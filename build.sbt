@@ -6,7 +6,7 @@ ThisBuild / startYear := Some(2020)
 lazy val supportedScalaVersions = List("2.13.1", "2.12.10", "2.11.12")
 
 lazy val root = (project in file("."))
-  .enablePlugins(AutomateHeaderPlugin)
+  .enablePlugins(AutomateHeaderPlugin, GhpagesPlugin, SiteScaladocPlugin)
   .settings(
     name := "tree",
     licenses += ("Apache-2.0", new URL("https://www.apache.org/licenses/LICENSE-2.0.txt")),
@@ -21,5 +21,6 @@ lazy val root = (project in file("."))
     publishTo := sonatypePublishTo.value,
     scalacOptions in (Compile, doc) ++= Seq(
       "-groups"
-    )
+    ),
+    git.remoteRepo := "git@github.com:arturopala/scala-tree.git"
   )

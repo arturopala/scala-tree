@@ -379,7 +379,8 @@ class TreeSpec extends AnyWordSpec with Matchers {
         (1, Tree("b2")),
         (0, Tree("c1")),
         (1, Tree("b1")),
-        (2, Tree("a")))
+        (2, Tree("a"))
+      )
       Tree.Builder.fromTreeList(tree1List) shouldBe List(tree1)
 
       val tree2 = Tree("a", Tree("b1", Tree("c1")), Tree("b2", Tree("c2", Tree("d2"))), Tree("b3"))
@@ -391,7 +392,8 @@ class TreeSpec extends AnyWordSpec with Matchers {
         (1, Tree("b2")),
         (0, Tree("c1")),
         (1, Tree("b1")),
-        (3, Tree("a")))
+        (3, Tree("a"))
+      )
       Tree.Builder.fromTreeList(tree2List) shouldBe List(tree2)
     }
   }
