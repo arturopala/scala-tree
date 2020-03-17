@@ -204,20 +204,21 @@ sealed trait Tree[+T] {
 
   // VISUALIZATION
 
-  /** Makes a String representation of the tree.
+  /** Makes a String representation of the tree by enumerating all branches.
     * @param show function to render a node value
-    * @param nodeSeparator string to separate nodes
+    * @param valueSeparator string to separate nodes
     * @param branchStart string to add at the start of each branch
     * @param branchEnd string to add at the end of each branch
     * @param branchSeparator string to separate branches
     * @group visualization
     */
-  def mkString(
+  def mkStringUsingBranches(
     show: T => String,
-    nodeSeparator: String,
+    valueSeparator: String,
     branchSeparator: String,
     branchStart: String,
-    branchEnd: String
+    branchEnd: String,
+    maxDepth: Int = Int.MaxValue
   ): String
 }
 
@@ -405,33 +406,36 @@ object Tree {
 
     // VISUALIZATION
 
-    /** Makes a String representation of the tree.
+    /** Makes a String representation of the tree by enumerating all branches.
       * @param show function to render a node value
-      * @param nodeSeparator string to separate nodes
+      * @param valueSeparator string to separate nodes
       * @param branchStart string to add at the start of each branch
       * @param branchEnd string to add at the end of each branch
       * @param branchSeparator string to separate branches
+      * @param maxDepth maximum path length (or tree depth) to show
       * @group visualization
       */
-    override def mkString(
+    override def mkStringUsingBranches(
       show: T => String,
-      nodeSeparator: String,
+      valueSeparator: String,
       branchSeparator: String,
       branchStart: String,
-      branchEnd: String
+      branchEnd: String,
+      maxDepth: Int = Int.MaxValue
     ): String = {
       val string = show(value)
       subtrees match {
         case Nil => branchStart + string + branchEnd
         case _ =>
           NodeOps
-            .mkString(
+            .mkStringUsingBranches(
               show,
-              nodeSeparator,
+              valueSeparator,
               branchSeparator,
               branchEnd,
-              new StringBuilder().append(branchStart).append(string),
-              subtrees.map((branchStart + string, _)),
+              maxDepth,
+              new StringBuilder(branchStart),
+              List((0, branchStart, this)),
               newBranch = false
             )
             .mkString
@@ -441,7 +445,7 @@ object Tree {
   }
 
   /** Node companion object. */
-  object Node {
+  private object Node {
 
     /** Creates a new leaf node */
     def apply[T](value: T): Node[T] = Node(value, Nil)
@@ -481,12 +485,13 @@ object Tree {
     override def flatMap[K](f: Nothing => Tree[K])(implicit strategy: FlatMapStrategy): Tree[K] = empty
     override def toValueList: List[(Int, Nothing)] = Nil
     override def toTreeList: List[(Int, Tree[Nothing])] = Nil
-    override def mkString(
+    override def mkStringUsingBranches(
       show: Nothing => String,
       nodeSeparator: String,
       branchSeparator: String,
       branchStart: String,
-      branchEnd: String
+      branchEnd: String,
+      maxDepth: Int = Int.MaxValue
     ): String = ""
   }
 
@@ -684,33 +689,47 @@ object Tree {
       }
 
     @tailrec
-    def mkString[T](
+    def mkStringUsingBranches[T](
       show: T => String,
       nodeSeparator: String,
       branchSeparator: String,
       branchEnd: String,
-      result: StringBuilder,
-      remaining: List[(String, Node[T])],
+      maxDepth: Int,
+      builder: StringBuilder,
+      remaining: List[(Int, String, Node[T])],
       newBranch: Boolean
     ): StringBuilder =
       remaining match {
-        case Nil => result
-        case (prefix, Node(value, subtrees)) :: xs =>
+        case Nil => builder
+        case (level, prefix, Node(value, subtrees)) :: xs =>
           val string = show(value)
-          val builder = (if (newBranch) result.append(branchSeparator).append(prefix) else result)
-            .append(nodeSeparator)
-            .append(string)
-          subtrees match {
+          if (level <= maxDepth) {
+            if (newBranch) builder.append(branchSeparator).append(prefix)
+            if (level > 0) builder.append(nodeSeparator)
+            builder.append(string)
+          }
+          val subtrees2 = if (level >= maxDepth) Nil else subtrees
+          subtrees2 match {
             case Nil =>
-              mkString(show, nodeSeparator, branchSeparator, branchEnd, builder.append(branchEnd), xs, newBranch = true)
-            case _ =>
-              mkString(
+              mkStringUsingBranches(
                 show,
                 nodeSeparator,
                 branchSeparator,
                 branchEnd,
+                maxDepth,
+                builder.append(branchEnd),
+                xs,
+                newBranch = true
+              )
+            case _ =>
+              mkStringUsingBranches(
+                show,
+                nodeSeparator,
+                branchSeparator,
+                branchEnd,
+                maxDepth,
                 builder,
-                subtrees.map((prefix + nodeSeparator + string, _)) ::: xs,
+                subtrees.map((level + 1, prefix + (if (level > 0) nodeSeparator else "") + string, _)) ::: xs,
                 newBranch = false
               )
           }
@@ -809,13 +828,13 @@ object Tree {
   object Show {
 
     def showAsArrays[T <: Any](tree: Tree[T]): String =
-      tree.mkString(_.toString, ",", "\n", "[", "]")
+      tree.mkStringUsingBranches(_.toString, ",", "\n", "[", "]")
 
     def showAsGraph[T <: Any](tree: Tree[T]): String =
-      tree.mkString(_.toString, " > ", "\n", "", "")
+      tree.mkStringUsingBranches(_.toString, " > ", "\n", "", "")
 
     def showAsPaths[T <: Any](tree: Tree[T]): String =
-      tree.mkString(_.toString, "/", "\n", "", "")
+      tree.mkStringUsingBranches(_.toString, "/", "\n", "", "")
 
   }
 

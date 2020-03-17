@@ -38,7 +38,7 @@ class TreeSpec extends AnyWordSpec with Matchers {
 
     "create a single node Tree" in {
       val tree1 = Tree(0)
-      tree1 shouldBe Tree.Node(0, Nil)
+      tree1 shouldBe Tree(0)
       tree1.size shouldBe 1
       tree1.leafsSize shouldBe 1
       tree1.isLeaf shouldBe true
@@ -67,7 +67,8 @@ class TreeSpec extends AnyWordSpec with Matchers {
       tree1.isLeaf shouldBe false
       tree1.children shouldBe List(Tree(1, Tree(2)))
       tree1.countBranches(_.nonEmpty) shouldBe 1
-      showAsArrays(tree1) shouldBe "[0,1,2]"
+      val arrays1 = showAsArrays(tree1)
+      arrays1 shouldBe "[0,1,2]"
       tree1.map(_ + 1) shouldBe Tree(1, Tree(2, Tree(3)))
 
       val tree2 = Tree(0, Tree(10), Tree(11))
@@ -76,7 +77,8 @@ class TreeSpec extends AnyWordSpec with Matchers {
       tree2.isLeaf shouldBe false
       tree2.children shouldBe List(Tree(10), Tree(11))
       tree2.countBranches(_.nonEmpty) shouldBe 2
-      showAsArrays(tree2) shouldBe
+      val arrays2 = showAsArrays(tree2)
+      arrays2 shouldBe
         """[0,10]
           |[0,11]""".stripMargin
       tree2.map(_ + 1) shouldBe Tree(1, Tree(11), Tree(12))
@@ -269,7 +271,7 @@ class TreeSpec extends AnyWordSpec with Matchers {
                        |0 > 12 > 21 > 31
                        |0 > 12 > 22 > 32""".stripMargin
 
-      val branches: List[List[Int]] = tree.branches
+      val branches: List[List[Int]] = tree.branches()
 
       val graph = branches.map(_.mkString(" > ")).mkString("\n")
       graph should be(expected)
@@ -346,6 +348,15 @@ class TreeSpec extends AnyWordSpec with Matchers {
           |1 > 2 > 3""".stripMargin
     }
 
+    "transform a tree using for-comprehension" in {
+      val tree = Tree(2, Tree(5, Tree(10)))
+      val nodeList = for {
+        n       <- tree
+        subtree <- Tree(n, Tree(n * n))
+      } yield subtree
+      nodeList shouldBe Tree(2, Tree(5, Tree(10, Tree(100)), Tree(25)), Tree(4))
+    }
+
     "serialize a tree to a list of (numberOfChildren, value) pairs" in {
       Tree().toValueList shouldBe Nil
       Tree("a").toValueList shouldBe List((0, "a"))
@@ -395,6 +406,23 @@ class TreeSpec extends AnyWordSpec with Matchers {
         (3, Tree("a"))
       )
       Tree.Builder.fromTreeList(tree2List) shouldBe List(tree2)
+    }
+
+    "visualize the branches of the tree" in {
+      val tree =
+        Tree("a", Tree("b1", Tree("c1")), Tree("b2", Tree("c2", Tree("d2", Tree("e1"), Tree("e2")))), Tree("b3"))
+      tree.mkStringUsingBranches(_.toString, ",", ",", "[", "]") shouldBe "[a,b1,c1],[a,b2,c2,d2,e1],[a,b2,c2,d2,e2],[a,b3]"
+    }
+
+    "visualize the branches of the tree limiting the depth" in {
+      val tree =
+        Tree("a", Tree("b1", Tree("c1")), Tree("b2", Tree("c2", Tree("d2", Tree("e1"), Tree("e2")))), Tree("b3"))
+      def mkStringWithMaxDepth(n: Int) = tree.mkStringUsingBranches(_.toString, ",", ",", "[", "]", n)
+      mkStringWithMaxDepth(0) shouldBe "[a]"
+      mkStringWithMaxDepth(1) shouldBe "[a,b1],[a,b2],[a,b3]"
+      mkStringWithMaxDepth(2) shouldBe "[a,b1,c1],[a,b2,c2],[a,b3]"
+      mkStringWithMaxDepth(3) shouldBe "[a,b1,c1],[a,b2,c2,d2],[a,b3]"
+      mkStringWithMaxDepth(4) shouldBe "[a,b1,c1],[a,b2,c2,d2,e1],[a,b2,c2,d2,e2],[a,b3]"
     }
   }
 
