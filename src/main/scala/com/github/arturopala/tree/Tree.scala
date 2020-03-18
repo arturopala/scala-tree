@@ -47,16 +47,16 @@ sealed trait Tree[+T] {
 
   /** The number of the concrete nodes in the tree.
     * @group properties */
-  val size: Int
+  def size: Int
 
   /** The number of leafs (concrete nodes without subtrees),
     * same as a number of distinct branches starting at the root of the tree.
     * @group properties */
-  val leafsSize: Int
+  def leafsSize: Int
 
   /** Returns true if this is a node without subtrees, otherwise false.
     * @group properties */
-  val isLeaf: Boolean
+  def isLeaf: Boolean
 
   // NODES
 
@@ -85,9 +85,9 @@ sealed trait Tree[+T] {
 
   // SUB-TREES
 
-  /** Returns direct children of the tree.
+  /** Returns direct children values, i.e. values of the subtree nodes, if any.
     * @group sub-trees */
-  def children: List[Tree[T]]
+  def children: List[T]
 
   /** List all the possible subtrees of this tree inclusive.
     * @group sub-trees */
@@ -164,7 +164,7 @@ sealed trait Tree[+T] {
 
   /** Flat-maps all nodes of the tree using provided function and returns a new tree.
     * @group transformations */
-  def flatMap[K](f: T => Tree[K])(implicit strategy: Tree.FlatMapStrategy = Tree.FlatMapStrategy.JoinSubtrees): Tree[K]
+  def flatMap[K](f: T => Tree[K]): Tree[K]
 
   // PATH-BASED OPERATIONS
 
@@ -204,12 +204,13 @@ sealed trait Tree[+T] {
 
   // VISUALIZATION
 
-  /** Makes a String representation of the tree by enumerating all branches.
+  /** Makes a String representation of the tree by enumerating all branches, up to the `maxDepth`.
     * @param show function to render a node value
     * @param valueSeparator string to separate nodes
     * @param branchStart string to add at the start of each branch
     * @param branchEnd string to add at the end of each branch
     * @param branchSeparator string to separate branches
+    * @param maxDepth maximum path length (or tree depth) to reveal
     * @group visualization
     */
   def mkStringUsingBranches(
@@ -230,30 +231,33 @@ object Tree {
   /** Creates an empty Tree, same as [[Tree.empty]]. */
   def apply[T](): Tree[T] = empty
 
-  /** Creates a single leaf tree, same as [[Node.apply(value:T)]]. */
-  def apply[T](value: T): Node[T] = Node(value)
+  /** Creates a leaf tree. */
+  def apply[T](value: T): Leaf[T] = Leaf(value)
 
-  /** Creates a tree node from the value and subtrees */
-  def apply[T](value: T, subtree: Node[T], others: Node[T]*): Node[T] = Node(value, subtree :: others.toList)
+  /** Creates a tree having a single subtree. */
+  def apply[T](value: T, subtree: Node[T]): Single[T] = Single(value, subtree)
+
+  /** Creates a tree having two subtrees. */
+  def apply[T](value: T, left: Node[T], right: Node[T]): Binary[T] = Binary(value, left, right)
+
+  /** Creates a tree node from the value and multiple subtrees */
+  def apply[T](value: T, subtree1: Node[T], subtree2: Node[T], subtree3: Node[T], others: Node[T]*): Multiple[T] =
+    Multiple(value, subtree1 :: subtree2 :: subtree3 :: others.toList)
 
   /** Creates a tree node from the value and list of subtrees */
-  def apply[T](value: T, subtrees: List[Node[T]]): Node[T] = Node(value, subtrees)
+  def apply[T](value: T, subtrees: List[Node[T]]): Node[T] = subtrees match {
+    case Nil           => Leaf(value)
+    case x :: Nil      => Single(value, x)
+    case x :: y :: Nil => Binary(value, x, y)
+    case _             => Multiple(value, subtrees)
+  }
 
-  /** Concrete node of the Tree, consisting of a value and a list of subtrees (possibly empty). */
-  final case class Node[+T] private (value: T, subtrees: List[Node[T]]) extends Tree[T] {
+  /** Abstract node of the Tree, consisting of a value and a list of subtrees (possibly empty).
+    * Implemented by [[Leaf]], [[Single]], [[Binary]], and [[Multiple]] concrete nodes.*/
+  trait Node[+T] extends Tree[T] {
 
-    /** The number of the concrete nodes in the tree.
-      * @group properties */
-    override val size: Int = 1 + subtrees.map(_.size).sum
-
-    /** The number of leafs (concrete nodes without subtrees),
-      * same as a number of distinct branches starting at the root of the tree.
-      * @group properties */
-    override val leafsSize: Int = Math.max(1, subtrees.map(_.leafsSize).sum)
-
-    /** Returns true if this is a node without subtrees, otherwise false.
-      * @group properties */
-    override val isLeaf: Boolean = subtrees.isEmpty
+    val value: T
+    def subtrees: List[Node[T]]
 
     // NODES
 
@@ -282,7 +286,7 @@ object Tree {
 
     /** Returns direct children of the tree.
       * @group sub-trees */
-    def children: List[Tree[T]] = subtrees
+    def children: List[T] = subtrees.map(_.value)
 
     /** List all the possible subtrees of this tree inclusive.
       * @group sub-trees */
@@ -338,13 +342,13 @@ object Tree {
 
     /** Inserts a new node holding the value and returns updated tree.
       * @group modifications */
-    override def insert[T1 >: T](newValue: T1): Tree[T1] = Node(value, Node(newValue) :: subtrees)
+    override def insert[T1 >: T](newValue: T1): Tree[T1] = Tree(value, Tree(newValue) :: subtrees)
 
     /** Inserts a new sub-tree and returns updated tree.
       * @group modifications */
     override def insert[T1 >: T](subtree: Tree[T1]): Tree[T1] = subtree match {
       case `empty`        => this
-      case node: Node[T1] => Node(value, node :: subtrees)
+      case node: Node[T1] => Tree(value, node :: subtrees)
     }
 
     /** Inserts a new branch of values and returns updated tree
@@ -369,17 +373,15 @@ object Tree {
       * @note Uses nested recursions.
       * @group transformations */
     override def mapUnsafe[K](f: T => K): Tree[K] = {
-      def mapNodeUnsafe(n: Node[T]): Node[K] = Node(f(n.value), n.subtrees.map(mapNodeUnsafe))
+      def mapNodeUnsafe(n: Node[T]): Node[K] = Tree(f(n.value), n.subtrees.map(mapNodeUnsafe))
       mapNodeUnsafe(this)
     }
 
     /** Flat-maps all nodes of the tree using provided function and returns a new tree.
       * @group transformations */
-    override def flatMap[K](
-      f: T => Tree[K]
-    )(implicit strategy: FlatMapStrategy = FlatMapStrategy.JoinSubtrees): Tree[K] = {
+    override def flatMap[K](f: T => Tree[K]): Tree[K] = {
       val list: List[(Int, Tree[K])] = NodeOps.listFlatMap(f, List((subtrees.size, f(value))), subtrees)
-      Builder.fromTreeList(list, Nil, 0, strategy).headOption.getOrElse(empty)
+      Builder.fromTreeList(list, Nil, 0, FlatMapStrategy.JoinSubtrees).headOption.getOrElse(empty)
     }
 
     // PATH-BASED OPERATIONS
@@ -402,7 +404,7 @@ object Tree {
     /** Outputs tree in the linear format as a list of pairs (numberOfChildren, value).
       * @note It is possible to build a tree back using [[Tree.Builder.fromTreeList]] method.
       * @group serialization */
-    def toTreeList: List[(Int, Tree[T])] = NodeOps.toTreeList(List((subtrees.size, Node(value))), subtrees)
+    def toTreeList: List[(Int, Tree[T])] = NodeOps.toTreeList(List((subtrees.size, Tree(value))), subtrees)
 
     // VISUALIZATION
 
@@ -412,7 +414,7 @@ object Tree {
       * @param branchStart string to add at the start of each branch
       * @param branchEnd string to add at the end of each branch
       * @param branchSeparator string to separate branches
-      * @param maxDepth maximum path length (or tree depth) to show
+      * @param maxDepth maximum path length (or tree depth) to reveal
       * @group visualization
       */
     override def mkStringUsingBranches(
@@ -444,11 +446,53 @@ object Tree {
 
   }
 
-  /** Node companion object. */
   private object Node {
 
-    /** Creates a new leaf node */
-    def apply[T](value: T): Node[T] = Node(value, Nil)
+    /** Universal node extractor */
+    def unapply[T](node: Node[T]): Option[(T, List[Node[T]])] =
+      Some((node.value, node.subtrees))
+  }
+
+  private object NodeHavingSubtree {
+
+    /** Extractor optimized for matches splitting subtrees into head and tail */
+    def unapply[T](node: Node[T]): Option[(T, Node[T], List[Node[T]])] = node match {
+      case Leaf(_)                    => None
+      case Single(value, subtree)     => Some((value, subtree, Nil))
+      case Binary(value, left, right) => Some((value, left, right :: Nil))
+      case Multiple(value, subtrees)  => Some((value, subtrees.head, subtrees.tail))
+    }
+  }
+
+  /** Concrete node of the Tree, consisting of a value and no subtrees. */
+  final case class Leaf[+T] private (value: T) extends Node[T] {
+    override def size: Int = 1
+    override def leafsSize: Int = 1
+    override def isLeaf: Boolean = true
+    override def subtrees: List[Node[T]] = Nil
+  }
+
+  /** Concrete node of the Tree, consisting of a value and a single subtree. */
+  final case class Single[+T] private (value: T, subtree: Node[T]) extends Node[T] {
+    override val size: Int = 1 + subtree.size
+    override val leafsSize: Int = Math.max(1, subtree.leafsSize)
+    override def isLeaf: Boolean = false
+    override def subtrees: List[Node[T]] = List(subtree)
+  }
+
+  /** Concrete node of the Tree, consisting of a value and two subtrees. */
+  final case class Binary[+T] private (value: T, left: Node[T], right: Node[T]) extends Node[T] {
+    override val size: Int = 1 + left.size + right.size
+    override val leafsSize: Int = Math.max(1, left.leafsSize + right.leafsSize)
+    override def isLeaf: Boolean = false
+    override def subtrees: List[Node[T]] = List(left, right)
+  }
+
+  /** Concrete node of the Tree, consisting of a value and a list of subtrees (non empty). */
+  final case class Multiple[+T] private (value: T, subtrees: List[Node[T]]) extends Node[T] {
+    override val size: Int = 1 + subtrees.map(_.size).sum
+    override val leafsSize: Int = Math.max(1, subtrees.map(_.leafsSize).sum)
+    override def isLeaf: Boolean = subtrees.isEmpty
   }
 
   /** An empty Tree. */
@@ -464,7 +508,7 @@ object Tree {
     override def nodeStream(filter: Nothing => Boolean): Stream[Nothing] = Stream.empty
     override def select[T1](path: List[T1]): Option[Tree[Nothing]] = if (path.isEmpty) Some(empty) else None
     override def contains[T1](path: List[T1]): Boolean = path.isEmpty
-    override def children: List[Tree[Nothing]] = Nil
+    override def children: List[Nothing] = Nil
     override def trees(): List[Tree[Nothing]] = List(empty)
     override def treesUnsafe: List[Tree[Nothing]] = List(empty)
     override def trees(filter: Tree[Nothing] => Boolean): List[Tree[Nothing]] = List(empty)
@@ -474,15 +518,15 @@ object Tree {
     override def branchStream: Stream[List[Nothing]] = Stream.empty
     override def branchStream(filter: List[Nothing] => Boolean): Stream[List[Nothing]] = Stream.empty
     override def countBranches(filter: List[Nothing] => Boolean): Int = 0
-    override def insert[T1](value: T1): Tree[T1] = Node(value)
+    override def insert[T1](value: T1): Tree[T1] = Tree(value)
     override def insert[T1](subtree: Tree[T1]): Tree[T1] = subtree
     override def insert[T1](branch: List[T1]): Tree[T1] = branch match {
-      case x :: xs => NodeOps.insert(Node(x), xs)
+      case x :: xs => NodeOps.insert(Tree(x), xs)
       case _       => empty
     }
     override def map[K](f: Nothing => K): Tree[K] = empty
     override def mapUnsafe[K](f: Nothing => K): Tree[K] = empty
-    override def flatMap[K](f: Nothing => Tree[K])(implicit strategy: FlatMapStrategy): Tree[K] = empty
+    override def flatMap[K](f: Nothing => Tree[K]): Tree[K] = empty
     override def toValueList: List[(Int, Nothing)] = Nil
     override def toTreeList: List[(Int, Tree[Nothing])] = Nil
     override def mkStringUsingBranches(
@@ -508,11 +552,11 @@ object Tree {
       }
 
     def nodeStream[T](filter: T => Boolean, node: Node[T], remaining: List[Node[T]]): Stream[T] = {
-      def continue: Stream[T] = node.subtrees match {
-        case x :: xs =>
+      def continue: Stream[T] = node match {
+        case NodeHavingSubtree(_, x, xs) =>
           nodeStream(filter, x, xs ::: remaining)
 
-        case Nil =>
+        case _ =>
           remaining match {
             case y :: ys => nodeStream(filter, y, ys)
             case Nil     => Stream.empty
@@ -579,25 +623,19 @@ object Tree {
       remaining: List[(List[T], Node[T])]
     ): Stream[List[T]] =
       tree match {
-        case `empty` => Stream.empty
-
-        case Node(value, subtrees) =>
-          subtrees match {
-            case x :: Nil =>
-              branchStream(filter, x, value :: acc, remaining)
-
-            case x :: xs =>
-              branchStream(filter, x, value :: acc, (acc, Node(value, xs)) :: remaining)
-
-            case Nil =>
-              val branch = value :: acc
-              def continue: Stream[List[T]] = remaining match {
-                case (acc2, y) :: ys => branchStream(filter, y, acc2, ys)
-                case Nil             => Stream.empty
-              }
-              if (filter(branch)) Stream.cons(branch.reverse, continue)
-              else continue
+        case `empty`                          => Stream.empty
+        case NodeHavingSubtree(value, x, Nil) => branchStream(filter, x, value :: acc, remaining)
+        case NodeHavingSubtree(value, x, xs) =>
+          branchStream(filter, x, value :: acc, (acc, Tree(value, xs)) :: remaining)
+        case Node(value, Nil) =>
+          val branch = value :: acc
+          def continue: Stream[List[T]] = remaining match {
+            case (acc2, y) :: ys => branchStream(filter, y, acc2, ys)
+            case Nil             => Stream.empty
           }
+          if (filter(branch)) Stream.cons(branch.reverse, continue)
+          else continue
+
       }
 
     @tailrec
@@ -618,19 +656,19 @@ object Tree {
           tree.subtrees.partition(_.value == x) match {
 
             case (Nil, bs) =>
-              val c = insert(Node(x), xs)
-              Node(tree.value, c :: bs)
+              val c = insert(Tree(x), xs)
+              Tree(tree.value, c :: bs)
 
             case (as, bs) =>
               as match {
 
                 case a :: Nil =>
                   val c = insert(a, xs)
-                  Node(tree.value, c :: bs)
+                  Tree(tree.value, c :: bs)
 
                 case _ =>
                   val cs = as.map(insert(_, xs))
-                  Node(tree.value, cs ::: bs)
+                  Tree(tree.value, cs ::: bs)
               }
           }
 
@@ -640,12 +678,9 @@ object Tree {
     @tailrec
     def toValueList[T](result: List[(Int, T)], remaining: List[Node[T]]): List[(Int, T)] =
       remaining match {
-        case Nil => result
-        case Node(value, subtrees) :: xs =>
-          subtrees match {
-            case Nil => toValueList((subtrees.size, value) :: result, subtrees ::: xs)
-            case _   => toValueList((subtrees.size, value) :: result, subtrees ::: xs)
-          }
+        case Nil                         => result
+        case Leaf(value) :: xs           => toValueList((0, value) :: result, xs)
+        case Node(value, subtrees) :: xs => toValueList((subtrees.size, value) :: result, subtrees ::: xs)
       }
 
     @tailrec
@@ -654,23 +689,17 @@ object Tree {
       remaining: List[Node[T]]
     ): List[(Int, Tree[T])] =
       remaining match {
-        case Nil => result
-        case Node(value, subtrees) :: xs =>
-          subtrees match {
-            case Nil => toTreeList((subtrees.size, Node(value)) :: result, subtrees ::: xs)
-            case _   => toTreeList((subtrees.size, Node(value)) :: result, subtrees ::: xs)
-          }
+        case Nil                         => result
+        case Leaf(value) :: xs           => toTreeList((0, Tree(value)) :: result, xs)
+        case Node(value, subtrees) :: xs => toTreeList((subtrees.size, Tree(value)) :: result, subtrees ::: xs)
       }
 
     @tailrec
     def listMap[T, K](f: T => K, result: List[(Int, K)], remaining: List[Node[T]]): List[(Int, K)] =
       remaining match {
-        case Nil => result
-        case Node(value, subtrees) :: xs =>
-          subtrees match {
-            case Nil => listMap(f, (subtrees.size, f(value)) :: result, subtrees ::: xs)
-            case _   => listMap(f, (subtrees.size, f(value)) :: result, subtrees ::: xs)
-          }
+        case Nil                         => result
+        case Leaf(value) :: xs           => listMap(f, (0, f(value)) :: result, xs)
+        case Node(value, subtrees) :: xs => listMap(f, (subtrees.size, f(value)) :: result, subtrees ::: xs)
       }
 
     @tailrec
@@ -680,12 +709,9 @@ object Tree {
       remaining: List[Node[T]]
     ): List[(Int, Tree[K])] =
       remaining match {
-        case Nil => result
-        case Node(value, subtrees) :: xs =>
-          subtrees match {
-            case Nil => listFlatMap(f, (subtrees.size, f(value)) :: result, subtrees ::: xs)
-            case _   => listFlatMap(f, (subtrees.size, f(value)) :: result, subtrees ::: xs)
-          }
+        case Nil                         => result
+        case Leaf(value) :: xs           => listFlatMap(f, (0, f(value)) :: result, xs)
+        case Node(value, subtrees) :: xs => listFlatMap(f, (subtrees.size, f(value)) :: result, subtrees ::: xs)
       }
 
     @tailrec
@@ -752,14 +778,14 @@ object Tree {
     def keepOrphanedSubtrees: Boolean
   }
 
-  object FlatMapStrategy {
+  final object FlatMapStrategy {
 
     /** Default strategy is to preserve all existing subtrees. */
     object JoinSubtrees extends FlatMapStrategy {
 
       /** Concatenates new and existing subtrees of an expanded node. */
       override def merge[T](newNode: Node[T], existingSubtrees: List[Node[T]]): Node[T] =
-        Node(newNode.value, existingSubtrees ::: newNode.subtrees)
+        Tree(newNode.value, existingSubtrees ::: newNode.subtrees)
 
       /** Joins orphaned subtrees to the parent node. */
       override def keepOrphanedSubtrees: Boolean = true
@@ -779,7 +805,7 @@ object Tree {
   }
 
   /** Useful methods to construct the tree. */
-  object Builder {
+  final object Builder {
 
     /** Builds a tree from a list of pairs (numberOfChildren, value), where:
       *   - `value` is the value of a new node, and
@@ -789,10 +815,10 @@ object Tree {
       *       - The sum of all numberOfChildren values must be the size of the list minus one.
       */
     @tailrec
-    final def fromValueList[K](list: List[(Int, K)], result: List[Node[K]] = Nil): List[Tree[K]] = list match {
+    def fromValueList[K](list: List[(Int, K)], result: List[Node[K]] = Nil): List[Tree[K]] = list match {
       case Nil => result
       case (size, value) :: xs =>
-        fromValueList(xs, Node(value, result.take(size)) :: result.drop(size))
+        fromValueList(xs, Tree(value, result.take(size)) :: result.drop(size))
     }
 
     /** Builds a tree from a list of pairs (numberOfChildren, node), where:
@@ -804,7 +830,7 @@ object Tree {
       *       - The sum of all numberOfChildren values must be the size of the list minus one.
       */
     @tailrec
-    final def fromTreeList[K](
+    def fromTreeList[K](
       list: List[(Int, Tree[K])],
       result: List[Node[K]] = Nil,
       offset: Int = 0,
@@ -825,7 +851,7 @@ object Tree {
   }
 
   /** Collection of common visualization templates. */
-  object Show {
+  final object Show {
 
     def showAsArrays[T <: Any](tree: Tree[T]): String =
       tree.mkStringUsingBranches(_.toString, ",", "\n", "[", "]")

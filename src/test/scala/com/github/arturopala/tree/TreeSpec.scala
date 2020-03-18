@@ -54,7 +54,7 @@ class TreeSpec extends AnyWordSpec with Matchers {
       tree1.size shouldBe 2
       tree1.leafsSize shouldBe 1
       tree1.isLeaf shouldBe false
-      tree1.children shouldBe List(Tree(1))
+      tree1.children shouldBe List(1)
       tree1.countBranches(_.nonEmpty) shouldBe 1
       showAsArrays(tree1) shouldBe "[0,1]"
       tree1.map(_ + 1) shouldBe Tree(1, Tree(2))
@@ -65,23 +65,25 @@ class TreeSpec extends AnyWordSpec with Matchers {
       tree1.size shouldBe 3
       tree1.leafsSize shouldBe 1
       tree1.isLeaf shouldBe false
-      tree1.children shouldBe List(Tree(1, Tree(2)))
+      tree1.children shouldBe List(1)
       tree1.countBranches(_.nonEmpty) shouldBe 1
       val arrays1 = showAsArrays(tree1)
       arrays1 shouldBe "[0,1,2]"
-      tree1.map(_ + 1) shouldBe Tree(1, Tree(2, Tree(3)))
+      val newTree1 = tree1.map(_ + 1)
+      newTree1 shouldBe Tree(1, Tree(2, Tree(3)))
 
       val tree2 = Tree(0, Tree(10), Tree(11))
       tree2.size shouldBe 3
       tree2.leafsSize shouldBe 2
       tree2.isLeaf shouldBe false
-      tree2.children shouldBe List(Tree(10), Tree(11))
+      tree2.children shouldBe List(10, 11)
       tree2.countBranches(_.nonEmpty) shouldBe 2
       val arrays2 = showAsArrays(tree2)
       arrays2 shouldBe
         """[0,10]
           |[0,11]""".stripMargin
-      tree2.map(_ + 1) shouldBe Tree(1, Tree(11), Tree(12))
+      val newTree2 = tree2.map(_ + 1)
+      newTree2 shouldBe Tree(1, Tree(11), Tree(12))
     }
 
     "create a four nodes Tree" in {
@@ -90,7 +92,7 @@ class TreeSpec extends AnyWordSpec with Matchers {
       tree1.leafsSize shouldBe 1
       tree1.isLeaf shouldBe false
       tree1.countBranches(_.nonEmpty) shouldBe 1
-      tree1.children shouldBe List(Tree(1, Tree(2, Tree(3))))
+      tree1.children shouldBe List(1)
       showAsArrays(tree1) shouldBe "[0,1,2,3]"
       tree1.map(_ + 1) shouldBe Tree(1, Tree(2, Tree(3, Tree(4))))
 
@@ -98,7 +100,7 @@ class TreeSpec extends AnyWordSpec with Matchers {
       tree2.size shouldBe 4
       tree2.leafsSize shouldBe 2
       tree2.isLeaf shouldBe false
-      tree2.children shouldBe List(Tree(1, Tree(20), Tree(21)))
+      tree2.children shouldBe List(1)
       tree2.countBranches(_.nonEmpty) shouldBe 2
       showAsArrays(tree2) shouldBe
         """[0,1,20]
@@ -109,7 +111,7 @@ class TreeSpec extends AnyWordSpec with Matchers {
       tree3.size shouldBe 4
       tree3.leafsSize shouldBe 3
       tree3.isLeaf shouldBe false
-      tree3.children shouldBe List(Tree(10), Tree(11), Tree(12))
+      tree3.children shouldBe List(10, 11, 12)
       tree3.countBranches(_.nonEmpty) shouldBe 3
       tree3.countBranches(_.contains(11)) shouldBe 1
       showAsArrays(tree3) shouldBe
@@ -281,12 +283,24 @@ class TreeSpec extends AnyWordSpec with Matchers {
     }
 
     "stream all branches" in {
-      val tree = Tree(0, Tree(11, Tree(20, Tree(30))), Tree(12, Tree(21, Tree(31)), Tree(22, Tree(32))))
-      val graph = tree.branchStream.map(_.mkString(" > ")).mkString("\n")
+      val tree0 = Tree()
+      tree0.branchStream.toList shouldBe Nil
+
+      val tree1 = Tree(0)
+      tree1.branchStream.toList shouldBe List(List(0))
+
+      val tree2 = Tree(0, Tree(1))
+      tree2.branchStream.toList shouldBe List(List(0, 1))
+
+      val tree3 = Tree(0, Tree(1), Tree(2))
+      tree3.branchStream.toList shouldBe List(List(0, 1), List(0, 2))
+
+      val tree4 = Tree(0, Tree(11, Tree(20, Tree(30))), Tree(12, Tree(21, Tree(31)), Tree(22, Tree(32))))
+      val graph = tree4.branchStream.map(_.mkString(" > ")).mkString("\n")
       graph shouldBe """0 > 11 > 20 > 30
                        |0 > 12 > 21 > 31
                        |0 > 12 > 22 > 32""".stripMargin
-      graph shouldBe showAsGraph(tree)
+      graph shouldBe showAsGraph(tree4)
     }
 
     "list all sub-trees" in {
@@ -319,19 +333,42 @@ class TreeSpec extends AnyWordSpec with Matchers {
     }
 
     "map all nodes" in {
-      val tree = Tree(0, Tree(11, Tree(20, Tree(30))), Tree(12, Tree(21, Tree(31)), Tree(22, Tree(32))))
-      val tree2 = tree.map(_ + 1)
-      showAsGraph(tree2) shouldBe """1 > 12 > 21 > 31
-                                    |1 > 13 > 22 > 32
-                                    |1 > 13 > 23 > 33""".stripMargin
-      val tree3 = tree.mapUnsafe(_ + 1)
-      tree3 shouldBe tree2
+      val tree0: Tree[Int] = Tree()
+      val result0 = tree0.map(_ * 10)
+      showAsGraph(result0) shouldBe ""
+
+      val tree1 = Tree(1)
+      val result1 = tree1.map(_ * 10)
+      showAsGraph(result1) shouldBe "10"
+
+      val tree2 = Tree(1, Tree(2))
+      val result2 = tree2.map(_ * 10)
+      showAsGraph(result2) shouldBe
+        """10 > 20""".stripMargin
+
+      val tree3 = Tree(1, Tree(2), Tree(3))
+      val result3 = tree3.map(_ * 10)
+      showAsGraph(result3) shouldBe
+        """10 > 20
+          |10 > 30""".stripMargin
+
+      val tree4 = Tree(0, Tree(11, Tree(20, Tree(30))), Tree(12, Tree(21, Tree(31)), Tree(22, Tree(32))))
+      val result4 = tree4.map(_ + 1)
+      showAsGraph(result4) shouldBe """1 > 12 > 21 > 31
+                                      |1 > 13 > 22 > 32
+                                      |1 > 13 > 23 > 33""".stripMargin
+      val tree = tree4.mapUnsafe(_ + 1)
+      tree shouldBe result4
     }
 
     "flatMap all nodes" in {
-      val tree = Tree(0)
-      val result = tree.flatMap(n => Tree(n + 1))
-      showAsGraph(result) shouldBe "1"
+      val tree0: Tree[Int] = Tree()
+      val result0 = tree0.flatMap(n => Tree(n + 1))
+      showAsGraph(result0) shouldBe ""
+
+      val tree1 = Tree(0)
+      val result1 = tree1.flatMap(n => Tree(n + 1))
+      showAsGraph(result1) shouldBe "1"
 
       val tree2 = Tree(0, Tree(1))
       val result2 = tree2.flatMap(n => Tree(n + 1, Tree(n + 2)))
