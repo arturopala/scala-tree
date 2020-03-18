@@ -95,6 +95,8 @@ object TreeBenchmark extends Bench.LocalTime {
     singleBranchTreesInput.map { case (size, list)                            => (size, buildTree(list)) }
   val singleNodeTrees: TreeGen = singleNodeTreesInput.map { case (size, list) => (size, buildTree(list)) }
 
+  val listGen: Gen[List[String]] = sizes.map(size => (0 until size).map(_.toString).toList)
+
   performance of "Tree size and leafsSize" in {
     measure method "for wide trees" in {
       using(wideTrees) in {
@@ -129,10 +131,20 @@ object TreeBenchmark extends Bench.LocalTime {
     }
   }
 
+  performance of "List" in {
+    measure method "map" in {
+      using(listGen) in { list =>
+        list.map(_ + "_")
+      }
+    }
+  }
+
   performance of "Tree map" in {
     measure method "for ultre-wide trees" in {
       using(ultraWideTrees) in {
         case (size, tree) =>
+          tree.size
+          tree.leafsSize
           tree.map(_ + "_")
       }
     }
@@ -140,6 +152,8 @@ object TreeBenchmark extends Bench.LocalTime {
     measure method "for wide trees" in {
       using(wideTrees) in {
         case (size, tree) =>
+          tree.size
+          tree.leafsSize
           tree.map(_ + "_")
       }
     }
@@ -147,6 +161,8 @@ object TreeBenchmark extends Bench.LocalTime {
     measure method "for narrow trees" in {
       using(narrowTrees) in {
         case (size, tree) =>
+          tree.size
+          tree.leafsSize
           tree.map(_ + "_")
       }
     }
@@ -154,6 +170,8 @@ object TreeBenchmark extends Bench.LocalTime {
     measure method "binary trees" in {
       using(binaryTrees) in {
         case (size, tree) =>
+          tree.size
+          tree.leafsSize
           tree.map(_ + "_")
       }
     }
@@ -161,6 +179,8 @@ object TreeBenchmark extends Bench.LocalTime {
     measure method "single branch trees (max-deep)" in {
       using(singleBranchTrees) in {
         case (size, tree) =>
+          tree.size
+          tree.leafsSize
           tree.map(_ + "_")
       }
     }
@@ -168,6 +188,8 @@ object TreeBenchmark extends Bench.LocalTime {
     measure method "single node trees (max-wide)" in {
       using(singleBranchTrees) in {
         case (size, tree) =>
+          tree.size
+          tree.leafsSize
           tree.map(_ + "_")
       }
     }
