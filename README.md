@@ -1,3 +1,5 @@
+![Scala CI](https://github.com/arturopala/scala-tree/workflows/Scala%20CI/badge.svg)
+
 Tree\[+T]
 ===
 
