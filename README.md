@@ -20,7 +20,7 @@ Dependencies
 
 Depends only on a standard, built-in Scala library.
 
-Cross-compilation to Scala versions `2.13.1`, `2.12.10`, and `2.11.12` is provided.
+Cross-compilation to Scala versions `2.13.1`, `2.12.11`, and `2.11.12` is provided.
 
 API
 ---
