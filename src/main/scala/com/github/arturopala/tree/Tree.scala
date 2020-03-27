@@ -23,10 +23,21 @@ import scala.collection.Iterator
 import scala.collection.immutable.Stream
 import scala.reflect.ClassTag
 
-/** General purpose, covariant, immutable, linked tree-like data structure with rich API.
+/** A general-purpose, covariant, immutable, low overhead,
+  * efficient tree-like data structure with rich API.
   *
-  * Either an empty or a concrete node.
-  * Each concrete node holds a value and links to the other subtrees.
+  * Conceptually, apart from empty, each node of the tree have:
+  *   - a value, and
+  *   - a collection of subtrees.
+  *
+  * There are three implementations of the Tree:
+  *   - [[Tree.empty]], an empty tree singleton,
+  *   - [[Tree.Node]], nested hierarchy of nodes (inflated tree), or
+  *   - [[Tree.ArrayTree]], a linear array (deflated tree).
+  *
+  * The idea behind having an inflated and deflated variant of the tree
+  * is such that each of them exhibits different performance and memory
+  * consumption characteristics.
   *
   * @groupprio properties 0
   * @groupname properties Properties
@@ -483,7 +494,7 @@ object Tree {
   final class ArrayTree[T: ClassTag] private[tree] (
     structure: Slice[Int],
     values: Slice[T],
-    _width: => Int,
+    _width:  => Int,
     _height: => Int
   ) extends Tree[T] {
 
