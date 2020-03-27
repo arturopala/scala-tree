@@ -30,9 +30,9 @@ import scala.reflect.ClassTag
   *   - a value, and
   *   - a collection of subtrees.
   *
-  * There are three implementations of the Tree:
+  * Internally, there are three implementations of the Tree:
   *   - [[Tree.empty]], an empty tree singleton,
-  *   - [[Tree.Node]], nested hierarchy of nodes (inflated tree), or
+  *   - [[Tree.Node]], nested hierarchy of immutable nodes (inflated tree),
   *   - [[Tree.ArrayTree]], a linear array (deflated tree).
   *
   * The idea behind having an inflated and deflated variant of the tree
@@ -72,7 +72,7 @@ sealed trait Tree[+T] {
     * @group properties */
   def width: Int
 
-  /** The length of the longest branch of tree.
+  /** The length of the longest branch of the tree.
     * @group properties */
   def height: Int
 
@@ -116,54 +116,54 @@ sealed trait Tree[+T] {
     * @group sub-trees */
   def children: List[T]
 
-  /** Lists all the possible subtrees of tree inclusive.
+  /** Lists all the possible subtrees of the tree inclusive.
     * @group sub-trees */
   def trees(): List[Tree[T]]
 
-  /** Lists all the possible subtrees of tree inclusive.
+  /** Lists all the possible subtrees of the tree inclusive.
     *
     * @note Uses unsafe nested recursions, result same as [[treeIterator()]].
     * @group sub-trees */
   def treesUnsafe: List[Tree[T]]
 
-  /** Iterates over filtered subtrees of tree inclusive.
+  /** Iterates over filtered subtrees of the tree inclusive.
     * @param pred return true to include the tree in the result, false otherwise.
     * @group sub-trees */
   def treeIterator(pred: Tree[T] => Boolean): Iterator[Tree[T]]
 
-  /** Lazy stream of the possible subtrees of tree inclusive.
+  /** Lazy stream of the possible subtrees of the tree inclusive.
     * @group sub-trees */
   def treeStream: Stream[Tree[T]]
 
-  /** Filtered lazy stream of the possible subtrees of tree inclusive.
+  /** Filtered lazy stream of the possible subtrees of the tree inclusive.
     * @param pred return true to include the subtree in the result, false otherwise.
     * @group sub-trees */
   def treeStream(pred: Tree[T] => Boolean): Stream[Tree[T]]
 
   // BRANCHES
 
-  /** List all the branches of tree starting at the root.
+  /** Lists all the branches of the tree starting at the root.
     *
     * @note Uses unsafe nested recursions, result same as [[branchIterator()]].
     * @group branches */
   def branches(): List[List[T]]
 
-  /** List all the branches of tree starting at the root.
+  /** Lists all the branches of the tree starting at the root.
     * @group branches */
   def branchesUnsafe: List[List[T]]
 
-  /** Iterates over filtered branches of tree starting at the root.
+  /** Iterates over filtered branches of the tree starting at the root.
     * @param pred return true to include the branch in the result, false otherwise.
     * @note An argument to the filter function is a REVERSED branch.
     * @group branches
     */
   def branchIterator(pred: List[T] => Boolean): Iterator[List[T]]
 
-  /** Lazy stream of all the branches of tree starting at the root.
+  /** Lazy stream of all the branches of the tree starting at the root.
     * @group branches */
   def branchStream: Stream[List[T]]
 
-  /** Filtered lazy stream of all the branches of tree starting at the root.
+  /** Filtered lazy stream of all the branches of the tree starting at the root.
     * @param pred return true to include the branch in the result, false otherwise.
     * @note An argument to the filter function is a REVERSED branch.
     * @group branches */
@@ -187,7 +187,7 @@ sealed trait Tree[+T] {
 
   /** Inserts a new branch of values and returns updated tree.
     * @param branch list of values forming a path from the root to the leaf.
-    * @note New branch must start with the existing root element of tree, otherwise the tree will stay intact.
+    * @note New branch must start with the existing root element of the tree, otherwise the tree will stay intact.
     * @group modifications */
   def insert[T1 >: T](branch: List[T1]): Tree[T1]
 
