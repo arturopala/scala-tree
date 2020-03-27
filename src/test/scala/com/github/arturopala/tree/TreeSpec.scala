@@ -16,140 +16,153 @@
 
 package com.github.arturopala.tree
 
+import com.github.arturopala.tree.Tree.Show._
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 
-import com.github.arturopala.tree.Tree.Show._
-
 class TreeSpec extends AnyWordSpec with Matchers {
+
+  val tree0 = Tree[String]()
+  val tree1 = Tree("a")
+  val tree2 = Tree("a", Tree("b"))
+  val tree3_1 = Tree("a", Tree("b", Tree("c")))
+  val tree3_2 = Tree("a", Tree("b"), Tree("c"))
+  val tree4_1 = Tree("a", Tree("b", Tree("c", Tree("d"))))
+  val tree4_2 = Tree("a", Tree("b", Tree("c")), Tree("d"))
+  val tree4_3 = Tree("a", Tree("b"), Tree("c"), Tree("d"))
+  val tree7 = Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e", Tree("f"))), Tree("g"))
+  val tree9 = Tree("a", Tree("b", Tree("c", Tree("d"))), Tree("e", Tree("f", Tree("g")), Tree("h", Tree("i"))))
 
   "Tree" should {
     "create an empty Tree" in {
-      val tree: Tree[Int] = Tree.empty
-      tree.size shouldBe 0
-      tree.leafsSize shouldBe 0
-      tree.isLeaf shouldBe false
-      tree.children shouldBe Nil
-      tree.countBranches(_.nonEmpty) shouldBe 0
-      tree.countBranches(_.isEmpty) shouldBe 0
-      showAsArrays(tree) shouldBe ""
-      tree.map(_ + 1) shouldBe Tree.empty
+      tree0.size shouldBe 0
+      tree0.width shouldBe 0
+      tree0.height shouldBe 0
+      tree0.isLeaf shouldBe false
+      tree0.children shouldBe Nil
+      tree0.countBranches(_.nonEmpty) shouldBe 0
+      tree0.countBranches(_.isEmpty) shouldBe 0
+      showAsArrays(tree0) shouldBe ""
+      tree0.map(_ + 1) shouldBe Tree.empty
     }
 
     "create a single node Tree" in {
-      val tree1 = Tree(0)
-      tree1 shouldBe Tree(0)
+      tree1 shouldBe Tree("a")
       tree1.size shouldBe 1
-      tree1.leafsSize shouldBe 1
+      tree1.width shouldBe 1
+      tree1.height shouldBe 1
       tree1.isLeaf shouldBe true
       tree1.children shouldBe Nil
       tree1.countBranches(_.nonEmpty) shouldBe 1
       tree1.countBranches(_.isEmpty) shouldBe 1
-      showAsArrays(tree1) shouldBe "[0]"
-      tree1.map(_ + 1) shouldBe Tree(1)
+      showAsArrays(tree1) shouldBe "[a]"
+      tree1.map(_ + 1) shouldBe Tree("a1")
     }
 
     "create a double node Tree" in {
-      val tree1 = Tree(0, Tree(1))
-      tree1.size shouldBe 2
-      tree1.leafsSize shouldBe 1
-      tree1.isLeaf shouldBe false
-      tree1.children shouldBe List(1)
-      tree1.countBranches(_.nonEmpty) shouldBe 1
-      showAsArrays(tree1) shouldBe "[0,1]"
-      tree1.map(_ + 1) shouldBe Tree(1, Tree(2))
+      tree2.size shouldBe 2
+      tree2.width shouldBe 1
+      tree2.height shouldBe 2
+      tree2.isLeaf shouldBe false
+      tree2.children shouldBe List("b")
+      tree2.countBranches(_.nonEmpty) shouldBe 1
+      showAsArrays(tree2) shouldBe "[a,b]"
+      tree2.map(_ + 1) shouldBe Tree("a1", Tree("b1"))
     }
 
     "create a three nodes Tree" in {
-      val tree1 = Tree(0, Tree(1, Tree(2)))
-      tree1.size shouldBe 3
-      tree1.leafsSize shouldBe 1
-      tree1.isLeaf shouldBe false
-      tree1.children shouldBe List(1)
-      tree1.countBranches(_.nonEmpty) shouldBe 1
-      val arrays1 = showAsArrays(tree1)
-      arrays1 shouldBe "[0,1,2]"
-      val newTree1 = tree1.map(_ + 1)
-      newTree1 shouldBe Tree(1, Tree(2, Tree(3)))
+      tree3_1.size shouldBe 3
+      tree3_1.width shouldBe 1
+      tree3_1.height shouldBe 3
+      tree3_1.isLeaf shouldBe false
+      tree3_1.children shouldBe List("b")
+      tree3_1.countBranches(_.nonEmpty) shouldBe 1
+      val arrays1 = showAsArrays(tree3_1)
+      arrays1 shouldBe "[a,b,c]"
+      val newTree3_1 = tree3_1.map(_ + 1)
+      newTree3_1 shouldBe Tree("a1", Tree("b1", Tree("c1")))
 
-      val tree2 = Tree(0, Tree(10), Tree(11))
-      tree2.size shouldBe 3
-      tree2.leafsSize shouldBe 2
-      tree2.isLeaf shouldBe false
-      tree2.children shouldBe List(10, 11)
-      tree2.countBranches(_.nonEmpty) shouldBe 2
-      val arrays2 = showAsArrays(tree2)
+      tree3_2.size shouldBe 3
+      tree3_2.width shouldBe 2
+      tree3_2.height shouldBe 2
+      tree3_2.isLeaf shouldBe false
+      tree3_2.children shouldBe List("b", "c")
+      tree3_2.countBranches(_.nonEmpty) shouldBe 2
+      val arrays2 = showAsArrays(tree3_2)
       arrays2 shouldBe
-        """[0,10]
-          |[0,11]""".stripMargin
-      val newTree2 = tree2.map(_ + 1)
-      newTree2 shouldBe Tree(1, Tree(11), Tree(12))
+        """[a,b]
+          |[a,c]""".stripMargin
+      val newTree2 = tree3_2.map(_ + 1)
+      newTree2 shouldBe Tree("a1", Tree("b1"), Tree("c1"))
     }
 
     "create a four nodes Tree" in {
-      val tree1 = Tree(0, Tree(1, Tree(2, Tree(3))))
-      tree1.size shouldBe 4
-      tree1.leafsSize shouldBe 1
-      tree1.isLeaf shouldBe false
-      tree1.countBranches(_.nonEmpty) shouldBe 1
-      tree1.children shouldBe List(1)
-      showAsArrays(tree1) shouldBe "[0,1,2,3]"
-      tree1.map(_ + 1) shouldBe Tree(1, Tree(2, Tree(3, Tree(4))))
+      tree4_1.size shouldBe 4
+      tree4_1.width shouldBe 1
+      tree4_1.height shouldBe 4
+      tree4_1.isLeaf shouldBe false
+      tree4_1.countBranches(_.nonEmpty) shouldBe 1
+      tree4_1.children shouldBe List("b")
+      showAsArrays(tree4_1) shouldBe "[a,b,c,d]"
+      tree4_1.map(_ + 1) shouldBe Tree("a1", Tree("b1", Tree("c1", Tree("d1"))))
 
-      val tree2 = Tree(0, Tree(1, Tree(20), Tree(21)))
-      tree2.size shouldBe 4
-      tree2.leafsSize shouldBe 2
-      tree2.isLeaf shouldBe false
-      tree2.children shouldBe List(1)
-      tree2.countBranches(_.nonEmpty) shouldBe 2
-      showAsArrays(tree2) shouldBe
-        """[0,1,20]
-          |[0,1,21]""".stripMargin
-      tree2.map(_ + 1) shouldBe Tree(1, Tree(2, Tree(21), Tree(22)))
+      tree4_2.size shouldBe 4
+      tree4_2.width shouldBe 2
+      tree4_2.height shouldBe 3
+      tree4_2.isLeaf shouldBe false
+      tree4_2.children shouldBe List("b", "d")
+      tree4_2.countBranches(_.nonEmpty) shouldBe 2
+      showAsArrays(tree4_2) shouldBe
+        """[a,b,c]
+          |[a,d]""".stripMargin
+      tree4_2.map(_ + 1) shouldBe Tree("a1", Tree("b1", Tree("c1")), Tree("d1"))
 
-      val tree3 = Tree(0, Tree(10), Tree(11), Tree(12))
-      tree3.size shouldBe 4
-      tree3.leafsSize shouldBe 3
-      tree3.isLeaf shouldBe false
-      tree3.children shouldBe List(10, 11, 12)
-      tree3.countBranches(_.nonEmpty) shouldBe 3
-      tree3.countBranches(_.contains(11)) shouldBe 1
-      showAsArrays(tree3) shouldBe
-        """[0,10]
-          |[0,11]
-          |[0,12]""".stripMargin
-      tree3.map(_ + 1) shouldBe Tree(1, Tree(11), Tree(12), Tree(13))
+      tree4_3.size shouldBe 4
+      tree4_3.width shouldBe 3
+      tree4_3.height shouldBe 2
+      tree4_3.isLeaf shouldBe false
+      tree4_3.children shouldBe List("b", "c", "d")
+      tree4_3.countBranches(_.nonEmpty) shouldBe 3
+      tree4_3.countBranches(_.contains("c")) shouldBe 1
+      showAsArrays(tree4_3) shouldBe
+        """[a,b]
+          |[a,c]
+          |[a,d]""".stripMargin
+      tree4_3.map(_ + 1) shouldBe Tree("a1", Tree("b1"), Tree("c1"), Tree("d1"))
     }
 
     "create a multi-branch Tree" in {
-      val tree = Tree(0, Tree(11, Tree(20, Tree(30))), Tree(12, Tree(21, Tree(31)), Tree(22, Tree(32))))
-      tree.size shouldBe 9
-      tree.leafsSize shouldBe 3
-      tree.isLeaf shouldBe false
-      tree.countBranches(_.nonEmpty) shouldBe 3
-      tree.countBranches(_.contains(12)) shouldBe 2
-      showAsArrays(tree) shouldBe
-        """[0,11,20,30]
-          |[0,12,21,31]
-          |[0,12,22,32]""".stripMargin
+      tree9.size shouldBe 9
+      tree9.width shouldBe 3
+      tree9.height shouldBe 4
+      tree9.isLeaf shouldBe false
+      tree9.countBranches(_.nonEmpty) shouldBe 3
+      tree9.countBranches(_.contains("e")) shouldBe 2
+      showAsArrays(tree9) shouldBe
+        """[a,b,c,d]
+          |[a,e,f,g]
+          |[a,e,h,i]""".stripMargin
     }
 
-    "check if the path exists" in {
-      val tree = Tree.empty
-      tree.contains(List(0, 1)) shouldBe false
+    "check if contains branch" in {
+      tree0.containsBranch(List("a", "b")) shouldBe false
+      tree9.containsBranch(List("a", "b", "c")) shouldBe false
+      tree9.containsBranch(List("a", "e", "h", "i")) shouldBe true
+      tree9.containsBranch(List("a", "e", "c")) shouldBe false
+    }
 
-      val tree1 = Tree(0, Tree(11, Tree(20, Tree(30))), Tree(12, Tree(21, Tree(31)), Tree(22, Tree(32))))
-      tree1.contains(List(0, 11)) shouldBe true
-      tree1.contains(List(0, 11, 20)) shouldBe true
-      tree1.contains(List(0, 11, 30)) shouldBe false
+    "check if contains path" in {
+      tree0.containsPath(List("a", "b")) shouldBe false
+      tree9.containsPath(List("a", "b", "c")) shouldBe true
+      tree9.containsPath(List("a", "e", "h", "i")) shouldBe true
+      tree9.containsPath(List("a", "e", "c")) shouldBe false
     }
 
     "insert new node to an empty Tree" in {
-      val tree: Tree[Int] = Tree.empty
-      val tree2 = tree.insert(0)
-      tree2 shouldBe Tree(0)
-      tree2.size shouldBe 1
-      tree2.leafsSize shouldBe 1
+      val tree1 = tree0.insert("a")
+      tree1 shouldBe Tree("a")
+      tree1.size shouldBe 1
+      tree1.width shouldBe 1
     }
 
     "insert new node to a single node Tree" in {
@@ -157,7 +170,7 @@ class TreeSpec extends AnyWordSpec with Matchers {
       val tree2 = tree.insert(1)
       tree2 shouldBe Tree(0, Tree(1))
       tree2.size shouldBe 2
-      tree2.leafsSize shouldBe 1
+      tree2.width shouldBe 1
     }
 
     "insert new branch to an empty Tree" in {
@@ -165,7 +178,7 @@ class TreeSpec extends AnyWordSpec with Matchers {
       val tree2 = tree.insert(List(0, 1, 2, 3))
       tree2 shouldBe Tree(0, Tree(1, Tree(2, Tree(3))))
       tree2.size shouldBe 4
-      tree2.leafsSize shouldBe 1
+      tree2.width shouldBe 1
     }
 
     "insert new branch to a single node Tree" in {
@@ -176,19 +189,20 @@ class TreeSpec extends AnyWordSpec with Matchers {
     "insert new branch to a multi-branch Tree" in {
       val tree = Tree(0, Tree(1, Tree(2, Tree(3))))
       tree.size shouldBe 4
-      tree.leafsSize shouldBe 1
+      tree.width shouldBe 1
+      tree.height shouldBe 4
 
       val tree2 = tree.insert(List(0, 1, 22, 33))
       tree2 shouldBe Tree(0, Tree(1, Tree(22, Tree(33)), Tree(2, Tree(3))))
       tree2.size shouldBe 6
-      tree2.leafsSize shouldBe 2
+      tree2.width shouldBe 2
 
       val tree3 = tree
         .insert(List(0, 1, 22, 33))
         .insert(List(0, 11, 12, 13))
       tree3 shouldBe Tree(0, Tree(11, Tree(12, Tree(13))), Tree(1, Tree(22, Tree(33)), Tree(2, Tree(3))))
       tree3.size shouldBe 9
-      tree3.leafsSize shouldBe 3
+      tree3.width shouldBe 3
     }
 
     "insert existing node to a multi-branch Tree" in {
@@ -208,14 +222,15 @@ class TreeSpec extends AnyWordSpec with Matchers {
 
     "select an existing subtree" in {
       val tree = Tree(0, Tree(1, Tree(2, Tree(3), Tree(4), Tree(5))))
-      tree.select(List(0, 1)) shouldBe Some(Tree(1, Tree(2, Tree(3), Tree(4), Tree(5))))
-      tree.contains(List(0, 1)) shouldBe true
+      tree.selectTree(List(0, 1)) shouldBe Some(Tree(1, Tree(2, Tree(3), Tree(4), Tree(5))))
+      tree.containsPath(List(0, 1)) shouldBe true
+      tree.containsBranch(List(0, 1)) shouldBe false
     }
 
     "try selecting non-existent subtree" in {
       val tree = Tree(0, Tree(1, Tree(2, Tree(3), Tree(4), Tree(5))))
-      tree.select(List(1, 2)) shouldBe None
-      tree.contains(List(1, 2)) shouldBe false
+      tree.selectTree(List(1, 2)) shouldBe None
+      tree.containsBranch(List(1, 2)) shouldBe false
     }
 
     "list all nodes" in {
@@ -234,6 +249,21 @@ class TreeSpec extends AnyWordSpec with Matchers {
       tree1.nodes shouldBe List(0)
       val tree2 = Tree(0, Tree(11, Tree(20, Tree(30))), Tree(12, Tree(21, Tree(31)), Tree(22, Tree(32))))
       tree2.nodes shouldBe List(0, 11, 20, 30, 12, 21, 31, 22, 32)
+    }
+
+    "iterate over nodes with filter" in {
+      Tree.empty.nodeIterator(_ => true).toList shouldBe Nil
+
+      val tree1 = Tree(0)
+      tree1.nodeIterator(_ > 1).toList shouldBe Nil
+      tree1.nodeIterator(_ < 1).toList shouldBe List(0)
+
+      val tree2 = Tree(0, Tree(11, Tree(20, Tree(30))), Tree(12, Tree(21, Tree(31)), Tree(22, Tree(32))))
+      tree2.nodeIterator(_ >= 0).toList shouldBe List(0, 11, 20, 30, 12, 21, 31, 22, 32)
+      tree2.nodeIterator(_ > 15).toList shouldBe List(20, 30, 21, 31, 22, 32)
+      tree2.nodeIterator(_ > 100).toList shouldBe Nil
+      tree2.nodeIterator(_ < 15).toList shouldBe List(0, 11, 12)
+      tree2.nodeIterator(_ < 0).toList shouldBe Nil
     }
 
     "stream all nodes" in {
@@ -263,7 +293,7 @@ class TreeSpec extends AnyWordSpec with Matchers {
       val graph = branches.map(_.mkString(" > ")).mkString("\n")
       graph should be(expected)
       graph shouldBe showAsGraph(tree)
-      branches.forall(tree.contains) shouldBe true
+      branches.forall(tree.containsBranch) shouldBe true
       branches.reverse.foldLeft[Tree[Int]](Tree.empty)(_.insert(_)) shouldBe tree
     }
 
@@ -278,8 +308,19 @@ class TreeSpec extends AnyWordSpec with Matchers {
       val graph = branches.map(_.mkString(" > ")).mkString("\n")
       graph should be(expected)
       graph shouldBe showAsGraph(tree)
-      branches.forall(tree.contains) shouldBe true
+      branches.forall(tree.containsBranch) shouldBe true
       branches.reverse.foldLeft[Tree[Int]](Tree.empty)(_.insert(_)) shouldBe tree
+    }
+
+    "iterate over branches with filter" in {
+      tree0.branchIterator(_.size > 3).toList shouldBe Nil
+      tree1.branchIterator(_.size > 1).toList shouldBe Nil
+      tree2.branchIterator(_.size > 1).toList shouldBe List(List("a", "b"))
+      tree3_1.branchIterator(_.head == "c").toList shouldBe List(List("a", "b", "c"))
+      tree3_2.branchIterator(_.head == "c").toList shouldBe List(List("a", "c"))
+      tree4_2.branchIterator(_.head == "d").toList shouldBe List(List("a", "d"))
+      tree4_2.branchIterator(_.size > 2).toList shouldBe List(List("a", "b", "c"))
+      tree7.branchIterator(_.size > 3).toList shouldBe List(List("a", "d", "e", "f"))
     }
 
     "stream all branches" in {
@@ -330,6 +371,28 @@ class TreeSpec extends AnyWordSpec with Matchers {
       val treesGraph = trees.map(showAsGraph).mkString("\n\n")
 
       treesGraph should be(expected)
+    }
+
+    "iterate over filtered subtrees" in {
+      tree0.treeIterator(_.size > 0).toList shouldBe Nil
+      tree1.treeIterator(_.size > 0).toList shouldBe List(tree1)
+      tree2.treeIterator(_.size > 0).toList shouldBe List(tree2, Tree("b"))
+      tree3_2.treeIterator(_.size < 2).toList shouldBe List(Tree("b"), Tree("c"))
+      tree7.treeIterator(_.height == 2).toList shouldBe List(Tree("b", Tree("c")), Tree("e", Tree("f")))
+
+      val tree9 = Tree(0, Tree(11, Tree(20, Tree(30))), Tree(12, Tree(21, Tree(31)), Tree(22, Tree(32))))
+      tree9.treeIterator(_.size == 2).toList shouldBe List(Tree(20, Tree(30)), Tree(21, Tree(31)), Tree(22, Tree(32)))
+    }
+
+    "stream filtered subtrees" in {
+      tree0.treeStream(_.size > 0).toList shouldBe Nil
+      tree1.treeStream(_.size > 0).toList shouldBe List(tree1)
+      tree2.treeStream(_.size > 0).toList shouldBe List(tree2, Tree("b"))
+      tree3_2.treeStream(_.size < 2).toList shouldBe List(Tree("b"), Tree("c"))
+      tree7.treeStream(_.height == 2).toList shouldBe List(Tree("b", Tree("c")), Tree("e", Tree("f")))
+
+      val tree9 = Tree(0, Tree(11, Tree(20, Tree(30))), Tree(12, Tree(21, Tree(31)), Tree(22, Tree(32))))
+      tree9.treeStream(_.size == 2).toList shouldBe List(Tree(20, Tree(30)), Tree(21, Tree(31)), Tree(22, Tree(32)))
     }
 
     "map all nodes" in {
@@ -395,54 +458,95 @@ class TreeSpec extends AnyWordSpec with Matchers {
     }
 
     "serialize a tree to a list of (numberOfChildren, value) pairs" in {
-      Tree().toValueList shouldBe Nil
-      Tree("a").toValueList shouldBe List((0, "a"))
-      Tree("a", Tree("b")).toValueList shouldBe List((0, "b"), (1, "a"))
-      Tree("a", Tree("b1"), Tree("b2")).toValueList shouldBe List((0, "b2"), (0, "b1"), (2, "a"))
-      Tree("a", Tree("b", Tree("c"))).toValueList shouldBe List((0, "c"), (1, "b"), (1, "a"))
+      Tree().toPairsIterator shouldBe Iterator.empty
+      Tree.Builder.fromPairsIterator(Iterator.empty) shouldBe List(Tree.empty)
+
+      Tree("a").toPairsIterator.toList shouldBe List((0, "a"))
+      Tree("a", Tree("b")).toPairsIterator.toList shouldBe List((0, "b"), (1, "a"))
+      Tree("a", Tree("b1"), Tree("b2")).toPairsIterator.toList shouldBe List((0, "b2"), (0, "b1"), (2, "a"))
+      Tree("a", Tree("b", Tree("c"))).toPairsIterator.toList shouldBe List((0, "c"), (1, "b"), (1, "a"))
 
       val tree1 = Tree("a", Tree("b1", Tree("c1")), Tree("b2", Tree("c2", Tree("d2"))))
-      val tree1List = tree1.toValueList
-      tree1List shouldBe List((0, "d2"), (1, "c2"), (1, "b2"), (0, "c1"), (1, "b1"), (2, "a"))
-      Tree.Builder.fromValueList(tree1List) shouldBe List(tree1)
+      tree1.toPairsIterator.toList shouldBe List((0, "d2"), (1, "c2"), (1, "b2"), (0, "c1"), (1, "b1"), (2, "a"))
+      Tree.Builder.fromPairsIterator(tree1.toPairsIterator) shouldBe List(tree1)
 
       val tree2 = Tree("a", Tree("b1", Tree("c1")), Tree("b2", Tree("c2", Tree("d2"))), Tree("b3"))
-      val tree2List = tree2.toValueList
-      tree2List shouldBe List((0, "b3"), (0, "d2"), (1, "c2"), (1, "b2"), (0, "c1"), (1, "b1"), (3, "a"))
-      Tree.Builder.fromValueList(tree2List) shouldBe List(tree2)
+      val pairList = tree2.toPairsIterator.toList
+      pairList shouldBe List((0, "b3"), (0, "d2"), (1, "c2"), (1, "b2"), (0, "c1"), (1, "b1"), (3, "a"))
+      Tree.Builder.fromPairsIterator(tree2.toPairsIterator) shouldBe List(tree2)
     }
 
-    "serialize a tree to a list of (numberOfChildren, subtree) pairs" in {
-      Tree().toTreeList shouldBe Nil
-      Tree("a").toTreeList shouldBe List((0, Tree("a")))
-      Tree("a", Tree("b")).toTreeList shouldBe List((0, Tree("b")), (1, Tree("a")))
-      Tree("a", Tree("b1"), Tree("b2")).toTreeList shouldBe List((0, Tree("b2")), (0, Tree("b1")), (2, Tree("a")))
-      Tree("a", Tree("b", Tree("c"))).toTreeList shouldBe List((0, Tree("c")), (1, Tree("b")), (1, Tree("a")))
+    "serialize a tree to a pair of arrays and deserialize it back using fromArrays" in {
+      /*val tree0: Tree[String] = Tree()
+      val (structure0, values0) = tree0.toArrays
+      structure0.length shouldBe 0
+      values0.length shouldBe 0
+      Tree.Builder.fromArrays(structure0, values0) shouldBe List(tree0)
 
-      val tree1 = Tree("a", Tree("b1", Tree("c1")), Tree("b2", Tree("c2", Tree("d2"))))
-      val tree1List = tree1.toTreeList
-      tree1List shouldBe List(
-        (0, Tree("d2")),
-        (1, Tree("c2")),
-        (1, Tree("b2")),
-        (0, Tree("c1")),
-        (1, Tree("b1")),
-        (2, Tree("a"))
-      )
-      Tree.Builder.fromTreeList(tree1List) shouldBe List(tree1)
+      val tree1 = Tree(1)
+      val (structure1, values1) = tree1.toArrays
+      structure1.length shouldBe 1
+      values1.length shouldBe 1
+      Tree.Builder.fromArrays(structure1, values1) shouldBe List(tree1)
 
-      val tree2 = Tree("a", Tree("b1", Tree("c1")), Tree("b2", Tree("c2", Tree("d2"))), Tree("b3"))
-      val tree2List = tree2.toTreeList
-      tree2List shouldBe List(
-        (0, Tree("b3")),
-        (0, Tree("d2")),
-        (1, Tree("c2")),
-        (1, Tree("b2")),
-        (0, Tree("c1")),
-        (1, Tree("b1")),
-        (3, Tree("a"))
+      val tree2 = Tree("a", Tree("b"))
+      val (structure2, values2) = tree2.toArrays
+      structure2.length shouldBe 2
+      structure2 shouldBe Array(0, 1)
+      values2.length shouldBe 2
+      values2 shouldBe Array("b", "a")
+      Tree.Builder.fromArrays(structure2, values2) shouldBe List(tree2)
+
+      val tree3 = Tree("a", Tree("b"), Tree("c"))
+      val (structure3, values3) = tree3.toArrays
+      structure3.length shouldBe 3
+      structure3 shouldBe Array(0, 0, 2)
+      values3.length shouldBe 3
+      values3 shouldBe Array("c", "b", "a")
+      val t = Tree.Builder.fromArrays(structure3, values3)
+      t shouldBe List(tree3)
+
+      val tree4 = Tree("a", Tree("b", Tree("c")), Tree("d"))
+      val (structure4, values4) = tree4.toArrays
+      structure4.length shouldBe 4
+      structure4 shouldBe Array(0, 0, 1, 2)
+      values4.length shouldBe 4
+      values4 shouldBe Array("d", "c", "b", "a")
+      Tree.Builder.fromArrays(structure4, values4) shouldBe List(tree4)
+
+      val tree7 = Tree("a", Tree("b1", Tree("c1")), Tree("b2", Tree("c2", Tree("d2"))), Tree("b3"))
+      val (structure7, values7) = tree7.toArrays
+      structure7.length shouldBe 7
+      structure7 shouldBe Array(0, 0, 1, 1, 0, 1, 3)
+      values7.length shouldBe 7
+      values7 shouldBe Array("b3", "d2", "c2", "b2", "c1", "b1", "a")
+      Tree.Builder.fromArrays(structure7, values7) shouldBe List(tree7)
+       */
+      val tree10 = Tree(
+        "a",
+        Tree("b1", Tree("c1"), Tree("d1")),
+        Tree("b2", Tree("c2", Tree("d2"))),
+        Tree("b3"),
+        Tree("b4", Tree("c4"))
       )
-      Tree.Builder.fromTreeList(tree2List) shouldBe List(tree2)
+      val (structure10, values10) = tree10.toArrays
+      structure10.length shouldBe 10
+      structure10 shouldBe Array(0, 1, 0, 0, 1, 1, 0, 0, 2, 4)
+      values10.length shouldBe 10
+      values10 shouldBe Array("c4", "b4", "b3", "d2", "c2", "b2", "d1", "c1", "b1", "a")
+      Tree.Builder.fromArraysHead(structure10, values10) shouldBe tree10
+    }
+
+    "serialize a tree to a structure array" in {
+      Tree.empty.toStructureArray shouldBe Array.empty[Int]
+      Tree(1).toStructureArray shouldBe Array(0)
+      Tree(1, Tree(2)).toStructureArray shouldBe Array(0, 1)
+      Tree(1, Tree(2, Tree(3))).toStructureArray shouldBe Array(0, 1, 1)
+      Tree(1, Tree(2), Tree(3)).toStructureArray shouldBe Array(0, 0, 2)
+      Tree(1, Tree(2), Tree(3, Tree(4))).toStructureArray shouldBe Array(0, 1, 0, 2)
+      Tree(1, Tree(2, Tree(5)), Tree(3, Tree(4))).toStructureArray shouldBe Array(0, 1, 0, 1, 2)
+      Tree(1, Tree(2, Tree(5)), Tree(3, Tree(4), Tree(6))).toStructureArray shouldBe Array(0, 0, 2, 0, 1, 2)
+      Tree(1, Tree(2, Tree(5)), Tree(3, Tree(4), Tree(6)), Tree(7)).toStructureArray shouldBe Array(0, 0, 0, 2, 0, 1, 3)
     }
 
     "visualize the branches of the tree" in {
@@ -467,11 +571,11 @@ class TreeSpec extends AnyWordSpec with Matchers {
     "create a new tree from the list of values" in {
       val list: List[(Int, String)] = List((0, "a"), (0, "b"), (0, "c"), (3, "d"))
 
-      val trees = Tree.Builder.fromValueList(list)
+      val trees = Tree.Builder.fromPairsIterable(list)
 
       trees.size shouldBe 1
       trees.head.size shouldBe 4
-      trees.head.leafsSize shouldBe 3
+      trees.head.width shouldBe 3
       trees.head shouldBe Tree("d", Tree("c"), Tree("b"), Tree("a"))
       showAsGraph(trees.head) shouldBe
         """d > c
@@ -482,7 +586,7 @@ class TreeSpec extends AnyWordSpec with Matchers {
     "create a new trees from the list of values" in {
       val list: List[(Int, String)] = List((0, "a"), (1, "b"), (0, "c"), (1, "d"))
 
-      val trees = Tree.Builder.fromValueList(list)
+      val trees = Tree.Builder.fromPairsIterable(list)
 
       trees.size shouldBe 2
       trees(0) shouldBe Tree("d", Tree("c"))
@@ -496,7 +600,7 @@ class TreeSpec extends AnyWordSpec with Matchers {
 
       trees.size shouldBe 1
       trees.head.size shouldBe 4
-      trees.head.leafsSize shouldBe 3
+      trees.head.width shouldBe 3
       trees.head shouldBe Tree("d", Tree("c"), Tree("b"), Tree("a"))
       showAsGraph(trees.head) shouldBe
         """d > c
@@ -512,7 +616,7 @@ class TreeSpec extends AnyWordSpec with Matchers {
 
       trees.size shouldBe 1
       trees.head.size shouldBe 8
-      trees.head.leafsSize shouldBe 4
+      trees.head.width shouldBe 4
       trees.head shouldBe Tree("d", Tree("c", Tree("C")), Tree("b", Tree("B")), Tree("a", Tree("A")), Tree("D"))
       showAsGraph(trees.head) shouldBe
         """d > c > C
@@ -529,7 +633,7 @@ class TreeSpec extends AnyWordSpec with Matchers {
 
       trees.size shouldBe 1
       trees.head.size shouldBe 8
-      trees.head.leafsSize shouldBe 4
+      trees.head.width shouldBe 4
       trees.head shouldBe Tree("d", Tree("c", Tree("b", Tree("a", Tree("A")), Tree("B")), Tree("C")), Tree("D"))
       showAsGraph(trees.head) shouldBe
         """d > c > b > a > A
@@ -546,9 +650,84 @@ class TreeSpec extends AnyWordSpec with Matchers {
 
       trees.size shouldBe 1
       trees.head.size shouldBe 2
-      trees.head.leafsSize shouldBe 1
+      trees.head.width shouldBe 1
       trees.head shouldBe Tree("d", Tree("D"))
       showAsGraph(trees.head) shouldBe "d > D"
+    }
+
+    "be equal to the other tree if both have same structure and content" in {
+      tree0 shouldBe Tree()
+      tree0.hashCode() shouldBe Tree().hashCode()
+      tree0 shouldBe Tree()
+      tree0 shouldBe Tree().deflate
+      tree0.hashCode() shouldBe Tree().deflate.hashCode()
+
+      tree1 shouldBe Tree("a")
+      tree1.hashCode() shouldBe Tree("a").hashCode()
+      tree1 shouldBe Tree("a")
+      tree1 shouldBe Tree("a").deflate
+      tree1.hashCode() shouldBe Tree("a").deflate.hashCode()
+      Tree.Builder.fromArraysHead(Array(0), Array("a")) shouldBe Tree("a")
+      Tree.Builder.fromArraysHead(Array(0), Array("a")).hashCode() shouldBe Tree("a")
+        .hashCode()
+
+      tree2 shouldBe Tree("a", Tree("b"))
+      tree2.hashCode() shouldBe Tree("a", Tree("b")).hashCode()
+      tree2 shouldBe Tree("a", Tree("b"))
+      tree2 shouldBe Tree("a", Tree("b")).deflate
+      tree2.hashCode() shouldBe Tree("a", Tree("b")).deflate.hashCode()
+      Tree.Builder.fromArraysHead(Array(0, 1), Array("b", "a")) shouldBe Tree("a", Tree("b"))
+      Tree.Builder.fromArraysHead(Array(0, 1), Array("b", "a")).hashCode() shouldBe Tree("a", Tree("b")).hashCode()
+
+      tree3_1 shouldBe Tree("a", Tree("b", Tree("c")))
+      tree3_1.hashCode() shouldBe Tree("a", Tree("b", Tree("c"))).hashCode()
+      tree3_1 shouldBe Tree("a", Tree("b", Tree("c")))
+      tree3_1 shouldBe Tree("a", Tree("b", Tree("c"))).deflate
+      tree3_1.hashCode() shouldBe Tree("a", Tree("b", Tree("c"))).deflate.hashCode()
+      Tree.Builder.fromArraysHead(Array(0, 1, 1), Array("c", "b", "a")) shouldBe Tree("a", Tree("b", Tree("c")))
+      Tree.Builder.fromArraysHead(Array(0, 1, 1), Array("c", "b", "a")).hashCode() shouldBe Tree(
+        "a",
+        Tree("b", Tree("c"))
+      ).hashCode()
+
+      tree3_2 shouldBe Tree("a", Tree("b"), Tree("c"))
+      tree3_2.hashCode() shouldBe Tree("a", Tree("b"), Tree("c")).hashCode()
+      tree3_2 shouldBe Tree("a", Tree("b"), Tree("c"))
+      tree3_2 shouldBe Tree("a", Tree("b"), Tree("c")).deflate
+      tree3_2.hashCode() shouldBe Tree("a", Tree("b"), Tree("c")).deflate.hashCode()
+      Tree.Builder.fromArraysHead(Array(0, 0, 2), Array("c", "b", "a")) shouldBe Tree("a", Tree("b"), Tree("c"))
+      Tree.Builder.fromArraysHead(Array(0, 0, 2), Array("c", "b", "a")).hashCode() shouldBe Tree(
+        "a",
+        Tree("b"),
+        Tree("c")
+      ).hashCode()
+    }
+
+    "be not equal to the tree with different structure" in {
+      tree3_1 should not be tree3_2
+      tree4_1 should not be tree4_2
+      tree4_2 should not be tree4_3
+      tree4_1 should not be tree4_3
+    }
+
+    "be not equal to the tree with different content" in {
+      Tree(0) should not be Tree(1)
+      Tree("a") should not be Tree("A")
+      Tree("a") should not be Tree("b")
+      Tree(0, Tree(1)) should not be Tree(1, Tree(0))
+      Tree("a", Tree("b")) should not be Tree("b", Tree("a"))
+      Tree("a", Tree("b")) should not be Tree("ab")
+      Tree("a", Tree("b")) should not be Tree("ba")
+      Tree("ab") should not be Tree("ba")
+    }
+
+    "hashcode should differ for different trees" in {
+      Seq(tree0, tree1, tree2, tree3_1, tree3_2, tree4_1, tree4_2, tree4_3, tree7, tree9)
+        .map(_.hashCode())
+        .toSet
+        .size shouldBe 10
+      Tree(0).hashCode() should not be Tree(1).hashCode()
+      Tree(0, Tree(1)).hashCode() should not be Tree(1, Tree(0)).hashCode()
     }
   }
 

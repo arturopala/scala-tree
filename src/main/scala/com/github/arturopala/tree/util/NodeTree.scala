@@ -1,0 +1,526 @@
+/*
+ * Copyright 2020 Artur Opala
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.github.arturopala.tree.util
+
+import com.github.arturopala.tree.Tree
+import com.github.arturopala.tree.Tree.{Binary, Leaf, Node, Unary}
+
+import scala.annotation.tailrec
+import scala.reflect.ClassTag
+
+/** Collection of operations on the hierarchical, node-based, representation of the tree. */
+object NodeTree {
+
+  final object Node {
+    def unapply[T](node: Node[T]): Option[(T, List[Node[T]])] =
+      Some((node.value, node.subtrees))
+  }
+
+  final object NonEmptySubtree {
+    def unapply[T](node: Node[T]): Option[(T, Node[T], List[Node[T]])] = node match {
+      case _: Leaf[T]      => None
+      case node: Unary[T]  => Some((node.value, node.subtree, Nil))
+      case node: Binary[T] => Some((node.value, node.left, node.right :: Nil))
+      case _               => Some((node.value, node.subtrees.head, node.subtrees.tail))
+    }
+  }
+
+  object Leaf {
+    def unapply[T](node: Leaf[T]): Option[T] = Some(node.value)
+  }
+
+  object Unary {
+    def unapply[T](node: Unary[T]): Option[(T, Node[T])] = Some((node.value, node.subtree))
+  }
+
+  object Binary {
+    def unapply[T](node: Binary[T]): Option[(T, Node[T], Node[T])] = Some((node.value, node.left, node.right))
+  }
+
+  /** Returns an iterator over the nodes of the tree, goes depth-first. */
+  final def nodeIterator[T](pred: T => Boolean, node: Node[T]): Iterator[T] = new Iterator[T] {
+
+    type Queue = List[Node[T]]
+    var queue: Queue = seekNext(List(node))
+
+    override def hasNext: Boolean = queue.nonEmpty
+
+    @tailrec
+    override def next(): T = queue match {
+      case Nil => throw new NoSuchElementException()
+      case Node(value, subtrees) :: xs =>
+        queue = seekNext(subtrees ::: xs)
+        if (pred(value)) value else next()
+    }
+
+    @tailrec
+    private def seekNext(q: Queue): Queue = q match {
+      case Nil => q
+      case Node(value, subtrees) :: xs =>
+        if (pred(value)) q
+        else seekNext(subtrees ::: xs)
+    }
+  }
+
+  final def nodes[T](pred: T => Boolean, node: Node[T]): List[T] = nodes(pred, Nil, List(node))
+
+  @tailrec
+  private def nodes[T](pred: T => Boolean, result: List[T], queue: List[Node[T]]): List[T] =
+    queue match {
+      case Nil => result.reverse
+      case Node(value, subtrees) :: xs =>
+        if (pred(value)) nodes(pred, value :: result, subtrees ::: xs)
+        else nodes(pred, result, subtrees ::: xs)
+    }
+
+  /** Returns lazy node stream, goes depth-first */
+  final def nodeStream[T](pred: T => Boolean, node: Node[T]): Stream[T] = nodeStream(pred, node, Nil)
+
+  private def nodeStream[T](pred: T => Boolean, node: Node[T], queue: List[Node[T]]): Stream[T] = {
+    def continue: Stream[T] = node match {
+      case NonEmptySubtree(_, x, xs) =>
+        nodeStream(pred, x, xs ::: queue)
+
+      case _ =>
+        queue match {
+          case y :: ys => nodeStream(pred, y, ys)
+          case Nil     => Stream.empty
+        }
+    }
+    if (pred(node.value)) Stream.cons(node.value, continue) else continue
+  }
+
+  @tailrec
+  final def selectTree[T, T1 >: T](node: Node[T], path: Iterable[T1]): Option[Node[T]] =
+    if (path.isEmpty || (path.nonEmpty && path.head != node.value)) None
+    else if (path.tail.isEmpty) {
+      if (path.head == node.value) Some(node) else None
+    } else {
+      val nextOpt = node.subtrees
+        .collectFirst {
+          case nextNode if nextNode.value == path.tail.head => nextNode
+        }
+      if (nextOpt.isEmpty) None
+      else selectTree(nextOpt.get, path.tail)
+    }
+
+  final def containsBranch[T, T1 >: T](node: Node[T], branch: Iterable[T1]): Boolean =
+    contains(node, branch, fullMatch = true)
+
+  final def containsPath[T, T1 >: T](node: Node[T], path: Iterable[T1]): Boolean =
+    contains(node, path, fullMatch = false)
+
+  @tailrec
+  private def contains[T, T1 >: T](node: Node[T], branch: Iterable[T1], fullMatch: Boolean): Boolean =
+    if (branch.isEmpty || (branch.nonEmpty && branch.head != node.value)) false
+    else if (branch.tail.isEmpty) (!fullMatch || node.isLeaf) && branch.head == node.value
+    else {
+      val nextOpt = node.subtrees
+        .collectFirst {
+          case nextNode if nextNode.value == branch.tail.head => nextNode
+        }
+      if (nextOpt.isEmpty) false
+      else contains(nextOpt.get, branch.tail, fullMatch)
+    }
+
+  /** Returns an iterator over (sub)trees of the tree, goes depth-first. */
+  final def treeIterator[T](pred: Tree[T] => Boolean, node: Node[T]): Iterator[Tree[T]] = new Iterator[Tree[T]] {
+
+    type Queue = List[Node[T]]
+    var queue: Queue = seekNext(List(node))
+
+    override def hasNext: Boolean = queue.nonEmpty
+
+    @tailrec
+    override def next(): Tree[T] = queue match {
+      case Nil => throw new NoSuchElementException()
+      case (node @ Node(_, subtrees)) :: xs =>
+        queue = seekNext(subtrees ::: xs)
+        if (pred(node)) node else next()
+    }
+
+    @tailrec
+    private def seekNext(q: Queue): Queue = q match {
+      case Nil => q
+      case (node @ Node(_, subtrees)) :: xs =>
+        if (pred(node)) q
+        else seekNext(subtrees ::: xs)
+    }
+  }
+
+  final def trees[T](pred: Tree[T] => Boolean, node: Node[T]): List[Node[T]] = trees(pred, Nil, List(node))
+
+  @tailrec
+  private def trees[T](pred: Tree[T] => Boolean, result: List[Node[T]], queue: List[Node[T]]): List[Node[T]] =
+    queue match {
+      case Nil => result.reverse
+      case (node @ Node(_, subtrees)) :: xs =>
+        if (pred(node)) trees(pred, node :: result, subtrees ::: xs)
+        else trees(pred, result, subtrees ::: xs)
+    }
+
+  /** Returns lazy subtree stream, goes depth-first */
+  final def treeStream[T](pred: Tree[T] => Boolean, node: Node[T]): Stream[Tree[T]] = treeStream(pred, node, Nil)
+
+  private def treeStream[T](pred: Tree[T] => Boolean, node: Node[T], queue: List[Node[T]]): Stream[Tree[T]] = {
+    def continue: Stream[Tree[T]] = node match {
+      case NonEmptySubtree(_, x, xs) =>
+        treeStream(pred, x, xs ::: queue)
+
+      case _ =>
+        queue match {
+          case y :: ys => treeStream(pred, y, ys)
+          case Nil     => Stream.empty
+        }
+    }
+    if (pred(node)) Stream.cons(node, continue) else continue
+  }
+
+  /** Returns an iterator over branches of the tree */
+  final def branchIterator[T](pred: List[T] => Boolean, node: Node[T]): Iterator[List[T]] = new Iterator[List[T]] {
+
+    type Queue = List[(List[T], Node[T])]
+    var queue: Queue = seekNext(List((Nil, node)))
+
+    override def hasNext: Boolean = queue.nonEmpty
+
+    @tailrec
+    override def next(): List[T] = queue match {
+      case Nil => throw new NoSuchElementException()
+      case (acc, Node(value, subtrees)) :: xs =>
+        val branch = value :: acc
+        queue = seekNext(subtrees.map((branch, _)) ::: xs)
+        subtrees match {
+          case Nil if pred(branch) => branch.reverse
+          case _                   => next()
+        }
+    }
+
+    @tailrec
+    private def seekNext(q: Queue): Queue = q match {
+      case Nil => q
+      case (acc, Node(value, subtrees)) :: xs =>
+        val branch = value :: acc
+        subtrees match {
+          case Nil if pred(branch) => q
+          case _                   => seekNext(subtrees.map((branch, _)) ::: xs)
+        }
+    }
+  }
+
+  final def branches[T](pred: List[T] => Boolean, node: Node[T]): List[List[T]] =
+    branches(pred, Nil, node.subtrees.map((List(node.value), _)))
+
+  @tailrec
+  private def branches[T](
+    pred: List[T] => Boolean,
+    result: List[List[T]],
+    queue: List[(List[T], Node[T])]
+  ): List[List[T]] =
+    queue match {
+      case Nil => result.reverse
+      case (acc, Node(value, subtrees)) :: xs =>
+        val branch = value :: acc
+        subtrees match {
+          case Nil if pred(branch) => branches(pred, branch.reverse :: result, xs)
+          case _                   => branches(pred, result, subtrees.map((branch, _)) ::: xs)
+        }
+    }
+
+  final def branchStream[T](pred: List[T] => Boolean, node: Node[T]): Stream[List[T]] =
+    branchStream(pred, node, Nil, Nil)
+
+  private def branchStream[T](
+    pred: List[T] => Boolean,
+    node: Node[T],
+    acc: List[T],
+    queue: List[(List[T], Node[T])]
+  ): Stream[List[T]] =
+    node match {
+      case NonEmptySubtree(value, x, Nil) => branchStream(pred, x, value :: acc, queue)
+      case NonEmptySubtree(value, x, xs)  => branchStream(pred, x, value :: acc, (acc, Tree(value, xs)) :: queue)
+      case Node(value, Nil) =>
+        val branch = value :: acc
+        def continue: Stream[List[T]] = queue match {
+          case (acc2, y) :: ys => branchStream(pred, y, acc2, ys)
+          case Nil             => Stream.empty
+        }
+        if (pred(branch)) Stream.cons(branch.reverse, continue)
+        else continue
+
+    }
+
+  @tailrec
+  final def countBranches[T](pred: List[T] => Boolean, result: Int, queue: List[(List[T], Node[T])]): Int =
+    queue match {
+      case Nil => result
+      case (acc, Node(value, subtrees)) :: xs =>
+        val branch = value :: acc
+        subtrees match {
+          case Nil if pred(branch) => countBranches(pred, 1 + result, xs)
+          case _                   => countBranches(pred, result, subtrees.map((branch, _)) ::: xs)
+        }
+    }
+
+  final def insert[T, T1 >: T](tree: Node[T], branch: List[T1]): Node[T1] =
+    branch match {
+      case x :: xs =>
+        tree.subtrees.partition(_.value == x) match {
+
+          case (Nil, bs) =>
+            val c = insert(Tree(x), xs)
+            Tree(tree.value, c :: bs)
+
+          case (as, bs) =>
+            as match {
+
+              case a :: Nil =>
+                val c = insert(a, xs)
+                Tree(tree.value, c :: bs)
+
+              case _ =>
+                val cs = as.map(insert(_, xs))
+                Tree(tree.value, cs ::: bs)
+            }
+        }
+
+      case Nil => tree
+    }
+
+  final def toPairsList[T](node: Node[T]): List[(Int, T)] = toPairsList(Nil, List(node))
+
+  @tailrec
+  private def toPairsList[T](result: List[(Int, T)], queue: List[Node[T]]): List[(Int, T)] =
+    queue match {
+      case Nil                         => result
+      case Leaf(value) :: xs           => toPairsList((0, value) :: result, xs)
+      case Node(value, subtrees) :: xs => toPairsList((subtrees.size, value) :: result, subtrees ::: xs)
+    }
+
+  @`inline` final def toArrays[T: ClassTag](node: Node[T]): (Array[Int], Array[T]) = {
+    val queue = new Array[Node[T]](Math.max(node.width, node.height))
+    queue(0) = node
+    toArrays(new Array[Int](node.size), new Array[T](node.size), queue, node.size - 1, 0)
+  }
+
+  @tailrec
+  private final def toArrays[T: ClassTag](
+    structure: Array[Int],
+    values: Array[T],
+    queue: Array[Node[T]],
+    position: Int,
+    queuePosition: Int
+  ): (Array[Int], Array[T]) =
+    if (position < 0) (structure, values)
+    else
+      queue(queuePosition) match {
+        case Leaf(value) =>
+          structure.update(position, 0)
+          values.update(position, value)
+          toArrays(structure, values, queue, position - 1, queuePosition - 1)
+
+        case Node(value, subtrees) =>
+          structure.update(position, subtrees.size)
+          values.update(position, value)
+          var rp: Int = queuePosition + subtrees.size - 1
+          subtrees.foreach { subtree =>
+            queue(rp) = subtree
+            rp = rp - 1
+          }
+          toArrays(structure, values, queue, position - 1, queuePosition + subtrees.size - 1)
+      }
+
+  @`inline` final def toStructureArray[T](node: Node[T]): Array[Int] = {
+    val queue = new Array[Node[T]](Math.max(node.width, node.height))
+    queue(0) = node
+    toStructureArray(new Array[Int](node.size), queue, node.size - 1, 0)
+  }
+
+  @tailrec
+  private final def toStructureArray[T](
+    structure: Array[Int],
+    queue: Array[Node[T]],
+    position: Int,
+    queuePosition: Int
+  ): Array[Int] =
+    if (position < 0) structure
+    else
+      queue(queuePosition) match {
+        case Leaf(_) =>
+          structure.update(position, 0)
+          toStructureArray(structure, queue, position - 1, queuePosition - 1)
+
+        case Node(_, subtrees) =>
+          structure.update(position, subtrees.size)
+          var rp: Int = queuePosition + subtrees.size - 1
+          subtrees.foreach { subtree =>
+            queue(rp) = subtree
+            rp = rp - 1
+          }
+          toStructureArray(structure, queue, position - 1, queuePosition + subtrees.size - 1)
+      }
+
+  @tailrec
+  final def toTreeList[T](
+    result: List[(Int, Tree[T])],
+    queue: List[Node[T]]
+  ): List[(Int, Tree[T])] =
+    queue match {
+      case Nil                         => result
+      case Leaf(value) :: xs           => toTreeList((0, Tree(value)) :: result, xs)
+      case Node(value, subtrees) :: xs => toTreeList((subtrees.size, Tree(value)) :: result, subtrees ::: xs)
+    }
+
+  @`inline` final def listMap[T, K](f: T => K, node: Node[T]): List[(Int, K)] = listMap(f, Nil, List(node))
+
+  @tailrec
+  private final def listMap[T, K](f: T => K, result: List[(Int, K)], queue: List[Node[T]]): List[(Int, K)] =
+    queue match {
+      case Nil                              => result
+      case Leaf(value) :: xs                => listMap(f, (0, f(value)) :: result, xs)
+      case Unary(value, subtree) :: xs      => listMap(f, (1, f(value)) :: result, subtree :: xs)
+      case Binary(value, left, right) :: xs => listMap(f, (2, f(value)) :: result, left :: right :: xs)
+      case Node(value, subtrees) :: xs      => listMap(f, (subtrees.size, f(value)) :: result, subtrees ::: xs)
+    }
+
+  @`inline` final def arrayMap[T, K](f: T => K, node: Node[T])(implicit tag: ClassTag[K]): (Array[Int], Array[K]) = {
+    val queue = new Array[Node[T]](Math.max(node.width, node.height))
+    queue(0) = node
+    arrayMap(f, new Array[Int](node.size), new Array[K](node.size), queue, node.size - 1, 0)
+  }
+
+  @tailrec
+  private final def arrayMap[T, K](
+    f: T => K,
+    structure: Array[Int],
+    values: Array[K],
+    queue: Array[Node[T]],
+    position: Int,
+    queuePosition: Int
+  ): (Array[Int], Array[K]) =
+    if (position < 0) (structure, values)
+    else
+      queue(queuePosition) match {
+        case Leaf(value) =>
+          structure.update(position, 0)
+          values.update(position, f(value))
+          arrayMap(f, structure, values, queue, position - 1, queuePosition - 1)
+
+        case Unary(value, subtree) =>
+          structure.update(position, 1)
+          values.update(position, f(value))
+          queue(queuePosition) = subtree
+          arrayMap(f, structure, values, queue, position - 1, queuePosition)
+
+        case Binary(value, left, right) =>
+          structure.update(position, 2)
+          values.update(position, f(value))
+          queue(queuePosition) = right
+          queue(queuePosition + 1) = left
+          arrayMap(f, structure, values, queue, position - 1, queuePosition + 1)
+
+        case Node(value, subtrees) =>
+          structure.update(position, subtrees.size)
+          values.update(position, f(value))
+          var rp: Int = queuePosition + subtrees.size - 1
+          subtrees.foreach { subtree =>
+            queue(rp) = subtree
+            rp = rp - 1
+          }
+          arrayMap(f, structure, values, queue, position - 1, queuePosition + subtrees.size - 1)
+      }
+
+  @tailrec
+  final def listFlatMap[T, K](
+    f: T => Tree[K],
+    result: List[(Int, Tree[K])],
+    queue: List[Node[T]]
+  ): List[(Int, Tree[K])] =
+    queue match {
+      case Nil                         => result
+      case Leaf(value) :: xs           => listFlatMap(f, (0, f(value)) :: result, xs)
+      case Node(value, subtrees) :: xs => listFlatMap(f, (subtrees.size, f(value)) :: result, subtrees ::: xs)
+    }
+
+  final def mkStringUsingBranches[T](
+    node: Node[T],
+    show: T => String,
+    valueSeparator: String,
+    branchSeparator: String,
+    branchStart: String,
+    branchEnd: String,
+    maxDepth: Int
+  ): StringBuilder =
+    mkStringUsingBranches(
+      show,
+      valueSeparator,
+      branchSeparator,
+      branchEnd,
+      maxDepth,
+      new StringBuilder(branchStart),
+      List((0, branchStart, node)),
+      newBranch = false
+    )
+
+  @tailrec
+  private def mkStringUsingBranches[T](
+    show: T => String,
+    valueSeparator: String,
+    branchSeparator: String,
+    branchEnd: String,
+    maxDepth: Int,
+    builder: StringBuilder,
+    queue: List[(Int, String, Node[T])],
+    newBranch: Boolean
+  ): StringBuilder =
+    queue match {
+      case Nil => builder
+      case (level, prefix, Node(value, subtrees)) :: xs =>
+        val string = show(value)
+        if (level <= maxDepth) {
+          if (newBranch) builder.append(branchSeparator).append(prefix)
+          if (level > 0) builder.append(valueSeparator)
+          builder.append(string)
+        }
+        val subtrees2 = if (level >= maxDepth) Nil else subtrees
+        subtrees2 match {
+          case Nil =>
+            mkStringUsingBranches(
+              show,
+              valueSeparator,
+              branchSeparator,
+              branchEnd,
+              maxDepth,
+              builder.append(branchEnd),
+              xs,
+              newBranch = true
+            )
+          case _ =>
+            mkStringUsingBranches(
+              show,
+              valueSeparator,
+              branchSeparator,
+              branchEnd,
+              maxDepth,
+              builder,
+              subtrees.map((level + 1, prefix + (if (level > 0) valueSeparator else "") + string, _)) ::: xs,
+              newBranch = false
+            )
+        }
+    }
+
+}
