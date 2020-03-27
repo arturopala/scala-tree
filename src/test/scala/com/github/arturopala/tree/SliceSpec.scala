@@ -16,7 +16,7 @@
 
 package com.github.arturopala.tree
 
-import com.github.arturopala.tree.util.Slice
+import com.github.arturopala.tree.util.{IntSlice, Slice}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 
@@ -24,19 +24,16 @@ class SliceSpec extends AnyWordSpec with Matchers {
 
   "Slice" should {
     "wrap a whole array" in {
-      Slice.ofInt(Array(0, 1, 2, 3, 4)).toArray shouldBe Array(0, 1, 2, 3, 4)
       Slice.of(Array("a", "b", "c", "d", "e")).toArray shouldBe Array("a", "b", "c", "d", "e")
       Slice.of(Array.empty[String]).toArray shouldBe Array.empty[String]
     }
 
     "wrap a slice of an array" in {
-      Slice.ofInt(Array(0, 1, 2, 3, 4), 1, 3).toArray shouldBe Array(1, 2)
       Slice.of(Array("a", "b", "c", "d", "e"), 2, 5).toArray shouldBe Array("c", "d", "e")
       Slice.of(Array("a", "b", "c", "d", "e"), 4, 4).toArray shouldBe Array.empty[String]
     }
 
     "have isEmpty" in {
-      Slice.ofInt(Array(0, 1, 2, 3, 4)).isEmpty shouldBe false
       Slice.of(Array("a", "b", "c", "d", "e")).isEmpty shouldBe false
       Slice.of(Array("a", "b", "c", "d", "e"), 2, 4).isEmpty shouldBe false
       Slice.of(Array("a", "b", "c", "d", "e"), 2, 2).isEmpty shouldBe true
@@ -84,7 +81,7 @@ class SliceSpec extends AnyWordSpec with Matchers {
       Slice(0, 0, 0, 0, 0).count(_ == 0) shouldBe 5
       Slice(0).count(_ == 0) shouldBe 1
       Slice(1).count(_ == 0) shouldBe 0
-      Slice().count(_ == 0) shouldBe 0
+      Slice[Int]().count(_ == 0) shouldBe 0
     }
 
     "get a value by an index" in {
@@ -131,11 +128,11 @@ class SliceSpec extends AnyWordSpec with Matchers {
       Slice().slice(-5, 10) shouldBe Slice()
       Slice(1, 2, 3).slice(-5, 10) shouldBe Slice(1, 2, 3)
       Slice(1, 2, 3, 4, 5, 6, 7, 8, 9).slice(-5, 5) shouldBe Slice(1, 2, 3, 4, 5)
-      Slice.ofInt(Array(1, 2, 3, 4, 5, 6, 7, 8, 9), 2, 7).slice(-5, 5) shouldBe Slice(3, 4, 5, 6, 7)
-      Slice.ofInt(Array(1, 2, 3, 4, 5, 6, 7, 8, 9), 2, 5).slice(5, 8) shouldBe Slice()
-      Slice.ofInt(Array(1, 2, 3, 4, 5, 6, 7, 8, 9), 5, 5).slice(1, 2) shouldBe Slice()
-      Slice.ofInt(Array(1, 2, 3, 4, 5, 6, 7, 8, 9), 3, 5).slice(1, 2) shouldBe Slice(5)
-      Slice.ofInt(Array(1, 2, 3, 4, 5, 6, 7, 8, 9), 0, 9).slice(7, 12) shouldBe Slice(8, 9)
+      Slice.of(Array(1, 2, 3, 4, 5, 6, 7, 8, 9), 2, 7).slice(-5, 5) shouldBe Slice(3, 4, 5, 6, 7)
+      Slice.of(Array(1, 2, 3, 4, 5, 6, 7, 8, 9), 2, 5).slice(5, 8) shouldBe Slice()
+      Slice.of(Array(1, 2, 3, 4, 5, 6, 7, 8, 9), 5, 5).slice(1, 2) shouldBe Slice()
+      Slice.of(Array(1, 2, 3, 4, 5, 6, 7, 8, 9), 3, 5).slice(1, 2) shouldBe Slice(5)
+      Slice.of(Array(1, 2, 3, 4, 5, 6, 7, 8, 9), 0, 9).slice(7, 12) shouldBe Slice(8, 9)
     }
 
     "have a drop" in {

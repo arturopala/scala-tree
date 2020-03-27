@@ -16,7 +16,7 @@
 
 package com.github.arturopala.tree
 
-import com.github.arturopala.tree.util.{ArrayTree, Compare, NodeTree, Slice}
+import com.github.arturopala.tree.util.{ArrayTree, Compare, IntSlice, NodeTree, Slice}
 
 import scala.annotation.tailrec
 import scala.collection.Iterator
@@ -154,10 +154,9 @@ sealed trait Tree[+T] {
 
   /** Iterates over filtered branches of the tree starting at the root.
     * @param pred return true to include the branch in the result, false otherwise.
-    * @note An argument to the filter function is a REVERSED branch.
     * @group branches
     */
-  def branchIterator(pred: List[T] => Boolean): Iterator[List[T]]
+  def branchIterator(pred: Iterable[T] => Boolean): Iterator[Iterable[T]]
 
   /** Lazy stream of all the branches of the tree starting at the root.
     * @group branches */
@@ -165,15 +164,13 @@ sealed trait Tree[+T] {
 
   /** Filtered lazy stream of all the branches of the tree starting at the root.
     * @param pred return true to include the branch in the result, false otherwise.
-    * @note An argument to the filter function is a REVERSED branch.
     * @group branches */
-  def branchStream(pred: List[T] => Boolean): Stream[List[T]]
+  def branchStream(pred: Iterable[T] => Boolean): Stream[List[T]]
 
   /** Returns the number of distinct branches accepted by the filter, starting at the root of the tree.
     * @param pred return true to count the branch, false otherwise.
-    * @note An argument to the filter function is a REVERSED branch.
     * @group branches */
-  def countBranches(pred: List[T] => Boolean): Int
+  def countBranches(pred: Iterable[T] => Boolean): Int
 
   // MODIFICATION
 
@@ -346,7 +343,7 @@ object Tree {
     case arrayTree: ArrayTree[T] => arrayTree
     case _ =>
       val (structure, values) = tree.toArrays
-      new ArrayTree[T](Slice.of(structure), Slice.of(values), tree.width, tree.height)
+      new ArrayTree[T](IntSlice.of(structure), Slice.of(values), tree.width, tree.height)
   }
 
   final def inflate[T](tree: Tree[T]): Tree[T] = tree match {
@@ -386,12 +383,12 @@ object Tree {
         subtrees.flatMap(_.branchesUnsafe).map(value :: _)
     }
 
-    override def branchIterator(pred: List[T] => Boolean): Iterator[List[T]] =
+    override def branchIterator(pred: Iterable[T] => Boolean): Iterator[Iterable[T]] =
       NodeTree.branchIterator(pred, this)
 
     override def branchStream: Stream[List[T]] = branchStream(all)
-    override def branchStream(pred: List[T] => Boolean): Stream[List[T]] = NodeTree.branchStream(pred, this)
-    override def countBranches(pred: List[T] => Boolean): Int = NodeTree.countBranches(pred, this)
+    override def branchStream(pred: Iterable[T] => Boolean): Stream[List[T]] = NodeTree.branchStream(pred, this)
+    override def countBranches(pred: Iterable[T] => Boolean): Int = NodeTree.countBranches(pred, this)
 
     override def insert[T1 >: T](newValue: T1): Tree[T1] = Tree(value, Tree(newValue) :: subtrees)
     override def insert[T1 >: T](subtree: Tree[T1]): Tree[T1] = subtree match {
@@ -490,7 +487,7 @@ object Tree {
     * @note All operations on this impl of the Tree are tail-safe by design.
     */
   final class ArrayTree[T: ClassTag] private[tree] (
-    structure: Slice[Int],
+    structure: IntSlice,
     values: Slice[T],
     delayedWidth: => Int,
     delayedHeight: => Int
@@ -526,14 +523,16 @@ object Tree {
     @`inline` override def treeStream: Stream[Tree[T]] = treeStream(all)
     override def treeStream(pred: Tree[T] => Boolean): Stream[Tree[T]] = streamFromIterator(treeIterator(pred))
 
-    @`inline` override def branches(): List[List[T]] = branchIterator(all).toList
+    @`inline` override def branches(): List[List[T]] = branchIterator(all).map(_.toList).toList
     @`inline` override def branchesUnsafe: List[List[T]] = branches()
-    override def branchIterator(pred: List[T] => Boolean): Iterator[List[T]] =
+    override def branchIterator(pred: Iterable[T] => Boolean): Iterator[Iterable[T]] =
       ArrayTree.branchIterator(rootIndex, structure, values, pred)
 
     @`inline` override def branchStream: Stream[List[T]] = branchStream(all)
-    override def branchStream(pred: List[T] => Boolean): Stream[List[T]] = streamFromIterator(branchIterator(pred))
-    override def countBranches(pred: List[T] => Boolean): Int =
+    override def branchStream(pred: Iterable[T] => Boolean): Stream[List[T]] =
+      streamFromIterator(branchIterator(pred).map(_.toList))
+
+    override def countBranches(pred: Iterable[T] => Boolean): Int =
       ArrayTree.countBranches(rootIndex, structure, values, pred)
 
     override def insert[T1 >: T](value: T1): Tree[T1] = ???
@@ -622,10 +621,10 @@ object Tree {
 
     override def branches(): List[List[Nothing]] = Nil
     override def branchesUnsafe: List[List[Nothing]] = Nil
-    override def branchIterator(pred: List[Nothing] => Boolean): Iterator[List[Nothing]] = Iterator.empty
+    override def branchIterator(pred: Iterable[Nothing] => Boolean): Iterator[List[Nothing]] = Iterator.empty
     override def branchStream: Stream[List[Nothing]] = Stream.empty
-    override def branchStream(pred: List[Nothing] => Boolean): Stream[List[Nothing]] = Stream.empty
-    override def countBranches(pred: List[Nothing] => Boolean): Int = 0
+    override def branchStream(pred: Iterable[Nothing] => Boolean): Stream[List[Nothing]] = Stream.empty
+    override def countBranches(pred: Iterable[Nothing] => Boolean): Int = 0
 
     override def insert[T1](value: T1): Tree[T1] = Tree(value)
     override def insert[T1](subtree: Tree[T1]): Tree[T1] = subtree
@@ -769,7 +768,7 @@ object Tree {
         else {
           val width = structure.count(_ == 0)
           val height = ArrayTree.calculateHeight(structure.length - 1, structure)
-          new ArrayTree[T](Slice.ofInt(structure), Slice.of(values), width, height)
+          new ArrayTree[T](IntSlice.of(structure), Slice.of(values), width, height)
         }
 
       List(tree)

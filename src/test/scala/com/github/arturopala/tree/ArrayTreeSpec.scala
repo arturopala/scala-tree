@@ -17,7 +17,7 @@
 package com.github.arturopala.tree
 
 import com.github.arturopala.tree.util.ArrayTree._
-import com.github.arturopala.tree.util.{IntBuffer, Slice}
+import com.github.arturopala.tree.util.{IntBuffer, IntSlice, Slice}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 
@@ -145,18 +145,22 @@ class ArrayTreeSpec extends AnyWordSpec with Matchers {
 
     "iterate over tree's branches as values lists without filter" in {
       val v: Int => Int = _ * 10
-      val f: List[Int] => Boolean = _ => true
-      branchIterator(0, Array(0), v, f).toList shouldBe List(List(0))
-      branchIterator(1, Array(0, 1), v, f).toList shouldBe List(List(10, 0))
-      branchIterator(2, Array(0, 1, 1), v, f).toList shouldBe List(List(20, 10, 0))
-      branchIterator(2, Array(0, 0, 2), v, f).toList shouldBe List(List(20, 10), List(20, 0))
-      branchIterator(3, Array(0, 0, 0, 3), v, f).toList shouldBe List(List(30, 20), List(30, 10), List(30, 0))
-      branchIterator(3, Array(0, 0, 2, 1), v, f).toList shouldBe List(List(30, 20, 10), List(30, 20, 0))
+      val f: Iterable[Int] => Boolean = _ => true
+      branchIterator(0, Array(0), v, f).map(_.toList).toList shouldBe List(List(0))
+      branchIterator(1, Array(0, 1), v, f).map(_.toList).toList shouldBe List(List(10, 0))
+      branchIterator(2, Array(0, 1, 1), v, f).map(_.toList).toList shouldBe List(List(20, 10, 0))
+      branchIterator(2, Array(0, 0, 2), v, f).map(_.toList).toList shouldBe List(List(20, 10), List(20, 0))
+      branchIterator(3, Array(0, 0, 0, 3), v, f).map(_.toList).toList shouldBe List(
+        List(30, 20),
+        List(30, 10),
+        List(30, 0)
+      )
+      branchIterator(3, Array(0, 0, 2, 1), v, f).map(_.toList).toList shouldBe List(List(30, 20, 10), List(30, 20, 0))
     }
 
     "fold branches as index lists" in {
       val fold =
-        (s: (Int, Int, Int), a: Slice[Int], _: Int) => (s._1 + 1, Math.max(s._2, a.length), s._3 + a.length)
+        (s: (Int, Int, Int), a: IntSlice, _: Int) => (s._1 + 1, Math.max(s._2, a.length), s._3 + a.length)
       foldLeftBranchesIndexLists(-1, Array.empty[Int], (0, 0, 0), fold) shouldBe (0, 0, 0)
       foldLeftBranchesIndexLists(0, Array(0), (0, 0, 0), fold) shouldBe (1, 1, 1)
       foldLeftBranchesIndexLists(1, Array(0, 1), (0, 0, 0), fold) shouldBe (1, 2, 2)
@@ -200,36 +204,36 @@ class ArrayTreeSpec extends AnyWordSpec with Matchers {
     }
 
     "access a tree at the index" in {
-      treeAt(0, Slice(0), Slice("a")).height shouldBe 1
-      treeAt(1, Slice(0, 1), Slice("a", "b")).height shouldBe 2
-      treeAt(0, Slice(0, 1), Slice("a", "b")).height shouldBe 1
-      treeAt(2, Slice(0, 1, 1), Slice("a", "b", "c")).height shouldBe 3
-      treeAt(1, Slice(0, 1, 1), Slice("a", "b", "c")).height shouldBe 2
-      treeAt(0, Slice(0, 1, 1), Slice("a", "b", "c")).height shouldBe 1
+      treeAt(0, IntSlice(0), Slice("a")).height shouldBe 1
+      treeAt(1, IntSlice(0, 1), Slice("a", "b")).height shouldBe 2
+      treeAt(0, IntSlice(0, 1), Slice("a", "b")).height shouldBe 1
+      treeAt(2, IntSlice(0, 1, 1), Slice("a", "b", "c")).height shouldBe 3
+      treeAt(1, IntSlice(0, 1, 1), Slice("a", "b", "c")).height shouldBe 2
+      treeAt(0, IntSlice(0, 1, 1), Slice("a", "b", "c")).height shouldBe 1
     }
 
     "iterate over tree's subtrees" in {
       val f: Tree[String] => Boolean = _ => true
-      val l = treeIterator(0, Slice(0), Slice("a"), f).toList
+      val l = treeIterator(0, IntSlice(0), Slice("a"), f).toList
       l shouldBe List(Tree("a"))
       l should not be List(Tree("b"))
       l should not be List(Tree("a", Tree("b")))
       l should not be Nil
-      treeIterator(1, Slice(0, 1), Slice("b", "a"), f).toList shouldBe List(Tree("a", Tree("b")), Tree("b"))
-      treeIterator(2, Slice(0, 1, 1), Slice("c", "b", "a"), f).toList shouldBe List(
+      treeIterator(1, IntSlice(0, 1), Slice("b", "a"), f).toList shouldBe List(Tree("a", Tree("b")), Tree("b"))
+      treeIterator(2, IntSlice(0, 1, 1), Slice("c", "b", "a"), f).toList shouldBe List(
         Tree("a", Tree("b", Tree("c"))),
         Tree("b", Tree("c")),
         Tree("c")
       )
-      treeIterator(1, Slice(0, 1, 1), Slice("c", "b", "a"), f).toList shouldBe List(Tree("b", Tree("c")), Tree("c"))
-      treeIterator(2, Slice(0, 0, 2), Slice("c", "b", "a"), f).toList shouldBe List(
+      treeIterator(1, IntSlice(0, 1, 1), Slice("c", "b", "a"), f).toList shouldBe List(Tree("b", Tree("c")), Tree("c"))
+      treeIterator(2, IntSlice(0, 0, 2), Slice("c", "b", "a"), f).toList shouldBe List(
         Tree("a", Tree("b"), Tree("c")),
         Tree("b"),
         Tree("c")
       )
-      treeIterator(1, Slice(0, 0, 2), Slice("c", "b", "a"), f).toList shouldBe List(Tree("b"))
-      treeIterator(0, Slice(0, 0, 2), Slice("c", "b", "a"), f).toList shouldBe List(Tree("c"))
-      treeIterator(2, Slice(0, 0, 1, 2, 1), Slice("e", "d", "c", "b", "a"), f).toList shouldBe List(
+      treeIterator(1, IntSlice(0, 0, 2), Slice("c", "b", "a"), f).toList shouldBe List(Tree("b"))
+      treeIterator(0, IntSlice(0, 0, 2), Slice("c", "b", "a"), f).toList shouldBe List(Tree("c"))
+      treeIterator(2, IntSlice(0, 0, 1, 2, 1), Slice("e", "d", "c", "b", "a"), f).toList shouldBe List(
         Tree("c", Tree("d")),
         Tree("d")
       )

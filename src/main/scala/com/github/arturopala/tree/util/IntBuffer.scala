@@ -67,7 +67,7 @@ final class IntBuffer(initialSize: Int = 8) {
 
   def toArray: Array[Int] = java.util.Arrays.copyOf(array, length)
 
-  def toSlice: Slice[Int] = Slice.ofInt(array, 0, length)
+  def toSlice: IntSlice = IntSlice.of(array, 0, length)
 
   def isEmpty: Boolean = length == 0
 

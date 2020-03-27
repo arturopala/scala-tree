@@ -127,11 +127,11 @@ object ArrayTree {
   }
 
   /** Iterates over tree's branches as index lists, depth first. */
-  final def branchesIndexListIterator(startIndex: Int, treeStructure: Int => Int): Iterator[Array[Int]] =
-    new Iterator[Array[Int]] {
+  final def branchesIndexListIterator(startIndex: Int, treeStructure: Int => Int): Iterator[IntSlice] =
+    new Iterator[IntSlice] {
 
       var hasNext: Boolean = false
-      var array: Array[Int] = Array.empty
+      var array: IntSlice = IntSlice.empty
 
       val counters = new IntBuffer()
       val indexes = new IntBuffer()
@@ -139,7 +139,7 @@ object ArrayTree {
       indexes.push(startIndex)
       seekNext(false)
 
-      override def next(): Array[Int] =
+      override def next(): IntSlice =
         if (hasNext) {
           val result = array
           seekNext(true)
@@ -155,7 +155,7 @@ object ArrayTree {
           else {
             val c = treeStructure(i)
             if (c == 0) {
-              array = BranchIterator.readBranch(counters, indexes).push(i).toArray
+              array = BranchIterator.readBranch(counters, indexes).push(i).toSlice
               hasNext = true
               BranchIterator.retract(counters, indexes)
             } else {
@@ -207,25 +207,25 @@ object ArrayTree {
       }
   }
 
-  /** Iterates over tree's branches with filter. */
-  final def branchIterator[T](
+  /** Iterates over tree's branches with pred. */
+  final def branchIterator[T: ClassTag](
     startIndex: Int,
     treeStructure: Int => Int,
     treeValues: Int => T,
-    filter: List[T] => Boolean
-  ): Iterator[List[T]] =
-    new MapFilterIterator[Array[Int], List[T]](
+    pred: Iterable[T] => Boolean
+  ): Iterator[Iterable[T]] =
+    new MapFilterIterator[IntSlice, Iterable[T]](
       branchesIndexListIterator(startIndex, treeStructure),
-      _.iterator.map(treeValues).toList,
-      filter
+      _.map(treeValues).asIterable,
+      pred
     )
 
   /** Iterates over all subtrees (including the tree itself), depth-first. */
   final def treeIterator[T: ClassTag](
     startIndex: Int,
-    treeStructure: Slice[Int],
+    treeStructure: IntSlice,
     treeValues: Slice[T],
-    filter: Tree[T] => Boolean
+    pred: Tree[T] => Boolean
   ): Iterator[Tree[T]] = {
     assert(
       treeStructure.length == treeValues.length,
@@ -234,12 +234,12 @@ object ArrayTree {
     new MapFilterIterator[Int, Tree[T]](
       nodeIndexIterator(startIndex, treeStructure),
       treeAt(_, treeStructure, treeValues),
-      filter
+      pred
     )
   }
 
   /** Returns tree rooted at the given index. */
-  final def treeAt[T: ClassTag](index: Int, treeStructure: Slice[Int], treeValues: Slice[T]): Tree[T] = {
+  final def treeAt[T: ClassTag](index: Int, treeStructure: IntSlice, treeValues: Slice[T]): Tree[T] = {
     val size = treeSize(index, treeStructure)
     if (size == 0) Tree.empty
     else {
@@ -249,7 +249,7 @@ object ArrayTree {
     }
   }
 
-  private val readBranchSlice: (IntBuffer, IntBuffer, Int) => Slice[Int] =
+  private val readBranchSlice: (IntBuffer, IntBuffer, Int) => IntSlice =
     (counters, indexes, i) => BranchIterator.readBranch(counters, indexes).push(i).toSlice
 
   /** Fold tree's branches as index lists. */
@@ -257,7 +257,7 @@ object ArrayTree {
     startIndex: Int,
     treeStructure: Int => Int,
     initialValue: A,
-    fold: (A, Slice[Int], Int) => A
+    fold: (A, IntSlice, Int) => A
   ): A =
     foldLeftBranches(startIndex, treeStructure, initialValue, readBranchSlice, fold)
 
@@ -319,13 +319,13 @@ object ArrayTree {
     startIndex: Int,
     treeStructure: Int => Int,
     treeValues: Int => T,
-    filter: List[T] => Boolean
+    pred: List[T] => Boolean
   ): Int =
     foldLeftBranchesIndexLists(
       startIndex,
       treeStructure,
       0,
-      (a: Int, branch: Slice[Int], _: Int) => a + (if (filter(branch.reverseIterator.map(treeValues).toList)) 1 else 0)
+      (a: Int, branch: IntSlice, _: Int) => a + (if (pred(branch.reverseIterator.map(treeValues).toList)) 1 else 0)
     )
 
   /** Renders tree as a string iterating over the branches.*/
@@ -341,7 +341,7 @@ object ArrayTree {
     maxDepth: Int
   ): StringBuilder = {
 
-    def renderBranch(builder: StringBuilder, branch: Slice[Int], branchIndex: Int): StringBuilder = {
+    def renderBranch(builder: StringBuilder, branch: IntSlice, branchIndex: Int): StringBuilder = {
       if (branchIndex > 0) builder.append(branchSeparator)
       builder.append(branchStart)
       var i = 0
@@ -439,7 +439,7 @@ object ArrayTree {
   @`inline` final def selectTree[T: ClassTag, T1 >: T](
     path: Iterable[T1],
     startIndex: Int,
-    treeStructure: Slice[Int],
+    treeStructure: IntSlice,
     treeValues: Slice[T]
   ): Option[Tree[T]] =
     followPath(path, startIndex, treeStructure, treeValues) match {

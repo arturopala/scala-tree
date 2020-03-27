@@ -15,33 +15,40 @@
  */
 
 package com.github.arturopala.tree.util
+import scala.collection.AbstractIterable
 import scala.reflect.ClassTag
 
-/** Lazy slice of the array. */
-final class Slice[A] private (fromIndex: Int, toIndex: Int, array: Array[A]) extends (Int => A) {
+/** Lazy, immutable slice of the underlying array. */
+abstract class Slice[T] private (fromIndex: Int, toIndex: Int) extends (Int => T) {
+
+  type A
+
+  val array: Array[A]
+  val mapF: A => T
 
   val length: Int = toIndex - fromIndex
 
-  def apply(index: Int): A = {
+  def apply(index: Int): T = {
     if (index < 0 || index >= length)
       throw new IndexOutOfBoundsException(s"Expected an `apply` index in the interval [0,$length), but was $index.")
-    array.apply(fromIndex + index)
+    mapF(array.apply(fromIndex + index))
   }
 
-  def update(index: Int, value: A): Slice[A] = {
+  def update(index: Int, value: T)(implicit tag: ClassTag[T]): Slice[T] = {
     if (index < 0 || index >= length)
       throw new IndexOutOfBoundsException(s"Expected an `update` index in the interval [0,$length), but was $index.")
-    array.update(fromIndex + index, value)
-    this
+    val modified: Array[T] = toArray[T]
+    modified.update(index, value)
+    Slice.of[T, T](0, length, modified, identity)
   }
 
-  def map[B](f: A => B)(implicit tagA: ClassTag[A], tagB: ClassTag[B]): Slice[B] = Slice.of(toArray.map(f))
+  def map[K](f: T => K): Slice[K] = Slice.of[K, A](fromIndex, toIndex, array, mapF.andThen(f))
 
-  def count(pred: A => Boolean): Int = {
+  def count(pred: T => Boolean): Int = {
     var a = 0
     var i = fromIndex
     while (i < toIndex) {
-      if (pred(array(i))) a = a + 1
+      if (pred(mapF(array(i)))) a = a + 1
       i = i + 1
     }
     a
@@ -49,99 +56,102 @@ final class Slice[A] private (fromIndex: Int, toIndex: Int, array: Array[A]) ext
 
   def isEmpty: Boolean = length <= 0
 
-  def slice(from: Int, to: Int): Slice[A] = {
+  def slice(from: Int, to: Int): Slice[T] = {
     val t = fit(0, to, length)
     val f = fit(0, from, t)
     if (f == 0 && t == length) this
-    else new Slice[A](fromIndex + f, fromIndex + t, array)
+    else
+      Slice.of[T, A](fromIndex + f, fromIndex + t, array, mapF)
   }
 
   private def fit(lower: Int, value: Int, upper: Int): Int =
     Math.min(Math.max(lower, value), upper)
 
-  def take(n: Int): Slice[A] = {
+  def take(n: Int): Slice[T] = {
     assert(n >= 0, "take parameter must be equal or greater to zero")
-    new Slice[A](fromIndex, Math.min(fromIndex + n, toIndex), array)
+    Slice.of[T, A](fromIndex, Math.min(fromIndex + n, toIndex), array, mapF)
   }
 
-  def takeRight(n: Int): Slice[A] = {
+  def takeRight(n: Int): Slice[T] = {
     assert(n >= 0, "takeRight parameter must be equal or greater to zero")
-    new Slice[A](Math.max(toIndex - n, fromIndex), toIndex, array)
+    Slice.of[T, A](Math.max(toIndex - n, fromIndex), toIndex, array, mapF)
   }
 
-  def drop(n: Int): Slice[A] = {
+  def drop(n: Int): Slice[T] = {
     assert(n >= 0, "drop parameter must be equal or greater to zero")
-    new Slice[A](Math.min(fromIndex + n, toIndex), toIndex, array)
+    Slice.of[T, A](Math.min(fromIndex + n, toIndex), toIndex, array, mapF)
   }
 
-  def dropRight(n: Int): Slice[A] = {
+  def dropRight(n: Int): Slice[T] = {
     assert(n >= 0, "dropRight parameter must be equal or greater to zero")
-    new Slice[A](fromIndex, Math.max(toIndex - n, fromIndex), array)
+    Slice.of[T, A](fromIndex, Math.max(toIndex - n, fromIndex), array, mapF)
   }
 
-  def iterator: Iterator[A] = new Iterator[A] {
+  def iterator: Iterator[T] = new Iterator[T] {
 
     var i = fromIndex
 
-    override def hasNext: Boolean = i < toIndex
+    def hasNext: Boolean = i < toIndex
 
-    override def next(): A = {
-      val value = array(i)
+    def next(): T = {
+      val value = mapF(array(i))
       i = i + 1
       value
     }
   }
 
-  def reverseIterator: Iterator[A] = new Iterator[A] {
+  def reverseIterator: Iterator[T] = new Iterator[T] {
 
     var i = toIndex - 1
 
-    override def hasNext: Boolean = i >= fromIndex
+    def hasNext: Boolean = i >= fromIndex
 
-    override def next(): A = {
-      val value = array(i)
+    def next(): T = {
+      val value = mapF(array(i))
       i = i - 1
       value
     }
   }
 
-  def reverseIterator(pred: A => Boolean): Iterator[A] = new Iterator[A] {
+  def reverseIterator(pred: T => Boolean): Iterator[T] = new Iterator[T] {
 
     var i = toIndex - 1
 
     if (i >= fromIndex) seekNext
 
-    override def hasNext: Boolean = i >= fromIndex
+    def hasNext: Boolean = i >= fromIndex
 
-    override def next(): A = {
-      val value = array(i)
+    def next(): T = {
+      val value = mapF(array(i))
       i = i - 1
       seekNext
       value
     }
 
     def seekNext: Unit = {
-      var v = array(i)
+      var v = mapF(array(i))
       while (!pred(v) && i >= fromIndex) {
         i = i - 1
-        if (i > fromIndex) v = array(i)
+        if (i > fromIndex) v = mapF(array(i))
       }
     }
   }
 
-  def toArray(implicit tag: ClassTag[A]): Array[A] = {
-    val newArray = new Array[A](length)
-    Array.copy(array, fromIndex, newArray, 0, length)
-    newArray
-  }
+  def toArray[T1 >: T](implicit tagT1: ClassTag[T1]): Array[T1] =
+    iterator.toArray[T1]
 
-  def toList: List[A] = iterator.toList
+  def toList: List[T] = iterator.toList
+
+  def asIterable: Iterable[T] = new AbstractIterable[T] {
+    override def iterator: Iterator[T] = Slice.this.iterator
+    override def toString(): String = Slice.this.toString
+  }
 
   override def toString: String =
     iterator.take(Math.min(20, length)).mkString("Slice(", ",", if (length > 20) ", ... )" else ")")
 
   override def equals(obj: Any): Boolean = obj match {
-    case other: Slice[A] =>
+    case other: Slice[T] =>
       this.length == other.length &&
         Compare.sameElements(this.iterator, other.iterator)
 
@@ -160,26 +170,24 @@ final class Slice[A] private (fromIndex: Int, toIndex: Int, array: Array[A]) ext
 
 object Slice {
 
-  def apply(is: Int*): Slice[Int] = Slice.ofInt(Array(is: _*))
-
   def apply[T: ClassTag](is: T*): Slice[T] = Slice.of(Array(is: _*))
 
-  def of[T](array: Array[T]): Slice[T] = new Slice[T](0, array.length, array)
+  private[util] def of[T, K](fromIndex: Int, toIndex: Int, _array: Array[K], _mapF: K => T): Slice[T] =
+    new Slice[T](fromIndex, toIndex) {
+      type A = K
+      val array: Array[A] = _array
+      val mapF: A => T = _mapF
+    }
+
+  def of[T](array: Array[T]): Slice[T] = Slice.of[T, T](0, array.length, array, identity)
 
   def of[T](array: Array[T], from: Int, to: Int): Slice[T] = {
     assert(from >= 0, "When creating a Slice, parameter `from` must be greater or equal to zero.")
     assert(to <= array.length, "When creating a Slice, parameter `to` must be lower or equal to the array length.")
     assert(from <= to, "When creating a Slice, parameter `from` must be lower or equal to the parameter `to`.")
-    new Slice[T](from, to, array)
+    Slice.of[T, T](from, to, array, identity)
   }
 
-  def ofInt(array: Array[Int]): Slice[Int] = new Slice[Int](0, array.length, array)
-
-  def ofInt(array: Array[Int], from: Int, to: Int): Slice[Int] = {
-    assert(from >= 0, "When creating a Slice, parameter `from` must be greater or equal to 0.")
-    assert(to <= array.length, "When creating a Slice, parameter `to` must be lower or equal to the array length.")
-    assert(from <= to, "When creating a Slice, parameter `from` must be lower or equal to `to`.")
-    new Slice[Int](from, to, array)
-  }
+  def empty[T: ClassTag]: Slice[T] = Slice.of(Array.empty[T])
 
 }

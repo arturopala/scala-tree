@@ -127,7 +127,7 @@ trait TreeSpec extends AnyWordSpec with Matchers {
       tree4_3.isLeaf shouldBe false
       tree4_3.children shouldBe List("b", "c", "d")
       tree4_3.countBranches(_.nonEmpty) shouldBe 3
-      tree4_3.countBranches(_.contains("c")) shouldBe 1
+      tree4_3.countBranches(_.toSeq.contains("c")) shouldBe 1
       showAsArrays(tree4_3) shouldBe
         """[a,b]
           |[a,c]
@@ -141,7 +141,7 @@ trait TreeSpec extends AnyWordSpec with Matchers {
       tree9.height shouldBe 4
       tree9.isLeaf shouldBe false
       tree9.countBranches(_.nonEmpty) shouldBe 3
-      tree9.countBranches(_.contains("e")) shouldBe 2
+      tree9.countBranches(_.toSeq.contains("e")) shouldBe 2
       showAsArrays(tree9) shouldBe
         """[a,b,c,d]
           |[a,e,f,g]
@@ -319,12 +319,12 @@ trait TreeSpec extends AnyWordSpec with Matchers {
     "iterate over branches with filter" in {
       tree0.branchIterator(_.size > 3).toList shouldBe Nil
       tree1.branchIterator(_.size > 1).toList shouldBe Nil
-      tree2.branchIterator(_.size > 1).toList shouldBe List(List("a", "b"))
-      tree3_1.branchIterator(_.last == "c").toList shouldBe List(List("a", "b", "c"))
-      tree3_2.branchIterator(_.last == "c").toList shouldBe List(List("a", "c"))
-      tree4_2.branchIterator(_.last == "d").toList shouldBe List(List("a", "d"))
-      tree4_2.branchIterator(_.size > 2).toList shouldBe List(List("a", "b", "c"))
-      tree7.branchIterator(_.size > 3).toList shouldBe List(List("a", "d", "e", "f"))
+      tree2.branchIterator(_.size > 1).map(_.toList).toList shouldBe List(List("a", "b"))
+      tree3_1.branchIterator(_.last == "c").map(_.toList).toList shouldBe List(List("a", "b", "c"))
+      tree3_2.branchIterator(_.last == "c").map(_.toList).toList shouldBe List(List("a", "c"))
+      tree4_2.branchIterator(_.last == "d").map(_.toList).toList shouldBe List(List("a", "d"))
+      tree4_2.branchIterator(_.size > 2).map(_.toList).toList shouldBe List(List("a", "b", "c"))
+      tree7.branchIterator(_.size > 3).map(_.toList).toList shouldBe List(List("a", "d", "e", "f"))
     }
 
     "stream all branches" in {

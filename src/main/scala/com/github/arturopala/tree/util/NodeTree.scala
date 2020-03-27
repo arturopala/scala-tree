@@ -191,37 +191,37 @@ object NodeTree {
   }
 
   /** Returns an iterator over branches of the tree */
-  final def branchIterator[T](pred: List[T] => Boolean, node: Node[T]): Iterator[List[T]] = new Iterator[List[T]] {
+  final def branchIterator[T](pred: Iterable[T] => Boolean, node: Node[T]): Iterator[Iterable[T]] =
+    new Iterator[Iterable[T]] {
 
-    type Queue = List[(List[T], Node[T])]
-    var queue: Queue = seekNext(List((Nil, node)))
+      type Queue = List[(Vector[T], Node[T])]
+      var queue: Queue = seekNext(List((Vector.empty, node)))
 
-    override def hasNext: Boolean = queue.nonEmpty
+      override def hasNext: Boolean = queue.nonEmpty
 
-    @tailrec
-    override def next(): List[T] = queue match {
-      case Nil => throw new NoSuchElementException()
-      case (acc, Node(value, subtrees)) :: xs =>
-        val branch = value :: acc
-        queue = seekNext(subtrees.map((branch, _)) ::: xs)
-        val normalized = branch.reverse
-        subtrees match {
-          case Nil if pred(normalized) => normalized
-          case _                       => next()
-        }
+      @tailrec
+      override def next(): Iterable[T] = queue match {
+        case Nil => throw new NoSuchElementException()
+        case (acc, Node(value, subtrees)) :: xs =>
+          val branch = acc :+ value
+          queue = seekNext(subtrees.map((branch, _)) ::: xs)
+          subtrees match {
+            case Nil if pred(branch) => branch
+            case _                   => next()
+          }
+      }
+
+      @tailrec
+      private def seekNext(q: Queue): Queue = q match {
+        case Nil => q
+        case (acc, Node(value, subtrees)) :: xs =>
+          val branch = acc :+ value
+          subtrees match {
+            case Nil if pred(branch) => q
+            case _                   => seekNext(subtrees.map((branch, _)) ::: xs)
+          }
+      }
     }
-
-    @tailrec
-    private def seekNext(q: Queue): Queue = q match {
-      case Nil => q
-      case (acc, Node(value, subtrees)) :: xs =>
-        val branch = value :: acc
-        subtrees match {
-          case Nil if pred(branch.reverse) => q
-          case _                           => seekNext(subtrees.map((branch, _)) ::: xs)
-        }
-    }
-  }
 
   final def branches[T](pred: List[T] => Boolean, node: Node[T]): List[List[T]] =
     branches(pred, Nil, node.subtrees.map((List(node.value), _)))
