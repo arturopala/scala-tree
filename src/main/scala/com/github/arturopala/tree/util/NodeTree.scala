@@ -204,9 +204,10 @@ object NodeTree {
       case (acc, Node(value, subtrees)) :: xs =>
         val branch = value :: acc
         queue = seekNext(subtrees.map((branch, _)) ::: xs)
+        val normalized = branch.reverse
         subtrees match {
-          case Nil if pred(branch) => branch.reverse
-          case _                   => next()
+          case Nil if pred(normalized) => normalized
+          case _                       => next()
         }
     }
 
@@ -216,8 +217,8 @@ object NodeTree {
       case (acc, Node(value, subtrees)) :: xs =>
         val branch = value :: acc
         subtrees match {
-          case Nil if pred(branch) => q
-          case _                   => seekNext(subtrees.map((branch, _)) ::: xs)
+          case Nil if pred(branch.reverse) => q
+          case _                           => seekNext(subtrees.map((branch, _)) ::: xs)
         }
     }
   }
@@ -264,8 +265,10 @@ object NodeTree {
 
     }
 
+  final def countBranches[T](pred: List[T] => Boolean, node: Node[T]): Int = countBranches(pred, 0, List((Nil, node)))
+
   @tailrec
-  final def countBranches[T](pred: List[T] => Boolean, result: Int, queue: List[(List[T], Node[T])]): Int =
+  private def countBranches[T](pred: List[T] => Boolean, result: Int, queue: List[(List[T], Node[T])]): Int =
     queue match {
       case Nil => result
       case (acc, Node(value, subtrees)) :: xs =>

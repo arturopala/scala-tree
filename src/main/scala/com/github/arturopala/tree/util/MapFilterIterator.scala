@@ -20,7 +20,9 @@ import java.util.NoSuchElementException
 
 import scala.annotation.tailrec
 
-final class MapFilterIterator[A, B](iterator: Iterator[A], mapF: A => B, filterF: B => Boolean) extends Iterator[B] {
+/** Iterator over the mapped items fulfilling the predicate.
+  * Items itself are provided by the supplied iterator. */
+final class MapFilterIterator[A, B](iterator: Iterator[A], f: A => B, pred: B => Boolean) extends Iterator[B] {
 
   var hasNext: Boolean = false
   var v: B = seekNext
@@ -36,8 +38,8 @@ final class MapFilterIterator[A, B](iterator: Iterator[A], mapF: A => B, filterF
   def seekNext: B =
     if (iterator.hasNext) {
       val i = iterator.next()
-      v = mapF(i)
-      if (filterF(v)) {
+      v = f(i)
+      if (pred(v)) {
         hasNext = true
         v
       } else seekNext

@@ -391,10 +391,7 @@ object Tree {
 
     override def branchStream: Stream[List[T]] = branchStream(all)
     override def branchStream(pred: List[T] => Boolean): Stream[List[T]] = NodeTree.branchStream(pred, this)
-    override def countBranches(pred: List[T] => Boolean): Int = subtrees match {
-      case Nil => 1
-      case _   => NodeTree.countBranches(pred, 0, subtrees.map((List(value), _)))
-    }
+    override def countBranches(pred: List[T] => Boolean): Int = NodeTree.countBranches(pred, this)
 
     override def insert[T1 >: T](newValue: T1): Tree[T1] = Tree(value, Tree(newValue) :: subtrees)
     override def insert[T1 >: T](subtree: Tree[T1]): Tree[T1] = subtree match {
@@ -427,6 +424,7 @@ object Tree {
     override def selectTree[T1 >: T: ClassTag](path: Iterable[T1]): Option[Tree[T]] = NodeTree.selectTree(this, path)
     override def containsBranch[T1 >: T](branch: Iterable[T1]): Boolean = NodeTree.containsBranch(this, branch)
     override def containsPath[T1 >: T](path: Iterable[T1]): Boolean = NodeTree.containsPath(this, path)
+
     override def toPairsIterator: Iterator[(Int, T)] = NodeTree.toPairsList(this).iterator
     override def toArrays[T1 >: T: ClassTag]: (Array[Int], Array[T1]) = NodeTree.toArrays(this)
     override def toStructureArray: Array[Int] = NodeTree.toStructureArray(this)
@@ -494,17 +492,20 @@ object Tree {
   final class ArrayTree[T: ClassTag] private[tree] (
     structure: Slice[Int],
     values: Slice[T],
-    _width:  => Int,
-    _height: => Int
+    delayedWidth: => Int,
+    delayedHeight: => Int
   ) extends Tree[T] {
 
-    assert(!values.isEmpty, "When creating ArrayTree `values` must not be empty.")
-    assert(values.length == structure.length, "When creating ArrayTree `structure` and `values` must be the same size.")
+    assert(!values.isEmpty, "When creating an ArrayTree, `values` must not be empty.")
+    assert(
+      values.length == structure.length,
+      "When creating an ArrayTree, `structure` and `values` must be the same size."
+    )
 
     def rootIndex: Int = structure.length - 1
 
-    override val width: Int = _width
-    override val height: Int = _height
+    override val width: Int = delayedWidth
+    override val height: Int = delayedHeight
 
     override def size: Int = structure.length
     override def isLeaf: Boolean = values.length == 1
@@ -545,7 +546,9 @@ object Tree {
     override def mapUnsafe[K: ClassTag](f: T => K): Tree[K] = map(f)
     override def flatMap[K: ClassTag](f: T => Tree[K]): Tree[K] = ???
 
-    override def selectValue[T1 >: T](path: Iterable[T1]): Option[T] = ???
+    override def selectValue[T1 >: T](path: Iterable[T1]): Option[T] =
+      ArrayTree.selectValue(path, rootIndex, structure, values)
+
     override def selectTree[T1 >: T: ClassTag](path: Iterable[T1]): Option[Tree[T]] =
       ArrayTree.selectTree(path, rootIndex, structure, values)
 

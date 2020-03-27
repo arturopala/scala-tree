@@ -430,7 +430,7 @@ object ArrayTree {
     startIndex: Int,
     treeStructure: Int => Int,
     treeValues: Int => T
-  ): Option[T1] =
+  ): Option[T] =
     followPath(path, startIndex, treeStructure, treeValues) match {
       case (indexes, None, _, _) if indexes.nonEmpty => Some(treeValues(indexes.last))
       case _                                         => None
