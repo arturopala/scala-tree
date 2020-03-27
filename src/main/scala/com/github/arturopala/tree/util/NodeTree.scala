@@ -242,25 +242,25 @@ object NodeTree {
         }
     }
 
-  final def branchStream[T](pred: List[T] => Boolean, node: Node[T]): Stream[List[T]] =
-    branchStream(pred, node, Nil, Nil)
+  final def branchStream[T](pred: Iterable[T] => Boolean, node: Node[T]): Stream[Iterable[T]] =
+    branchStream(pred, node, Vector.empty, Nil)
 
   private def branchStream[T](
-    pred: List[T] => Boolean,
+    pred: Iterable[T] => Boolean,
     node: Node[T],
-    acc: List[T],
-    queue: List[(List[T], Node[T])]
-  ): Stream[List[T]] =
+    acc: Vector[T],
+    queue: List[(Vector[T], Node[T])]
+  ): Stream[Vector[T]] =
     node match {
-      case NonEmptySubtree(value, x, Nil) => branchStream(pred, x, value :: acc, queue)
-      case NonEmptySubtree(value, x, xs)  => branchStream(pred, x, value :: acc, (acc, Tree(value, xs)) :: queue)
+      case NonEmptySubtree(value, x, Nil) => branchStream(pred, x, acc :+ value, queue)
+      case NonEmptySubtree(value, x, xs)  => branchStream(pred, x, acc :+ value, (acc, Tree(value, xs)) :: queue)
       case Node(value, Nil) =>
-        val branch = value :: acc
-        def continue: Stream[List[T]] = queue match {
+        val branch = acc :+ value
+        def continue: Stream[Vector[T]] = queue match {
           case (acc2, y) :: ys => branchStream(pred, y, acc2, ys)
           case Nil             => Stream.empty
         }
-        if (pred(branch)) Stream.cons(branch.reverse, continue)
+        if (pred(branch)) Stream.cons(branch, continue)
         else continue
 
     }

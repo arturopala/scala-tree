@@ -26,4 +26,4 @@ API
 
 Provided API allows for a rich set of queries and operations on the tree. 
 
-For details, consult [Scaladoc](https://arturopala.github.io/scala-tree/latest/api/com/github/arturopala/tree/index.html).
+For details, consult [Scaladoc](https://arturopala.github.io/scala-tree/latest/api/com/github/arturopala/tree/Tree.html).

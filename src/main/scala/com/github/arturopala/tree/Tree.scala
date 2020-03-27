@@ -165,7 +165,7 @@ sealed trait Tree[+T] {
   /** Filtered lazy stream of all the branches of the tree starting at the root.
     * @param pred return true to include the branch in the result, false otherwise.
     * @group branches */
-  def branchStream(pred: Iterable[T] => Boolean): Stream[List[T]]
+  def branchStream(pred: Iterable[T] => Boolean): Stream[Iterable[T]]
 
   /** Returns the number of distinct branches accepted by the filter, starting at the root of the tree.
     * @param pred return true to count the branch, false otherwise.
@@ -386,8 +386,8 @@ object Tree {
     override def branchIterator(pred: Iterable[T] => Boolean): Iterator[Iterable[T]] =
       NodeTree.branchIterator(pred, this)
 
-    override def branchStream: Stream[List[T]] = branchStream(all)
-    override def branchStream(pred: Iterable[T] => Boolean): Stream[List[T]] = NodeTree.branchStream(pred, this)
+    override def branchStream: Stream[List[T]] = branchStream(all).map(_.toList)
+    override def branchStream(pred: Iterable[T] => Boolean): Stream[Iterable[T]] = NodeTree.branchStream(pred, this)
     override def countBranches(pred: Iterable[T] => Boolean): Int = NodeTree.countBranches(pred, this)
 
     override def insert[T1 >: T](newValue: T1): Tree[T1] = Tree(value, Tree(newValue) :: subtrees)
@@ -489,7 +489,7 @@ object Tree {
   final class ArrayTree[T: ClassTag] private[tree] (
     structure: IntSlice,
     values: Slice[T],
-    delayedWidth: => Int,
+    delayedWidth:  => Int,
     delayedHeight: => Int
   ) extends Tree[T] {
 
@@ -528,9 +528,9 @@ object Tree {
     override def branchIterator(pred: Iterable[T] => Boolean): Iterator[Iterable[T]] =
       ArrayTree.branchIterator(rootIndex, structure, values, pred)
 
-    @`inline` override def branchStream: Stream[List[T]] = branchStream(all)
-    override def branchStream(pred: Iterable[T] => Boolean): Stream[List[T]] =
-      streamFromIterator(branchIterator(pred).map(_.toList))
+    @`inline` override def branchStream: Stream[List[T]] = branchStream(all).map(_.toList)
+    override def branchStream(pred: Iterable[T] => Boolean): Stream[Iterable[T]] =
+      streamFromIterator(branchIterator(pred))
 
     override def countBranches(pred: Iterable[T] => Boolean): Int =
       ArrayTree.countBranches(rootIndex, structure, values, pred)
