@@ -19,74 +19,103 @@ package com.github.arturopala.tree.util
 import scala.reflect.ClassTag
 
 /** Lazy, immutable slice of a sequence of values.
-  * @tparam T type of the items of the sequence. */
+  * @tparam T type of the items of the sequence.
+  *
+  * @groupprio Properties 0
+  * @groupprio Access 1
+  * @groupprio Transform 2
+  * @groupprio Aggregate 3
+  * @groupprio Read 4
+  */
 trait Slice[T] extends (Int => T) {
 
-  /** Returns value at the given index. */
+  /** Returns value at the given index.
+    * @group Access */
   def apply(index: Int): T
 
-  /** Returns length of the Slice. */
+  /** Returns length of the Slice.
+    * @group Properties */
   def length: Int
 
-  /** Returns true if Slice has values, otherwise false. */
+  /** Returns true if Slice has values, otherwise false.
+    * @group Properties */
   def isEmpty: Boolean
 
   /** Lazily composes mapping function and returns new Slice.
-    * Does not modify nor copy underlying array.  */
+    * Does not modify nor copy underlying array.
+    * @group Transform */
   def map[K](f: T => K): Slice[K]
 
-  /** Counts values fulfilling the predicate. */
+  /** Counts values fulfilling the predicate.
+    * @group Aggregate */
   def count(pred: T => Boolean): Int
 
-  /** Returns first value in the Slice. */
+  /** Returns first value in the Slice.
+    * @group Access */
   def head: T
 
-  /** Returns the last value in the Slice. */
+  /** Returns the last value in the Slice.
+    * @group Access */
   def last: T
 
-  /** Returns first value in the Slice. */
+  /** Returns first value in the Slice.
+    * @group Access */
   def headOption: Option[T]
 
-  /** Returns the last value in the Slice. */
+  /** Returns the last value in the Slice.
+    * @group Access */
   def lastOption: Option[T]
 
-  /** Returns the Slice without first value. */
+  /** Returns the Slice without first value.
+    * @group Access */
   def tail: Slice[T]
 
-  /** Returns the Slice without last value. */
+  /** Returns the Slice without last value.
+    * @group Access */
   def init: Slice[T]
 
-  /** Lazily narrows Slice to provided range. */
+  /** Lazily narrows Slice to provided range.
+    * @group Transform */
   def slice(from: Int, to: Int): Slice[T]
 
-  /** Lazily narrows Slice to first N items. */
+  /** Lazily narrows Slice to first N items.
+    * @group Transform */
   def take(n: Int): Slice[T]
 
-  /** Lazily narrows Slice to last N items. */
+  /** Lazily narrows Slice to last N items.
+    * @group Transform */
   def takeRight(n: Int): Slice[T]
 
-  /** Lazily narrows Slice to exclude first N items. */
+  /** Lazily narrows Slice to exclude first N items.
+    * @group Transform */
   def drop(n: Int): Slice[T]
 
-  /** Lazily narrows Slice to exclude last N items. */
+  /** Lazily narrows Slice to exclude last N items.
+    * @group Transform */
   def dropRight(n: Int): Slice[T]
 
-  /** Returns iterator over Slice values. */
+  /** Returns iterator over Slice values.
+    * @group Read */
   def iterator: Iterator[T]
 
-  /** Returns iterator over Slice values in the reverse order. */
+  /** Returns iterator over Slice values in the reverse order.
+    * @group Read */
   def reverseIterator: Iterator[T]
 
-  /** Returns iterator over Slice values, fulfilling the predicate, in the reverse order. */
+  /** Returns iterator over Slice values, fulfilling the predicate, in the reverse order.
+    * @group Read */
   def reverseIterator(pred: T => Boolean): Iterator[T]
 
-  /** Returns new list of Slice values. */
+  /** Returns new list of Slice values.
+    * @group Read */
   def toList: List[T]
 
-  /** Returns new iterable of Slice values. */
+  /** Returns new iterable of Slice values.
+    * @group Read */
   def asIterable: Iterable[T]
 
-  /** Returns minimal copy of an underlying array, trimmed to the actual range. */
+  /** Returns minimal copy of an underlying array, trimmed to the actual range.
+    * @group Read */
   def toArray[T1 >: T: ClassTag]: Array[T1]
 
 }

@@ -177,23 +177,27 @@ abstract class ArraySlice[T] private[util] (fromIndex: Int, toIndex: Int) extend
     }
   }
 
-  /** Returns minimal copy of an underlying array, trimmed to the actual range. */
+  /** Returns minimal copy of an underlying array, trimmed to the actual range.
+    * @group Read */
   final def toArray[T1 >: T: ClassTag]: Array[T1] = {
     val newArray: Array[A] = ArrayOps.copyOf(array, length)
     Array.copy(array, fromIndex, newArray, 0, length)
     newArray.map(mapF.andThen(_.asInstanceOf[T1]))
   }
 
-  /** Returns new list of Slice values. */
+  /** Returns new list of Slice values.
+    * @group Read */
   final def toList: List[T] = iterator.toList
 
-  /** Returns new iterable of Slice values. */
+  /** Returns new iterable of Slice values.
+    * @group Read */
   final def asIterable: Iterable[T] = new AbstractIterable[T] {
     override def iterator: Iterator[T] = ArraySlice.this.iterator
     override def toString(): String = ArraySlice.this.toString
   }
 
-  /** Returns a copy of the underlying array as a buffer. */
+  /** Returns a copy of the underlying array as a buffer.
+    * @group Read */
   def toBuffer[T1 >: T: ClassTag]: Buffer[T1] = new ArrayBuffer(toArray)
 
   final override def toString: String =

@@ -21,12 +21,12 @@ import scala.reflect.ClassTag
 /** Mutable, indexed buffer abstraction.
   *
   * @groupprio Abstract 0
-  * @groupprio Update 1
-  * @groupprio Properties 2
+  * @groupprio Properties 1
+  * @groupprio Update 2
   * @groupprio Append 3
   * @groupprio Insert 4
   * @groupprio Shift 5
-  * @groupprio Stack-like 6
+  * @groupprio Stack Ops 6
   * @groupprio Limit 7
   */
 trait Buffer[T] extends (Int => T) {
@@ -86,7 +86,7 @@ trait Buffer[T] extends (Int => T) {
   }
 
   /** Length of the accessible part of the buffer.
-    * @group Update */
+    * @group Properties */
   final def length: Int = topIndex + 1
 
   /** Is the accessible part of the buffer empty?
@@ -209,7 +209,7 @@ trait Buffer[T] extends (Int => T) {
   def shiftLeft(index: Int, distance: Int): this.type
 
   /** Replace value at the topIndex.
-    * @group Stack-like */
+    * @group Stack Ops */
   final def store(value: T): this.type = {
     if (topIndex < 0) topIndex = 0
     update(topIndex, value)
@@ -218,18 +218,18 @@ trait Buffer[T] extends (Int => T) {
 
   /** Appends value to the topIndex.
     * Same as [[append]]
-    * @group Stack-like */
+    * @group Stack Ops */
   @`inline` final def push(value: T): this.type = {
     update(length, value)
     this
   }
 
   /** Returns value at the topIndex.
-    * @group Stack Operations */
+    * @group Stack Ops */
   final def peek: T = apply(topIndex)
 
   /** Returns value at the topIndex, and moves topIndex back.
-    * @group Stack-like */
+    * @group Stack Ops */
   final def pop: T = {
     val value = peek
     topIndex = topIndex - 1

@@ -170,23 +170,27 @@ final class IntSlice private (
     }
   }
 
-  /** Returns minimal copy of an underlying array, trimmed to the actual range. */
+  /** Returns minimal copy of an underlying array, trimmed to the actual range.
+    * @group Read */
   def toArray[T1 >: Int: ClassTag]: Array[T1] = {
     val newArray = new Array[Int](length)
     Array.copy(array, fromIndex, newArray, 0, length)
     newArray.asInstanceOf[Array[T1]]
   }
 
-  /** Returns new list of Slice values. */
+  /** Returns new list of Slice values.
+    * @group Read */
   def toList: List[Int] = iterator.toList
 
-  /** Returns new iterable of Slice values. */
+  /** Returns new iterable of Slice values.
+    * @group Read */
   def asIterable: Iterable[Int] = new AbstractIterable[Int] {
     override def iterator: Iterator[Int] = IntSlice.this.iterator
     override def toString(): String = IntSlice.this.toString
   }
 
-  /** Returns a copy of the underlying array as a buffer. */
+  /** Returns a copy of the underlying array as a buffer.
+    * @group Read */
   def toBuffer: IntBuffer =
     new IntBuffer(length)
       .insertArray(0, fromIndex, length, array)

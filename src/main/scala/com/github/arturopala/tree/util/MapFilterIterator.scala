@@ -20,7 +20,7 @@ import java.util.NoSuchElementException
 
 import scala.annotation.tailrec
 
-/** Iterator over the mapped items fulfilling the predicate.
+/** Iterator over mapped items fulfilling the predicate.
   * Items itself are provided by the supplied iterator. */
 final class MapFilterIterator[A, B](iterator: Iterator[A], f: A => B, pred: B => Boolean) extends Iterator[B] {
 
