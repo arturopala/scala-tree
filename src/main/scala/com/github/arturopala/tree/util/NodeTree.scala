@@ -52,7 +52,7 @@ object NodeTree {
   }
 
   /** Returns an iterator over the nodes of the tree, goes depth-first. */
-  final def nodeIterator[T](pred: T => Boolean, node: Node[T]): Iterator[T] = new Iterator[T] {
+  final def valueIterator[T](pred: T => Boolean, node: Node[T]): Iterator[T] = new Iterator[T] {
 
     type Queue = List[Node[T]]
     var queue: Queue = seekNext(List(node))
@@ -76,28 +76,28 @@ object NodeTree {
     }
   }
 
-  final def nodes[T](pred: T => Boolean, node: Node[T]): List[T] = nodes(pred, Nil, List(node))
+  final def values[T](pred: T => Boolean, node: Node[T]): List[T] = values(pred, Nil, List(node))
 
   @tailrec
-  private def nodes[T](pred: T => Boolean, result: List[T], queue: List[Node[T]]): List[T] =
+  private def values[T](pred: T => Boolean, result: List[T], queue: List[Node[T]]): List[T] =
     queue match {
       case Nil => result.reverse
       case Node(value, subtrees) :: xs =>
-        if (pred(value)) nodes(pred, value :: result, subtrees ::: xs)
-        else nodes(pred, result, subtrees ::: xs)
+        if (pred(value)) values(pred, value :: result, subtrees ::: xs)
+        else values(pred, result, subtrees ::: xs)
     }
 
   /** Returns lazy node stream, goes depth-first */
-  final def nodeStream[T](pred: T => Boolean, node: Node[T]): Stream[T] = nodeStream(pred, node, Nil)
+  final def valueStream[T](pred: T => Boolean, node: Node[T]): Stream[T] = valueStream(pred, node, Nil)
 
-  private def nodeStream[T](pred: T => Boolean, node: Node[T], queue: List[Node[T]]): Stream[T] = {
+  private def valueStream[T](pred: T => Boolean, node: Node[T], queue: List[Node[T]]): Stream[T] = {
     def continue: Stream[T] = node match {
       case NonEmptySubtree(_, x, xs) =>
-        nodeStream(pred, x, xs ::: queue)
+        valueStream(pred, x, xs ::: queue)
 
       case _ =>
         queue match {
-          case y :: ys => nodeStream(pred, y, ys)
+          case y :: ys => valueStream(pred, y, ys)
           case Nil     => Stream.empty
         }
     }
@@ -314,7 +314,12 @@ object NodeTree {
       case Node(value, subtrees) :: xs => toPairsList((subtrees.size, value) :: result, subtrees ::: xs)
     }
 
-  @`inline` final def toArrays[T: ClassTag](node: Node[T]): (Array[Int], Array[T]) = {
+  final def toSlices[T: ClassTag](node: Node[T]): (IntSlice, Slice[T]) = {
+    val (structure, values) = toArrays(node)
+    (IntSlice.of(structure), Slice.of(values))
+  }
+
+  final def toArrays[T: ClassTag](node: Node[T]): (Array[Int], Array[T]) = {
     val queue = new Array[Node[T]](Math.max(node.width, node.height))
     queue(0) = node
     toArrays(new Array[Int](node.size), new Array[T](node.size), queue, node.size - 1, 0)

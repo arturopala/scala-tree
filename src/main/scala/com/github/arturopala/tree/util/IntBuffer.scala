@@ -16,70 +16,53 @@
 
 package com.github.arturopala.tree.util
 
-/** Growable array of integers.
-  * Can act as well as a stack of integers. */
-final class IntBuffer(initialSize: Int = 8) {
+/** Growable, mutable array of integers.
+  * Unlike [[ArrayBuffer]] allows to address elements outside the range. */
+final class IntBuffer(initialSize: Int = 8) extends ArrayBufferLike[Int] {
 
-  private var array = new Array[Int](initialSize)
+  override protected var array = new Array[Int](initialSize)
 
-  private var maxIndex = -1
+  /** Returns value at the given index or 0 if out of scope. */
+  @`inline` def apply(index: Int): Int =
+    if (index < 0 || index >= array.length) 0
+    else array(index)
 
-  def apply(index: Int): Int = if (index >= array.length) 0 else array(index)
-
-  def update(index: Int, value: Int): Unit = {
-    ensureIndex(index)
-    array.update(index, value)
-    maxIndex = Math.max(index, maxIndex)
-  }
-
-  private def ensureIndex(index: Int): Unit =
+  override protected def ensureIndex(index: Int): Unit =
     if (index >= array.length) {
       val newArray: Array[Int] = new Array(Math.max(array.length * 2, index + 1))
       java.lang.System.arraycopy(array, 0, newArray, 0, array.length)
       array = newArray
     }
 
-  @`inline` def append(value: Int): IntBuffer = push(value)
-
-  def store(value: Int): IntBuffer = {
-    if (maxIndex < 0) maxIndex = 0
-    update(maxIndex, value)
+  /** Increments the value at index.s */
+  def increment(index: Int): this.type = {
+    update(index, apply(index) + 1)
     this
   }
 
-  def push(value: Int): IntBuffer = {
-    update(length, value)
-    this
-  }
-
-  def peek: Int = {
-    if (maxIndex < 0) throw new NoSuchElementException
-    array(maxIndex)
-  }
-
-  def pop: Int = {
-    val value = peek
-    maxIndex = maxIndex - 1
-    value
-  }
-
-  def length: Int = maxIndex + 1
-
+  /** Returns copy of the underlying array trimmed to length. */
   def toArray: Array[Int] = java.util.Arrays.copyOf(array, length)
 
+  /** Wraps underlying array as a Slice. */
   def toSlice: IntSlice = IntSlice.of(array, 0, length)
 
-  def isEmpty: Boolean = length == 0
-
-  def nonEmpty: Boolean = length > 0
-
-  def reset: Int = {
-    val l = length
-    maxIndex = -1
-    l
+  /** Copy values directly from IntSlice's array into the buffer array. */
+  def copyFrom(index: Int, slice: IntSlice): Unit = {
+    ensureIndex(index + slice.length - 1)
+    java.lang.System.arraycopy(slice.array, slice.fromIndex, array, index, slice.length)
   }
 
-  override def toString: String =
-    array.take(Math.min(20, length)).mkString("[", ",", if (length > 20) ", ... ]" else "]")
+}
 
+/** IntBuffer factory. */
+object IntBuffer {
+
+  /** Create buffer with initial values. */
+  def apply(elems: Int*): IntBuffer = new IntBuffer(elems.size).appendArray(elems.toArray)
+
+  /** Create buffer from an array copy. */
+  def apply(array: Array[Int]): IntBuffer = new IntBuffer(array.length).appendArray(array)
+
+  /** An empty buffer. */
+  def empty = new IntBuffer(0)
 }

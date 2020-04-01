@@ -42,7 +42,7 @@ trait TreeSpec extends AnyWordSpec with Matchers {
       tree0.width shouldBe 0
       tree0.height shouldBe 0
       tree0.isLeaf shouldBe false
-      tree0.children shouldBe Nil
+      tree0.childrenValues shouldBe Nil
       tree0.countBranches(_.nonEmpty) shouldBe 0
       tree0.countBranches(_.isEmpty) shouldBe 0
       showAsArrays(tree0) shouldBe ""
@@ -55,7 +55,7 @@ trait TreeSpec extends AnyWordSpec with Matchers {
       tree1.width shouldBe 1
       tree1.height shouldBe 1
       tree1.isLeaf shouldBe true
-      tree1.children shouldBe Nil
+      tree1.childrenValues shouldBe Nil
       tree1.countBranches(_.nonEmpty) shouldBe 1
       tree1.countBranches(_.isEmpty) shouldBe 0
       showAsArrays(tree1) shouldBe "[a]"
@@ -67,7 +67,7 @@ trait TreeSpec extends AnyWordSpec with Matchers {
       tree2.width shouldBe 1
       tree2.height shouldBe 2
       tree2.isLeaf shouldBe false
-      tree2.children shouldBe List("b")
+      tree2.childrenValues shouldBe List("b")
       tree2.countBranches(_.nonEmpty) shouldBe 1
       tree2.countBranches(_.isEmpty) shouldBe 0
       showAsArrays(tree2) shouldBe "[a,b]"
@@ -79,7 +79,7 @@ trait TreeSpec extends AnyWordSpec with Matchers {
       tree3_1.width shouldBe 1
       tree3_1.height shouldBe 3
       tree3_1.isLeaf shouldBe false
-      tree3_1.children shouldBe List("b")
+      tree3_1.childrenValues shouldBe List("b")
       tree3_1.countBranches(_.nonEmpty) shouldBe 1
       val arrays1 = showAsArrays(tree3_1)
       arrays1 shouldBe "[a,b,c]"
@@ -90,7 +90,7 @@ trait TreeSpec extends AnyWordSpec with Matchers {
       tree3_2.width shouldBe 2
       tree3_2.height shouldBe 2
       tree3_2.isLeaf shouldBe false
-      tree3_2.children shouldBe List("b", "c")
+      tree3_2.childrenValues shouldBe List("b", "c")
       tree3_2.countBranches(_.nonEmpty) shouldBe 2
       val arrays2 = showAsArrays(tree3_2)
       arrays2 shouldBe
@@ -106,7 +106,7 @@ trait TreeSpec extends AnyWordSpec with Matchers {
       tree4_1.height shouldBe 4
       tree4_1.isLeaf shouldBe false
       tree4_1.countBranches(_.nonEmpty) shouldBe 1
-      tree4_1.children shouldBe List("b")
+      tree4_1.childrenValues shouldBe List("b")
       showAsArrays(tree4_1) shouldBe "[a,b,c,d]"
       tree4_1.map(_ + 1) shouldBe Tree("a1", Tree("b1", Tree("c1", Tree("d1"))))
 
@@ -114,7 +114,7 @@ trait TreeSpec extends AnyWordSpec with Matchers {
       tree4_2.width shouldBe 2
       tree4_2.height shouldBe 3
       tree4_2.isLeaf shouldBe false
-      tree4_2.children shouldBe List("b", "d")
+      tree4_2.childrenValues shouldBe List("b", "d")
       tree4_2.countBranches(_.nonEmpty) shouldBe 2
       showAsArrays(tree4_2) shouldBe
         """[a,b,c]
@@ -125,7 +125,7 @@ trait TreeSpec extends AnyWordSpec with Matchers {
       tree4_3.width shouldBe 3
       tree4_3.height shouldBe 2
       tree4_3.isLeaf shouldBe false
-      tree4_3.children shouldBe List("b", "c", "d")
+      tree4_3.childrenValues shouldBe List("b", "c", "d")
       tree4_3.countBranches(_.nonEmpty) shouldBe 3
       tree4_3.countBranches(_.toSeq.contains("c")) shouldBe 1
       showAsArrays(tree4_3) shouldBe
@@ -239,51 +239,51 @@ trait TreeSpec extends AnyWordSpec with Matchers {
 
     "list all nodes" in {
       val tree = Tree.empty
-      tree.nodesUnsafe shouldBe Nil
+      tree.valuesUnsafe shouldBe Nil
       val tree1 = Tree(0)
-      tree1.nodesUnsafe shouldBe List(0)
+      tree1.valuesUnsafe shouldBe List(0)
       val tree2 = Tree(0, Tree(11, Tree(20, Tree(30))), Tree(12, Tree(21, Tree(31)), Tree(22, Tree(32))))
-      tree2.nodesUnsafe shouldBe List(0, 11, 20, 30, 12, 21, 31, 22, 32)
+      tree2.valuesUnsafe shouldBe List(0, 11, 20, 30, 12, 21, 31, 22, 32)
     }
 
     "list all nodes using tail safe method" in {
       val tree = Tree.empty
-      tree.nodes shouldBe Nil
+      tree.values shouldBe Nil
       val tree1 = Tree(0)
-      tree1.nodes shouldBe List(0)
+      tree1.values shouldBe List(0)
       val tree2 = Tree(0, Tree(11, Tree(20, Tree(30))), Tree(12, Tree(21, Tree(31)), Tree(22, Tree(32))))
-      tree2.nodes shouldBe List(0, 11, 20, 30, 12, 21, 31, 22, 32)
+      tree2.values shouldBe List(0, 11, 20, 30, 12, 21, 31, 22, 32)
     }
 
     "iterate over nodes with filter" in {
-      Tree.empty.nodeIterator(_ => true).toList shouldBe Nil
+      Tree.empty.valueIterator(_ => true).toList shouldBe Nil
 
       val tree1 = Tree(0)
-      tree1.nodeIterator(_ > 1).toList shouldBe Nil
-      tree1.nodeIterator(_ < 1).toList shouldBe List(0)
+      tree1.valueIterator(_ > 1).toList shouldBe Nil
+      tree1.valueIterator(_ < 1).toList shouldBe List(0)
 
       val tree2 = Tree(0, Tree(11, Tree(20, Tree(30))), Tree(12, Tree(21, Tree(31)), Tree(22, Tree(32))))
-      tree2.nodeIterator(_ >= 0).toList shouldBe List(0, 11, 20, 30, 12, 21, 31, 22, 32)
-      tree2.nodeIterator(_ > 15).toList shouldBe List(20, 30, 21, 31, 22, 32)
-      tree2.nodeIterator(_ > 100).toList shouldBe Nil
-      tree2.nodeIterator(_ < 15).toList shouldBe List(0, 11, 12)
-      tree2.nodeIterator(_ < 0).toList shouldBe Nil
+      tree2.valueIterator(_ >= 0).toList shouldBe List(0, 11, 20, 30, 12, 21, 31, 22, 32)
+      tree2.valueIterator(_ > 15).toList shouldBe List(20, 30, 21, 31, 22, 32)
+      tree2.valueIterator(_ > 100).toList shouldBe Nil
+      tree2.valueIterator(_ < 15).toList shouldBe List(0, 11, 12)
+      tree2.valueIterator(_ < 0).toList shouldBe Nil
     }
 
     "stream all nodes" in {
       val tree = Tree.empty
-      tree.nodeStream.toList shouldBe Nil
+      tree.valueStream.toList shouldBe Nil
       val tree1 = Tree(0)
-      tree1.nodeStream.toList shouldBe List(0)
+      tree1.valueStream.toList shouldBe List(0)
       val tree2 = Tree(0, Tree(11, Tree(20, Tree(30))), Tree(12, Tree(21, Tree(31)), Tree(22, Tree(32))))
-      tree2.nodeStream.toList shouldBe List(0, 11, 20, 30, 12, 21, 31, 22, 32)
+      tree2.valueStream.toList shouldBe List(0, 11, 20, 30, 12, 21, 31, 22, 32)
     }
 
     "stream filtered nodes" in {
       val tree1 = Tree(0)
-      tree1.nodeStream(_ > 15).toList shouldBe Nil
+      tree1.valueStream(_ > 15).toList shouldBe Nil
       val tree2 = Tree(0, Tree(11, Tree(20, Tree(30))), Tree(12, Tree(21, Tree(31)), Tree(22, Tree(32))))
-      tree2.nodeStream(_ > 15).toList shouldBe List(20, 30, 21, 31, 22, 32)
+      tree2.valueStream(_ > 15).toList shouldBe List(20, 30, 21, 31, 22, 32)
     }
 
     "list all branches" in {
@@ -400,56 +400,98 @@ trait TreeSpec extends AnyWordSpec with Matchers {
     }
 
     "map all nodes" in {
-      val tree0: Tree[Int] = Tree()
-      val result0 = tree0.map(_ * 10)
+      val f: String => String = _ + "0"
+
+      val result0 = tree0.map(f)
       showAsGraph(result0) shouldBe ""
 
-      val tree1 = Tree(1)
-      val result1 = tree1.map(_ * 10)
-      showAsGraph(result1) shouldBe "10"
+      val result1 = tree1.map(f)
+      showAsGraph(result1) shouldBe "a0"
 
-      val tree2 = Tree(1, Tree(2))
-      val result2 = tree2.map(_ * 10)
+      val result2 = tree2.map(f)
       showAsGraph(result2) shouldBe
-        """10 > 20""".stripMargin
+        """a0 > b0""".stripMargin
 
-      val tree3 = Tree(1, Tree(2), Tree(3))
-      val result3 = tree3.map(_ * 10)
-      showAsGraph(result3) shouldBe
-        """10 > 20
-          |10 > 30""".stripMargin
+      val result3_1 = tree3_1.map(f)
+      showAsGraph(result3_1) shouldBe
+        """a0 > b0 > c0""".stripMargin
 
-      val tree4 = Tree(0, Tree(11, Tree(20, Tree(30))), Tree(12, Tree(21, Tree(31)), Tree(22, Tree(32))))
-      val result4 = tree4.map(_ + 1)
-      showAsGraph(result4) shouldBe """1 > 12 > 21 > 31
-                                      |1 > 13 > 22 > 32
-                                      |1 > 13 > 23 > 33""".stripMargin
-      val tree = tree4.mapUnsafe(_ + 1)
-      tree shouldBe result4
+      val result3_2 = tree3_2.map(f)
+      showAsGraph(result3_2) shouldBe
+        """a0 > b0
+          |a0 > c0""".stripMargin
+
+      val result4 = tree7.map(f)
+      showAsGraph(result4) shouldBe
+        """a0 > b0 > c0
+          |a0 > d0 > e0 > f0
+          |a0 > g0""".stripMargin
+    }
+
+    "mapUnsafe all nodes" in {
+      val f: String => String = _ + "0"
+
+      val result0 = tree0.mapUnsafe(f)
+      showAsGraph(result0) shouldBe ""
+
+      val result1 = tree1.mapUnsafe(f)
+      showAsGraph(result1) shouldBe "a0"
+
+      val result2 = tree2.mapUnsafe(f)
+      showAsGraph(result2) shouldBe
+        """a0 > b0""".stripMargin
+
+      val result3_1 = tree3_1.mapUnsafe(f)
+      showAsGraph(result3_1) shouldBe
+        """a0 > b0 > c0""".stripMargin
+
+      val result3_2 = tree3_2.mapUnsafe(f)
+      showAsGraph(result3_2) shouldBe
+        """a0 > b0
+          |a0 > c0""".stripMargin
+
+      val result4 = tree7.mapUnsafe(f)
+      showAsGraph(result4) shouldBe
+        """a0 > b0 > c0
+          |a0 > d0 > e0 > f0
+          |a0 > g0""".stripMargin
     }
 
     "flatMap all nodes" in {
-      val tree0: Tree[Int] = Tree()
-      val result0 = tree0.flatMap(n => Tree(n + 1))
+      val f: String => Tree[String] = x => Tree(x, Tree(x + "0"))
+
+      val result0 = tree0.flatMap(f)
       showAsGraph(result0) shouldBe ""
 
-      val tree1 = Tree(0)
-      val result1 = tree1.flatMap(n => Tree(n + 1))
-      showAsGraph(result1) shouldBe "1"
+      val result1 = tree1.flatMap(f)
+      showAsGraph(result1) shouldBe "a > a0"
 
-      val tree2 = Tree(0, Tree(1))
-      val result2 = tree2.flatMap(n => Tree(n + 1, Tree(n + 2)))
+      val result2 = tree2.flatMap(f)
       showAsGraph(result2) shouldBe
-        """1 > 2 > 3
-          |1 > 2""".stripMargin
+        """a > b > b0
+          |a > a0""".stripMargin
 
-      val tree3 = Tree(0, Tree(5, Tree(10)))
-      val result3 = tree3.flatMap(n => Tree(n + 1, Tree(n + 2, Tree(n + 3))))
-      val graph3 = showAsGraph(result3)
-      graph3 shouldBe
-        """1 > 6 > 11 > 12 > 13
-          |1 > 6 > 7 > 8
-          |1 > 2 > 3""".stripMargin
+      val result3_1 = tree3_1.flatMap(f)
+      showAsGraph(result3_1) shouldBe
+        """a > b > c > c0
+          |a > b > b0
+          |a > a0""".stripMargin
+
+      val result3_2 = tree3_2.flatMap(f)
+      showAsGraph(result3_2) shouldBe
+        """a > b > b0
+          |a > c > c0
+          |a > a0""".stripMargin
+
+      val result4 = tree7.flatMap(f)
+      showAsGraph(result4) shouldBe
+        """a > b > c > c0
+          |a > b > b0
+          |a > d > e > f > f0
+          |a > d > e > e0
+          |a > d > d0
+          |a > g > g0
+          |a > a0""".stripMargin
     }
 
     "transform a tree using for-comprehension" in {
@@ -481,7 +523,7 @@ trait TreeSpec extends AnyWordSpec with Matchers {
     }
 
     "serialize a tree to a pair of arrays and deserialize it back using fromArrays" in {
-      /*val tree0: Tree[String] = Tree()
+      val tree0: Tree[String] = Tree()
       val (structure0, values0) = tree0.toArrays
       structure0.length shouldBe 0
       values0.length shouldBe 0
@@ -525,7 +567,6 @@ trait TreeSpec extends AnyWordSpec with Matchers {
       values7.length shouldBe 7
       values7 shouldBe Array("b3", "d2", "c2", "b2", "c1", "b1", "a")
       Tree.Builder.fromArrays(structure7, values7) shouldBe List(tree7)
-       */
       val tree10 = Tree(
         "a",
         Tree("b1", Tree("c1"), Tree("d1")),

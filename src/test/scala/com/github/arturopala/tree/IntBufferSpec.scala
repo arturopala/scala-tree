@@ -72,6 +72,27 @@ class IntBufferSpec extends AnyWordSpec with Matchers {
       buffer(1000) shouldBe -13
       buffer.length shouldBe 1001
     }
+
+    "modify value at an index" in {
+      val buffer = IntBuffer(0, 1, 2, 3, 4, 5, 6, 7, 8, 9)
+      buffer.modify(0, _ + 10).toArray shouldBe Array(10, 1, 2, 3, 4, 5, 6, 7, 8, 9)
+      buffer.modify(1, _ + 1).toArray shouldBe Array(10, 2, 2, 3, 4, 5, 6, 7, 8, 9)
+      buffer.modify(1, _ + 1).toArray shouldBe Array(10, 3, 2, 3, 4, 5, 6, 7, 8, 9)
+      buffer.modify(2, _ - 1).toArray shouldBe Array(10, 3, 1, 3, 4, 5, 6, 7, 8, 9)
+      buffer.modify(1, _ - 1).toArray shouldBe Array(10, 2, 1, 3, 4, 5, 6, 7, 8, 9)
+    }
+
+    "modify values in the range" in {
+      val buffer = IntBuffer(0, 1, 2, 3, 4, 5, 6, 7, 8, 9)
+      buffer.modifyRange(0, 2, _ + 10).toArray shouldBe Array(10, 11, 2, 3, 4, 5, 6, 7, 8, 9)
+      buffer.modifyRange(1, 5, _ + 1).toArray shouldBe Array(10, 12, 3, 4, 5, 5, 6, 7, 8, 9)
+      buffer.modifyRange(2, 9, _ + 1).toArray shouldBe Array(10, 12, 4, 5, 6, 6, 7, 8, 9, 9)
+      buffer.modifyRange(2, 1, _ - 1).toArray shouldBe Array(10, 12, 4, 5, 6, 6, 7, 8, 9, 9)
+      buffer.modifyRange(0, 1, _ - 1).toArray shouldBe Array(9, 12, 4, 5, 6, 6, 7, 8, 9, 9)
+
+      IntBuffer(0, 1).modifyRange(2, 5, _ + 1).toArray shouldBe Array(0, 1)
+      IntBuffer(0, 1).modifyRange(0, 0, _ + 1).toArray shouldBe Array(0, 1)
+    }
   }
 
 }

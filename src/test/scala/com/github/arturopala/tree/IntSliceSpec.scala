@@ -88,7 +88,7 @@ class IntSliceSpec extends AnyWordSpec with Matchers {
       IntSlice().count(_ == 0) shouldBe 0
     }
 
-    "get a value by an index" in {
+    "top a value by an index" in {
       IntSlice.of(Array(1, 2, 3, 4, 5, 6, 7, 8, 9)).apply(3) shouldBe 4
       IntSlice.of(Array(1, 2, 3, 4, 5, 6, 7, 8, 9), 2, 9).apply(3) shouldBe 6
       IntSlice.of(Array(1, 2, 3, 4, 5, 6, 7, 8, 9), 5, 9).apply(3) shouldBe 9
@@ -185,6 +185,42 @@ class IntSliceSpec extends AnyWordSpec with Matchers {
       IntSlice.of(Array(1, 2)).takeRight(3).toList shouldBe List(1, 2)
       IntSlice.of(Array(1)).takeRight(3).toList shouldBe List(1)
       IntSlice.of(Array.empty[Int]).takeRight(3).toList shouldBe Nil
+    }
+
+    "have a head" in {
+      IntSlice.of(Array(1, 2, 3, 4, 5, 6, 7, 8, 9)).head shouldBe 1
+      IntSlice.of(Array(4)).head shouldBe 4
+      an[NoSuchElementException] shouldBe thrownBy(IntSlice.empty.head)
+    }
+
+    "have a headOption" in {
+      IntSlice.of(Array(1, 2, 3, 4, 5, 6, 7, 8, 9)).headOption shouldBe Some(1)
+      IntSlice.of(Array(4)).headOption shouldBe Some(4)
+      IntSlice.empty.headOption shouldBe None
+    }
+
+    "have a tail" in {
+      IntSlice.of(Array(1, 2, 3, 4, 5, 6, 7, 8, 9)).tail.toList shouldBe List(2, 3, 4, 5, 6, 7, 8, 9)
+      IntSlice.of(Array(4)).tail.toList shouldBe Nil
+      IntSlice.empty.tail.toList shouldBe Nil
+    }
+
+    "have a last" in {
+      IntSlice.of(Array(1, 2, 3, 4, 5, 6, 7, 8, 9)).last shouldBe 9
+      IntSlice.of(Array(4)).last shouldBe 4
+      an[NoSuchElementException] shouldBe thrownBy(IntSlice.empty.head)
+    }
+
+    "have a lastOption" in {
+      IntSlice.of(Array(1, 2, 3, 4, 5, 6, 7, 8, 9)).lastOption shouldBe Some(9)
+      IntSlice.of(Array(4)).lastOption shouldBe Some(4)
+      IntSlice.empty.lastOption shouldBe None
+    }
+
+    "have an init" in {
+      IntSlice.of(Array(1, 2, 3, 4, 5, 6, 7, 8, 9)).init.toList shouldBe List(1, 2, 3, 4, 5, 6, 7, 8)
+      IntSlice.of(Array(4)).init.toList shouldBe Nil
+      IntSlice.empty.init.toList shouldBe Nil
     }
   }
 

@@ -16,11 +16,11 @@
 
 package com.github.arturopala.tree
 
-import com.github.arturopala.tree.util.{IntSlice, Slice}
+import com.github.arturopala.tree.util.{ArraySlice, IntSlice, Slice}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 
-class SliceSpec extends AnyWordSpec with Matchers {
+class ArraySliceSpec extends AnyWordSpec with Matchers {
 
   "Slice" should {
     "wrap a whole array" in {
@@ -48,8 +48,14 @@ class SliceSpec extends AnyWordSpec with Matchers {
     }
 
     "reverse-iterate over slice of values" in {
-      Slice.of(Array("a", "b", "c", "d", "e")).reverseIterator.toList shouldBe List("a", "b", "c", "d", "e").reverse
-      Slice.of(Array("a", "b", "c", "d", "e"), 1, 5).reverseIterator.toList shouldBe List("b", "c", "d", "e").reverse
+      Slice
+        .of(Array("a", "b", "c", "d", "e"))
+        .reverseIterator
+        .toList shouldBe List("a", "b", "c", "d", "e").reverse
+      Slice
+        .of(Array("a", "b", "c", "d", "e"), 1, 5)
+        .reverseIterator
+        .toList shouldBe List("b", "c", "d", "e").reverse
       Slice.of(Array("a", "b", "c", "d", "e"), 1, 4).reverseIterator.toList shouldBe List("b", "c", "d").reverse
       Slice.of(Array("a", "b", "c", "d", "e"), 2, 3).reverseIterator.toList shouldBe List("c").reverse
       Slice.of(Array("a", "b", "c", "d", "e"), 0, 0).reverseIterator.toList shouldBe List()
@@ -84,7 +90,7 @@ class SliceSpec extends AnyWordSpec with Matchers {
       Slice[Int]().count(_ == 0) shouldBe 0
     }
 
-    "get a value by an index" in {
+    "top a value by an index" in {
       Slice.of(Array(1, 2, 3, 4, 5, 6, 7, 8, 9)).apply(3) shouldBe 4
       Slice.of(Array(1, 2, 3, 4, 5, 6, 7, 8, 9), 2, 9).apply(3) shouldBe 6
       Slice.of(Array(1, 2, 3, 4, 5, 6, 7, 8, 9), 5, 9).apply(3) shouldBe 9
@@ -181,6 +187,42 @@ class SliceSpec extends AnyWordSpec with Matchers {
       Slice.of(Array(1, 2)).takeRight(3).toList shouldBe List(1, 2)
       Slice.of(Array(1)).takeRight(3).toList shouldBe List(1)
       Slice.of(Array.empty[Int]).takeRight(3).toList shouldBe Nil
+    }
+
+    "have a head" in {
+      Slice.of(Array(1, 2, 3, 4, 5, 6, 7, 8, 9)).head shouldBe 1
+      Slice.of(Array(4)).head shouldBe 4
+      an[NoSuchElementException] shouldBe thrownBy(Slice.of(Array.empty[String]).head)
+    }
+
+    "have a headOption" in {
+      Slice.of(Array(1, 2, 3, 4, 5, 6, 7, 8, 9)).headOption shouldBe Some(1)
+      Slice.of(Array(4)).headOption shouldBe Some(4)
+      Slice.of(Array.empty[String]).headOption shouldBe None
+    }
+
+    "have a tail" in {
+      Slice.of(Array(1, 2, 3, 4, 5, 6, 7, 8, 9)).tail.toList shouldBe List(2, 3, 4, 5, 6, 7, 8, 9)
+      Slice.of(Array(4)).tail.toList shouldBe Nil
+      Slice.of(Array.empty[String]).tail.toList shouldBe Nil
+    }
+
+    "have a last" in {
+      Slice.of(Array(1, 2, 3, 4, 5, 6, 7, 8, 9)).last shouldBe 9
+      Slice.of(Array(4)).last shouldBe 4
+      an[NoSuchElementException] shouldBe thrownBy(Slice.of(Array.empty[String]).head)
+    }
+
+    "have a lastOption" in {
+      Slice.of(Array(1, 2, 3, 4, 5, 6, 7, 8, 9)).lastOption shouldBe Some(9)
+      Slice.of(Array(4)).lastOption shouldBe Some(4)
+      Slice.of(Array.empty[String]).lastOption shouldBe None
+    }
+
+    "have an init" in {
+      Slice.of(Array(1, 2, 3, 4, 5, 6, 7, 8, 9)).init.toList shouldBe List(1, 2, 3, 4, 5, 6, 7, 8)
+      Slice.of(Array(4)).init.toList shouldBe Nil
+      Slice.of(Array.empty[String]).init.toList shouldBe Nil
     }
   }
 

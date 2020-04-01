@@ -20,29 +20,29 @@ class DeflatedTreeSpec extends TreeSpec {
 
   override def name = "DeflatedTree"
 
-  val tree0 = Tree[String]().deflate
-  val tree1 = Tree("a").deflate
-  val tree2 = Tree("a", Tree("b")).deflate
-  val tree3_1 = Tree("a", Tree("b", Tree("c"))).deflate
-  val tree3_2 = Tree("a", Tree("b"), Tree("c")).deflate
-  val tree4_1 = Tree("a", Tree("b", Tree("c", Tree("d")))).deflate
-  val tree4_2 = Tree("a", Tree("b", Tree("c")), Tree("d")).deflate
-  val tree4_3 = Tree("a", Tree("b"), Tree("c"), Tree("d")).deflate
-  val tree7 = Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e", Tree("f"))), Tree("g")).deflate
-  val tree9 = Tree("a", Tree("b", Tree("c", Tree("d"))), Tree("e", Tree("f", Tree("g")), Tree("h", Tree("i")))).deflate
+  val tree0: Tree[String] = TestTrees.tree0.deflate
+  val tree1: Tree[String] = TestTrees.tree1.deflate
+  val tree2: Tree[String] = TestTrees.tree2.deflate
+  val tree3_1: Tree[String] = TestTrees.tree3_1.deflate
+  val tree3_2: Tree[String] = TestTrees.tree3_2.deflate
+  val tree4_1: Tree[String] = TestTrees.tree4_1.deflate
+  val tree4_2: Tree[String] = TestTrees.tree4_2.deflate
+  val tree4_3: Tree[String] = TestTrees.tree4_3.deflate
+  val tree7: Tree[String] = TestTrees.tree7.deflate
+  val tree9: Tree[String] = TestTrees.tree9.deflate
 
   s"$name also" should {
 
     "return nodes in the same order as an inflated tree" in {
-      Tree.inflate(tree3_2).nodes shouldBe tree3_2.nodes
-      Tree.inflate(tree7).nodes shouldBe tree7.nodes
-      Tree.inflate(tree9).nodes shouldBe tree9.nodes
+      Tree.inflate(tree3_2).values shouldBe tree3_2.values
+      Tree.inflate(tree7).values shouldBe tree7.values
+      Tree.inflate(tree9).values shouldBe tree9.values
     }
 
     "return children in the same order as an inflated tree" in {
-      Tree.inflate(tree3_2).children shouldBe tree3_2.children
-      Tree.inflate(tree7).children shouldBe tree7.children
-      Tree.inflate(tree9).children shouldBe tree9.children
+      Tree.inflate(tree3_2).childrenValues shouldBe tree3_2.childrenValues
+      Tree.inflate(tree7).childrenValues shouldBe tree7.childrenValues
+      Tree.inflate(tree9).childrenValues shouldBe tree9.childrenValues
     }
 
     "return branches in the same order as an inflated tree" in {

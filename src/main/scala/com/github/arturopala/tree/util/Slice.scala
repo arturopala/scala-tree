@@ -15,179 +15,106 @@
  */
 
 package com.github.arturopala.tree.util
-import scala.collection.AbstractIterable
+
 import scala.reflect.ClassTag
 
-/** Lazy, immutable slice of the underlying array. */
-abstract class Slice[T] private (fromIndex: Int, toIndex: Int) extends (Int => T) {
+/** Lazy, immutable slice of a sequence of values.
+  * @tparam T type of the items of the sequence. */
+trait Slice[T] extends (Int => T) {
 
-  type A
+  /** Returns value at the given index. */
+  def apply(index: Int): T
 
-  val array: Array[A]
-  val mapF: A => T
+  /** Returns length of the Slice. */
+  def length: Int
 
-  val length: Int = toIndex - fromIndex
+  /** Returns true if Slice has values, otherwise false. */
+  def isEmpty: Boolean
 
-  def apply(index: Int): T = {
-    if (index < 0 || index >= length)
-      throw new IndexOutOfBoundsException(s"Expected an `apply` index in the interval [0,$length), but was $index.")
-    mapF(array.apply(fromIndex + index))
-  }
+  /** Lazily composes mapping function and returns new Slice.
+    * Does not modify nor copy underlying array.  */
+  def map[K](f: T => K): Slice[K]
 
-  def update(index: Int, value: T)(implicit tag: ClassTag[T]): Slice[T] = {
-    if (index < 0 || index >= length)
-      throw new IndexOutOfBoundsException(s"Expected an `update` index in the interval [0,$length), but was $index.")
-    val modified: Array[T] = toArray[T]
-    modified.update(index, value)
-    Slice.of[T, T](0, length, modified, identity)
-  }
+  /** Counts values fulfilling the predicate. */
+  def count(pred: T => Boolean): Int
 
-  def map[K](f: T => K): Slice[K] = Slice.of[K, A](fromIndex, toIndex, array, mapF.andThen(f))
+  /** Returns first value in the Slice. */
+  def head: T
 
-  def count(pred: T => Boolean): Int = {
-    var a = 0
-    var i = fromIndex
-    while (i < toIndex) {
-      if (pred(mapF(array(i)))) a = a + 1
-      i = i + 1
-    }
-    a
-  }
+  /** Returns the last value in the Slice. */
+  def last: T
 
-  def isEmpty: Boolean = length <= 0
+  /** Returns first value in the Slice. */
+  def headOption: Option[T]
 
-  def slice(from: Int, to: Int): Slice[T] = {
-    val t = fit(0, to, length)
-    val f = fit(0, from, t)
-    if (f == 0 && t == length) this
-    else
-      Slice.of[T, A](fromIndex + f, fromIndex + t, array, mapF)
-  }
+  /** Returns the last value in the Slice. */
+  def lastOption: Option[T]
 
-  private def fit(lower: Int, value: Int, upper: Int): Int =
-    Math.min(Math.max(lower, value), upper)
+  /** Returns the Slice without first value. */
+  def tail: Slice[T]
 
-  def take(n: Int): Slice[T] = {
-    assert(n >= 0, "take parameter must be equal or greater to zero")
-    Slice.of[T, A](fromIndex, Math.min(fromIndex + n, toIndex), array, mapF)
-  }
+  /** Returns the Slice without last value. */
+  def init: Slice[T]
 
-  def takeRight(n: Int): Slice[T] = {
-    assert(n >= 0, "takeRight parameter must be equal or greater to zero")
-    Slice.of[T, A](Math.max(toIndex - n, fromIndex), toIndex, array, mapF)
-  }
+  /** Lazily narrows Slice to provided range. */
+  def slice(from: Int, to: Int): Slice[T]
 
-  def drop(n: Int): Slice[T] = {
-    assert(n >= 0, "drop parameter must be equal or greater to zero")
-    Slice.of[T, A](Math.min(fromIndex + n, toIndex), toIndex, array, mapF)
-  }
+  /** Lazily narrows Slice to first N items. */
+  def take(n: Int): Slice[T]
 
-  def dropRight(n: Int): Slice[T] = {
-    assert(n >= 0, "dropRight parameter must be equal or greater to zero")
-    Slice.of[T, A](fromIndex, Math.max(toIndex - n, fromIndex), array, mapF)
-  }
+  /** Lazily narrows Slice to last N items. */
+  def takeRight(n: Int): Slice[T]
 
-  def iterator: Iterator[T] = new Iterator[T] {
+  /** Lazily narrows Slice to exclude first N items. */
+  def drop(n: Int): Slice[T]
 
-    var i = fromIndex
+  /** Lazily narrows Slice to exclude last N items. */
+  def dropRight(n: Int): Slice[T]
 
-    def hasNext: Boolean = i < toIndex
+  /** Returns iterator over Slice values. */
+  def iterator: Iterator[T]
 
-    def next(): T = {
-      val value = mapF(array(i))
-      i = i + 1
-      value
-    }
-  }
+  /** Returns iterator over Slice values in the reverse order. */
+  def reverseIterator: Iterator[T]
 
-  def reverseIterator: Iterator[T] = new Iterator[T] {
+  /** Returns iterator over Slice values, fulfilling the predicate, in the reverse order. */
+  def reverseIterator(pred: T => Boolean): Iterator[T]
 
-    var i = toIndex - 1
+  /** Returns new list of Slice values. */
+  def toList: List[T]
 
-    def hasNext: Boolean = i >= fromIndex
+  /** Returns new iterable of Slice values. */
+  def asIterable: Iterable[T]
 
-    def next(): T = {
-      val value = mapF(array(i))
-      i = i - 1
-      value
-    }
-  }
+  /** Returns minimal copy of an underlying array, trimmed to the actual range. */
+  def toArray[T1 >: T: ClassTag]: Array[T1]
 
-  def reverseIterator(pred: T => Boolean): Iterator[T] = new Iterator[T] {
-
-    var i = toIndex - 1
-
-    if (i >= fromIndex) seekNext
-
-    def hasNext: Boolean = i >= fromIndex
-
-    def next(): T = {
-      val value = mapF(array(i))
-      i = i - 1
-      seekNext
-      value
-    }
-
-    def seekNext: Unit = {
-      var v = mapF(array(i))
-      while (!pred(v) && i >= fromIndex) {
-        i = i - 1
-        if (i > fromIndex) v = mapF(array(i))
-      }
-    }
-  }
-
-  def toArray[T1 >: T](implicit tagT1: ClassTag[T1]): Array[T1] =
-    iterator.toArray[T1]
-
-  def toList: List[T] = iterator.toList
-
-  def asIterable: Iterable[T] = new AbstractIterable[T] {
-    override def iterator: Iterator[T] = Slice.this.iterator
-    override def toString(): String = Slice.this.toString
-  }
-
-  override def toString: String =
-    iterator.take(Math.min(20, length)).mkString("Slice(", ",", if (length > 20) ", ... )" else ")")
-
-  override def equals(obj: Any): Boolean = obj match {
-    case other: Slice[T] =>
-      this.length == other.length &&
-        Compare.sameElements(this.iterator, other.iterator)
-
-    case _ => false
-  }
-
-  override def hashCode(): Int = {
-    var hash = 17
-    hash = hash * 31 + this.length
-    for (i <- fromIndex to toIndex by (length / 7)) {
-      hash = hash * 31 + array(i).hashCode()
-    }
-    hash
-  }
 }
 
 object Slice {
 
+  /** Creates new Slice of given values. */
   def apply[T: ClassTag](is: T*): Slice[T] = Slice.of(Array(is: _*))
 
-  private[util] def of[T, K](fromIndex: Int, toIndex: Int, _array: Array[K], _mapF: K => T): Slice[T] =
-    new Slice[T](fromIndex, toIndex) {
+  private[util] def of[T, K](fromIndex: Int, toIndex: Int, _array: Array[K], _mapF: K => T): ArraySlice[T] =
+    new ArraySlice[T](fromIndex, toIndex) {
       type A = K
       val array: Array[A] = _array
       val mapF: A => T = _mapF
     }
 
-  def of[T](array: Array[T]): Slice[T] = Slice.of[T, T](0, array.length, array, identity)
+  /** Creates new Slice of given array values. */
+  def of[T](array: Array[T]): ArraySlice[T] = Slice.of[T, T](0, array.length, array, identity)
 
-  def of[T](array: Array[T], from: Int, to: Int): Slice[T] = {
+  /** Creates new Slice of given subset of array values. */
+  def of[T](array: Array[T], from: Int, to: Int): ArraySlice[T] = {
     assert(from >= 0, "When creating a Slice, parameter `from` must be greater or equal to zero.")
     assert(to <= array.length, "When creating a Slice, parameter `to` must be lower or equal to the array length.")
     assert(from <= to, "When creating a Slice, parameter `from` must be lower or equal to the parameter `to`.")
     Slice.of[T, T](from, to, array, identity)
   }
 
+  /** Creates an empty Slice of given type. */
   def empty[T: ClassTag]: Slice[T] = Slice.of(Array.empty[T])
 
 }

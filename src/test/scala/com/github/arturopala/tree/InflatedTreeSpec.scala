@@ -22,17 +22,16 @@ class InflatedTreeSpec extends TreeSpec {
 
   override def name = "InflatedTree"
 
-  val tree0: Tree[String] = Tree[String]()
-  val tree1: Tree[String] = Tree("a")
-  val tree2: Tree[String] = Tree("a", Tree("b"))
-  val tree3_1: Tree[String] = Tree("a", Tree("b", Tree("c")))
-  val tree3_2: Tree[String] = Tree("a", Tree("b"), Tree("c"))
-  val tree4_1: Tree[String] = Tree("a", Tree("b", Tree("c", Tree("d"))))
-  val tree4_2: Tree[String] = Tree("a", Tree("b", Tree("c")), Tree("d"))
-  val tree4_3: Tree[String] = Tree("a", Tree("b"), Tree("c"), Tree("d"))
-  val tree7: Tree[String] = Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e", Tree("f"))), Tree("g"))
-  val tree9: Tree[String] =
-    Tree("a", Tree("b", Tree("c", Tree("d"))), Tree("e", Tree("f", Tree("g")), Tree("h", Tree("i"))))
+  val tree0: Tree[String] = TestTrees.tree0
+  val tree1: Tree[String] = TestTrees.tree1
+  val tree2: Tree[String] = TestTrees.tree2
+  val tree3_1: Tree[String] = TestTrees.tree3_1
+  val tree3_2: Tree[String] = TestTrees.tree3_2
+  val tree4_1: Tree[String] = TestTrees.tree4_1
+  val tree4_2: Tree[String] = TestTrees.tree4_2
+  val tree4_3: Tree[String] = TestTrees.tree4_3
+  val tree7: Tree[String] = TestTrees.tree7
+  val tree9: Tree[String] = TestTrees.tree9
 
   "Tree.Builder" should {
     "create a new tree from the list of values" in {

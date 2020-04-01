@@ -79,8 +79,43 @@ object ArrayTree {
     }
   }
 
+  /** Looks for Some index of the child node holding the given value, or None. */
+  final def childrenIndexFor[T](
+    value: T,
+    parentIndex: Int,
+    treeStructure: Int => Int,
+    treeValues: Int => T
+  ): Option[Int] = {
+    var result: Option[Int] = None
+    if (parentIndex > 0) {
+      val numberOfChildren = treeStructure(parentIndex)
+      if (numberOfChildren > 0) {
+        if (treeValues(parentIndex - 1) == value) {
+          result = Some(parentIndex - 1)
+        } else {
+          var n = numberOfChildren - 1
+          var i = parentIndex - 1
+          while (n > 0 && i >= 0) {
+            var a = treeStructure(i)
+            while (a > 0) {
+              i = i - 1
+              a = a - 1 + treeStructure(i)
+            }
+            i = i - 1
+            if (treeValues(i) == value) {
+              result = Some(i)
+              n = -1
+            }
+            n = n - 1
+          }
+        }
+      }
+    }
+    result
+  }
+
   /** Finds an index of the parent node of the given node.
-    * @note If index > size - 1 then returns size -1.  */
+    * @note If index > size - 1 then returns -1.  */
   final def parentIndex(index: Int, size: Int, treeStructure: Int => Int): Int = {
     var v = 1
     var i = index
@@ -91,8 +126,12 @@ object ArrayTree {
       c = v > 0
       v = v + 1
     }
-    i
+    if (c) -1 else i
   }
+
+  /** Calculates leftmost index of the tree rooted at index. */
+  final def bottomIndex(index: Int, treeStructure: Int => Int): Int =
+    index - treeSize(index, treeStructure) + 1
 
   /** Calculates the size of the tree starting at the given index. */
   final def treeSize(index: Int, treeStructure: Int => Int): Int = {
@@ -107,7 +146,7 @@ object ArrayTree {
     index - i + 1
   }
 
-  /** Iterates over tree's node indexes, depth first. */
+  /** Iterates over tree's node indexes, top-down, depth first. */
   final def nodeIndexIterator(startIndex: Int, treeStructure: Int => Int): Iterator[Int] = new Iterator[Int] {
 
     var i: Int = startIndex
@@ -220,7 +259,7 @@ object ArrayTree {
       pred
     )
 
-  /** Iterates over all subtrees (including the tree itself), depth-first. */
+  /** Iterates over all subtrees (including the tree itself), top-down, depth-first. */
   final def treeIterator[T: ClassTag](
     startIndex: Int,
     treeStructure: IntSlice,
@@ -386,7 +425,7 @@ object ArrayTree {
     var pathSegment: Option[T1] = None
 
     while (children.nonEmpty && pathIterator.hasNext) {
-      val c = children.reset
+      val c = children.reset + 1
       pathSegment = Some(pathIterator.next())
       var n = 0
       while (n >= 0 && n < c) {
@@ -405,6 +444,7 @@ object ArrayTree {
     (indexes.toArray, pathSegment, pathIterator, pathSegment.isEmpty && children.isEmpty)
   }
 
+  /** Checks tree contains branch. */
   @`inline` final def containsBranch[T, T1 >: T](
     branch: Iterable[T1],
     startIndex: Int,
@@ -415,6 +455,7 @@ object ArrayTree {
     fullMatch && unmatched.isEmpty
   }
 
+  /** Checks tree contains path (branch prefix). */
   @`inline` final def containsPath[T, T1 >: T](
     path: Iterable[T1],
     startIndex: Int,
@@ -425,6 +466,7 @@ object ArrayTree {
     unmatched.isEmpty
   }
 
+  /** Selects node's value accessible by path. */
   @`inline` final def selectValue[T, T1 >: T](
     path: Iterable[T1],
     startIndex: Int,
@@ -436,6 +478,7 @@ object ArrayTree {
       case _                                         => None
     }
 
+  /** Selects tree accessible by path. */
   @`inline` final def selectTree[T: ClassTag, T1 >: T](
     path: Iterable[T1],
     startIndex: Int,
@@ -449,5 +492,252 @@ object ArrayTree {
 
       case _ => None
     }
+
+  /** FlatMaps the tree without checking for duplicates. */
+  final def flatMap[T: ClassTag, K: ClassTag](
+    treeStructure: IntSlice,
+    treeValues: Slice[T],
+    f: T => Tree[K]
+  ): Tree[K] = {
+
+    val structureBuffer = treeStructure.toBuffer
+    val valuesBuffer = new ArrayBuffer[K](new Array[K](treeValues.length))
+
+    var index = 0
+    var offset = 0
+
+    def parent: Int = parentIndex(index, treeStructure.length, treeStructure) + offset
+
+    while (index < treeStructure.length) {
+      val tree = f(treeValues(index))
+      val delta = insertTree(tree, index + offset, parent, structureBuffer, valuesBuffer)
+      offset = offset + delta
+      index = index + 1
+    }
+
+    Tree.Builder.fromArraysHead(structureBuffer.toArray, valuesBuffer.toArray)
+
+  }
+
+  /** FlatMaps the tree enforcing distinct children. */
+  final def flatMapDistinct[T: ClassTag, K: ClassTag](
+    treeStructure: IntSlice,
+    treeValues: Slice[T],
+    f: T => Tree[K]
+  ): Tree[K] = {
+
+    val structureBuffer = treeStructure.toBuffer
+    val valuesBuffer = Buffer.ofSize[K](treeValues.length)
+
+    var index = 0
+    var offset = 0
+
+    while (index < treeStructure.length) {
+      val parent = {
+        val p = parentIndex(index, treeStructure.length, treeStructure)
+        if (p < 0) p else p + offset
+      }
+
+      val tree = f(treeValues(index))
+      val delta = insertTreeDistinct(tree, index + offset, parent, structureBuffer, valuesBuffer)
+
+      offset = offset + delta
+      index = index + 1
+    }
+
+    Tree.Builder.fromArraysHead(structureBuffer.toArray, valuesBuffer.toArray)
+
+  }
+
+  /** Removes value at index and joins subtrees to the parent node.
+    * Does not check for duplicate children values in parent. */
+  final def removeNode[T: ClassTag](
+    index: Int,
+    parentIndex: Int,
+    structureBuffer: IntBuffer,
+    valuesBuffer: Buffer[T]
+  ): Unit = {
+    structureBuffer.modify(parentIndex, _ + structureBuffer(index) - 1)
+    structureBuffer.shiftLeft(index + 1, 1)
+    valuesBuffer.shiftLeft(index + 1, 1)
+  }
+
+  /** Inserts tree to the buffers at the given index without checking for duplicates.
+    * If the tree is empty then removes the value at index, merges subtrees,
+    * and updates subtree count at parent index.
+    * @return buffer length change */
+  final def insertTree[T: ClassTag](
+    tree: Tree[T],
+    index: Int,
+    parentIndex: => Int,
+    structureBuffer: IntBuffer,
+    valuesBuffer: Buffer[T]
+  ): Int =
+    if (tree.size == 0) {
+      removeNode(index, parentIndex, structureBuffer, valuesBuffer)
+      -1
+    } else {
+
+      val offset1 = if (index < 0) {
+        structureBuffer.shiftRight(0, -index)
+        structureBuffer.modifyRange(0, -index, _ => 0)
+        valuesBuffer.shiftRight(0, -index)
+        -index
+      } else 0
+
+      val offset2 = if (tree.size == 1) {
+        valuesBuffer(index + offset1) = tree.valueOption.get
+        0
+      } else {
+        val (structure, values) = tree.toSlices
+        val s = treeSize(index + offset1, structureBuffer) - 1
+        structureBuffer.modify(index + offset1, _ + structure.last)
+        valuesBuffer.update(index + offset1, values.last)
+        insertSubtree(index + offset1 - s, structure.init, values.init, structureBuffer, valuesBuffer)
+      }
+      offset1 + offset2
+    }
+
+  /** Inserts a subtree to buffers at index.
+    * @return buffer length change */
+  final def insertSubtree[T: ClassTag](
+    index: Int,
+    structure: IntSlice,
+    values: Slice[T],
+    structureBuffer: IntBuffer,
+    valuesBuffer: Buffer[T]
+  ): Int = {
+    structureBuffer.shiftRight(index, structure.length)
+    structureBuffer.copyFrom(index, structure)
+    valuesBuffer.insertArray(index, 0, values.length, values.toArray)
+    structure.length
+  }
+
+  /** Inserts tree to the buffers at the given index checking for duplicated children.
+    * Does nothing when an empty tree.
+    * @return buffer length change */
+  final def insertTreeDistinctUnsafe[T: ClassTag](
+    tree: Tree[T],
+    index: Int,
+    structureBuffer: IntBuffer,
+    valuesBuffer: Buffer[T]
+  ): Int =
+    tree.valueOption match {
+      case None => 0
+      case Some(value) =>
+        valuesBuffer(index) = value
+        tree.childrenTrees.foldLeft(0) { (offset, subtree) =>
+          val bufferIndex = index + offset
+          offset + (childrenIndexFor(subtree.valueOption.get, bufferIndex, structureBuffer, valuesBuffer) match {
+            case None =>
+              val (structure, values) = subtree.toSlices
+              val s = treeSize(bufferIndex, structureBuffer) - 1
+              structureBuffer.increment(bufferIndex)
+              insertSubtree(bufferIndex - s, structure, values, structureBuffer, valuesBuffer)
+
+            case Some(i) => insertTreeDistinctUnsafe(subtree, i, structureBuffer, valuesBuffer)
+          })
+        }
+    }
+
+  /** Inserts tree to the buffers at the given index with checking for duplicated children.
+    * Does nothing when an empty tree.
+    * @return buffer length change */
+  final def insertTreeDistinct[T: ClassTag](
+    tree: Tree[T],
+    index: Int,
+    parentIndex: Int,
+    structureBuffer: IntBuffer,
+    valuesBuffer: Buffer[T]
+  ): Int =
+    if (tree.size == 0) {
+      removeNode(index, parentIndex, structureBuffer, valuesBuffer)
+      -1
+    } else {
+
+      /*println(structureBuffer)
+      println(valuesBuffer)
+      println(index, parentIndex)
+      println(tree)
+      println()*/
+
+      val (i, sibling) =
+        childrenIndexFor(tree.valueOption.get, parentIndex, structureBuffer, valuesBuffer)
+          .map((_, true))
+          .getOrElse((index, false))
+
+      valuesBuffer(i) = tree.valueOption.get
+
+      val delta =
+        if (tree.size == 1) 0
+        else
+          insertSubtreesDistinct(tree.childrenTrees.filter(_.size > 0).map((i, _)), structureBuffer, valuesBuffer, 0)
+
+      if (sibling && delta == 0 && parentIndex >= 0) {
+        removeNode(index, parentIndex, structureBuffer, valuesBuffer)
+        delta - 1
+      } else delta
+    }
+
+  /** Inserts subtrees to the buffers with checking for duplicated children.
+    * Does nothing when an empty tree.
+    * @return buffer length change */
+  @tailrec
+  final def insertSubtreesDistinct[T: ClassTag](
+    queue: List[(Int, Tree[T])],
+    structureBuffer: IntBuffer,
+    valuesBuffer: Buffer[T],
+    offset: Int
+  ): Int = {
+
+    /*println(structureBuffer)
+    println(valuesBuffer)
+    println(offset)
+    println(queue)
+    println()*/
+
+    def shiftFrom(i: Int, d: Int): ((Int, Tree[T])) => (Int, Tree[T]) = {
+      case (p, t) => (shiftIfGreaterOrEqualTo(p, i, d), t)
+    }
+
+    queue match {
+      case Nil => offset
+      case (parentIndex, tree) :: tail =>
+        if (tree.size == 0) insertSubtreesDistinct(tail, structureBuffer, valuesBuffer, offset)
+        else {
+
+          val (i, insert) =
+            childrenIndexFor(tree.valueOption.get, parentIndex, structureBuffer, valuesBuffer)
+              .map((_, false))
+              .getOrElse((parentIndex - treeSize(parentIndex, structureBuffer) + 1, true))
+
+          val (delta, updatedTail) = if (insert) {
+            structureBuffer.shiftRight(i, 1)
+            structureBuffer.update(i, 0)
+            structureBuffer.increment(parentIndex + 1)
+            valuesBuffer.shiftRight(i, 1)
+            valuesBuffer.update(i, tree.valueOption.get)
+            (1, tail.map(shiftFrom(i, 1)))
+          } else (0, tail)
+
+          val updatedQueue = if (tree.size > 1) {
+            if (structureBuffer(i) == 0) { // skip checking duplicates and insert tree at once
+              val (structure, values) = tree.toSlices
+              val s = treeSize(i, structureBuffer)
+              val d = insertSubtree(i - s + 1, structure.init, values.init, structureBuffer, valuesBuffer)
+              updatedTail.map(shiftFrom(i - d + 1, d))
+            } else
+              tree.childrenTrees.reverse.filter(_.size > 0).map((i, _)) ::: updatedTail
+          } else
+            updatedTail
+
+          insertSubtreesDistinct(updatedQueue, structureBuffer, valuesBuffer, offset + delta)
+        }
+    }
+
+  }
+
+  /** Adds d to i if i >= b, returns i otherwise. */
+  final def shiftIfGreaterOrEqualTo(i: Int, b: Int, d: Int): Int = if (i >= b) i + d else i
 
 }
