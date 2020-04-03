@@ -172,10 +172,18 @@ final class IntSlice private (
 
   /** Returns minimal copy of an underlying array, trimmed to the actual range.
     * @group Read */
-  def toArray[T1 >: Int: ClassTag]: Array[T1] = {
+  def toArray(implicit tag: ClassTag[Int]): Array[Int] = {
     val newArray = new Array[Int](length)
     Array.copy(array, fromIndex, newArray, 0, length)
-    newArray.asInstanceOf[Array[T1]]
+    newArray
+  }
+
+  /** Returns buffer with a copy of this Slice.
+    * @group Read */
+  def toBuffer(implicit tag: ClassTag[Int]): Buffer[Int] = {
+    val newArray = new Array[Int](length)
+    Array.copy(array, fromIndex, newArray, 0, length)
+    new IntBuffer(length).appendArray(newArray)
   }
 
   /** Returns new list of Slice values.

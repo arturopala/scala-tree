@@ -23,6 +23,12 @@ import org.scalatest.wordspec.AnyWordSpec
 
 class ArrayTreeSpec extends AnyWordSpec with Matchers {
 
+  val aa_a = Slice("aa", "a")
+  val aaa_aa_a = Slice("aaa", "aa", "a")
+  val a_aaa_aa_a = Slice("a", "aaa", "aa", "a")
+  val aa_aaa_aa_a = Slice("aa", "aaa", "aa", "a")
+  val aa_a_aaa_aa_a = Slice("aa", "a", "aaa", "aa", "a")
+
   "ArrayTree" should {
     "list children indexes" in {
       childrenIndexes(0, Array(0)) shouldBe Nil
@@ -60,16 +66,34 @@ class ArrayTreeSpec extends AnyWordSpec with Matchers {
       buffer(6) shouldBe 3
     }
 
-    "look for a child node holding a value" in {
-      childrenIndexFor(2, -1, Array.empty[Int], Array.empty[Int]) shouldBe None
-      childrenIndexFor(2, 0, Array(0), Array(2)) shouldBe None
-      childrenIndexFor(2, 1, Array(0, 1), Array(2, 1)) shouldBe Some(0)
-      childrenIndexFor(2, 3, Array(0, 0, 2, 1), Array(4, 3, 2, 1)) shouldBe Some(2)
-      childrenIndexFor(3, 3, Array(0, 0, 2, 1), Array(4, 3, 2, 1)) shouldBe None
-      childrenIndexFor(3, 2, Array(0, 0, 2, 1), Array(4, 3, 2, 1)) shouldBe Some(1)
-      childrenIndexFor(4, 2, Array(0, 0, 2, 1), Array(4, 3, 2, 1)) shouldBe Some(0)
-      childrenIndexFor(3, 1, Array(0, 0, 2, 1), Array(4, 3, 2, 1)) shouldBe None
-      childrenIndexFor(1, 2, Array(0, 0, 2, 1), Array(4, 3, 2, 1)) shouldBe None
+    "find rightmost index of children's node holding a value" in {
+      childrenLeftmostIndexFor(2, -1, Array.empty[Int], Array.empty[Int]) shouldBe None
+      childrenLeftmostIndexFor(2, 0, Array(0), Array(2)) shouldBe None
+      childrenLeftmostIndexFor(2, 1, Array(0, 1), Array(2, 1)) shouldBe Some(0)
+      childrenLeftmostIndexFor(2, 3, Array(0, 0, 2, 1), Array(4, 3, 2, 1)) shouldBe Some(2)
+      childrenLeftmostIndexFor(3, 3, Array(0, 0, 2, 1), Array(4, 3, 2, 1)) shouldBe None
+      childrenLeftmostIndexFor(3, 2, Array(0, 0, 2, 1), Array(4, 3, 2, 1)) shouldBe Some(1)
+      childrenLeftmostIndexFor(4, 2, Array(0, 0, 2, 1), Array(4, 3, 2, 1)) shouldBe Some(0)
+      childrenLeftmostIndexFor(3, 1, Array(0, 0, 2, 1), Array(4, 3, 2, 1)) shouldBe None
+      childrenLeftmostIndexFor(1, 2, Array(0, 0, 2, 1), Array(4, 3, 2, 1)) shouldBe None
+      childrenLeftmostIndexFor(1, 2, Array(0, 0, 2, 1), Array(1, 1, 1, 1)) shouldBe Some(1)
+    }
+
+    "find leftmost index of children's node holding a value" in {
+      childrenRightmostIndexFor(2, -1, Array.empty[Int], Array.empty[Int]) shouldBe None
+      childrenRightmostIndexFor(2, 0, Array(0), Array(2)) shouldBe None
+      childrenRightmostIndexFor(2, 1, Array(0, 1), Array(2, 1)) shouldBe Some(0)
+      childrenRightmostIndexFor(2, 3, Array(0, 0, 2, 1), Array(4, 3, 2, 1)) shouldBe Some(2)
+      childrenRightmostIndexFor(3, 3, Array(0, 0, 2, 1), Array(4, 3, 2, 1)) shouldBe None
+      childrenRightmostIndexFor(3, 2, Array(0, 0, 2, 1), Array(4, 3, 2, 1)) shouldBe Some(1)
+      childrenRightmostIndexFor(4, 2, Array(0, 0, 2, 1), Array(4, 3, 2, 1)) shouldBe Some(0)
+      childrenRightmostIndexFor(3, 1, Array(0, 0, 2, 1), Array(4, 3, 2, 1)) shouldBe None
+      childrenRightmostIndexFor(1, 2, Array(0, 0, 2, 1), Array(4, 3, 2, 1)) shouldBe None
+      childrenRightmostIndexFor(1, 2, Array(0, 0, 2, 1), Array(1, 1, 1, 1)) shouldBe Some(0)
+    }
+
+    "list indexes of children's nodes holding a value" in {
+      childrenIndexListFor(1, 2, Array(0, 0, 2, 1), Array(1, 1, 1, 1)) shouldBe List(0, 1)
     }
 
     "find parent index" in {
@@ -133,6 +157,16 @@ class ArrayTreeSpec extends AnyWordSpec with Matchers {
       treeSize(2, Array(0, 0, 1, 0, 3)) shouldBe 2
       treeSize(3, Array(0, 0, 1, 0, 3)) shouldBe 1
       treeSize(1, Array(0, 0, 1, 0, 3)) shouldBe 1
+    }
+
+    "calculate malformed subtree size" in {
+      an[IllegalArgumentException] shouldBe thrownBy(treeSize(0, Array(-1)))
+      an[IllegalArgumentException] shouldBe thrownBy(treeSize(0, Array(1)))
+      an[IllegalArgumentException] shouldBe thrownBy(treeSize(0, Array(2)))
+      an[IllegalArgumentException] shouldBe thrownBy(treeSize(1, Array(0, 2)))
+      an[IllegalArgumentException] shouldBe thrownBy(treeSize(2, Array(0, 2, 1)))
+      treeSize(1, Array(1, 0)) shouldBe 1
+      treeSize(2, Array(0, 0, 1)) shouldBe 2
     }
 
     "iterate over tree's branches as index lists" in {
@@ -213,6 +247,11 @@ class ArrayTreeSpec extends AnyWordSpec with Matchers {
       calculateHeight(4, Array(0, 0, 0, 2, 2)) shouldBe 3
       calculateHeight(4, Array(0, 0, 0, 0, 4)) shouldBe 2
       calculateHeight(9, Array(0, 1, 0, 0, 1, 1, 0, 0, 2, 4)) shouldBe 4
+    }
+
+    "calculate height of an incomplete tree" in {
+      calculateHeight(0, Array(1)) shouldBe 2
+      calculateHeight(1, Array(1, 1)) shouldBe 3
     }
 
     "access a tree at the index" in {
@@ -327,16 +366,34 @@ class ArrayTreeSpec extends AnyWordSpec with Matchers {
     }
 
     "flatMap a tree" in {
+      val f0: String => Tree[Int] = s => Tree(s.length)
+      flatMapDistinct(IntSlice(), Slice.empty[String], f0) shouldBe Tree.empty
+      flatMapDistinct(IntSlice(0), Slice("a"), f0) shouldBe Tree(1)
+      flatMapDistinct(IntSlice(0, 1), aa_a, f0) shouldBe Tree(1, Tree(2))
+      flatMapDistinct(IntSlice(0, 1, 1), aaa_aa_a, f0) shouldBe Tree(1, Tree(2, Tree(3)))
+      flatMapDistinct(IntSlice(0, 0, 2), aaa_aa_a, f0) shouldBe Tree(1, Tree(2), Tree(3))
+      flatMapDistinct(IntSlice(0, 1, 1, 1), a_aaa_aa_a, f0) shouldBe Tree(
+        1,
+        Tree(2, Tree(3, Tree(1)))
+      )
+      flatMapDistinct(IntSlice(0, 0, 0, 3), a_aaa_aa_a, f0) shouldBe Tree(1, Tree(2), Tree(3), Tree(1))
+      flatMapDistinct(IntSlice(0, 0, 2, 1), a_aaa_aa_a, f0) shouldBe Tree(1, Tree(2, Tree(3), Tree(1)))
+      flatMapDistinct(IntSlice(0, 0, 1, 2), a_aaa_aa_a, f0) shouldBe Tree(1, Tree(2, Tree(3)), Tree(1))
+      flatMapDistinct(IntSlice(0, 1, 0, 2), a_aaa_aa_a, f0) shouldBe Tree(1, Tree(2), Tree(3, Tree(1)))
+      flatMapDistinct(IntSlice(0, 1, 0, 2, 1), aa_a_aaa_aa_a, f0) shouldBe Tree(1, Tree(2, Tree(3), Tree(1, Tree(2))))
+      flatMapDistinct(IntSlice(0, 1, 0, 1, 2), aa_a_aaa_aa_a, f0) shouldBe
+        Tree(1, Tree(2, Tree(3)), Tree(1, Tree(2)))
+
       val f1: String => Tree[Int] = s => Tree(s.length, Tree(s.length * 2))
       flatMap(IntSlice(), Slice.empty[String], f1) shouldBe Tree.empty
       flatMap(IntSlice(0), Slice("a"), f1) shouldBe Tree(1, Tree(2))
-      flatMap(IntSlice(0, 1), Slice("aa", "a"), f1) shouldBe Tree(1, Tree(2, Tree(4)), Tree(2))
-      flatMap(IntSlice(0, 1, 1), Slice("aaa", "aa", "a"), f1) shouldBe Tree(
+      flatMap(IntSlice(0, 1), aa_a, f1) shouldBe Tree(1, Tree(2, Tree(4)), Tree(2))
+      flatMap(IntSlice(0, 1, 1), aaa_aa_a, f1) shouldBe Tree(
         1,
         Tree(2, Tree(3, Tree(6)), Tree(4)),
         Tree(2)
       )
-      flatMap(IntSlice(0, 0, 2), Slice("aaa", "aa", "a"), f1) shouldBe Tree(
+      flatMap(IntSlice(0, 0, 2), aaa_aa_a, f1) shouldBe Tree(
         1,
         Tree(2, Tree(4)),
         Tree(3, Tree(6)),
@@ -346,8 +403,8 @@ class ArrayTreeSpec extends AnyWordSpec with Matchers {
       val f2: String => Tree[Int] = s => Tree(s.length, Tree(s.length * 2), Tree(s.length + 1))
       flatMap(IntSlice(), Slice.empty[String], f2) shouldBe Tree.empty
       flatMap(IntSlice(0), Slice("a"), f2) shouldBe Tree(1, Tree(2), Tree(2))
-      flatMap(IntSlice(0, 1), Slice("aa", "a"), f2) shouldBe Tree(1, Tree(2, Tree(4), Tree(3)), Tree(2), Tree(2))
-      flatMap(IntSlice(0, 1, 1), Slice("aaa", "aa", "a"), f2) shouldBe Tree(
+      flatMap(IntSlice(0, 1), aa_a, f2) shouldBe Tree(1, Tree(2, Tree(4), Tree(3)), Tree(2), Tree(2))
+      flatMap(IntSlice(0, 1, 1), aaa_aa_a, f2) shouldBe Tree(
         1,
         Tree(2, Tree(3, Tree(6), Tree(4)), Tree(4), Tree(3)),
         Tree(2),
@@ -357,98 +414,197 @@ class ArrayTreeSpec extends AnyWordSpec with Matchers {
       val f3: String => Tree[Int] = _ => Tree.empty
       flatMap(IntSlice(), Slice.empty[String], f3) shouldBe Tree.empty
       flatMap(IntSlice(0), Slice("a"), f3) shouldBe Tree.empty
-      flatMap(IntSlice(0, 1), Slice("aa", "a"), f3) shouldBe Tree.empty
-      flatMap(IntSlice(0, 1, 1), Slice("aaa", "aa", "a"), f3) shouldBe Tree.empty
+      flatMap(IntSlice(0, 1), aa_a, f3) shouldBe Tree.empty
+      flatMap(IntSlice(0, 1, 1), aaa_aa_a, f3) shouldBe Tree.empty
 
       val f4: String => Tree[Int] = s => if (s == "a") Tree.empty else Tree(s.length, Tree(s.length * 2))
       flatMap(IntSlice(), Slice.empty[String], f4) shouldBe Tree.empty
       flatMap(IntSlice(0), Slice("a"), f4) shouldBe Tree.empty
-      flatMap(IntSlice(0, 1), Slice("aa", "a"), f4) shouldBe Tree(2, Tree(4))
-      flatMap(IntSlice(0, 1, 1), Slice("aaa", "aa", "a"), f4) shouldBe Tree(2, Tree(3, Tree(6)), Tree(4))
+      flatMap(IntSlice(0, 1), aa_a, f4) shouldBe Tree(2, Tree(4))
+      flatMap(IntSlice(0, 1, 1), aaa_aa_a, f4) shouldBe Tree(2, Tree(3, Tree(6)), Tree(4))
+
+      val f5: String => Tree[Int] = _ => Tree(0, Tree(1, Tree(2, Tree(4, Tree(5)))))
+      flatMap(IntSlice(0), Slice("a"), f5) shouldBe Tree(0, Tree(1, Tree(2, Tree(4, Tree(5)))))
+      flatMap(IntSlice(0, 1), Slice("b", "a"), f5) shouldBe
+        Tree(0, Tree(0, Tree(1, Tree(2, Tree(4, Tree(5))))), Tree(1, Tree(2, Tree(4, Tree(5)))))
+      flatMap(IntSlice(0, 0, 2), Slice("c", "b", "a"), f5) shouldBe
+        Tree(
+          0,
+          Tree(0, Tree(1, Tree(2, Tree(4, Tree(5))))),
+          Tree(0, Tree(1, Tree(2, Tree(4, Tree(5))))),
+          Tree(1, Tree(2, Tree(4, Tree(5))))
+        )
     }
 
-    "debug" in {
-      val f2: String => Tree[Int] = s => Tree(s.length, Tree(s.length * 2), Tree(s.length + 1))
-      flatMapDistinct(IntSlice(0, 0, 0, 3), Slice("aa", "aaa", "aa", "a"), f2) shouldBe Tree(
-        1,
-        Tree(3, Tree(6), Tree(4)),
-        Tree(2, Tree(4), Tree(3))
-      )
-    }
+    "debug" in {}
 
     "flatMap distinct a tree" in {
       val f0: String => Tree[Int] = s => Tree(s.length)
       flatMapDistinct(IntSlice(), Slice.empty[String], f0) shouldBe Tree.empty
       flatMapDistinct(IntSlice(0), Slice("a"), f0) shouldBe Tree(1)
-      flatMapDistinct(IntSlice(0, 1), Slice("aa", "a"), f0) shouldBe Tree(1, Tree(2))
-      flatMapDistinct(IntSlice(0, 1, 1), Slice("aaa", "aa", "a"), f0) shouldBe Tree(1, Tree(2, Tree(3)))
-      flatMapDistinct(IntSlice(0, 0, 2), Slice("aaa", "aa", "a"), f0) shouldBe Tree(1, Tree(2), Tree(3))
-      flatMapDistinct(IntSlice(0, 1, 1, 1), Slice("a", "aaa", "aa", "a"), f0) shouldBe Tree(
+      flatMapDistinct(IntSlice(0, 1), aa_a, f0) shouldBe Tree(1, Tree(2))
+      flatMapDistinct(IntSlice(0, 1, 1), aaa_aa_a, f0) shouldBe Tree(1, Tree(2, Tree(3)))
+      flatMapDistinct(IntSlice(0, 0, 2), aaa_aa_a, f0) shouldBe Tree(1, Tree(2), Tree(3))
+      flatMapDistinct(IntSlice(0, 1, 1, 1), a_aaa_aa_a, f0) shouldBe Tree(
         1,
         Tree(2, Tree(3, Tree(1)))
       )
-      flatMapDistinct(IntSlice(0, 0, 0, 3), Slice("a", "aaa", "aa", "a"), f0) shouldBe
-        Tree(1, Tree(2), Tree(3), Tree(1))
-      flatMapDistinct(IntSlice(0, 0, 2, 1), Slice("a", "aaa", "aa", "a"), f0) shouldBe
-        Tree(1, Tree(2, Tree(3), Tree(1)))
-      flatMapDistinct(IntSlice(0, 0, 1, 2), Slice("a", "aaa", "aa", "a"), f0) shouldBe
-        Tree(1, Tree(2, Tree(3)), Tree(1))
-      flatMapDistinct(IntSlice(0, 1, 0, 2), Slice("a", "aaa", "aa", "a"), f0) shouldBe
-        Tree(1, Tree(2), Tree(3, Tree(1)))
+      flatMapDistinct(IntSlice(0, 0, 0, 3), a_aaa_aa_a, f0) shouldBe Tree(1, Tree(2), Tree(3), Tree(1))
+      flatMapDistinct(IntSlice(0, 0, 2, 1), a_aaa_aa_a, f0) shouldBe Tree(1, Tree(2, Tree(3), Tree(1)))
+      flatMapDistinct(IntSlice(0, 0, 1, 2), a_aaa_aa_a, f0) shouldBe Tree(1, Tree(2, Tree(3)), Tree(1))
+      flatMapDistinct(IntSlice(0, 1, 0, 2), a_aaa_aa_a, f0) shouldBe Tree(1, Tree(2), Tree(3, Tree(1)))
+      flatMapDistinct(IntSlice(0, 1, 0, 2, 1), aa_a_aaa_aa_a, f0) shouldBe Tree(1, Tree(2, Tree(3), Tree(1, Tree(2))))
+      flatMapDistinct(IntSlice(0, 1, 0, 1, 2), aa_a_aaa_aa_a, f0) shouldBe
+        Tree(1, Tree(2, Tree(3)), Tree(1, Tree(2)))
 
       val f1: String => Tree[Int] = s => Tree(s.length, Tree(s.length * 2))
       flatMapDistinct(IntSlice(), Slice.empty[String], f1) shouldBe Tree.empty
       flatMapDistinct(IntSlice(0), Slice("a"), f1) shouldBe Tree(1, Tree(2))
-      flatMapDistinct(IntSlice(0, 1), Slice("aa", "a"), f1) shouldBe Tree(1, Tree(2, Tree(4)))
-      flatMapDistinct(IntSlice(0, 1, 1), Slice("aaa", "aa", "a"), f1) shouldBe Tree(
+      flatMapDistinct(IntSlice(0, 1), aa_a, f1) shouldBe Tree(1, Tree(2, Tree(4)))
+      flatMapDistinct(IntSlice(0, 1, 1), aaa_aa_a, f1) shouldBe Tree(1, Tree(2, Tree(3, Tree(6)), Tree(4)))
+      flatMapDistinct(IntSlice(0, 0, 2), aaa_aa_a, f1) shouldBe Tree(1, Tree(2, Tree(4)), Tree(3, Tree(6)))
+      flatMapDistinct(IntSlice(0, 1, 1, 1), a_aaa_aa_a, f1) shouldBe Tree(
         1,
-        Tree(2, Tree(3, Tree(6)), Tree(4))
+        Tree(2, Tree(3, Tree(1, Tree(2)), Tree(6)), Tree(4))
       )
-      flatMapDistinct(IntSlice(0, 0, 2), Slice("aaa", "aa", "a"), f1) shouldBe Tree(
+      flatMapDistinct(IntSlice(0, 0, 0, 3), a_aaa_aa_a, f1) shouldBe Tree(
         1,
         Tree(2, Tree(4)),
-        Tree(3, Tree(6))
+        Tree(3, Tree(6)),
+        Tree(1, Tree(2))
       )
-      flatMapDistinct(IntSlice(0, 1, 1, 1), Slice("a", "aaa", "aa", "a"), f1) shouldBe
-        Tree(1, Tree(2, Tree(3, Tree(1, Tree(2)), Tree(6)), Tree(4)))
-      flatMapDistinct(IntSlice(0, 0, 0, 3), Slice("a", "aaa", "aa", "a"), f1) shouldBe
-        Tree(1, Tree(2, Tree(4)), Tree(3, Tree(6)), Tree(1, Tree(2)))
-      flatMapDistinct(IntSlice(0, 0, 2, 1), Slice("a", "aaa", "aa", "a"), f1) shouldBe
-        Tree(1, Tree(2, Tree(3, Tree(6)), Tree(1, Tree(2)), Tree(4)))
-      flatMapDistinct(IntSlice(0, 0, 1, 2), Slice("a", "aaa", "aa", "a"), f1) shouldBe
-        Tree(1, Tree(2, Tree(3, Tree(6)), Tree(4)), Tree(1, Tree(2)))
-      flatMapDistinct(IntSlice(0, 1, 0, 2), Slice("a", "aaa", "aa", "a"), f1) shouldBe
-        Tree(1, Tree(2, Tree(4)), Tree(3, Tree(1, Tree(2)), Tree(6)))
+      flatMapDistinct(IntSlice(0, 0, 2, 1), a_aaa_aa_a, f1) shouldBe Tree(
+        1,
+        Tree(2, Tree(3, Tree(6)), Tree(1, Tree(2)), Tree(4))
+      )
+      flatMapDistinct(IntSlice(0, 0, 1, 2), a_aaa_aa_a, f1) shouldBe Tree(
+        1,
+        Tree(2, Tree(3, Tree(6)), Tree(4)),
+        Tree(1, Tree(2))
+      )
+      flatMapDistinct(IntSlice(0, 1, 0, 2), a_aaa_aa_a, f1) shouldBe Tree(
+        1,
+        Tree(2, Tree(4)),
+        Tree(3, Tree(1, Tree(2)), Tree(6))
+      )
+      flatMapDistinct(IntSlice(0, 1, 0, 2, 1), aa_a_aaa_aa_a, f1) shouldBe Tree(
+        1,
+        Tree(2, Tree(3, Tree(6)), Tree(1, Tree(2, Tree(4))), Tree(4))
+      )
+      flatMapDistinct(IntSlice(0, 1, 0, 1, 2), aa_a_aaa_aa_a, f1) shouldBe
+        Tree(1, Tree(2, Tree(3, Tree(6)), Tree(4)), Tree(1, Tree(2, Tree(4))))
 
       val f2: String => Tree[Int] = s => Tree(s.length, Tree(s.length * 2), Tree(s.length + 1))
       flatMapDistinct(IntSlice(), Slice.empty[String], f2) shouldBe Tree.empty
       flatMapDistinct(IntSlice(0), Slice("a"), f2) shouldBe Tree(1, Tree(2))
-      flatMapDistinct(IntSlice(0, 1), Slice("aa", "a"), f2) shouldBe Tree(1, Tree(2, Tree(4), Tree(3)))
-      flatMapDistinct(IntSlice(0, 1, 1), Slice("aaa", "aa", "a"), f2) shouldBe
-        Tree(1, Tree(2, Tree(3, Tree(6), Tree(4)), Tree(4)))
-      flatMapDistinct(IntSlice(0, 0, 2), Slice("aaa", "aa", "a"), f2) shouldBe Tree(
+      flatMapDistinct(IntSlice(0, 1), aa_a, f2) shouldBe Tree(1, Tree(2, Tree(4), Tree(3)))
+      flatMapDistinct(IntSlice(0, 1, 1), aaa_aa_a, f2) shouldBe Tree(1, Tree(2, Tree(3, Tree(6), Tree(4)), Tree(4)))
+      flatMapDistinct(IntSlice(0, 0, 2), aaa_aa_a, f2) shouldBe Tree(
         1,
         Tree(2, Tree(4), Tree(3)),
         Tree(3, Tree(6), Tree(4))
       )
-      flatMapDistinct(IntSlice(0, 0, 0, 3), Slice("aa", "aaa", "aa", "a"), f2) shouldBe Tree(
+      flatMapDistinct(IntSlice(0, 0, 0, 3), aa_aaa_aa_a, f2) shouldBe Tree(
         1,
         Tree(3, Tree(6), Tree(4)),
         Tree(2, Tree(4), Tree(3))
       )
+      flatMapDistinct(IntSlice(0, 0, 2, 1), a_aaa_aa_a, f2) shouldBe Tree(
+        1,
+        Tree(2, Tree(3, Tree(6), Tree(4)), Tree(1, Tree(2)), Tree(4))
+      )
+      flatMapDistinct(IntSlice(0, 0, 1, 2), a_aaa_aa_a, f2) shouldBe Tree(
+        1,
+        Tree(2, Tree(3, Tree(6), Tree(4)), Tree(4)),
+        Tree(1, Tree(2))
+      )
+      flatMapDistinct(IntSlice(0, 1, 0, 2), a_aaa_aa_a, f2) shouldBe Tree(
+        1,
+        Tree(2, Tree(4), Tree(3)),
+        Tree(3, Tree(1, Tree(2)), Tree(6), Tree(4))
+      )
+      flatMapDistinct(IntSlice(0, 1, 0, 2, 1), aa_a_aaa_aa_a, f2) shouldBe Tree(
+        1,
+        Tree(2, Tree(3, Tree(6), Tree(4)), Tree(1, Tree(2, Tree(4), Tree(3))), Tree(4))
+      )
+      flatMapDistinct(IntSlice(0, 1, 0, 1, 2), aa_a_aaa_aa_a, f2) shouldBe
+        Tree(1, Tree(2, Tree(3, Tree(6), Tree(4)), Tree(4)), Tree(1, Tree(2, Tree(4), Tree(3))))
 
       val f3: String => Tree[Int] = _ => Tree.empty
       flatMapDistinct(IntSlice(), Slice.empty[String], f3) shouldBe Tree.empty
       flatMapDistinct(IntSlice(0), Slice("a"), f3) shouldBe Tree.empty
-      flatMapDistinct(IntSlice(0, 1), Slice("aa", "a"), f3) shouldBe Tree.empty
-      flatMapDistinct(IntSlice(0, 1, 1), Slice("aaa", "aa", "a"), f3) shouldBe Tree.empty
-      flatMapDistinct(IntSlice(0, 0, 2), Slice("aaa", "aa", "a"), f3) shouldBe Tree.empty
+      flatMapDistinct(IntSlice(0, 1), aa_a, f3) shouldBe Tree.empty
+      flatMapDistinct(IntSlice(0, 1, 1), aaa_aa_a, f3) shouldBe Tree.empty
+      flatMapDistinct(IntSlice(0, 0, 2), aaa_aa_a, f3) shouldBe Tree.empty
+      flatMapDistinct(IntSlice(0, 1, 1, 1), a_aaa_aa_a, f3) shouldBe Tree.empty
+      flatMapDistinct(IntSlice(0, 0, 0, 3), a_aaa_aa_a, f3) shouldBe Tree.empty
+      flatMapDistinct(IntSlice(0, 0, 2, 1), a_aaa_aa_a, f3) shouldBe Tree.empty
+      flatMapDistinct(IntSlice(0, 0, 1, 2), a_aaa_aa_a, f3) shouldBe Tree.empty
+      flatMapDistinct(IntSlice(0, 1, 0, 2), a_aaa_aa_a, f3) shouldBe Tree.empty
+      flatMapDistinct(IntSlice(0, 1, 0, 2, 1), aa_a_aaa_aa_a, f3) shouldBe Tree.empty
+      flatMapDistinct(IntSlice(0, 1, 0, 1, 2), aa_a_aaa_aa_a, f3) shouldBe Tree.empty
 
       val f4: String => Tree[Int] = s => if (s == "a") Tree.empty else Tree(s.length, Tree(s.length * 2))
       flatMapDistinct(IntSlice(), Slice.empty[String], f4) shouldBe Tree.empty
       flatMapDistinct(IntSlice(0), Slice("a"), f4) shouldBe Tree.empty
-      flatMapDistinct(IntSlice(0, 1), Slice("aa", "a"), f4) shouldBe Tree(2, Tree(4))
-      flatMapDistinct(IntSlice(0, 1, 1), Slice("aaa", "aa", "a"), f4) shouldBe Tree(2, Tree(3, Tree(6)), Tree(4))
+      flatMapDistinct(IntSlice(0, 1), aa_a, f4) shouldBe Tree(2, Tree(4))
+      flatMapDistinct(IntSlice(0, 1, 1), aaa_aa_a, f4) shouldBe Tree(2, Tree(3, Tree(6)), Tree(4))
+      flatMapDistinct(IntSlice(0, 0, 2), aaa_aa_a, f4) shouldBe Tree.empty
+
+      // test direct subtree insertion
+      val f5: String => Tree[Int] = _ => Tree(0, Tree(1, Tree(2, Tree(4, Tree(5)))))
+      flatMapDistinct(IntSlice(0), Slice("a"), f5) shouldBe Tree(0, Tree(1, Tree(2, Tree(4, Tree(5)))))
+      flatMapDistinct(IntSlice(0, 1), Slice("b", "a"), f5) shouldBe
+        Tree(0, Tree(0, Tree(1, Tree(2, Tree(4, Tree(5))))), Tree(1, Tree(2, Tree(4, Tree(5)))))
+      flatMapDistinct(IntSlice(0, 0, 2), Slice("c", "b", "a"), f5) shouldBe
+        Tree(0, Tree(0, Tree(1, Tree(2, Tree(4, Tree(5))))), Tree(1, Tree(2, Tree(4, Tree(5)))))
+    }
+
+    "insert a value" in {
+      insertValue(0, "a", Tree.empty) shouldBe Tree("a")
+      insertValue(0, "a", Tree("a")) shouldBe Tree("a", Tree("a"))
+      insertValue(1, "a", Tree("a", Tree("b"))) shouldBe Tree("a", Tree("a"), Tree("b"))
+      insertValue(0, "a", Tree("a", Tree("b"))) shouldBe Tree("a", Tree("b", Tree("a")))
+      insertValue(2, "a", Tree("a", Tree("b"), Tree("c"))) shouldBe Tree("a", Tree("a"), Tree("b"), Tree("c"))
+      insertValue(1, "a", Tree("a", Tree("b"), Tree("c"))) shouldBe Tree("a", Tree("b", Tree("a")), Tree("c"))
+      insertValue(0, "a", Tree("a", Tree("b"), Tree("c"))) shouldBe Tree("a", Tree("b"), Tree("c", Tree("a")))
+      insertValue(0, "a", Tree("a", Tree("b", Tree("c")))) shouldBe Tree("a", Tree("b", Tree("c", Tree("a"))))
+      insertValue(1, "a", Tree("a", Tree("b", Tree("c")))) shouldBe Tree("a", Tree("b", Tree("a"), Tree("c")))
+      insertValue(2, "a", Tree("a", Tree("b", Tree("c")))) shouldBe Tree("a", Tree("a"), Tree("b", Tree("c")))
+    }
+
+    "insert a subtree" in {
+      insertSubtree(0, Tree.empty, Tree.empty) shouldBe Tree.empty
+      insertSubtree(0, Tree("a"), Tree.empty) shouldBe Tree("a")
+      insertSubtree(0, Tree.empty, Tree("a")) shouldBe Tree("a")
+      insertSubtree(0, Tree("a"), Tree("a")) shouldBe Tree("a", Tree("a"))
+      insertSubtree(1, Tree("a"), Tree("a", Tree("b"))) shouldBe Tree("a", Tree("a"), Tree("b"))
+      insertSubtree(0, Tree("a"), Tree("a", Tree("b"))) shouldBe Tree("a", Tree("b", Tree("a")))
+      insertSubtree(1, Tree("b", Tree("a")), Tree("a", Tree("b"))) shouldBe Tree("a", Tree("b", Tree("a")), Tree("b"))
+      insertSubtree(0, Tree("b", Tree("a")), Tree("a", Tree("b"))) shouldBe Tree("a", Tree("b", Tree("b", Tree("a"))))
+      insertSubtree(2, Tree("a", Tree("b")), Tree("b", Tree("a", Tree("b")))) shouldBe Tree(
+        "b",
+        Tree("a", Tree("b")),
+        Tree("a", Tree("b"))
+      )
+    }
+
+    "insert a subtree distinct" in {
+      insertSubtreeDistinct(0, Tree.empty, Tree.empty) shouldBe Tree.empty
+      insertSubtreeDistinct(0, Tree("a"), Tree.empty) shouldBe Tree("a")
+      insertSubtreeDistinct(0, Tree.empty, Tree("a")) shouldBe Tree("a")
+      insertSubtreeDistinct(0, Tree("a"), Tree("a")) shouldBe Tree("a", Tree("a"))
+      insertSubtreeDistinct(1, Tree("a"), Tree("a", Tree("b"))) shouldBe Tree("a", Tree("a"), Tree("b"))
+      insertSubtreeDistinct(0, Tree("a"), Tree("a", Tree("b"))) shouldBe Tree("a", Tree("b", Tree("a")))
+      insertSubtreeDistinct(1, Tree("b", Tree("a")), Tree("a", Tree("b"))) shouldBe Tree("a", Tree("b", Tree("a")))
+      insertSubtreeDistinct(0, Tree("b", Tree("a")), Tree("a", Tree("b"))) shouldBe Tree(
+        "a",
+        Tree("b", Tree("b", Tree("a")))
+      )
+      insertSubtreeDistinct(2, Tree("a", Tree("b")), Tree("b", Tree("a", Tree("b")))) shouldBe Tree(
+        "b",
+        Tree("a", Tree("b"))
+      )
     }
   }
 

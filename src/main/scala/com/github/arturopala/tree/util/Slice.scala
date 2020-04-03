@@ -41,6 +41,10 @@ trait Slice[T] extends (Int => T) {
     * @group Properties */
   def isEmpty: Boolean
 
+  /** Returns true if Slice has values, otherwise false.
+    * @group Properties */
+  @`inline` final def nonEmpty: Boolean = !isEmpty
+
   /** Lazily composes mapping function and returns new Slice.
     * Does not modify nor copy underlying array.
     * @group Transform */
@@ -116,7 +120,11 @@ trait Slice[T] extends (Int => T) {
 
   /** Returns minimal copy of an underlying array, trimmed to the actual range.
     * @group Read */
-  def toArray[T1 >: T: ClassTag]: Array[T1]
+  def toArray(implicit tag: ClassTag[T]): Array[T]
+
+  /** Returns buffer with a copy of this Slice.
+    * @group Read */
+  def toBuffer(implicit tag: ClassTag[T]): Buffer[T]
 
 }
 

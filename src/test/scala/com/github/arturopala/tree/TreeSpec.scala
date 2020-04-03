@@ -148,38 +148,59 @@ trait TreeSpec extends AnyWordSpec with Matchers {
           |[a,e,h,i]""".stripMargin
     }
 
-    "check if contains branch" in {
+    "check if tree contains a branch" in {
       tree0.containsBranch(List("a", "b")) shouldBe false
       tree9.containsBranch(List("a", "b", "c")) shouldBe false
       tree9.containsBranch(List("a", "e", "h", "i")) shouldBe true
       tree9.containsBranch(List("a", "e", "c")) shouldBe false
     }
 
-    "check if contains path" in {
+    "check if tree contains a path" in {
       tree0.containsPath(List("a", "b")) shouldBe false
       tree9.containsPath(List("a", "b", "c")) shouldBe true
       tree9.containsPath(List("a", "e", "h", "i")) shouldBe true
       tree9.containsPath(List("a", "e", "c")) shouldBe false
     }
 
-    "insert new node to an empty Tree" in {
-      val tree1 = tree0.insert("a")
-      tree1 shouldBe Tree("a")
-      tree1.size shouldBe 1
-      tree1.width shouldBe 1
+    "insert new node to a tree" in {
+      val result0 = tree0.insertValue("a")
+      result0 shouldBe Tree("a")
+      result0.size shouldBe 1
+      result0.width shouldBe 1
+
+      val result1 = tree1.insertValue("b")
+      result1 shouldBe Tree("a", Tree("b"))
+      result1.size shouldBe 2
+      result1.width shouldBe 1
+
+      tree2.insertValue("c") shouldBe Tree("a", Tree("c"), Tree("b"))
+      tree3_1.insertValue("d") shouldBe Tree("a", Tree("d"), Tree("b", Tree("c")))
+      tree3_1.insertValue("b") shouldBe Tree("a", Tree("b"), Tree("b", Tree("c")))
+      tree3_1.insertValue("c") shouldBe Tree("a", Tree("c"), Tree("b", Tree("c")))
+      tree3_2.insertValue("c") shouldBe Tree("a", Tree("c"), Tree("b"), Tree("c"))
     }
 
-    "insert new node to a single node Tree" in {
-      val tree = Tree(0)
-      val tree2 = tree.insert(1)
-      tree2 shouldBe Tree(0, Tree(1))
-      tree2.size shouldBe 2
-      tree2.width shouldBe 1
+    "insert subtree to a tree" in {
+      val result0 = tree0.insertTree(Tree("a"))
+      result0 shouldBe Tree("a")
+      result0.size shouldBe 1
+      result0.width shouldBe 1
+
+      val result1 = tree1.insertTree(Tree("b"))
+      result1 shouldBe Tree("a", Tree("b"))
+      result1.size shouldBe 2
+      result1.width shouldBe 1
+
+      tree2.insertTree(Tree("c")) shouldBe Tree("a", Tree("c"), Tree("b"))
+      tree3_1.insertTree(Tree("d")) shouldBe Tree("a", Tree("d"), Tree("b", Tree("c")))
+      tree3_1.insertTree(Tree("b")) shouldBe Tree("a", Tree("b"), Tree("b", Tree("c")))
+      tree3_1.insertTree(Tree("c")) shouldBe Tree("a", Tree("c"), Tree("b", Tree("c")))
+      tree3_2.insertTree(Tree("c")) shouldBe Tree("a", Tree("c"), Tree("b"), Tree("c"))
     }
 
     "insert new branch to an empty Tree" in {
       val tree: Tree[Int] = Tree.empty
-      val tree2 = tree.insert(List(0, 1, 2, 3))
+      val tree2 = tree.insertBranch(List(0, 1, 2, 3))
       tree2 shouldBe Tree(0, Tree(1, Tree(2, Tree(3))))
       tree2.size shouldBe 4
       tree2.width shouldBe 1
@@ -187,7 +208,7 @@ trait TreeSpec extends AnyWordSpec with Matchers {
 
     "insert new branch to a single node Tree" in {
       val tree = Tree(0)
-      tree.insert(List(0, 1, 2, 3)) shouldBe Tree(0, Tree(1, Tree(2, Tree(3))))
+      tree.insertBranch(List(0, 1, 2, 3)) shouldBe Tree(0, Tree(1, Tree(2, Tree(3))))
     }
 
     "insert new branch to a multi-branch Tree" in {
@@ -196,14 +217,14 @@ trait TreeSpec extends AnyWordSpec with Matchers {
       tree.width shouldBe 1
       tree.height shouldBe 4
 
-      val tree2 = tree.insert(List(0, 1, 22, 33))
+      val tree2 = tree.insertBranch(List(0, 1, 22, 33))
       tree2 shouldBe Tree(0, Tree(1, Tree(22, Tree(33)), Tree(2, Tree(3))))
       tree2.size shouldBe 6
       tree2.width shouldBe 2
 
       val tree3 = tree
-        .insert(List(0, 1, 22, 33))
-        .insert(List(0, 11, 12, 13))
+        .insertBranch(List(0, 1, 22, 33))
+        .insertBranch(List(0, 11, 12, 13))
       tree3 shouldBe Tree(0, Tree(11, Tree(12, Tree(13))), Tree(1, Tree(22, Tree(33)), Tree(2, Tree(3))))
       tree3.size shouldBe 9
       tree3.width shouldBe 3
@@ -211,17 +232,17 @@ trait TreeSpec extends AnyWordSpec with Matchers {
 
     "insert existing node to a multi-branch Tree" in {
       val tree = Tree(0, Tree(1, Tree(2, Tree(3))))
-      tree.insert(List(0)) shouldBe tree
+      tree.insertBranch(List(0)) shouldBe tree
     }
 
     "insert existing branch to a multi-branch Tree" in {
       val tree = Tree(0, Tree(1, Tree(2, Tree(3))))
-      tree.insert(List(0, 1, 2)) shouldBe tree
+      tree.insertBranch(List(0, 1, 2)) shouldBe tree
     }
 
     "try insert non-matching branch to a multi-branch Tree" in {
       val tree = Tree(0, Tree(1, Tree(2, Tree(3))))
-      tree.insert(List(7, 0)) shouldBe tree
+      tree.insertBranch(List(7, 0)) shouldBe tree
     }
 
     "select an existing subtree" in {
@@ -298,7 +319,7 @@ trait TreeSpec extends AnyWordSpec with Matchers {
       graph should be(expected)
       graph shouldBe showAsGraph(tree)
       branches.forall(tree.containsBranch) shouldBe true
-      branches.reverse.foldLeft[Tree[Int]](Tree.empty)(_.insert(_)) shouldBe tree
+      branches.reverse.foldLeft[Tree[Int]](Tree.empty)(_.insertBranch(_)) shouldBe tree
     }
 
     "list all branches using tail safe method" in {
@@ -307,13 +328,13 @@ trait TreeSpec extends AnyWordSpec with Matchers {
                        |0 > 12 > 21 > 31
                        |0 > 12 > 22 > 32""".stripMargin
 
-      val branches: List[List[Int]] = tree.branches()
+      val branches: List[List[Int]] = tree.branches
 
       val graph = branches.map(_.mkString(" > ")).mkString("\n")
       graph should be(expected)
       graph shouldBe showAsGraph(tree)
       branches.forall(tree.containsBranch) shouldBe true
-      branches.reverse.foldLeft[Tree[Int]](Tree.empty)(_.insert(_)) shouldBe tree
+      branches.reverse.foldLeft[Tree[Int]](Tree.empty)(_.insertBranch(_)) shouldBe tree
     }
 
     "iterate over branches with filter" in {
@@ -609,6 +630,78 @@ trait TreeSpec extends AnyWordSpec with Matchers {
       mkStringWithMaxDepth(2) shouldBe "[a,b1,c1],[a,b2,c2],[a,b3]"
       mkStringWithMaxDepth(3) shouldBe "[a,b1,c1],[a,b2,c2,d2],[a,b3]"
       mkStringWithMaxDepth(4) shouldBe "[a,b1,c1],[a,b2,c2,d2,e1],[a,b2,c2,d2,e2],[a,b3]"
+    }
+
+    "be equal to the other tree if both have same structure and content" in {
+      tree0 shouldBe Tree()
+      tree0.hashCode() shouldBe Tree().hashCode()
+      tree0 shouldBe Tree()
+      tree0 shouldBe Tree().deflated
+      tree0.hashCode() shouldBe Tree().deflated.hashCode()
+
+      tree1 shouldBe Tree("a")
+      tree1.hashCode() shouldBe Tree("a").hashCode()
+      tree1 shouldBe Tree("a")
+      tree1 shouldBe Tree("a").deflated
+      tree1.hashCode() shouldBe Tree("a").deflated.hashCode()
+      Tree.Builder.fromArraysHead(Array(0), Array("a")) shouldBe Tree("a")
+      Tree.Builder.fromArraysHead(Array(0), Array("a")).hashCode() shouldBe Tree("a")
+        .hashCode()
+
+      tree2 shouldBe Tree("a", Tree("b"))
+      tree2.hashCode() shouldBe Tree("a", Tree("b")).hashCode()
+      tree2 shouldBe Tree("a", Tree("b"))
+      tree2 shouldBe Tree("a", Tree("b")).deflated
+      tree2.hashCode() shouldBe Tree("a", Tree("b")).deflated.hashCode()
+      Tree.Builder.fromArraysHead(Array(0, 1), Array("b", "a")) shouldBe Tree("a", Tree("b"))
+      Tree.Builder.fromArraysHead(Array(0, 1), Array("b", "a")).hashCode() shouldBe Tree("a", Tree("b")).hashCode()
+
+      tree3_1 shouldBe Tree("a", Tree("b", Tree("c")))
+      tree3_1.hashCode() shouldBe Tree("a", Tree("b", Tree("c"))).hashCode()
+      tree3_1 shouldBe Tree("a", Tree("b", Tree("c")))
+      tree3_1 shouldBe Tree("a", Tree("b", Tree("c"))).deflated
+      tree3_1.hashCode() shouldBe Tree("a", Tree("b", Tree("c"))).deflated.hashCode()
+      Tree.Builder.fromArraysHead(Array(0, 1, 1), Array("c", "b", "a")) shouldBe Tree("a", Tree("b", Tree("c")))
+      Tree.Builder.fromArraysHead(Array(0, 1, 1), Array("c", "b", "a")).hashCode() shouldBe Tree(
+        "a",
+        Tree("b", Tree("c"))
+      ).hashCode()
+
+      tree3_2 shouldBe Tree("a", Tree("b"), Tree("c"))
+      tree3_2.hashCode() shouldBe Tree("a", Tree("b"), Tree("c")).hashCode()
+      tree3_2 shouldBe Tree("a", Tree("b"), Tree("c"))
+      tree3_2 shouldBe Tree("a", Tree("b"), Tree("c")).deflated
+      tree3_2.hashCode() shouldBe Tree("a", Tree("b"), Tree("c")).deflated.hashCode()
+      Tree.Builder.fromArraysHead(Array(0, 0, 2), Array("c", "b", "a")) shouldBe Tree("a", Tree("b"), Tree("c"))
+      Tree.Builder.fromArraysHead(Array(0, 0, 2), Array("c", "b", "a")).hashCode() shouldBe Tree(
+        "a",
+        Tree("b"),
+        Tree("c")
+      ).hashCode()
+    }
+
+    "be not equal to the tree with different structure" in {
+      tree3_1 should not be tree3_2
+      tree4_1 should not be tree4_2
+      tree4_2 should not be tree4_3
+      tree4_1 should not be tree4_3
+    }
+
+    "hashcode should differ for different trees" in {
+      TestTrees.allTrees.map(_.hashCode()).toSet.size shouldBe 10
+      Tree(0).hashCode() should not be Tree(1).hashCode()
+      Tree(0, Tree(1)).hashCode() should not be Tree(1, Tree(0)).hashCode()
+    }
+
+    "be not equal to the tree with different content" in {
+      Tree(0) should not be Tree(1)
+      tree1 should not be Tree("A")
+      tree1 should not be Tree("b")
+      Tree(0, Tree(1)) should not be Tree(1, Tree(0))
+      tree2 should not be Tree("b", Tree("a"))
+      tree2 should not be Tree("ab")
+      tree2 should not be Tree("ba")
+      Tree("ab") should not be Tree("ba")
     }
   }
 

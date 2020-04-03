@@ -319,6 +319,11 @@ object NodeTree {
     (IntSlice.of(structure), Slice.of(values))
   }
 
+  final def toBuffers[T: ClassTag](node: Node[T]): (IntBuffer, Buffer[T]) = {
+    val (structure, values) = toArrays(node)
+    (IntBuffer(structure), Buffer(values))
+  }
+
   final def toArrays[T: ClassTag](node: Node[T]): (Array[Int], Array[T]) = {
     val queue = new Array[Node[T]](Math.max(node.width, node.height))
     queue(0) = node

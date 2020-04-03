@@ -18,18 +18,18 @@ package com.github.arturopala.tree
 
 class DeflatedTreeSpec extends TreeSpec {
 
-  override def name = "DeflatedTree"
+  override def name = "A deflated Tree"
 
-  val tree0: Tree[String] = TestTrees.tree0.deflate
-  val tree1: Tree[String] = TestTrees.tree1.deflate
-  val tree2: Tree[String] = TestTrees.tree2.deflate
-  val tree3_1: Tree[String] = TestTrees.tree3_1.deflate
-  val tree3_2: Tree[String] = TestTrees.tree3_2.deflate
-  val tree4_1: Tree[String] = TestTrees.tree4_1.deflate
-  val tree4_2: Tree[String] = TestTrees.tree4_2.deflate
-  val tree4_3: Tree[String] = TestTrees.tree4_3.deflate
-  val tree7: Tree[String] = TestTrees.tree7.deflate
-  val tree9: Tree[String] = TestTrees.tree9.deflate
+  val tree0: Tree[String] = TestTrees.tree0.deflated
+  val tree1: Tree[String] = TestTrees.tree1.deflated
+  val tree2: Tree[String] = TestTrees.tree2.deflated
+  val tree3_1: Tree[String] = TestTrees.tree3_1.deflated
+  val tree3_2: Tree[String] = TestTrees.tree3_2.deflated
+  val tree4_1: Tree[String] = TestTrees.tree4_1.deflated
+  val tree4_2: Tree[String] = TestTrees.tree4_2.deflated
+  val tree4_3: Tree[String] = TestTrees.tree4_3.deflated
+  val tree7: Tree[String] = TestTrees.tree7.deflated
+  val tree9: Tree[String] = TestTrees.tree9.deflated
 
   s"$name also" should {
 
