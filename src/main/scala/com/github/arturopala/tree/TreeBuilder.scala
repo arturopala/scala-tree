@@ -24,6 +24,9 @@ import scala.collection.Iterator
 import scala.reflect.ClassTag
 import scala.util.Try
 
+/**
+  * Common tree building helpers.
+  */
 object TreeBuilder {
 
   /** Builds a tree from an iterator of pairs (numberOfChildren, value), where:
@@ -33,14 +36,14 @@ object TreeBuilder {
     * @note - Values of subtrees must always precede the value of a parent node, and appear in the reverse order.
     *       - The sum of all numberOfChildren values must be the size of the list minus one.
     */
-  def fromPairsIterator[T](iterator: Iterator[(Int, T)]): List[Tree[T]] = fromPairsIterator(iterator, Nil)
+  final def fromPairsIterator[T](iterator: Iterator[(Int, T)]): List[Tree[T]] = fromPairsIterator(iterator, Nil)
 
   /** Builds a tree from an iterable of pairs (numberOfChildren, value). */
-  def fromPairsIterable[T](iterable: Iterable[(Int, T)]): List[Tree[T]] =
+  final def fromPairsIterable[T](iterable: Iterable[(Int, T)]): List[Tree[T]] =
     fromPairsIterator(iterable.iterator, Nil)
 
   @tailrec
-  private def fromPairsIterator[T](iterator: Iterator[(Int, T)], result: List[NodeTree[T]] = Nil): List[Tree[T]] =
+  private final def fromPairsIterator[T](iterator: Iterator[(Int, T)], result: List[NodeTree[T]] = Nil): List[Tree[T]] =
     if (iterator.hasNext) {
       val (size, value) = iterator.next()
       fromPairsIterator(iterator, Tree(value, result.take(size)) :: result.drop(size))
@@ -53,7 +56,7 @@ object TreeBuilder {
     *
     * @note Both collections have to return data following rules set in [[Tree.toArrays]].
     */
-  def fromIterables[T](structure: Iterable[Int], values: Iterable[T]): List[Tree[T]] =
+  final def fromIterables[T](structure: Iterable[Int], values: Iterable[T]): List[Tree[T]] =
     fromIterators(structure.iterator, values.iterator)
 
   /** Builds a tree from a pair of iterators:
@@ -62,11 +65,11 @@ object TreeBuilder {
     *
     * @note Both iterators have to return data following rules set in [[Tree.toArrays]].
     */
-  def fromIterators[T](structure: Iterator[Int], values: Iterator[T]): List[Tree[T]] =
+  final def fromIterators[T](structure: Iterator[Int], values: Iterator[T]): List[Tree[T]] =
     fromIterators(structure, values, Nil)
 
   @tailrec
-  private def fromIterators[T](
+  private final def fromIterators[T](
     structure: Iterator[Int],
     values: Iterator[T],
     result: List[NodeTree[T]]
@@ -84,7 +87,7 @@ object TreeBuilder {
     *
     * @note Both arrays have to return data following rules set in [[Tree.toArrays]].
     */
-  def fromArrays[T: ClassTag](structure: Array[Int], values: Array[T]): List[Tree[T]] = {
+  final def fromArrays[T: ClassTag](structure: Array[Int], values: Array[T]): List[Tree[T]] = {
     assert(
       structure.length == values.length,
       "When constructing Tree from arrays, structure and values must be of the same size."
@@ -128,19 +131,19 @@ object TreeBuilder {
 
   /** Shortcut for [[TreeBuilder.fromArrays]].
     * @return head element from the produced list or an empty tree */
-  def fromArraysHead[T: ClassTag](structure: Array[Int], values: Array[T]): Tree[T] =
+  final def fromArraysHead[T: ClassTag](structure: Array[Int], values: Array[T]): Tree[T] =
     fromArrays(structure, values).headOption.getOrElse(Tree.empty)
 
   /** Builds a tree from a list of pairs (numberOfChildren, node), where:
     *   - `node` is a new node, and
     *   - `numberOfChildren` is a number of preceding elements in the list
     *                      to become direct subtrees of the current node.
-    *   - `strategy` defines how to merge nodes and what to do with orphaned subtrees.
+    *   - `strategy` final defines how to merge nodes and what to do with orphaned subtrees.
     * @note - Nodes of subtrees must always precede the parent node, and appear in the reverse order.
     *       - The sum of all numberOfChildren values must be the size of the list minus one.
     */
   @tailrec
-  def fromTreeList[T](
+  final def fromTreeList[T](
     list: List[(Int, Tree[T])],
     result: List[NodeTree[T]] = Nil,
     offset: Int = 0,
@@ -180,22 +183,22 @@ object TreeBuilder {
     object JoinSubtrees extends FlatMapStrategy {
 
       /** Concatenates new and existing subtrees of an expanded node. */
-      override def merge[T](newNode: NodeTree[T], existingSubtrees: List[NodeTree[T]]): NodeTree[T] =
+      override final def merge[T](newNode: NodeTree[T], existingSubtrees: List[NodeTree[T]]): NodeTree[T] =
         Tree(newNode.value, existingSubtrees ::: newNode.subtrees)
 
       /** Joins orphaned subtrees to the parent node. */
-      override def keepOrphanedSubtrees: Boolean = true
+      override final def keepOrphanedSubtrees: Boolean = true
     }
 
     /** A strategy to replace existing subtrees with the new ones. */
     object Replace extends FlatMapStrategy {
 
       /** Replaces old subtrees with the new ones. */
-      override def merge[T](newNode: NodeTree[T], existingSubtrees: List[NodeTree[T]]): NodeTree[T] =
+      override final def merge[T](newNode: NodeTree[T], existingSubtrees: List[NodeTree[T]]): NodeTree[T] =
         newNode
 
       /** Removes orphaned subtrees completely. */
-      override def keepOrphanedSubtrees: Boolean = false
+      override final def keepOrphanedSubtrees: Boolean = false
     }
 
   }

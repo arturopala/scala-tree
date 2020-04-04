@@ -17,7 +17,7 @@
 package com.github.arturopala.tree
 
 import com.github.arturopala.tree.TreeBuilder.{fromArrays, fromPairsIterable, fromTreeList}
-import com.github.arturopala.tree.Tree.Show.showAsGraph
+import com.github.arturopala.tree.TreeFormat.showAsGraph
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 

@@ -18,11 +18,9 @@ package com.github.arturopala.tree
 
 import com.github.arturopala.tree.util._
 
-import scala.annotation.tailrec
 import scala.collection.Iterator
 import scala.collection.immutable.Stream
 import scala.reflect.ClassTag
-import scala.util.Try
 
 /** A general-purpose, covariant, immutable, low overhead,
   * efficient tree-like data structure with rich API.
@@ -497,29 +495,15 @@ object Tree {
     override val toString: String = "Tree.empty"
   }
 
-  /** Collection of common visualization templates. */
-  final object Show {
-
-    def showAsArrays[T <: Any](tree: Tree[T]): String =
-      tree.mkStringUsingBranches(_.toString, ",", "\n", "[", "]")
-
-    def showAsGraph[T <: Any](tree: Tree[T]): String =
-      tree.mkStringUsingBranches(_.toString, " > ", "\n", "", "")
-
-    def showAsPaths[T <: Any](tree: Tree[T]): String =
-      tree.mkStringUsingBranches(_.toString, "/", "\n", "", "")
-
-  }
-
   /** Checks equality of the two trees. */
-  def equals[T](tree1: Tree[T], tree2: Tree[T]): Boolean =
+  final def equals[T](tree1: Tree[T], tree2: Tree[T]): Boolean =
     tree1.eq(tree2) || (tree1.size == tree2.size &&
       tree1.width == tree2.width &&
       tree1.height == tree2.height &&
       tree1.valueOption == tree2.valueOption && Compare.sameTrees(tree1, tree2))
 
   /** Computes hashcode of the tree. */
-  def hashCodeOf[T](tree: Tree[T]): Int = {
+  final def hashCodeOf[T](tree: Tree[T]): Int = {
     var hash = 17
     hash = hash * 31 + tree.valueOption.hashCode()
     hash = hash * 29 + tree.size.hashCode()
