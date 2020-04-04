@@ -96,7 +96,7 @@ trait NodeTreeOps[+T] {
 
   final def flatMap[K: ClassTag](f: T => Tree[K]): Tree[K] = {
     val list: List[(Int, Tree[K])] = NodeTree.listFlatMap(f, List((node.subtrees.size, f(node.value))), node.subtrees)
-    TreeBuilder.fromTreeList(list, Nil, 0, TreeBuilder.FlatMapStrategy.JoinSubtrees).headOption.getOrElse(empty)
+    TreeBuilder.fromTreeList(list, Nil, 0, TreeBuilder.TreeMergeStrategy.Join).headOption.getOrElse(empty)
   }
 
   final def selectValue[T1 >: T](path: Iterable[T1]): Option[T] =

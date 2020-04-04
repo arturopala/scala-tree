@@ -147,7 +147,7 @@ object TreeBuilder {
     list: List[(Int, Tree[T])],
     result: List[NodeTree[T]] = Nil,
     offset: Int = 0,
-    strategy: FlatMapStrategy = FlatMapStrategy.JoinSubtrees
+    strategy: TreeMergeStrategy = TreeMergeStrategy.Join
   ): List[Tree[T]] =
     list match {
       case Nil => if (result.isEmpty) List(Tree.empty) else result
@@ -162,11 +162,11 @@ object TreeBuilder {
         }
     }
 
-  /** There are multiple ways to flatten the tree after expanding a node.
+  /** There are multiple ways to merge the tree after expanding a node.
     * As we don't want to be constrained by an arbitrary choice,
-    * there is a possibility to create and/or use your own strategy when doing a flatMap.
+    * there is a possibility to create and/or use custom strategy.
     */
-  trait FlatMapStrategy {
+  trait TreeMergeStrategy {
 
     /** When a value of a node expands into a new Node,
       * we need a way to deal with the existing subtrees. */
@@ -177,10 +177,10 @@ object TreeBuilder {
     def keepOrphanedSubtrees: Boolean
   }
 
-  final object FlatMapStrategy {
+  final object TreeMergeStrategy {
 
     /** Default strategy is to preserve all existing subtrees. */
-    object JoinSubtrees extends FlatMapStrategy {
+    object Join extends TreeMergeStrategy {
 
       /** Concatenates new and existing subtrees of an expanded node. */
       override final def merge[T](newNode: NodeTree[T], existingSubtrees: List[NodeTree[T]]): NodeTree[T] =
@@ -191,7 +191,7 @@ object TreeBuilder {
     }
 
     /** A strategy to replace existing subtrees with the new ones. */
-    object Replace extends FlatMapStrategy {
+    object Replace extends TreeMergeStrategy {
 
       /** Replaces old subtrees with the new ones. */
       override final def merge[T](newNode: NodeTree[T], existingSubtrees: List[NodeTree[T]]): NodeTree[T] =

@@ -102,7 +102,7 @@ class TreeBuilderSpec extends AnyWordSpec with Matchers {
       val list: List[(Int, Tree[String])] =
         List((0, Tree("a", Tree("A"))), (0, Tree("b", Tree("B"))), (0, Tree("c", Tree("C"))), (3, Tree("d", Tree("D"))))
 
-      val trees = fromTreeList(list, strategy = TreeBuilder.FlatMapStrategy.Replace)
+      val trees = fromTreeList(list, strategy = TreeBuilder.TreeMergeStrategy.Replace)
 
       trees.size shouldBe 1
       trees.head.size shouldBe 2
