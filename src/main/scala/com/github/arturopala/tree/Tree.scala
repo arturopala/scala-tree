@@ -36,7 +36,7 @@ import scala.util.Try
   *
   * Internally, there are three implementations of the Tree:
   *   - [[Tree.empty]], an empty tree singleton,
-  *   - [[Tree.Node]], nested hierarchy of immutable nodes (inflated tree),
+  *   - [[Tree.NodeTree]], nested hierarchy of immutable nodes (inflated tree),
   *   - [[Tree.ArrayTree]], a linear array (deflated tree).
   *
   * The idea behind having an inflated and deflated variant of the tree
@@ -362,20 +362,26 @@ object Tree {
   final def apply[T](): Tree[T] = empty
 
   /** Creates a leaf tree. */
-  final def apply[T](value: T): Node[T] = new Leaf(value)
+  final def apply[T](value: T): NodeTree[T] = new Leaf(value)
 
   /** Creates a tree having a single subtree. */
-  final def apply[T](value: T, subtree: Node[T]): Node[T] = new Unary(value, subtree)
+  final def apply[T](value: T, subtree: NodeTree[T]): NodeTree[T] = new Unary(value, subtree)
 
   /** Creates a tree having two subtrees. */
-  final def apply[T](value: T, left: Node[T], right: Node[T]): Node[T] = new Binary(value, left, right)
+  final def apply[T](value: T, left: NodeTree[T], right: NodeTree[T]): NodeTree[T] = new Binary(value, left, right)
 
   /** Creates a tree node from the value and multiple subtrees */
-  final def apply[T](value: T, subtree1: Node[T], subtree2: Node[T], subtree3: Node[T], others: Node[T]*): Node[T] =
+  final def apply[T](
+    value: T,
+    subtree1: NodeTree[T],
+    subtree2: NodeTree[T],
+    subtree3: NodeTree[T],
+    others: NodeTree[T]*
+  ): NodeTree[T] =
     new Bunch(value, subtree1 :: subtree2 :: subtree3 :: others.toList)
 
   /** Creates a tree node from the value and list of subtrees */
-  final def apply[T](value: T, subtrees: List[Node[T]]): Node[T] = subtrees match {
+  final def apply[T](value: T, subtrees: List[NodeTree[T]]): NodeTree[T] = subtrees match {
     case Nil           => new Leaf(value)
     case x :: Nil      => new Unary(value, x)
     case x :: y :: Nil => new Binary(value, x, y)
@@ -396,153 +402,57 @@ object Tree {
     case _                       => tree
   }
 
-  private def all[A]: A => Boolean = _ => true
-
   /**
     * A Tree represented internally by linked node objects,
     * each node consists of a value and a list of subtrees.
     *
     * Concrete, specialized node types are [[Leaf]], [[Unary]], [[Binary]], and [[Bunch]].
     */
-  sealed trait Node[+T] extends Tree[T] {
+  sealed trait NodeTree[+T] extends Tree[T] with NodeTreeOps[T] {
+
+    override protected val node: NodeTree[T] = this
 
     val value: T
-    def subtrees: List[Node[T]]
-
-    override final def valueOption: Option[T] = Some(value)
-    override final def isEmpty: Boolean = size == 0
-
-    override final def values: List[T] = NodeTree.values[T](all, this)
-    override final def valuesUnsafe: List[T] = value :: subtrees.flatMap(_.valuesUnsafe)
-    override final def valueIterator(pred: T => Boolean): Iterator[T] = NodeTree.valueIterator(pred, this)
-    override final def valueStream: Stream[T] = valueStream(all)
-    override final def valueStream(pred: T => Boolean): Stream[T] = NodeTree.valueStream(pred, this)
-    override final def childrenValues: List[T] = subtrees.map(_.value)
-
-    override final def children: List[Tree[T]] = subtrees
-    override final def trees: List[Tree[T]] = NodeTree.trees[T](all, this)
-    override final def treesUnsafe: List[Tree[T]] = this :: subtrees.flatMap(_.treesUnsafe)
-    override final def treeIterator(pred: Tree[T] => Boolean): Iterator[Tree[T]] = NodeTree.treeIterator(pred, this)
-    override final def treeStream: Stream[Tree[T]] = treeStream(all)
-    override final def treeStream(pred: Tree[T] => Boolean): Stream[Tree[T]] = NodeTree.treeStream(pred, this)
-
-    override final def branches: List[List[T]] = NodeTree.branches[T](all, this)
-
-    override final def branchesUnsafe: List[List[T]] = subtrees match {
-      case Nil => List(List(value))
-      case _ =>
-        subtrees.flatMap(_.branchesUnsafe).map(value :: _)
-    }
-
-    override final def branchIterator(pred: Iterable[T] => Boolean): Iterator[Iterable[T]] =
-      NodeTree.branchIterator(pred, this)
-
-    override final def branchStream: Stream[List[T]] = branchStream(all).map(_.toList)
-
-    override final def branchStream(pred: Iterable[T] => Boolean): Stream[Iterable[T]] =
-      NodeTree.branchStream(pred, this)
-
-    override final def countBranches(pred: Iterable[T] => Boolean): Int =
-      NodeTree.countBranches(pred, this)
-
-    override final def insertValue[T1 >: T: ClassTag](newValue: T1): Tree[T1] =
-      Tree(value, Tree(newValue) :: subtrees)
-
-    override final def insertTree[T1 >: T: ClassTag](subtree: Tree[T1]): Tree[T1] = subtree match {
-      case `empty`        => this
-      case node: Node[T1] => Tree(value, node :: subtrees)
-    }
-
-    override final def insertBranch[T1 >: T: ClassTag](branch: List[T1]): Tree[T1] =
-      branch match {
-        case `value` :: xs => NodeTree.insert(this, xs)
-        case _             => this
-      }
-
-    override final def map[K: ClassTag](f: T => K): Tree[K] = {
-      val (structure, values) = NodeTree.arrayMap(f, this)
-      Builder.fromIterators(structure.iterator, values.iterator).headOption.getOrElse(empty)
-    }
-
-    override final def mapUnsafe[K: ClassTag](f: T => K): Tree[K] = {
-      def mapNodeUnsafe(n: Node[T]): Node[K] = Tree(f(n.value), n.subtrees.map(mapNodeUnsafe))
-      mapNodeUnsafe(this)
-    }
-
-    override final def flatMap[K: ClassTag](f: T => Tree[K]): Tree[K] = {
-      val list: List[(Int, Tree[K])] = NodeTree.listFlatMap(f, List((subtrees.size, f(value))), subtrees)
-      Builder.fromTreeList(list, Nil, 0, FlatMapStrategy.JoinSubtrees).headOption.getOrElse(empty)
-    }
-
-    override final def selectValue[T1 >: T](path: Iterable[T1]): Option[T] =
-      NodeTree.selectTree(this, path).map(_.value)
-
-    override final def selectTree[T1 >: T: ClassTag](path: Iterable[T1]): Option[Tree[T]] =
-      NodeTree.selectTree(this, path)
-
-    override final def containsBranch[T1 >: T](branch: Iterable[T1]): Boolean = NodeTree.containsBranch(this, branch)
-    override final def containsPath[T1 >: T](path: Iterable[T1]): Boolean = NodeTree.containsPath(this, path)
-
-    override final def toPairsIterator: Iterator[(Int, T)] = NodeTree.toPairsList(this).iterator
-    override final def toArrays[T1 >: T: ClassTag]: (Array[Int], Array[T1]) = NodeTree.toArrays(this)
-    override final def toSlices[T1 >: T: ClassTag]: (IntSlice, Slice[T1]) = NodeTree.toSlices(this)
-    override final def toBuffers[T1 >: T: ClassTag]: (IntBuffer, Buffer[T1]) = NodeTree.toBuffers(this)
-    override final def toStructureArray: Array[Int] = NodeTree.toStructureArray(this)
-
-    override final def mkStringUsingBranches(
-      show: T => String,
-      valueSeparator: String,
-      branchSeparator: String,
-      branchStart: String,
-      branchEnd: String,
-      maxDepth: Int = Int.MaxValue
-    ): String = {
-      val string = show(value)
-      subtrees match {
-        case Nil => branchStart + string + branchEnd
-        case _ =>
-          NodeTree
-            .mkStringUsingBranches(this, show, valueSeparator, branchSeparator, branchStart, branchEnd, maxDepth)
-            .mkString
-      }
-    }
-
-    override final def inflated: Tree[T] = Tree.inflate(this)
-    override final def deflated[T1 >: T](implicit tag: ClassTag[T1]): Tree[T1] = Tree.deflate[T1](this)
+    def subtrees: List[NodeTree[T]]
   }
 
   /** Concrete node of the Tree, consisting of a value and no subtrees. */
-  final class Leaf[+T] private[Tree] (val value: T) extends Node[T] {
+  final class Leaf[+T] private[Tree] (val value: T) extends NodeTree[T] {
+
     override def size: Int = 1
     override def width: Int = 1
     override def height: Int = 1
     override def isLeaf: Boolean = true
-    override def subtrees: List[Node[T]] = Nil
+    override def subtrees: List[NodeTree[T]] = Nil
     override def childrenCount: Int = 0
   }
 
   /** Concrete node of the Tree, consisting of a value and a single subtree. */
-  final class Unary[+T] private[Tree] (val value: T, val subtree: Node[T]) extends Node[T] {
+  final class Unary[+T] private[Tree] (val value: T, val subtree: NodeTree[T]) extends NodeTree[T] {
+
     override val size: Int = 1 + subtree.size
     override val width: Int = Math.max(1, subtree.width)
     override val height: Int = 1 + subtree.height
     override def isLeaf: Boolean = false
-    override def subtrees: List[Node[T]] = List(subtree)
+    override def subtrees: List[NodeTree[T]] = List(subtree)
     override def childrenCount: Int = 1
   }
 
   /** Concrete node of the Tree, consisting of a value and two subtrees. */
-  final class Binary[+T] private[Tree] (val value: T, val left: Node[T], val right: Node[T]) extends Node[T] {
+  final class Binary[+T] private[Tree] (val value: T, val left: NodeTree[T], val right: NodeTree[T])
+      extends NodeTree[T] {
+
     override val size: Int = 1 + left.size + right.size
     override val width: Int = Math.max(1, left.width + right.width)
     override val height: Int = 1 + Math.max(left.height, right.height)
     override def isLeaf: Boolean = false
-    override def subtrees: List[Node[T]] = List(left, right)
+    override def subtrees: List[NodeTree[T]] = List(left, right)
     override def childrenCount: Int = 2
   }
 
   /** Concrete node of the Tree, consisting of a value and a list of subtrees (more than two). */
-  final class Bunch[+T] private[Tree] (val value: T, val subtrees: List[Node[T]]) extends Node[T] {
+  final class Bunch[+T] private[Tree] (val value: T, val subtrees: List[NodeTree[T]]) extends NodeTree[T] {
+
     override val size: Int = 1 + subtrees.map(_.size).sum
     override val width: Int = Math.max(1, subtrees.map(_.width).sum)
     override val height: Int = 1 + subtrees.maxBy(_.height).height
@@ -551,15 +461,16 @@ object Tree {
   }
 
   /**
-    * A Tree represented internally by two arrays,
+    * A Tree represented internally by two array slices,
     * one encoding the structure, the other holding node's values.
     */
-  final class ArrayTree[T: ClassTag] private[tree] (
-    structure: IntSlice,
-    content: Slice[T],
+  final class ArrayTree[T] private[tree] (
+    val structure: IntSlice,
+    val content: Slice[T],
     delayedWidth: => Int,
     delayedHeight: => Int
-  ) extends Tree[T] {
+  )(implicit val classTag: ClassTag[T])
+      extends Tree[T] with ArrayTreeOps[T] {
 
     assert(content.nonEmpty, "When creating an ArrayTree, `values` must not be empty.")
     assert(
@@ -567,184 +478,20 @@ object Tree {
       "When creating an ArrayTree, `structure` and `values` must be of the same size."
     )
 
-    private val rootIndex: Int = structure.length - 1
+    override protected val tree: ArrayTree[T] = this
 
+    override val size: Int = tree.structure.length
     override lazy val width: Int = delayedWidth
     override lazy val height: Int = delayedHeight
-
-    override val size: Int = structure.length
     override def isLeaf: Boolean = size == 1
     override def isEmpty: Boolean = size == 0
-    override def childrenCount: Int = structure.last
-
-    override def valueOption: Option[T] = Some(content.last)
-    override def values: List[T] = content.reverseIterator.toList
-    override def valuesUnsafe: List[T] = values
-    override def valueIterator(pred: T => Boolean): Iterator[T] = content.reverseIterator(pred)
-    override def valueStream: Stream[T] = valueStream(all)
-    override def valueStream(pred: T => Boolean): Stream[T] = streamFromIterator(valueIterator(pred))
-    override def childrenValues: List[T] = ArrayTree.childrenIndexes(rootIndex, structure).map(content)
-
-    override def children: List[Tree[T]] =
-      ArrayTree.childrenIndexes(rootIndex, structure).map(ArrayTree.treeAt(_, structure, content))
-
-    override def trees: List[Tree[T]] = treeIterator(all).toList
-    override def treesUnsafe: List[Tree[T]] = trees
-    override def treeIterator(pred: Tree[T] => Boolean): Iterator[Tree[T]] =
-      ArrayTree.treeIterator(rootIndex, structure, content, pred)
-
-    override def treeStream: Stream[Tree[T]] = treeStream(all)
-    override def treeStream(pred: Tree[T] => Boolean): Stream[Tree[T]] = streamFromIterator(treeIterator(pred))
-
-    override def branches: List[List[T]] = branchIterator(all).map(_.toList).toList
-    override def branchesUnsafe: List[List[T]] = branches
-    override def branchIterator(pred: Iterable[T] => Boolean): Iterator[Iterable[T]] =
-      ArrayTree.branchIterator(rootIndex, structure, content, pred)
-
-    override def branchStream: Stream[List[T]] = branchStream(all).map(_.toList)
-    override def branchStream(pred: Iterable[T] => Boolean): Stream[Iterable[T]] =
-      streamFromIterator(branchIterator(pred))
-
-    override def countBranches(pred: Iterable[T] => Boolean): Int =
-      ArrayTree.countBranches(rootIndex, structure, content, pred)
-
-    override def insertValue[T1 >: T: ClassTag](value: T1): Tree[T1] =
-      ArrayTree.insertValue(rootIndex, value, this)
-
-    override def insertTree[T1 >: T: ClassTag](subtree: Tree[T1]): Tree[T1] =
-      ArrayTree.insertSubtree(rootIndex, subtree, this)
-
-    override def insertBranch[T1 >: T: ClassTag](branch: List[T1]): Tree[T1] = ???
-
-    override def map[K: ClassTag](f: T => K): Tree[K] =
-      new ArrayTree[K](structure, content.map(f), width, height)
-
-    override def mapUnsafe[K: ClassTag](f: T => K): Tree[K] = map(f)
-
-    override def flatMap[K: ClassTag](f: T => Tree[K]): Tree[K] =
-      ArrayTree.flatMap(structure, content, f)
-
-    override def selectValue[T1 >: T](path: Iterable[T1]): Option[T] =
-      ArrayTree.selectValue(path, rootIndex, structure, content)
-
-    override def selectTree[T1 >: T: ClassTag](path: Iterable[T1]): Option[Tree[T]] =
-      ArrayTree.selectTree(path, rootIndex, structure, content)
-
-    override def containsBranch[T1 >: T](branch: Iterable[T1]): Boolean =
-      ArrayTree.containsBranch(branch, rootIndex, structure, content)
-
-    override def containsPath[T1 >: T](path: Iterable[T1]): Boolean =
-      ArrayTree.containsPath(path, rootIndex, structure, content)
-
-    override def toPairsIterator: Iterator[(Int, T)] = ???
-    override def toArrays[T1 >: T: ClassTag]: (Array[Int], Array[T1]) =
-      (structure.toArray, content.toArray.asInstanceOf[Array[T1]])
-    override def toSlices[T1 >: T: ClassTag]: (IntSlice, Slice[T1]) = (structure, content.asInstanceOf[Slice[T1]])
-
-    override def toBuffers[T1 >: T: ClassTag]: (IntBuffer, Buffer[T1]) =
-      (structure.toBuffer, content.toBuffer.asInstanceOf[Buffer[T1]])
-    override def toStructureArray: Array[Int] = structure.toArray
-
-    override def mkStringUsingBranches(
-      show: T => String,
-      valueSeparator: String,
-      branchSeparator: String,
-      branchStart: String,
-      branchEnd: String,
-      maxDepth: Int
-    ): String =
-      ArrayTree
-        .mkStringUsingBranches(
-          rootIndex,
-          structure,
-          content,
-          show,
-          valueSeparator,
-          branchSeparator,
-          branchStart,
-          branchEnd,
-          maxDepth
-        )
-        .toString()
-
-    override def inflated: Tree[T] =
-      Builder.fromIterators(structure.iterator, content.iterator).headOption.getOrElse(Tree.empty)
-
-    override def deflated[T1 >: T](implicit tag: ClassTag[T1]): Tree[T1] = Tree.deflate[T1](this)
-
-    private def streamFromIterator[A](it: Iterator[A]): Stream[A] =
-      if (it.hasNext) {
-        new Stream.Cons(it.next(), streamFromIterator(it))
-      } else Stream.Empty
-
+    override def childrenCount: Int = tree.structure.last
   }
 
-  /** An empty Tree. */
-  final case object empty extends Tree[Nothing] {
-
-    override val size: Int = 0
-    override val width: Int = 0
-    override val height: Int = 0
-    override val isLeaf: Boolean = false
-    override val isEmpty: Boolean = true
-    override val childrenCount: Int = 0
-
-    override val valueOption: Option[Nothing] = None
-
-    override val values: List[Nothing] = Nil
-    override val valuesUnsafe: List[Nothing] = Nil
-    override def valueIterator(pred: Nothing => Boolean): Iterator[Nothing] = Iterator.empty
-    override def valueStream: Stream[Nothing] = Stream.empty
-    override def valueStream(pred: Nothing => Boolean): Stream[Nothing] = Stream.empty
-    override val childrenValues: List[Nothing] = Nil
-
-    override val children: List[Tree[Nothing]] = Nil
-    override val trees: List[Tree[Nothing]] = List(empty)
-    override val treesUnsafe: List[Tree[Nothing]] = List(empty)
-    override def treeIterator(pred: Tree[Nothing] => Boolean): Iterator[Tree[Nothing]] = Iterator.empty
-    override val treeStream: Stream[Nothing] = Stream.empty
-    override def treeStream(pred: Tree[Nothing] => Boolean): Stream[Nothing] = Stream.empty
-
-    override val branches: List[List[Nothing]] = Nil
-    override val branchesUnsafe: List[List[Nothing]] = Nil
-    override def branchIterator(pred: Iterable[Nothing] => Boolean): Iterator[List[Nothing]] = Iterator.empty
-    override val branchStream: Stream[List[Nothing]] = Stream.empty
-    override def branchStream(pred: Iterable[Nothing] => Boolean): Stream[List[Nothing]] = Stream.empty
-    override def countBranches(pred: Iterable[Nothing] => Boolean): Int = 0
-
-    override def insertValue[T1: ClassTag](value: T1): Tree[T1] = Tree(value)
-    override def insertTree[T1: ClassTag](subtree: Tree[T1]): Tree[T1] = subtree
-    override def insertBranch[T1: ClassTag](branch: List[T1]): Tree[T1] = branch match {
-      case x :: xs => NodeTree.insert(Tree(x), xs)
-      case _       => empty
-    }
-
-    override def selectValue[T1 >: Nothing](path: Iterable[T1]): Option[Nothing] = None
-    override def selectTree[T1: ClassTag](path: Iterable[T1]): Option[Tree[Nothing]] =
-      if (path.isEmpty) Some(empty) else None
-    override def containsBranch[T1](branch: Iterable[T1]): Boolean = branch.isEmpty
-    override def containsPath[T1 >: Nothing](path: Iterable[T1]): Boolean = path.isEmpty
-
-    override def map[K: ClassTag](f: Nothing => K): Tree[K] = empty
-    override def mapUnsafe[K: ClassTag](f: Nothing => K): Tree[K] = empty
-    override def flatMap[K: ClassTag](f: Nothing => Tree[K]): Tree[K] = empty
-    override def toPairsIterator: Iterator[(Int, Nothing)] = Iterator.empty
-    override def toArrays[T1: ClassTag]: (Array[Int], Array[T1]) = (Array.empty[Int], Array.empty[T1])
-    override def toSlices[T1: ClassTag]: (IntSlice, Slice[T1]) = (IntSlice.empty, Slice.empty[T1])
-    override def toBuffers[T1: ClassTag]: (IntBuffer, Buffer[T1]) = (IntBuffer.empty, Buffer.empty[T1])
-    override val toStructureArray: Array[Int] = Array.empty[Int]
-
-    override def mkStringUsingBranches(
-      show: Nothing => String,
-      nodeSeparator: String,
-      branchSeparator: String,
-      branchStart: String,
-      branchEnd: String,
-      maxDepth: Int = Int.MaxValue
-    ): String = ""
-
-    override val inflated: Tree[Nothing] = Tree.empty
-    override def deflated[T1](implicit tag: ClassTag[T1]): Tree[T1] = Tree.empty
+  /**
+    * An empty Tree singleton.
+    */
+  final case object empty extends Tree[Nothing] with EmptyTreeOps {
 
     override protected lazy val hashcode: Int = 0
     override val toString: String = "Tree.empty"
@@ -758,7 +505,7 @@ object Tree {
 
     /** When a value of a node expands into a new Node,
       * we need a way to deal with the existing subtrees. */
-    def merge[T](newNode: Node[T], existingSubtrees: List[Node[T]]): Node[T]
+    def merge[T](newNode: NodeTree[T], existingSubtrees: List[NodeTree[T]]): NodeTree[T]
 
     /** When a value of a node expands into an Empty tree,
       * we need to decide either to keep or remove existing subtrees. */
@@ -771,7 +518,7 @@ object Tree {
     object JoinSubtrees extends FlatMapStrategy {
 
       /** Concatenates new and existing subtrees of an expanded node. */
-      override def merge[T](newNode: Node[T], existingSubtrees: List[Node[T]]): Node[T] =
+      override def merge[T](newNode: NodeTree[T], existingSubtrees: List[NodeTree[T]]): NodeTree[T] =
         Tree(newNode.value, existingSubtrees ::: newNode.subtrees)
 
       /** Joins orphaned subtrees to the parent node. */
@@ -782,7 +529,7 @@ object Tree {
     object Replace extends FlatMapStrategy {
 
       /** Replaces old subtrees with the new ones. */
-      override def merge[T](newNode: Node[T], existingSubtrees: List[Node[T]]): Node[T] =
+      override def merge[T](newNode: NodeTree[T], existingSubtrees: List[NodeTree[T]]): NodeTree[T] =
         newNode
 
       /** Removes orphaned subtrees completely. */
@@ -808,7 +555,7 @@ object Tree {
       fromPairsIterator(iterable.iterator, Nil)
 
     @tailrec
-    private def fromPairsIterator[T](iterator: Iterator[(Int, T)], result: List[Node[T]] = Nil): List[Tree[T]] =
+    private def fromPairsIterator[T](iterator: Iterator[(Int, T)], result: List[NodeTree[T]] = Nil): List[Tree[T]] =
       if (iterator.hasNext) {
         val (size, value) = iterator.next()
         fromPairsIterator(iterator, Tree(value, result.take(size)) :: result.drop(size))
@@ -834,7 +581,11 @@ object Tree {
       fromIterators(structure, values, Nil)
 
     @tailrec
-    private def fromIterators[T](structure: Iterator[Int], values: Iterator[T], result: List[Node[T]]): List[Tree[T]] =
+    private def fromIterators[T](
+      structure: Iterator[Int],
+      values: Iterator[T],
+      result: List[NodeTree[T]]
+    ): List[Tree[T]] =
       if (structure.hasNext && values.hasNext) {
         val value = values.next()
         val size = structure.next()
@@ -906,7 +657,7 @@ object Tree {
     @tailrec
     def fromTreeList[T](
       list: List[(Int, Tree[T])],
-      result: List[Node[T]] = Nil,
+      result: List[NodeTree[T]] = Nil,
       offset: Int = 0,
       strategy: FlatMapStrategy = FlatMapStrategy.JoinSubtrees
     ): List[Tree[T]] =
@@ -917,7 +668,7 @@ object Tree {
             case `empty` =>
               val offset = if (strategy.keepOrphanedSubtrees) size else -1
               fromTreeList(xs, result.drop(size - offset), offset, strategy)
-            case node: Node[T] =>
+            case node: NodeTree[T] =>
               val merged = strategy.merge(node, result.take(size))
               fromTreeList(xs, merged :: result.drop(size), 0, strategy)
           }
