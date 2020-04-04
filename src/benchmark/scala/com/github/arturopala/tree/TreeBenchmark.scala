@@ -43,46 +43,46 @@ object TreeBenchmark extends Bench.LocalTime {
   val singleBranchTreesInput: TreeArraysGen = treeStructureAndValues(1, 1)
   val singleNodeTreesInput: TreeArraysGen = treeStructureAndValues(0, 0)
 
-  performance of "Tree.Builder" in {
+  performance of "TreeBuilder" in {
     measure method "fromArrays for an ultra-wide trees" in {
       using(ultraWideTreesInput) in {
         case (structure, values) =>
-          Tree.Builder.fromIterables(structure, values).headOption.getOrElse(Tree.empty)
+          TreeBuilder.fromIterables(structure, values).headOption.getOrElse(Tree.empty)
       }
     }
 
     measure method "fromArrays for a wide trees" in {
       using(wideTreesInput) in {
         case (structure, values) =>
-          Tree.Builder.fromIterables(structure, values).headOption.getOrElse(Tree.empty)
+          TreeBuilder.fromIterables(structure, values).headOption.getOrElse(Tree.empty)
       }
     }
 
     measure method "fromArrays for a narrow trees" in {
       using(narrowTreesInput) in {
         case (structure, values) =>
-          Tree.Builder.fromIterables(structure, values).headOption.getOrElse(Tree.empty)
+          TreeBuilder.fromIterables(structure, values).headOption.getOrElse(Tree.empty)
       }
     }
 
     measure method "fromArrays for a binary trees" in {
       using(binaryTreesInput) in {
         case (structure, values) =>
-          Tree.Builder.fromIterables(structure, values).headOption.getOrElse(Tree.empty)
+          TreeBuilder.fromIterables(structure, values).headOption.getOrElse(Tree.empty)
       }
     }
 
     measure method "fromArrays for a single branch tree (max-deep)" in {
       using(singleBranchTreesInput) in {
         case (structure, values) =>
-          Tree.Builder.fromIterables(structure, values).headOption.getOrElse(Tree.empty)
+          TreeBuilder.fromIterables(structure, values).headOption.getOrElse(Tree.empty)
       }
     }
 
     measure method "fromArrays for a single node tree (max-wide)" in {
       using(singleNodeTreesInput) in {
         case (structure, values) =>
-          Tree.Builder.fromIterables(structure, values).headOption.getOrElse(Tree.empty)
+          TreeBuilder.fromIterables(structure, values).headOption.getOrElse(Tree.empty)
       }
     }
   }
@@ -91,7 +91,7 @@ object TreeBenchmark extends Bench.LocalTime {
 
   def buildTree(arrays: (Array[Int], Array[String])): (Int, Tree[String]) = arrays match {
     case (structure, values) =>
-      (structure.length, Tree.Builder.fromIterables(structure, values).headOption.getOrElse(Tree.empty))
+      (structure.length, TreeBuilder.fromIterables(structure, values).headOption.getOrElse(Tree.empty))
   }
 
   val ultraWideTrees: TreeGen = ultraWideTreesInput.map(buildTree)

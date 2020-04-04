@@ -16,14 +16,14 @@
 
 package com.github.arturopala.tree
 
-import com.github.arturopala.tree.Tree.Builder.{fromArrays, fromPairsIterable, fromTreeList}
+import com.github.arturopala.tree.TreeBuilder.{fromArrays, fromPairsIterable, fromTreeList}
 import com.github.arturopala.tree.Tree.Show.showAsGraph
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 
 class TreeBuilderSpec extends AnyWordSpec with Matchers {
 
-  "Tree.Builder" should {
+  "TreeBuilder" should {
     "create a new tree from the list of values" in {
       val list: List[(Int, String)] = List((0, "a"), (0, "b"), (0, "c"), (3, "d"))
 
@@ -102,7 +102,7 @@ class TreeBuilderSpec extends AnyWordSpec with Matchers {
       val list: List[(Int, Tree[String])] =
         List((0, Tree("a", Tree("A"))), (0, Tree("b", Tree("B"))), (0, Tree("c", Tree("C"))), (3, Tree("d", Tree("D"))))
 
-      val trees = fromTreeList(list, strategy = Tree.FlatMapStrategy.Replace)
+      val trees = fromTreeList(list, strategy = TreeBuilder.FlatMapStrategy.Replace)
 
       trees.size shouldBe 1
       trees.head.size shouldBe 2

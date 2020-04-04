@@ -16,8 +16,8 @@
 
 package com.github.arturopala.tree.util
 
-import com.github.arturopala.tree.Tree
-import com.github.arturopala.tree.Tree.{Builder, FlatMapStrategy, NodeTree, empty}
+import com.github.arturopala.tree.{Tree, TreeBuilder}
+import com.github.arturopala.tree.Tree.{NodeTree, empty}
 
 import scala.collection.Iterator
 import scala.collection.immutable.Stream
@@ -86,7 +86,7 @@ trait NodeTreeOps[+T] {
 
   final def map[K: ClassTag](f: T => K): Tree[K] = {
     val (structure, values) = NodeTree.arrayMap(f, node)
-    Builder.fromIterators(structure.iterator, values.iterator).headOption.getOrElse(empty)
+    TreeBuilder.fromIterators(structure.iterator, values.iterator).headOption.getOrElse(empty)
   }
 
   final def mapUnsafe[K: ClassTag](f: T => K): Tree[K] = {
@@ -96,7 +96,7 @@ trait NodeTreeOps[+T] {
 
   final def flatMap[K: ClassTag](f: T => Tree[K]): Tree[K] = {
     val list: List[(Int, Tree[K])] = NodeTree.listFlatMap(f, List((node.subtrees.size, f(node.value))), node.subtrees)
-    Builder.fromTreeList(list, Nil, 0, FlatMapStrategy.JoinSubtrees).headOption.getOrElse(empty)
+    TreeBuilder.fromTreeList(list, Nil, 0, TreeBuilder.FlatMapStrategy.JoinSubtrees).headOption.getOrElse(empty)
   }
 
   final def selectValue[T1 >: T](path: Iterable[T1]): Option[T] =

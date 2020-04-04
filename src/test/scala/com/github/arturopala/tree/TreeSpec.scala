@@ -526,7 +526,7 @@ trait TreeSpec extends AnyWordSpec with Matchers {
 
     "serialize a tree to a list of (numberOfChildren, value) pairs" in {
       Tree().toPairsIterator shouldBe Iterator.empty
-      Tree.Builder.fromPairsIterator(Iterator.empty) shouldBe List(Tree.empty)
+      TreeBuilder.fromPairsIterator(Iterator.empty) shouldBe List(Tree.empty)
 
       Tree("a").toPairsIterator.toList shouldBe List((0, "a"))
       Tree("a", Tree("b")).toPairsIterator.toList shouldBe List((0, "b"), (1, "a"))
@@ -535,12 +535,12 @@ trait TreeSpec extends AnyWordSpec with Matchers {
 
       val tree1 = Tree("a", Tree("b1", Tree("c1")), Tree("b2", Tree("c2", Tree("d2"))))
       tree1.toPairsIterator.toList shouldBe List((0, "d2"), (1, "c2"), (1, "b2"), (0, "c1"), (1, "b1"), (2, "a"))
-      Tree.Builder.fromPairsIterator(tree1.toPairsIterator) shouldBe List(tree1)
+      TreeBuilder.fromPairsIterator(tree1.toPairsIterator) shouldBe List(tree1)
 
       val tree2 = Tree("a", Tree("b1", Tree("c1")), Tree("b2", Tree("c2", Tree("d2"))), Tree("b3"))
       val pairList = tree2.toPairsIterator.toList
       pairList shouldBe List((0, "b3"), (0, "d2"), (1, "c2"), (1, "b2"), (0, "c1"), (1, "b1"), (3, "a"))
-      Tree.Builder.fromPairsIterator(tree2.toPairsIterator) shouldBe List(tree2)
+      TreeBuilder.fromPairsIterator(tree2.toPairsIterator) shouldBe List(tree2)
     }
 
     "serialize a tree to a pair of arrays and deserialize it back using fromArrays" in {
@@ -548,13 +548,13 @@ trait TreeSpec extends AnyWordSpec with Matchers {
       val (structure0, values0) = tree0.toArrays
       structure0.length shouldBe 0
       values0.length shouldBe 0
-      Tree.Builder.fromArrays(structure0, values0) shouldBe List(tree0)
+      TreeBuilder.fromArrays(structure0, values0) shouldBe List(tree0)
 
       val tree1 = Tree(1)
       val (structure1, values1) = tree1.toArrays
       structure1.length shouldBe 1
       values1.length shouldBe 1
-      Tree.Builder.fromArrays(structure1, values1) shouldBe List(tree1)
+      TreeBuilder.fromArrays(structure1, values1) shouldBe List(tree1)
 
       val tree2 = Tree("a", Tree("b"))
       val (structure2, values2) = tree2.toArrays
@@ -562,7 +562,7 @@ trait TreeSpec extends AnyWordSpec with Matchers {
       structure2 shouldBe Array(0, 1)
       values2.length shouldBe 2
       values2 shouldBe Array("b", "a")
-      Tree.Builder.fromArrays(structure2, values2) shouldBe List(tree2)
+      TreeBuilder.fromArrays(structure2, values2) shouldBe List(tree2)
 
       val tree3 = Tree("a", Tree("b"), Tree("c"))
       val (structure3, values3) = tree3.toArrays
@@ -570,7 +570,7 @@ trait TreeSpec extends AnyWordSpec with Matchers {
       structure3 shouldBe Array(0, 0, 2)
       values3.length shouldBe 3
       values3 shouldBe Array("c", "b", "a")
-      val t = Tree.Builder.fromArrays(structure3, values3)
+      val t = TreeBuilder.fromArrays(structure3, values3)
       t shouldBe List(tree3)
 
       val tree4 = Tree("a", Tree("b", Tree("c")), Tree("d"))
@@ -579,7 +579,7 @@ trait TreeSpec extends AnyWordSpec with Matchers {
       structure4 shouldBe Array(0, 0, 1, 2)
       values4.length shouldBe 4
       values4 shouldBe Array("d", "c", "b", "a")
-      Tree.Builder.fromArrays(structure4, values4) shouldBe List(tree4)
+      TreeBuilder.fromArrays(structure4, values4) shouldBe List(tree4)
 
       val tree7 = Tree("a", Tree("b1", Tree("c1")), Tree("b2", Tree("c2", Tree("d2"))), Tree("b3"))
       val (structure7, values7) = tree7.toArrays
@@ -587,7 +587,7 @@ trait TreeSpec extends AnyWordSpec with Matchers {
       structure7 shouldBe Array(0, 0, 1, 1, 0, 1, 3)
       values7.length shouldBe 7
       values7 shouldBe Array("b3", "d2", "c2", "b2", "c1", "b1", "a")
-      Tree.Builder.fromArrays(structure7, values7) shouldBe List(tree7)
+      TreeBuilder.fromArrays(structure7, values7) shouldBe List(tree7)
       val tree10 = Tree(
         "a",
         Tree("b1", Tree("c1"), Tree("d1")),
@@ -600,7 +600,7 @@ trait TreeSpec extends AnyWordSpec with Matchers {
       structure10 shouldBe Array(0, 1, 0, 0, 1, 1, 0, 0, 2, 4)
       values10.length shouldBe 10
       values10 shouldBe Array("c4", "b4", "b3", "d2", "c2", "b2", "d1", "c1", "b1", "a")
-      Tree.Builder.fromArraysHead(structure10, values10) shouldBe tree10
+      TreeBuilder.fromArraysHead(structure10, values10) shouldBe tree10
     }
 
     "serialize a tree to a structure array" in {
@@ -644,8 +644,8 @@ trait TreeSpec extends AnyWordSpec with Matchers {
       tree1 shouldBe Tree("a")
       tree1 shouldBe Tree("a").deflated
       tree1.hashCode() shouldBe Tree("a").deflated.hashCode()
-      Tree.Builder.fromArraysHead(Array(0), Array("a")) shouldBe Tree("a")
-      Tree.Builder.fromArraysHead(Array(0), Array("a")).hashCode() shouldBe Tree("a")
+      TreeBuilder.fromArraysHead(Array(0), Array("a")) shouldBe Tree("a")
+      TreeBuilder.fromArraysHead(Array(0), Array("a")).hashCode() shouldBe Tree("a")
         .hashCode()
 
       tree2 shouldBe Tree("a", Tree("b"))
@@ -653,16 +653,16 @@ trait TreeSpec extends AnyWordSpec with Matchers {
       tree2 shouldBe Tree("a", Tree("b"))
       tree2 shouldBe Tree("a", Tree("b")).deflated
       tree2.hashCode() shouldBe Tree("a", Tree("b")).deflated.hashCode()
-      Tree.Builder.fromArraysHead(Array(0, 1), Array("b", "a")) shouldBe Tree("a", Tree("b"))
-      Tree.Builder.fromArraysHead(Array(0, 1), Array("b", "a")).hashCode() shouldBe Tree("a", Tree("b")).hashCode()
+      TreeBuilder.fromArraysHead(Array(0, 1), Array("b", "a")) shouldBe Tree("a", Tree("b"))
+      TreeBuilder.fromArraysHead(Array(0, 1), Array("b", "a")).hashCode() shouldBe Tree("a", Tree("b")).hashCode()
 
       tree3_1 shouldBe Tree("a", Tree("b", Tree("c")))
       tree3_1.hashCode() shouldBe Tree("a", Tree("b", Tree("c"))).hashCode()
       tree3_1 shouldBe Tree("a", Tree("b", Tree("c")))
       tree3_1 shouldBe Tree("a", Tree("b", Tree("c"))).deflated
       tree3_1.hashCode() shouldBe Tree("a", Tree("b", Tree("c"))).deflated.hashCode()
-      Tree.Builder.fromArraysHead(Array(0, 1, 1), Array("c", "b", "a")) shouldBe Tree("a", Tree("b", Tree("c")))
-      Tree.Builder.fromArraysHead(Array(0, 1, 1), Array("c", "b", "a")).hashCode() shouldBe Tree(
+      TreeBuilder.fromArraysHead(Array(0, 1, 1), Array("c", "b", "a")) shouldBe Tree("a", Tree("b", Tree("c")))
+      TreeBuilder.fromArraysHead(Array(0, 1, 1), Array("c", "b", "a")).hashCode() shouldBe Tree(
         "a",
         Tree("b", Tree("c"))
       ).hashCode()
@@ -672,8 +672,8 @@ trait TreeSpec extends AnyWordSpec with Matchers {
       tree3_2 shouldBe Tree("a", Tree("b"), Tree("c"))
       tree3_2 shouldBe Tree("a", Tree("b"), Tree("c")).deflated
       tree3_2.hashCode() shouldBe Tree("a", Tree("b"), Tree("c")).deflated.hashCode()
-      Tree.Builder.fromArraysHead(Array(0, 0, 2), Array("c", "b", "a")) shouldBe Tree("a", Tree("b"), Tree("c"))
-      Tree.Builder.fromArraysHead(Array(0, 0, 2), Array("c", "b", "a")).hashCode() shouldBe Tree(
+      TreeBuilder.fromArraysHead(Array(0, 0, 2), Array("c", "b", "a")) shouldBe Tree("a", Tree("b"), Tree("c"))
+      TreeBuilder.fromArraysHead(Array(0, 0, 2), Array("c", "b", "a")).hashCode() shouldBe Tree(
         "a",
         Tree("b"),
         Tree("c")

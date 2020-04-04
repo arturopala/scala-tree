@@ -16,8 +16,8 @@
 
 package com.github.arturopala.tree.util
 
-import com.github.arturopala.tree.Tree
-import com.github.arturopala.tree.Tree.{ArrayTree, Builder}
+import com.github.arturopala.tree.{Tree, TreeBuilder}
+import com.github.arturopala.tree.Tree.ArrayTree
 
 import scala.collection.Iterator
 import scala.collection.immutable.Stream
@@ -131,7 +131,7 @@ trait ArrayTreeOps[T] {
       .toString()
 
   final def inflated: Tree[T] =
-    Builder.fromIterators(tree.structure.iterator, tree.content.iterator).headOption.getOrElse(Tree.empty)
+    TreeBuilder.fromIterators(tree.structure.iterator, tree.content.iterator).headOption.getOrElse(Tree.empty)
 
   final def deflated[T1 >: T](implicit tag: ClassTag[T1]): Tree[T1] = tree
 

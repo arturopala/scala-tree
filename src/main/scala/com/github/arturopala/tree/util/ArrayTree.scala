@@ -18,7 +18,7 @@ package com.github.arturopala.tree.util
 
 import java.util.NoSuchElementException
 
-import com.github.arturopala.tree.Tree
+import com.github.arturopala.tree.{Tree, TreeBuilder}
 import com.github.arturopala.tree.Tree.ArrayTree
 
 import scala.annotation.tailrec
@@ -605,7 +605,7 @@ object ArrayTree {
       index = index + 1
     }
 
-    val trees = Tree.Builder.fromArrays(structureBuffer.toArray, valuesBuffer.toArray)
+    val trees = TreeBuilder.fromArrays(structureBuffer.toArray, valuesBuffer.toArray)
     if (trees.size == 1) trees.head else Tree.empty
   }
 
@@ -637,7 +637,7 @@ object ArrayTree {
       index = index + 1
     }
 
-    val trees = Tree.Builder.fromArrays(structureBuffer.toArray, valuesBuffer.toArray)
+    val trees = TreeBuilder.fromArrays(structureBuffer.toArray, valuesBuffer.toArray)
     if (trees.size == 1) trees.head else Tree.empty
   }
 
