@@ -351,8 +351,9 @@ sealed trait Tree[+T] {
     else s"Tree(size=$size, width=$width, height=$height, hashCode=${hashCode()})"
 }
 
-/** Tree companion object.
-  * Hosts factory methods, builders, flatMap strategies, helpers and visualisation templates.
+/**
+  * Tree companion object.
+  * Hosts factory methods and concrete tree implementations.
   */
 object Tree {
 
@@ -386,6 +387,7 @@ object Tree {
     case _             => new Bunch(value, subtrees)
   }
 
+  /** Deflates the tree, if inflated, otherwise returns as is. */
   final def deflate[T: ClassTag](tree: Tree[T]): Tree[T] = tree match {
     case `empty`                 => Tree.empty
     case arrayTree: ArrayTree[T] => arrayTree
@@ -394,6 +396,7 @@ object Tree {
       new ArrayTree[T](IntSlice.of(structure), Slice.of(values), tree.width, tree.height)
   }
 
+  /** Inflates the tree, if deflated, otherwise returns as is. */
   final def inflate[T](tree: Tree[T]): Tree[T] = tree match {
     case `empty`                 => Tree.empty
     case arrayTree: ArrayTree[T] => arrayTree.inflated
@@ -465,7 +468,7 @@ object Tree {
   final class ArrayTree[T] private[tree] (
     val structure: IntSlice,
     val content: Slice[T],
-    delayedWidth: => Int,
+    delayedWidth:  => Int,
     delayedHeight: => Int
   )(implicit val classTag: ClassTag[T])
       extends Tree[T] with ArrayTreeOps[T] {
