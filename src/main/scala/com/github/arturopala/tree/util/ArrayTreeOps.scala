@@ -100,7 +100,8 @@ trait ArrayTreeOps[T] {
   final def containsPath[T1 >: T](path: Iterable[T1]): Boolean =
     ArrayTree.containsPath(path, tree.structure.length - 1, tree.structure, tree.content)
 
-  final def toPairsIterator: Iterator[(Int, T)] = ???
+  final def toPairsIterator: Iterator[(Int, T)] = tree.structure.iterator.zip(tree.content.iterator)
+
   final def toArrays[T1 >: T: ClassTag]: (Array[Int], Array[T1]) =
     (tree.structure.toArray, tree.content.toArray.asInstanceOf[Array[T1]])
   final def toSlices[T1 >: T: ClassTag]: (IntSlice, Slice[T1]) = (tree.structure, tree.content.asInstanceOf[Slice[T1]])

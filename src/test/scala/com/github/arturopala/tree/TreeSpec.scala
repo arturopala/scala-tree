@@ -609,22 +609,15 @@ trait TreeSpec extends AnyWordSpec with Matchers {
     }
 
     "serialize a tree to a list of (numberOfChildren, value) pairs" in {
-      Tree().toPairsIterator shouldBe Iterator.empty
+      tree0.toPairsIterator shouldBe Iterator.empty
       TreeBuilder.fromPairsIterator(Iterator.empty) shouldBe List(Tree.empty)
-
-      Tree("a").toPairsIterator.toList shouldBe List((0, "a"))
-      Tree("a", Tree("b")).toPairsIterator.toList shouldBe List((0, "b"), (1, "a"))
-      Tree("a", Tree("b1"), Tree("b2")).toPairsIterator.toList shouldBe List((0, "b2"), (0, "b1"), (2, "a"))
-      Tree("a", Tree("b", Tree("c"))).toPairsIterator.toList shouldBe List((0, "c"), (1, "b"), (1, "a"))
-
-      val tree1 = Tree("a", Tree("b1", Tree("c1")), Tree("b2", Tree("c2", Tree("d2"))))
-      tree1.toPairsIterator.toList shouldBe List((0, "d2"), (1, "c2"), (1, "b2"), (0, "c1"), (1, "b1"), (2, "a"))
-      TreeBuilder.fromPairsIterator(tree1.toPairsIterator) shouldBe List(tree1)
-
-      val tree2 = Tree("a", Tree("b1", Tree("c1")), Tree("b2", Tree("c2", Tree("d2"))), Tree("b3"))
-      val pairList = tree2.toPairsIterator.toList
-      pairList shouldBe List((0, "b3"), (0, "d2"), (1, "c2"), (1, "b2"), (0, "c1"), (1, "b1"), (3, "a"))
-      TreeBuilder.fromPairsIterator(tree2.toPairsIterator) shouldBe List(tree2)
+      tree1.toPairsIterator.toList shouldBe List((0, "a"))
+      tree2.toPairsIterator.toList shouldBe List((0, "b"), (1, "a"))
+      tree3_1.toPairsIterator.toList shouldBe List((0, "c"), (1, "b"), (1, "a"))
+      tree3_2.toPairsIterator.toList shouldBe List((0, "c"), (0, "b"), (2, "a"))
+      tree4_1.toPairsIterator.toList shouldBe List((0, "d"), (1, "c"), (1, "b"), (1, "a"))
+      tree4_2.toPairsIterator.toList shouldBe List((0, "d"), (0, "c"), (1, "b"), (2, "a"))
+      tree4_3.toPairsIterator.toList shouldBe List((0, "d"), (0, "c"), (0, "b"), (3, "a"))
     }
 
     "serialize a tree to a pair of arrays and deserialize it back using fromArrays" in {
