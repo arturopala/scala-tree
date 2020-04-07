@@ -77,7 +77,8 @@ trait ArrayTreeOps[T] {
   final def insertTree[T1 >: T: ClassTag](subtree: Tree[T1]): Tree[T1] =
     ArrayTree.insertSubtree(tree.structure.length - 1, subtree, tree)
 
-  final def insertBranch[T1 >: T: ClassTag](branch: List[T1]): Tree[T1] = ???
+  final def insertBranch[T1 >: T: ClassTag](branch: Iterable[T1]): Tree[T1] =
+    ArrayTree.insertBranch(tree.structure.length - 1, branch, tree)
 
   final def map[K: ClassTag](f: T => K): Tree[K] =
     new ArrayTree[K](tree.structure, tree.content.map(f), tree.width, tree.height)

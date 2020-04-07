@@ -208,11 +208,12 @@ sealed trait Tree[+T] {
     * @group modifications */
   def insertTree[T1 >: T: ClassTag](subtree: Tree[T1]): Tree[T1]
 
-  /** Inserts a new branch of values and returns updated tree.
+  /** Inserts a new branch of values and returns an updated tree.
+    * Keeps children distinct by default.
     * @param branch list of values forming a path from the root to the leaf.
     * @note New branch must start with the existing root element of the tree, otherwise the tree will stay intact.
     * @group modifications */
-  def insertBranch[T1 >: T: ClassTag](branch: List[T1]): Tree[T1]
+  def insertBranch[T1 >: T: ClassTag](branch: Iterable[T1]): Tree[T1]
 
   // TRANSFORMATION
 

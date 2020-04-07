@@ -70,7 +70,7 @@ trait NodeTreeOps[+T] {
   final def countBranches(pred: Iterable[T] => Boolean): Int =
     NodeTree.countBranches(pred, node)
 
-  final def insertValue[T1 >: T: ClassTag](newValue: T1): Tree[T1] =
+  final def insertValue[T1 >: T: ClassTag](newValue: T1): NodeTree[T1] =
     Tree(node.value, Tree(newValue) :: node.subtrees)
 
   final def insertTree[T1 >: T: ClassTag](tree: Tree[T1]): Tree[T1] = tree match {
@@ -78,10 +78,16 @@ trait NodeTreeOps[+T] {
     case n: NodeTree[T1] => Tree(node.value, n :: node.subtrees)
   }
 
-  final def insertBranch[T1 >: T: ClassTag](branch: List[T1]): Tree[T1] =
-    branch match {
-      case value :: xs if value == node.value => NodeTree.insert(node, xs)
-      case _                                  => node
+  final def insertBranch[T1 >: T: ClassTag](branch: Iterable[T1]): Tree[T1] =
+    if (branch.isEmpty) node
+    else {
+      val iterator = branch.iterator
+      val value = iterator.next
+      if (node.value == value) NodeTree.insertBranch(node, iterator) match {
+        case None       => node
+        case Some(tree) => tree
+      }
+      else node
     }
 
   final def map[K: ClassTag](f: T => K): Tree[K] = {

@@ -181,7 +181,7 @@ trait TreeSpec extends AnyWordSpec with Matchers {
       tree3_2.insertValue("c") shouldBe Tree("a", Tree("c"), Tree("b"), Tree("c"))
     }
 
-    "insert subtree to a tree" in {
+    "insert new subtree to a tree" in {
       val result0 = tree0.insertTree(Tree("a"))
       result0 shouldBe Tree("a")
       result0.size shouldBe 1
@@ -209,24 +209,28 @@ trait TreeSpec extends AnyWordSpec with Matchers {
       tree4_1.insertTree(tree4_1) shouldBe Tree(
         "a",
         Tree("a", Tree("b", Tree("c", Tree("d")))),
-        Tree("b", Tree("c", Tree("d"))))
+        Tree("b", Tree("c", Tree("d")))
+      )
       tree4_2.insertTree(tree4_2) shouldBe Tree(
         "a",
         Tree("a", Tree("b", Tree("c")), Tree("d")),
         Tree("b", Tree("c")),
-        Tree("d"))
+        Tree("d")
+      )
       tree4_3.insertTree(tree4_3) shouldBe Tree(
         "a",
         Tree("a", Tree("b"), Tree("c"), Tree("d")),
         Tree("b"),
         Tree("c"),
-        Tree("d"))
+        Tree("d")
+      )
       tree7.insertTree(tree7) shouldBe Tree(
         "a",
         Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e", Tree("f"))), Tree("g")),
         Tree("b", Tree("c")),
         Tree("d", Tree("e", Tree("f"))),
-        Tree("g"))
+        Tree("g")
+      )
       tree7.insertTree(tree7).insertTree(tree7) shouldBe Tree(
         "a",
         Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e", Tree("f"))), Tree("g")),
@@ -247,7 +251,8 @@ trait TreeSpec extends AnyWordSpec with Matchers {
               Tree(
                 "a",
                 Tree("a", Tree("a", Tree("a", Tree("a"), Tree("b")), Tree("b", Tree("c"))), Tree("b"), Tree("c")),
-                Tree("b", Tree("c", Tree("d")))),
+                Tree("b", Tree("c", Tree("d")))
+              ),
               Tree("b", Tree("c")),
               Tree("d")
             ),
@@ -274,54 +279,54 @@ trait TreeSpec extends AnyWordSpec with Matchers {
         Tree("a", Tree("b", Tree("c"))),
         Tree("a", Tree("b"))
       )
-
     }
 
-    "insert new branch to an empty Tree" in {
-      val tree: Tree[Int] = Tree.empty
-      val tree2 = tree.insertBranch(List(0, 1, 2, 3))
-      tree2 shouldBe Tree(0, Tree(1, Tree(2, Tree(3))))
-      tree2.size shouldBe 4
-      tree2.width shouldBe 1
-    }
-
-    "insert new branch to a single node Tree" in {
-      val tree = Tree(0)
-      tree.insertBranch(List(0, 1, 2, 3)) shouldBe Tree(0, Tree(1, Tree(2, Tree(3))))
-    }
-
-    "insert new branch to a multi-branch Tree" in {
-      val tree = Tree(0, Tree(1, Tree(2, Tree(3))))
-      tree.size shouldBe 4
-      tree.width shouldBe 1
-      tree.height shouldBe 4
-
-      val tree2 = tree.insertBranch(List(0, 1, 22, 33))
-      tree2 shouldBe Tree(0, Tree(1, Tree(22, Tree(33)), Tree(2, Tree(3))))
-      tree2.size shouldBe 6
-      tree2.width shouldBe 2
-
-      val tree3 = tree
-        .insertBranch(List(0, 1, 22, 33))
-        .insertBranch(List(0, 11, 12, 13))
-      tree3 shouldBe Tree(0, Tree(11, Tree(12, Tree(13))), Tree(1, Tree(22, Tree(33)), Tree(2, Tree(3))))
-      tree3.size shouldBe 9
-      tree3.width shouldBe 3
-    }
-
-    "insert existing node to a multi-branch Tree" in {
-      val tree = Tree(0, Tree(1, Tree(2, Tree(3))))
-      tree.insertBranch(List(0)) shouldBe tree
-    }
-
-    "insert existing branch to a multi-branch Tree" in {
-      val tree = Tree(0, Tree(1, Tree(2, Tree(3))))
-      tree.insertBranch(List(0, 1, 2)) shouldBe tree
-    }
-
-    "try insert non-matching branch to a multi-branch Tree" in {
-      val tree = Tree(0, Tree(1, Tree(2, Tree(3))))
-      tree.insertBranch(List(7, 0)) shouldBe tree
+    "insert new branch to a tree" in {
+      tree0.insertBranch(List("a", "b", "c", "d")) shouldBe Tree("a", Tree("b", Tree("c", Tree("d"))))
+      tree1.insertBranch(List("a", "b", "c", "d")) shouldBe Tree("a", Tree("b", Tree("c", Tree("d"))))
+      tree1.insertBranch(List("b", "c", "d")) shouldBe Tree("a")
+      tree2.insertBranch(List("a", "b", "c", "d")) shouldBe Tree("a", Tree("b", Tree("c", Tree("d"))))
+      tree2
+        .insertBranch(List("a", "b", "c", "d"))
+        .insertBranch(List("a", "b", "e", "f")) shouldBe Tree(
+        "a",
+        Tree("b", Tree("e", Tree("f")), Tree("c", Tree("d")))
+      )
+      tree3_1.insertBranch(List("a", "b", "c", "d")) shouldBe Tree("a", Tree("b", Tree("c", Tree("d"))))
+      tree3_1.insertBranch(List("a", "b", "e", "f")) shouldBe Tree("a", Tree("b", Tree("e", Tree("f")), Tree("c")))
+      tree3_2.insertBranch(List("a", "b", "c", "d")) shouldBe Tree("a", Tree("b", Tree("c", Tree("d"))), Tree("c"))
+      tree4_1.insertBranch(List("a", "b", "c", "d")) shouldBe Tree("a", Tree("b", Tree("c", Tree("d"))))
+      tree4_2.insertBranch(List("a", "b", "c", "d")) shouldBe Tree("a", Tree("b", Tree("c", Tree("d"))), Tree("d"))
+      tree4_3.insertBranch(List("a", "b", "c", "d")) shouldBe Tree(
+        "a",
+        Tree("b", Tree("c", Tree("d"))),
+        Tree("c"),
+        Tree("d")
+      )
+      tree7.insertBranch(List("a", "b", "c", "d")) shouldBe Tree(
+        "a",
+        Tree("b", Tree("c", Tree("d"))),
+        Tree("d", Tree("e", Tree("f"))),
+        Tree("g")
+      )
+      tree7.insertBranch(List("a", "g", "h", "i")) shouldBe Tree(
+        "a",
+        Tree("b", Tree("c")),
+        Tree("d", Tree("e", Tree("f"))),
+        Tree("g", Tree("h", Tree("i")))
+      )
+      tree7.insertBranch(List("a", "d", "g", "h")) shouldBe Tree(
+        "a",
+        Tree("b", Tree("c")),
+        Tree("d", Tree("g", Tree("h")), Tree("e", Tree("f"))),
+        Tree("g")
+      )
+      tree7.insertBranch(List("a", "d", "e", "g")) shouldBe Tree(
+        "a",
+        Tree("b", Tree("c")),
+        Tree("d", Tree("e", Tree("g"), Tree("f"))),
+        Tree("g")
+      )
     }
 
     "select an existing subtree" in {

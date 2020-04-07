@@ -17,7 +17,7 @@
 package com.github.arturopala.tree
 
 import com.github.arturopala.tree.util.ArrayTree._
-import com.github.arturopala.tree.util.{IntBuffer, IntSlice, Slice}
+import com.github.arturopala.tree.util.{Buffer, IntBuffer, IntSlice, Slice}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 
@@ -604,6 +604,64 @@ class ArrayTreeSpec extends AnyWordSpec with Matchers {
       insertSubtreeDistinct(2, Tree("a", Tree("b")), Tree("b", Tree("a", Tree("b")))) shouldBe Tree(
         "b",
         Tree("a", Tree("b"))
+      )
+    }
+
+    "insert a branch into the buffers" in {
+      insertBranch(List.empty[String].iterator, 0, IntBuffer.empty, Buffer.empty[String], 0) shouldBe 0
+      insertBranch(List("a").iterator, -1, IntBuffer.empty, Buffer.empty[String], 0) shouldBe 1
+      insertBranch(List("a", "b").iterator, -1, IntBuffer.empty, Buffer.empty[String], 0) shouldBe 2
+      insertBranch(List("b").iterator, 0, IntBuffer(0), Buffer("a"), 0) shouldBe 1
+      insertBranch(List("a").iterator, 0, IntBuffer(0), Buffer("a"), 0) shouldBe 1
+      insertBranch(List("a", "b", "c").iterator, 0, IntBuffer(0), Buffer("a"), 0) shouldBe 3
+      insertBranch(List("b", "c").iterator, 1, IntBuffer(0, 1), Buffer("a", "b"), 0) shouldBe 2
+      insertBranch(List("b", "c").iterator, 1, IntBuffer(0, 1), Buffer("b", "a"), 0) shouldBe 1
+      insertBranch(List("b", "c", "d", "e", "f").iterator, 1, IntBuffer(0, 1), Buffer("b", "a"), 0) shouldBe 4
+      insertBranch(List("b", "c", "d", "e", "f").iterator, 2, IntBuffer(0, 1, 1), Buffer("c", "b", "a"), 0) shouldBe 3
+      insertBranch(List("b", "c", "d", "e", "f").iterator, 2, IntBuffer(0, 0, 2), Buffer("c", "b", "a"), 0) shouldBe 4
+    }
+
+    "insert a branch into the tree" in {
+      insertBranch(-1, List(), Tree.empty) shouldBe Tree.empty
+      insertBranch(-1, List("a"), Tree.empty) shouldBe Tree("a")
+      insertBranch(-1, List("a", "b", "c", "d", "e"), Tree.empty) shouldBe Tree(
+        "a",
+        Tree("b", Tree("c", Tree("d", Tree("e"))))
+      )
+      insertBranch(0, List("a"), Tree("a")) shouldBe Tree("a")
+      insertBranch(1, List("a"), Tree("a", Tree("b"))) shouldBe Tree("a", Tree("b"))
+      insertBranch(1, List("a", "b"), Tree("a", Tree("b"))) shouldBe Tree("a", Tree("b"))
+      insertBranch(1, List("a", "c"), Tree("a", Tree("b"))) shouldBe Tree("a", Tree("c"), Tree("b"))
+      insertBranch(3, List("a", "c"), Tree("a", Tree("b"), Tree("c"), Tree("d"))) shouldBe Tree(
+        "a",
+        Tree("b"),
+        Tree("c"),
+        Tree("d")
+      )
+      insertBranch(3, List("a", "c", "e"), Tree("a", Tree("b"), Tree("c"), Tree("d"))) shouldBe Tree(
+        "a",
+        Tree("b"),
+        Tree("c", Tree("e")),
+        Tree("d")
+      )
+      insertBranch(3, List("a", "b", "c"), Tree("a", Tree("b"), Tree("c"), Tree("d"))) shouldBe Tree(
+        "a",
+        Tree("b", Tree("c")),
+        Tree("c"),
+        Tree("d")
+      )
+      insertBranch(3, List("a", "d", "c"), Tree("a", Tree("b"), Tree("c"), Tree("d"))) shouldBe Tree(
+        "a",
+        Tree("b"),
+        Tree("c"),
+        Tree("d", Tree("c"))
+      )
+      insertBranch(3, List("a", "e", "c"), Tree("a", Tree("b"), Tree("c"), Tree("d"))) shouldBe Tree(
+        "a",
+        Tree("e", Tree("c")),
+        Tree("b"),
+        Tree("c"),
+        Tree("d")
       )
     }
   }

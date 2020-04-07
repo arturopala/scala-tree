@@ -61,10 +61,16 @@ trait EmptyTreeOps {
 
   final def insertValue[T1: ClassTag](value: T1): Tree[T1] = Tree(value)
   final def insertTree[T1: ClassTag](subtree: Tree[T1]): Tree[T1] = subtree
-  final def insertBranch[T1: ClassTag](branch: List[T1]): Tree[T1] = branch match {
-    case x :: xs => NodeTree.insert(Tree(x), xs)
-    case _       => empty
-  }
+
+  final def insertBranch[T1: ClassTag](branch: Iterable[T1]): Tree[T1] =
+    if (branch.isEmpty) Tree.empty
+    else {
+      val iterator = branch.iterator
+      NodeTree.insertBranch(Tree(iterator.next()), iterator) match {
+        case None       => empty
+        case Some(tree) => tree
+      }
+    }
 
   final def selectValue[T1 >: Nothing](path: Iterable[T1]): Option[Nothing] = None
   final def selectTree[T1: ClassTag](path: Iterable[T1]): Option[Tree[Nothing]] =

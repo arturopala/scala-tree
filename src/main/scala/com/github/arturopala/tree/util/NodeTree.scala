@@ -16,7 +16,7 @@
 
 package com.github.arturopala.tree.util
 
-import com.github.arturopala.tree.Tree
+import com.github.arturopala.tree.{Tree, TreeBuilder}
 import com.github.arturopala.tree.Tree.{Binary, Leaf, NodeTree, Unary}
 
 import scala.annotation.tailrec
@@ -284,30 +284,66 @@ object NodeTree {
         }
     }
 
-  final def insert[T, T1 >: T](tree: NodeTree[T], branch: List[T1]): NodeTree[T1] =
-    branch match {
-      case x :: xs =>
-        tree.subtrees.partition(_.value == x) match {
+  final def insertBranchUnsafe[T, T1 >: T: ClassTag](tree: NodeTree[T], branchIterator: Iterator[T1]): NodeTree[T1] =
+    if (branchIterator.hasNext) {
+      Tree(tree.value, insertBranchInSubtrees(branchIterator.next, Nil, tree.subtrees, branchIterator))
+    } else tree
 
-          case (Nil, bs) =>
-            val c = insert(Tree(x), xs)
-            Tree(tree.value, c :: bs)
+  @tailrec
+  private def insertBranchInSubtrees[T, T1 >: T: ClassTag](
+    branchHead: T1,
+    subtreesLeft: List[NodeTree[T]],
+    subtreesRight: List[NodeTree[T]],
+    branchTailIterator: Iterator[T1]
+  ): List[NodeTree[T1]] =
+    subtreesRight match {
+      case Nil =>
+        val branchTree: NodeTree[T1] =
+          TreeBuilder.fromList(branchHead :: branchTailIterator.toList).asInstanceOf[NodeTree[T1]]
+        branchTree :: subtreesLeft
 
-          case (as, bs) =>
-            as match {
+      case head :: tail if head.value == branchHead =>
+        val modified = insertBranchUnsafe(head, branchTailIterator)
+        subtreesLeft.reverse ::: (modified :: tail)
 
-              case a :: Nil =>
-                val c = insert(a, xs)
-                Tree(tree.value, c :: bs)
-
-              case _ =>
-                val cs = as.map(insert(_, xs))
-                Tree(tree.value, cs ::: bs)
-            }
-        }
-
-      case Nil => tree
+      case head :: tail =>
+        insertBranchInSubtrees(branchHead, head :: subtreesLeft, tail, branchTailIterator)
     }
+
+  final def insertBranch[T, T1 >: T: ClassTag](tree: NodeTree[T], branchIterator: Iterator[T1]): Option[NodeTree[T1]] =
+    insertBranch(tree, branchIterator, Nil)
+
+  @tailrec
+  private def insertBranch[T, T1 >: T: ClassTag](
+    tree: NodeTree[T],
+    branchIterator: Iterator[T1],
+    queue: List[(T, List[NodeTree[T]], List[NodeTree[T]])]
+  ): Option[NodeTree[T1]] =
+    if (branchIterator.hasNext) {
+      val value = branchIterator.next()
+      splitListWhen[NodeTree[T]](_.value == value, tree.subtrees) match {
+        case None =>
+          val branchTree: NodeTree[T1] =
+            TreeBuilder.fromList(value :: branchIterator.toList).asInstanceOf[NodeTree[T1]]
+          val newNode: NodeTree[T] = Tree(tree.value, branchTree :: tree.subtrees).asInstanceOf[NodeTree[T]]
+          Some(queue.foldLeft(newNode) { case (n, (v, l, r)) => Tree(v, l ::: (n :: r)) })
+
+        case Some((left, node, right)) =>
+          insertBranch(node, branchIterator, (tree.value, left, right) :: queue)
+      }
+    } else None
+
+  /** Optionally splits list into left and right part around matching element. */
+  final def splitListWhen[T](f: T => Boolean, list: List[T]): Option[(List[T], T, List[T])] = {
+    @tailrec
+    def split(left: List[T], right: List[T]): Option[(List[T], T, List[T])] = right match {
+      case Nil => None
+      case head :: tail =>
+        if (f(head)) Some((left.reverse, head, tail))
+        else split(head :: left, tail)
+    }
+    split(Nil, list)
+  }
 
   final def toPairsList[T](node: NodeTree[T]): List[(Int, T)] = toPairsList(Nil, List(node))
 

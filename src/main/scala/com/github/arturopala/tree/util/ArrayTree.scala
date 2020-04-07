@@ -716,16 +716,46 @@ object ArrayTree {
       if (delta == 0) {
         target // skip creating new instance if nothing changed
       } else {
-        val newTreeStructure = structureBuffer.toSlice
-        val newTreeValues = valuesBuffer.toSlice
-
-        new ArrayTree[T](
-          newTreeStructure,
-          newTreeValues,
-          calculateWidth(newTreeStructure),
-          calculateHeight(newTreeStructure)
-        )
+        TreeBuilder.fromBuffers(structureBuffer, valuesBuffer)
       }
+    }
+
+  /** Inserts a subtree to a tree at an index while keeping children values distinct.
+    * @return modified tree */
+  final def insertBranch[T: ClassTag](
+    index: Int,
+    branch: Iterable[T],
+    target: Tree[T]
+  ): Tree[T] =
+    if (branch.isEmpty) target
+    else if (target.isEmpty) {
+      val values = Slice.of(branch.toArray.reverse)
+      val structure = {
+        val array = Array.fill(values.length)(1)
+        array(0) = 0
+        IntSlice.of(array)
+      }
+      new ArrayTree[T](
+        structure,
+        values,
+        1,
+        values.length
+      )
+    } else {
+      assert(index >= 0 && index < target.size, "Insertion index must be within target's tree range [0,length).")
+      val iterator: Iterator[T] = branch.iterator
+      if (iterator.hasNext) {
+        val value = iterator.next()
+        val (structureBuffer, valuesBuffer) = target.toBuffers
+        if (valuesBuffer(index) == value) {
+          val delta = insertBranch(iterator, index, structureBuffer, valuesBuffer, 0)
+
+          if (delta == 0) target
+          else {
+            TreeBuilder.fromBuffers(structureBuffer, valuesBuffer)
+          }
+        } else target
+      } else target
     }
 
   /** Removes value at index and joins subtrees to the parent node.
@@ -777,7 +807,8 @@ object ArrayTree {
       offset1 + offset2
     }
 
-  /** Inserts slices to buffers at an index.
+  /** Inserts slice's content to the buffers at an index.
+    * Shifts existing buffer content right, starting from an index.
     * @return buffer length change */
   final def insertAt[T: ClassTag](
     index: Int,
@@ -862,18 +893,7 @@ object ArrayTree {
     structureBuffer: IntBuffer,
     valuesBuffer: Buffer[T],
     offset: Int
-  ): Int = {
-
-    /*println(structureBuffer)
-    println(valuesBuffer)
-    println(offset)
-    println(queue)
-    println()*/
-
-    def shiftFrom(i: Int, d: Int): ((Int, Tree[T])) => (Int, Tree[T]) = {
-      case (p, t) => (shiftIfGreaterOrEqualTo(p, i, d), t)
-    }
-
+  ): Int =
     queue match {
       case Nil => offset
       case (parentIndex, tree) :: tail =>
@@ -909,8 +929,6 @@ object ArrayTree {
         }
     }
 
-  }
-
   /** Inserts subtrees as the leftmost child to the buffers with checking for duplicates.
     * Does nothing when an empty tree.
     * @param queue list of (parentIndex, tree to insert)
@@ -921,22 +939,11 @@ object ArrayTree {
     structureBuffer: IntBuffer,
     valuesBuffer: Buffer[T],
     offset: Int
-  ): Int = {
-
-    /*println(structureBuffer)
-    println(valuesBuffer)
-    println(offset)
-    println(queue)
-    println()*/
-
-    def shiftFrom(i: Int, d: Int): ((Int, Tree[T])) => (Int, Tree[T]) = {
-      case (p, t) => (shiftIfGreaterOrEqualTo(p, i, d), t)
-    }
-
+  ): Int =
     queue match {
       case Nil => offset
       case (parentIndex, tree) :: tail =>
-        if (tree.size == 0) insertRightSubtreeListDistinct(tail, structureBuffer, valuesBuffer, offset)
+        if (tree.size == 0) insertLeftSubtreeListDistinct(tail, structureBuffer, valuesBuffer, offset)
         else {
           val (i, insert) =
             childrenLeftmostIndexFor(tree.valueOption.get, parentIndex, structureBuffer, valuesBuffer)
@@ -968,9 +975,46 @@ object ArrayTree {
         }
     }
 
-  }
+  /** Inserts branch into the buffers with checking for duplicates.
+    * @param branchIterator list of values
+    * @return buffer length change */
+  @tailrec
+  final def insertBranch[T: ClassTag](
+    branchIterator: Iterator[T],
+    parentIndex: Int,
+    structureBuffer: IntBuffer,
+    valuesBuffer: Buffer[T],
+    offset: Int
+  ): Int =
+    if (branchIterator.hasNext) {
+      val value = branchIterator.next()
+      childrenRightmostIndexFor(value, parentIndex, structureBuffer, valuesBuffer) match {
+        case Some(index) =>
+          insertBranch(branchIterator, index, structureBuffer, valuesBuffer, offset)
+
+        case None =>
+          val values = Slice.of(branchIterator.toArray.reverse :+ value)
+          val structure = {
+            val array = Array.fill(values.length)(1)
+            array(0) = 0
+            IntSlice.of(array)
+          }
+          if (parentIndex >= 0) {
+            structureBuffer.increment(parentIndex)
+            insertAt(parentIndex, structure, values, structureBuffer, valuesBuffer)
+          } else {
+            insertAt(0, structure, values, structureBuffer, valuesBuffer)
+          }
+
+      }
+    } else offset
 
   /** Adds d to i if i >= b, returns i otherwise. */
   final def shiftIfGreaterOrEqualTo(i: Int, b: Int, d: Int): Int = if (i >= b) i + d else i
+
+  /** Transforms (index,tree) by adding an offset d to the index if greater or equal to i. */
+  final def shiftFrom[T](i: Int, d: Int): ((Int, Tree[T])) => (Int, Tree[T]) = {
+    case (p, t) => (shiftIfGreaterOrEqualTo(p, i, d), t)
+  }
 
 }

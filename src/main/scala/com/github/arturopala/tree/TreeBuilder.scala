@@ -17,7 +17,7 @@
 package com.github.arturopala.tree
 
 import com.github.arturopala.tree.Tree.{ArrayTree, NodeTree}
-import com.github.arturopala.tree.util.{ArrayTree, IntSlice, Slice}
+import com.github.arturopala.tree.util.{ArrayTree, Buffer, IntBuffer, IntSlice, Slice}
 
 import scala.annotation.tailrec
 import scala.collection.Iterator
@@ -33,6 +33,7 @@ object TreeBuilder {
     *   - `value` is the value of a new node, and
     *   - `numberOfChildren` is a number of preceding elements in the list
     *                        to become direct subtrees of the node.
+    *
     * @note - Values of subtrees must always precede the value of a parent node, and appear in the reverse order.
     *       - The sum of all numberOfChildren values must be the size of the list minus one.
     */
@@ -60,7 +61,7 @@ object TreeBuilder {
     fromIterators(structure.iterator, values.iterator)
 
   /** Builds a tree from a pair of iterators:
-    *   - `structure` is an iterator over a serialized tree structure,
+    *   - `structure` is an iterator over linearized tree structure,
     *   - `values` is an iterator over node's values.
     *
     * @note Both iterators have to return data following rules set in [[Tree.toArrays]].
@@ -82,7 +83,7 @@ object TreeBuilder {
     else result
 
   /** Builds a tree from a pair of arrays:
-    *   - `structure` is an arrays holding a serialized tree structure,
+    *   - `structure` is an arrays holding linearized tree structure,
     *   - `values` is an arrays holding node's values.
     *
     * @note Both arrays have to return data following rules set in [[Tree.toArrays]].
@@ -161,6 +162,36 @@ object TreeBuilder {
             fromTreeList(xs, merged :: result.drop(size), 0, strategy)
         }
     }
+
+  /** Builds a tree from a pair of buffers.
+    *  - `structureBuffer` is a buffer holding linearized tree structure,
+    *  - `valuesBuffer` is a buffer holding node's values.
+    *
+    * @note Both buffers have to follow rules set in [[Tree.toArrays]].
+    */
+  @`inline` final def fromBuffers[T: ClassTag](structureBuffer: IntBuffer, valuesBuffer: Buffer[T]): Tree[T] =
+    fromSlices(structureBuffer.toSlice, valuesBuffer.toSlice)
+
+  /** Builds a tree from a pair of array slices.
+    *  - `structure` is a slice holding linearized tree structure,
+    *  - `values` is a slice holding node's values.
+    *
+    * @note Both slices have to follow rules set in [[Tree.toArrays]].
+    */
+  final def fromSlices[T: ClassTag](structure: IntSlice, values: Slice[T]): Tree[T] =
+    new ArrayTree[T](
+      structure,
+      values,
+      ArrayTree.calculateWidth(structure),
+      ArrayTree.calculateHeight(structure)
+    )
+
+  /** Builds a single branch tree from list of values. */
+  final def fromList[T: ClassTag](list: List[T]): Tree[T] = list.reverse match {
+    case Nil => Tree.empty
+    case value :: tail =>
+      tail.foldLeft(Tree(value))((t, v) => Tree(v, t))
+  }
 
   /** There are multiple ways to merge the tree after expanding a node.
     * As we don't want to be constrained by an arbitrary choice,
