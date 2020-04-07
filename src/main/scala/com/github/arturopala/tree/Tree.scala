@@ -468,7 +468,7 @@ object Tree {
   final class ArrayTree[T] private[tree] (
     val structure: IntSlice,
     val content: Slice[T],
-    delayedWidth:  => Int,
+    delayedWidth: => Int,
     delayedHeight: => Int
   )(implicit val classTag: ClassTag[T])
       extends Tree[T] with ArrayTreeOps[T] {

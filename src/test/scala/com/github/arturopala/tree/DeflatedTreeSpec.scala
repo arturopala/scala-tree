@@ -20,16 +20,17 @@ class DeflatedTreeSpec extends TreeSpec {
 
   override def name = "A deflated Tree"
 
-  val tree0: Tree[String] = TestTrees.tree0.deflated
-  val tree1: Tree[String] = TestTrees.tree1.deflated
-  val tree2: Tree[String] = TestTrees.tree2.deflated
-  val tree3_1: Tree[String] = TestTrees.tree3_1.deflated
-  val tree3_2: Tree[String] = TestTrees.tree3_2.deflated
-  val tree4_1: Tree[String] = TestTrees.tree4_1.deflated
-  val tree4_2: Tree[String] = TestTrees.tree4_2.deflated
-  val tree4_3: Tree[String] = TestTrees.tree4_3.deflated
-  val tree7: Tree[String] = TestTrees.tree7.deflated
-  val tree9: Tree[String] = TestTrees.tree9.deflated
+  override val tree0: Tree[String] = TestTrees.tree0.deflated
+  override val tree1: Tree[String] = TestTrees.tree1.deflated
+  override val tree2: Tree[String] = TestTrees.tree2.deflated
+  override val tree3_1: Tree[String] = TestTrees.tree3_1.deflated
+  override val tree3_2: Tree[String] = TestTrees.tree3_2.deflated
+  override val tree4_1: Tree[String] = TestTrees.tree4_1.deflated
+  override val tree4_2: Tree[String] = TestTrees.tree4_2.deflated
+  override val tree4_3: Tree[String] = TestTrees.tree4_3.deflated
+  override val tree7: Tree[String] = TestTrees.tree7.deflated
+  override val tree9: Tree[String] = TestTrees.tree9.deflated
+  override val allTrees: Seq[Tree[String]] = TestTrees.allTrees.map(_.deflated)
 
   s"$name also" should {
 

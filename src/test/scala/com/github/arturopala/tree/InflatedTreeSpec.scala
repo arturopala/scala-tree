@@ -20,15 +20,16 @@ class InflatedTreeSpec extends TreeSpec {
 
   override def name = "An inflated Tree"
 
-  val tree0: Tree[String] = TestTrees.tree0
-  val tree1: Tree[String] = TestTrees.tree1
-  val tree2: Tree[String] = TestTrees.tree2
-  val tree3_1: Tree[String] = TestTrees.tree3_1
-  val tree3_2: Tree[String] = TestTrees.tree3_2
-  val tree4_1: Tree[String] = TestTrees.tree4_1
-  val tree4_2: Tree[String] = TestTrees.tree4_2
-  val tree4_3: Tree[String] = TestTrees.tree4_3
-  val tree7: Tree[String] = TestTrees.tree7
-  val tree9: Tree[String] = TestTrees.tree9
+  override val tree0: Tree[String] = TestTrees.tree0
+  override val tree1: Tree[String] = TestTrees.tree1
+  override val tree2: Tree[String] = TestTrees.tree2
+  override val tree3_1: Tree[String] = TestTrees.tree3_1
+  override val tree3_2: Tree[String] = TestTrees.tree3_2
+  override val tree4_1: Tree[String] = TestTrees.tree4_1
+  override val tree4_2: Tree[String] = TestTrees.tree4_2
+  override val tree4_3: Tree[String] = TestTrees.tree4_3
+  override val tree7: Tree[String] = TestTrees.tree7
+  override val tree9: Tree[String] = TestTrees.tree9
+  override val allTrees: Seq[Tree[String]] = TestTrees.allTrees
 
 }

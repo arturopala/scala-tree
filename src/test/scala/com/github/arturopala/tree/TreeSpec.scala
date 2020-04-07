@@ -34,6 +34,7 @@ trait TreeSpec extends AnyWordSpec with Matchers {
   val tree4_3: Tree[String]
   val tree7: Tree[String]
   val tree9: Tree[String]
+  val allTrees: Seq[Tree[String]]
 
   s"$name" should {
 
@@ -196,6 +197,84 @@ trait TreeSpec extends AnyWordSpec with Matchers {
       tree3_1.insertTree(Tree("b")) shouldBe Tree("a", Tree("b"), Tree("b", Tree("c")))
       tree3_1.insertTree(Tree("c")) shouldBe Tree("a", Tree("c"), Tree("b", Tree("c")))
       tree3_2.insertTree(Tree("c")) shouldBe Tree("a", Tree("c"), Tree("b"), Tree("c"))
+
+      tree1.insertTree(Tree("b", Tree("c"))) shouldBe Tree("a", Tree("b", Tree("c")))
+      tree1.insertTree(Tree("a", Tree("b"))) shouldBe Tree("a", Tree("a", Tree("b")))
+      tree1.insertTree(Tree("a", Tree("b"), Tree("c"))) shouldBe Tree("a", Tree("a", Tree("b"), Tree("c")))
+
+      tree2.insertTree(Tree("b", Tree("c"))) shouldBe Tree("a", Tree("b", Tree("c")), Tree("b"))
+      tree2.insertTree(tree2) shouldBe Tree("a", Tree("a", Tree("b")), Tree("b"))
+      tree3_1.insertTree(tree3_1) shouldBe Tree("a", Tree("a", Tree("b", Tree("c"))), Tree("b", Tree("c")))
+      tree3_2.insertTree(tree3_2) shouldBe Tree("a", Tree("a", Tree("b"), Tree("c")), Tree("b"), Tree("c"))
+      tree4_1.insertTree(tree4_1) shouldBe Tree(
+        "a",
+        Tree("a", Tree("b", Tree("c", Tree("d")))),
+        Tree("b", Tree("c", Tree("d"))))
+      tree4_2.insertTree(tree4_2) shouldBe Tree(
+        "a",
+        Tree("a", Tree("b", Tree("c")), Tree("d")),
+        Tree("b", Tree("c")),
+        Tree("d"))
+      tree4_3.insertTree(tree4_3) shouldBe Tree(
+        "a",
+        Tree("a", Tree("b"), Tree("c"), Tree("d")),
+        Tree("b"),
+        Tree("c"),
+        Tree("d"))
+      tree7.insertTree(tree7) shouldBe Tree(
+        "a",
+        Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e", Tree("f"))), Tree("g")),
+        Tree("b", Tree("c")),
+        Tree("d", Tree("e", Tree("f"))),
+        Tree("g"))
+      tree7.insertTree(tree7).insertTree(tree7) shouldBe Tree(
+        "a",
+        Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e", Tree("f"))), Tree("g")),
+        Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e", Tree("f"))), Tree("g")),
+        Tree("b", Tree("c")),
+        Tree("d", Tree("e", Tree("f"))),
+        Tree("g")
+      )
+
+      allTrees.foldLeft(tree0)((acc, tree) => tree.insertTree(acc)) shouldBe Tree(
+        "a",
+        Tree(
+          "a",
+          Tree(
+            "a",
+            Tree(
+              "a",
+              Tree(
+                "a",
+                Tree("a", Tree("a", Tree("a", Tree("a"), Tree("b")), Tree("b", Tree("c"))), Tree("b"), Tree("c")),
+                Tree("b", Tree("c", Tree("d")))),
+              Tree("b", Tree("c")),
+              Tree("d")
+            ),
+            Tree("b"),
+            Tree("c"),
+            Tree("d")
+          ),
+          Tree("b", Tree("c")),
+          Tree("d", Tree("e", Tree("f"))),
+          Tree("g")
+        ),
+        Tree("b", Tree("c", Tree("d"))),
+        Tree("e", Tree("f", Tree("g")), Tree("h", Tree("i")))
+      )
+
+      allTrees.foldLeft(tree0)((acc, tree) => acc.insertTree(tree)) shouldBe Tree(
+        "a",
+        Tree("a", Tree("b", Tree("c", Tree("d"))), Tree("e", Tree("f", Tree("g")), Tree("h", Tree("i")))),
+        Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e", Tree("f"))), Tree("g")),
+        Tree("a", Tree("b"), Tree("c"), Tree("d")),
+        Tree("a", Tree("b", Tree("c")), Tree("d")),
+        Tree("a", Tree("b", Tree("c", Tree("d")))),
+        Tree("a", Tree("b"), Tree("c")),
+        Tree("a", Tree("b", Tree("c"))),
+        Tree("a", Tree("b"))
+      )
+
     }
 
     "insert new branch to an empty Tree" in {
@@ -688,7 +767,7 @@ trait TreeSpec extends AnyWordSpec with Matchers {
     }
 
     "hashcode should differ for different trees" in {
-      TestTrees.allTrees.map(_.hashCode()).toSet.size shouldBe 10
+      allTrees.map(_.hashCode()).toSet.size shouldBe 10
       Tree(0).hashCode() should not be Tree(1).hashCode()
       Tree(0, Tree(1)).hashCode() should not be Tree(1, Tree(0)).hashCode()
     }
