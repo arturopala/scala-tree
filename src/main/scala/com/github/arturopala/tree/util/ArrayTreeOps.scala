@@ -16,7 +16,7 @@
 
 package com.github.arturopala.tree.util
 
-import com.github.arturopala.tree.{Tree, TreeBuilder}
+import com.github.arturopala.tree.{Tree, TreeBuilder, TreeLike}
 import com.github.arturopala.tree.Tree.ArrayTree
 
 import scala.collection.Iterator
@@ -27,7 +27,7 @@ import scala.reflect.ClassTag
   * [[Tree.ArrayTree]] final functions implementations.
   * Extracted from [[Tree]] to de-clutter its codebase.
   */
-trait ArrayTreeOps[T] {
+trait ArrayTreeOps[T] extends TreeLike[T] {
 
   protected val tree: ArrayTree[T]
   protected val classTag: ClassTag[T]
@@ -36,81 +36,82 @@ trait ArrayTreeOps[T] {
 
   private def all[A]: A => Boolean = _ => true
 
-  final def valueOption: Option[T] = Some(tree.content.last)
-  final def values: List[T] = tree.content.reverseIterator.toList
-  final def valuesUnsafe: List[T] = values
-  final def valueIterator(pred: T => Boolean): Iterator[T] = tree.content.reverseIterator(pred)
-  final def valueStream: Stream[T] = valueStream(all)
-  final def valueStream(pred: T => Boolean): Stream[T] = streamFromIterator(valueIterator(pred))
+  final override def valueOption: Option[T] = Some(tree.content.last)
+  final override def values: List[T] = tree.content.reverseIterator.toList
+  final override def valuesUnsafe: List[T] = values
+  final override def valueIterator(pred: T => Boolean): Iterator[T] = tree.content.reverseIterator(pred)
+  final override def valueStream: Stream[T] = valueStream(all)
+  final override def valueStream(pred: T => Boolean): Stream[T] = streamFromIterator(valueIterator(pred))
 
-  final def childrenValues: List[T] =
+  final override def childrenValues: List[T] =
     ArrayTree.childrenIndexes(tree.structure.length - 1, tree.structure).map(tree.content)
 
-  final def children: List[Tree[T]] =
+  final override def children: List[Tree[T]] =
     ArrayTree
       .childrenIndexes(tree.structure.length - 1, tree.structure)
       .map(ArrayTree.treeAt(_, tree.structure, tree.content))
 
-  final def trees: List[Tree[T]] = treeIterator(all).toList
-  final def treesUnsafe: List[Tree[T]] = trees
-  final def treeIterator(pred: Tree[T] => Boolean): Iterator[Tree[T]] =
+  final override def trees: List[Tree[T]] = treeIterator(all).toList
+  final override def treesUnsafe: List[Tree[T]] = trees
+  final override def treeIterator(pred: Tree[T] => Boolean): Iterator[Tree[T]] =
     ArrayTree.treeIterator(tree.structure.length - 1, tree.structure, tree.content, pred)
 
-  final def treeStream: Stream[Tree[T]] = treeStream(all)
-  final def treeStream(pred: Tree[T] => Boolean): Stream[Tree[T]] = streamFromIterator(treeIterator(pred))
+  final override def treeStream: Stream[Tree[T]] = treeStream(all)
+  final override def treeStream(pred: Tree[T] => Boolean): Stream[Tree[T]] = streamFromIterator(treeIterator(pred))
 
-  final def branches: List[List[T]] = branchIterator(all).map(_.toList).toList
-  final def branchesUnsafe: List[List[T]] = branches
-  final def branchIterator(pred: Iterable[T] => Boolean): Iterator[Iterable[T]] =
+  final override def branches: List[List[T]] = branchIterator(all).map(_.toList).toList
+  final override def branchesUnsafe: List[List[T]] = branches
+  final override def branchIterator(pred: Iterable[T] => Boolean): Iterator[Iterable[T]] =
     ArrayTree.branchIterator(tree.structure.length - 1, tree.structure, tree.content, pred)
 
-  final def branchStream: Stream[List[T]] = branchStream(all).map(_.toList)
-  final def branchStream(pred: Iterable[T] => Boolean): Stream[Iterable[T]] =
+  final override def branchStream: Stream[List[T]] = branchStream(all).map(_.toList)
+  final override def branchStream(pred: Iterable[T] => Boolean): Stream[Iterable[T]] =
     streamFromIterator(branchIterator(pred))
 
-  final def countBranches(pred: Iterable[T] => Boolean): Int =
+  final override def countBranches(pred: Iterable[T] => Boolean): Int =
     ArrayTree.countBranches(tree.structure.length - 1, tree.structure, tree.content, pred)
 
-  final def insertValue[T1 >: T: ClassTag](value: T1): Tree[T1] =
+  final override def insertValue[T1 >: T: ClassTag](value: T1): Tree[T1] =
     ArrayTree.insertValue(tree.structure.length - 1, value, tree)
 
-  final def insertTree[T1 >: T: ClassTag](subtree: Tree[T1]): Tree[T1] =
+  final override def insertTree[T1 >: T: ClassTag](subtree: Tree[T1]): Tree[T1] =
     ArrayTree.insertSubtree(tree.structure.length - 1, subtree, tree)
 
-  final def insertBranch[T1 >: T: ClassTag](branch: Iterable[T1]): Tree[T1] =
+  final override def insertBranch[T1 >: T: ClassTag](branch: Iterable[T1]): Tree[T1] =
     ArrayTree.insertBranch(tree.structure.length - 1, branch, tree)
 
-  final def map[K: ClassTag](f: T => K): Tree[K] =
+  final override def map[K: ClassTag](f: T => K): Tree[K] =
     new ArrayTree[K](tree.structure, tree.content.map(f), tree.width, tree.height)
 
-  final def mapUnsafe[K: ClassTag](f: T => K): Tree[K] = map(f)
+  final override def mapUnsafe[K: ClassTag](f: T => K): Tree[K] = map(f)
 
-  final def flatMap[K: ClassTag](f: T => Tree[K]): Tree[K] =
+  final override def flatMap[K: ClassTag](f: T => Tree[K]): Tree[K] =
     ArrayTree.flatMap(tree.structure, tree.content, f)
 
-  final def selectValue[T1 >: T](path: Iterable[T1]): Option[T] =
+  final override def selectValue[T1 >: T](path: Iterable[T1]): Option[T] =
     ArrayTree.selectValue(path, tree.structure.length - 1, tree.structure, tree.content)
 
-  final def selectTree[T1 >: T: ClassTag](path: Iterable[T1]): Option[Tree[T]] =
+  final override def selectTree[T1 >: T: ClassTag](path: Iterable[T1]): Option[Tree[T]] =
     ArrayTree.selectTree(path, tree.structure.length - 1, tree.structure, tree.content)
 
-  final def containsBranch[T1 >: T](branch: Iterable[T1]): Boolean =
+  final override def containsBranch[T1 >: T](branch: Iterable[T1]): Boolean =
     ArrayTree.containsBranch(branch, tree.structure.length - 1, tree.structure, tree.content)
 
-  final def containsPath[T1 >: T](path: Iterable[T1]): Boolean =
+  final override def containsPath[T1 >: T](path: Iterable[T1]): Boolean =
     ArrayTree.containsPath(path, tree.structure.length - 1, tree.structure, tree.content)
 
-  final def toPairsIterator: Iterator[(Int, T)] = tree.structure.iterator.zip(tree.content.iterator)
+  final override def toPairsIterator: Iterator[(Int, T)] = tree.structure.iterator.zip(tree.content.iterator)
 
-  final def toArrays[T1 >: T: ClassTag]: (Array[Int], Array[T1]) =
+  final override def toArrays[T1 >: T: ClassTag]: (Array[Int], Array[T1]) =
     (tree.structure.toArray, tree.content.toArray.asInstanceOf[Array[T1]])
-  final def toSlices[T1 >: T: ClassTag]: (IntSlice, Slice[T1]) = (tree.structure, tree.content.asInstanceOf[Slice[T1]])
+  final override def toSlices[T1 >: T: ClassTag]: (IntSlice, Slice[T1]) =
+    (tree.structure, tree.content.asInstanceOf[Slice[T1]])
 
-  final def toBuffers[T1 >: T: ClassTag]: (IntBuffer, Buffer[T1]) =
+  final override def toBuffers[T1 >: T: ClassTag]: (IntBuffer, Buffer[T1]) =
     (tree.structure.toBuffer, tree.content.toBuffer.asInstanceOf[Buffer[T1]])
-  final def toStructureArray: Array[Int] = tree.structure.toArray
+  final override def toStructureArray: Array[Int] = tree.structure.toArray
 
-  final def mkStringUsingBranches(
+  final override def mkStringUsingBranches(
     show: T => String,
     valueSeparator: String,
     branchSeparator: String,

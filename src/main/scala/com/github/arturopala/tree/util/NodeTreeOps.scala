@@ -16,7 +16,7 @@
 
 package com.github.arturopala.tree.util
 
-import com.github.arturopala.tree.{Tree, TreeBuilder}
+import com.github.arturopala.tree.{Tree, TreeBuilder, TreeLike}
 import com.github.arturopala.tree.Tree.{NodeTree, empty}
 
 import scala.collection.Iterator
@@ -27,58 +27,58 @@ import scala.reflect.ClassTag
   * [[Tree.NodeTree]] functions final implementations.
   * Extracted from [[Tree]] to de-clutter its codebase.
   */
-trait NodeTreeOps[+T] {
+trait NodeTreeOps[+T] extends TreeLike[T] {
 
   /** [[Tree.NodeTree]] under consideration. */
   protected val node: NodeTree[T]
 
-  final def valueOption: Option[T] = Some(node.value)
+  final override def valueOption: Option[T] = Some(node.value)
   final def isEmpty: Boolean = node.size == 0
 
-  private final def all[A]: A => Boolean = _ => true
+  private def all[A]: A => Boolean = _ => true
 
-  final def values: List[T] = NodeTree.values[T](all, node)
-  final def valuesUnsafe: List[T] = node.value :: node.subtrees.flatMap(_.valuesUnsafe)
-  final def valueIterator(pred: T => Boolean): Iterator[T] = NodeTree.valueIterator(pred, node)
-  final def valueStream: Stream[T] = valueStream(all)
-  final def valueStream(pred: T => Boolean): Stream[T] = NodeTree.valueStream(pred, node)
-  final def childrenValues: List[T] = node.subtrees.map(_.value)
+  final override def values: List[T] = NodeTree.values[T](all, node)
+  final override def valuesUnsafe: List[T] = node.value :: node.subtrees.flatMap(_.valuesUnsafe)
+  final override def valueIterator(pred: T => Boolean): Iterator[T] = NodeTree.valueIterator(pred, node)
+  final override def valueStream: Stream[T] = valueStream(all)
+  final override def valueStream(pred: T => Boolean): Stream[T] = NodeTree.valueStream(pred, node)
+  final override def childrenValues: List[T] = node.subtrees.map(_.value)
 
-  final def children: List[Tree[T]] = node.subtrees
-  final def trees: List[Tree[T]] = NodeTree.trees[T](all, node)
-  final def treesUnsafe: List[Tree[T]] = node :: node.subtrees.flatMap(_.treesUnsafe)
-  final def treeIterator(pred: Tree[T] => Boolean): Iterator[Tree[T]] = NodeTree.treeIterator(pred, node)
-  final def treeStream: Stream[Tree[T]] = treeStream(all)
-  final def treeStream(pred: Tree[T] => Boolean): Stream[Tree[T]] = NodeTree.treeStream(pred, node)
+  final override def children: List[Tree[T]] = node.subtrees
+  final override def trees: List[Tree[T]] = NodeTree.trees[T](all, node)
+  final override def treesUnsafe: List[Tree[T]] = node :: node.subtrees.flatMap(_.treesUnsafe)
+  final override def treeIterator(pred: Tree[T] => Boolean): Iterator[Tree[T]] = NodeTree.treeIterator(pred, node)
+  final override def treeStream: Stream[Tree[T]] = treeStream(all)
+  final override def treeStream(pred: Tree[T] => Boolean): Stream[Tree[T]] = NodeTree.treeStream(pred, node)
 
-  final def branches: List[List[T]] = NodeTree.branches[T](all, node)
+  final override def branches: List[List[T]] = NodeTree.branches[T](all, node)
 
-  final def branchesUnsafe: List[List[T]] = node.subtrees match {
+  final override def branchesUnsafe: List[List[T]] = node.subtrees match {
     case Nil => List(List(node.value))
     case _ =>
       node.subtrees.flatMap(_.branchesUnsafe).map(node.value :: _)
   }
 
-  final def branchIterator(pred: Iterable[T] => Boolean): Iterator[Iterable[T]] =
+  final override def branchIterator(pred: Iterable[T] => Boolean): Iterator[Iterable[T]] =
     NodeTree.branchIterator(pred, node)
 
-  final def branchStream: Stream[List[T]] = branchStream(all).map(_.toList)
+  final override def branchStream: Stream[List[T]] = branchStream(all).map(_.toList)
 
-  final def branchStream(pred: Iterable[T] => Boolean): Stream[Iterable[T]] =
+  final override def branchStream(pred: Iterable[T] => Boolean): Stream[Iterable[T]] =
     NodeTree.branchStream(pred, node)
 
-  final def countBranches(pred: Iterable[T] => Boolean): Int =
+  final override def countBranches(pred: Iterable[T] => Boolean): Int =
     NodeTree.countBranches(pred, node)
 
-  final def insertValue[T1 >: T: ClassTag](newValue: T1): NodeTree[T1] =
+  final override def insertValue[T1 >: T: ClassTag](newValue: T1): NodeTree[T1] =
     Tree(node.value, Tree(newValue) :: node.subtrees)
 
-  final def insertTree[T1 >: T: ClassTag](tree: Tree[T1]): Tree[T1] = tree match {
+  final override def insertTree[T1 >: T: ClassTag](tree: Tree[T1]): Tree[T1] = tree match {
     case `empty`         => node
     case n: NodeTree[T1] => Tree(node.value, n :: node.subtrees)
   }
 
-  final def insertBranch[T1 >: T: ClassTag](branch: Iterable[T1]): Tree[T1] =
+  final override def insertBranch[T1 >: T: ClassTag](branch: Iterable[T1]): Tree[T1] =
     if (branch.isEmpty) node
     else {
       val iterator = branch.iterator
@@ -90,37 +90,37 @@ trait NodeTreeOps[+T] {
       else node
     }
 
-  final def map[K: ClassTag](f: T => K): Tree[K] = {
+  final override def map[K: ClassTag](f: T => K): Tree[K] = {
     val (structure, values) = NodeTree.arrayMap(f, node)
     TreeBuilder.fromIterators(structure.iterator, values.iterator).headOption.getOrElse(empty)
   }
 
-  final def mapUnsafe[K: ClassTag](f: T => K): Tree[K] = {
+  final override def mapUnsafe[K: ClassTag](f: T => K): Tree[K] = {
     def mapNodeUnsafe(n: NodeTree[T]): NodeTree[K] = Tree(f(n.value), n.subtrees.map(mapNodeUnsafe))
     mapNodeUnsafe(node)
   }
 
-  final def flatMap[K: ClassTag](f: T => Tree[K]): Tree[K] = {
+  final override def flatMap[K: ClassTag](f: T => Tree[K]): Tree[K] = {
     val list: List[(Int, Tree[K])] = NodeTree.listFlatMap(f, List((node.subtrees.size, f(node.value))), node.subtrees)
     TreeBuilder.fromTreeList(list, Nil, 0, TreeBuilder.TreeMergeStrategy.Join).headOption.getOrElse(empty)
   }
 
-  final def selectValue[T1 >: T](path: Iterable[T1]): Option[T] =
+  final override def selectValue[T1 >: T](path: Iterable[T1]): Option[T] =
     NodeTree.selectTree(node, path).map(_.value)
 
-  final def selectTree[T1 >: T: ClassTag](path: Iterable[T1]): Option[Tree[T]] =
+  final override def selectTree[T1 >: T: ClassTag](path: Iterable[T1]): Option[Tree[T]] =
     NodeTree.selectTree(node, path)
 
-  final def containsBranch[T1 >: T](branch: Iterable[T1]): Boolean = NodeTree.containsBranch(node, branch)
-  final def containsPath[T1 >: T](path: Iterable[T1]): Boolean = NodeTree.containsPath(node, path)
+  final override def containsBranch[T1 >: T](branch: Iterable[T1]): Boolean = NodeTree.containsBranch(node, branch)
+  final override def containsPath[T1 >: T](path: Iterable[T1]): Boolean = NodeTree.containsPath(node, path)
 
-  final def toPairsIterator: Iterator[(Int, T)] = NodeTree.toPairsList(node).iterator
-  final def toArrays[T1 >: T: ClassTag]: (Array[Int], Array[T1]) = NodeTree.toArrays(node)
-  final def toSlices[T1 >: T: ClassTag]: (IntSlice, Slice[T1]) = NodeTree.toSlices(node)
-  final def toBuffers[T1 >: T: ClassTag]: (IntBuffer, Buffer[T1]) = NodeTree.toBuffers(node)
-  final def toStructureArray: Array[Int] = NodeTree.toStructureArray(node)
+  final override def toPairsIterator: Iterator[(Int, T)] = NodeTree.toPairsList(node).iterator
+  final override def toArrays[T1 >: T: ClassTag]: (Array[Int], Array[T1]) = NodeTree.toArrays(node)
+  final override def toSlices[T1 >: T: ClassTag]: (IntSlice, Slice[T1]) = NodeTree.toSlices(node)
+  final override def toBuffers[T1 >: T: ClassTag]: (IntBuffer, Buffer[T1]) = NodeTree.toBuffers(node)
+  final override def toStructureArray: Array[Int] = NodeTree.toStructureArray(node)
 
-  final def mkStringUsingBranches(
+  final override def mkStringUsingBranches(
     show: T => String,
     valueSeparator: String,
     branchSeparator: String,
