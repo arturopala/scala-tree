@@ -329,7 +329,7 @@ trait TreeSpec extends AnyWordSpec with Matchers {
       )
     }
 
-    "select a node by path" in {
+    "select a value by a path" in {
       tree0.selectValue(List(), _.length) shouldBe None
       tree1.selectValue(List(), _.length) shouldBe None
       tree1.selectValue(List(1), _.length) shouldBe Some("a")
@@ -385,17 +385,65 @@ trait TreeSpec extends AnyWordSpec with Matchers {
       tree9.selectValue(List("a", "e", "f", "i"), identity) shouldBe None
     }
 
-    "select an existing subtree" in {
-      val tree = Tree(0, Tree(1, Tree(2, Tree(3), Tree(4), Tree(5))))
-      tree.selectTree(List(0, 1)) shouldBe Some(Tree(1, Tree(2, Tree(3), Tree(4), Tree(5))))
-      tree.containsPath(List(0, 1)) shouldBe true
-      tree.containsBranch(List(0, 1)) shouldBe false
+    "select a tree by a path" in {
+      tree0.selectTree(List()) shouldBe None
+      tree0.selectTree(List("a")) shouldBe None
+      tree1.selectTree(List("a")) shouldBe Some(Tree("a"))
+      tree1.selectTree(List("a", "b")) shouldBe None
+      tree2.selectTree(List("a", "b")) shouldBe Some(Tree("b"))
+      tree3_2.selectTree(List("a")) shouldBe Some(Tree("a", Tree("b"), Tree("c")))
+      tree3_2.selectTree(List("a", "b")) shouldBe Some(Tree("b"))
+      tree3_2.selectTree(List("a", "c")) shouldBe Some(Tree("c"))
+      tree3_2.selectTree(List("a", "d")) shouldBe None
+      tree3_2.selectTree(List("a", "a")) shouldBe None
+      tree3_2.selectTree(List("c", "a")) shouldBe None
+      tree3_2.selectTree(List("b", "a")) shouldBe None
+      tree4_1.selectTree(List("a", "b")) shouldBe Some(Tree("b", Tree("c", Tree("d"))))
+      tree4_1.selectTree(List("a", "b", "c")) shouldBe Some(Tree("c", Tree("d")))
+      tree4_1.selectTree(List("a", "b", "c", "d")) shouldBe Some(Tree("d"))
+      tree4_1.selectTree(List("a", "c")) shouldBe None
+      tree4_1.selectTree(List("a", "d")) shouldBe None
+      tree4_2.selectTree(List()) shouldBe None
+      tree4_2.selectTree(List("a")) shouldBe Some(Tree("a", Tree("b", Tree("c")), Tree("d")))
+      tree4_2.selectTree(List("a", "b")) shouldBe Some(Tree("b", Tree("c")))
+      tree4_2.selectTree(List("a", "b", "d")) shouldBe None
+      tree4_2.selectTree(List("a", "b", "c")) shouldBe Some(Tree("c"))
+      tree4_2.selectTree(List("a", "d")) shouldBe Some(Tree("d"))
+      tree4_2.selectTree(List("a", "d", "c")) shouldBe None
+      tree4_2.selectTree(List("b", "c")) shouldBe None
+      tree4_2.selectTree(List("d")) shouldBe None
+      tree4_3.selectTree(List("a", "b")) shouldBe Some(Tree("b"))
+      tree4_3.selectTree(List()) shouldBe None
+      tree4_3.selectTree(List("a")) shouldBe Some(Tree("a", Tree("b"), Tree("c"), Tree("d")))
+      tree4_3.selectTree(List("a", "c")) shouldBe Some(Tree("c"))
+      tree4_3.selectTree(List("a", "d")) shouldBe Some(Tree("d"))
+      tree4_3.selectTree(List("a", "a")) shouldBe None
+      tree4_3.selectTree(List("a", "e")) shouldBe None
+      tree4_3.selectTree(List("a", "b", "c")) shouldBe None
+      tree4_3.selectTree(List("a", "b", "b")) shouldBe None
+      tree4_3.selectTree(List("a", "a", "a")) shouldBe None
+      tree9.selectTree(List("a", "b", "c", "d")) shouldBe Some(Tree("d"))
+      tree9.selectTree(List("a", "e", "f", "g")) shouldBe Some(Tree("g"))
+      tree9.selectTree(List("a", "e", "h", "i")) shouldBe Some(Tree("i"))
+      tree9.selectTree(List("a", "e", "f", "i")) shouldBe None
     }
 
-    "try selecting non-existent subtree" in {
-      val tree = Tree(0, Tree(1, Tree(2, Tree(3), Tree(4), Tree(5))))
-      tree.selectTree(List(1, 2)) shouldBe None
-      tree.containsBranch(List(1, 2)) shouldBe false
+    "select a tree by path using extractor function" in {
+      val codeF: String => Int = s => { println(s.head.toInt); s.head.toInt }
+      tree0.selectTree(List(), codeF) shouldBe None
+      tree0.selectTree(List(0), codeF) shouldBe None
+      tree1.selectTree(List(), codeF) shouldBe None
+      tree1.selectTree(List(97), codeF) shouldBe Some(Tree("a"))
+      tree1.selectTree(List(96), codeF) shouldBe None
+      tree2.selectTree(List(97, 98), codeF) shouldBe Some(Tree("b"))
+      tree2.selectTree(List(97, 97), codeF) shouldBe None
+      tree2.selectTree(List(98, 97), codeF) shouldBe None
+      tree3_2.selectTree(List(97, 98), codeF) shouldBe Some(Tree("b"))
+      tree3_2.selectTree(List(97, 99), codeF) shouldBe Some(Tree("c"))
+      tree3_2.selectTree(List(97), codeF) shouldBe Some(Tree("a", Tree("b"), Tree("c")))
+      tree3_2.selectTree(List(97, 97), codeF) shouldBe None
+      tree3_2.selectTree(List(98), codeF) shouldBe None
+      tree3_2.selectTree(List(), codeF) shouldBe None
     }
 
     "list all nodes" in {

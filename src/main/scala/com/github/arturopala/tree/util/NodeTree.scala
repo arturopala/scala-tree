@@ -105,30 +105,21 @@ object NodeTree {
   }
 
   @tailrec
-  final def selectTree[T, T1 >: T](node: NodeTree[T], path: Iterable[T1]): Option[NodeTree[T]] =
-    if (path.isEmpty || (path.nonEmpty && path.head != node.value)) None
+  final def select[T, K, R](
+    node: NodeTree[T],
+    path: Iterable[K],
+    extract: T => K,
+    result: NodeTree[T] => R
+  ): Option[R] =
+    if (path.isEmpty || (path.nonEmpty && path.head != extract(node.value))) None
     else if (path.tail.isEmpty) {
-      if (path.head == node.value) Some(node) else None
-    } else {
-      val nextOpt = node.subtrees
-        .collectFirst {
-          case nextNode if nextNode.value == path.tail.head => nextNode
-        }
-      if (nextOpt.isEmpty) None
-      else selectTree(nextOpt.get, path.tail)
-    }
-
-  @tailrec
-  final def selectValue[T, K](node: NodeTree[T], path: Iterable[K], f: T => K): Option[T] =
-    if (path.isEmpty || (path.nonEmpty && path.head != f(node.value))) None
-    else if (path.tail.isEmpty) {
-      if (path.head == f(node.value)) Some(node.value) else None
+      if (path.head == extract(node.value)) Some(result(node)) else None
     } else {
       val nextOpt = node.subtrees.collect {
-        case nextNode if path.tail.head == f(nextNode.value) => nextNode
+        case nextNode if path.tail.head == extract(nextNode.value) => nextNode
       }.lastOption
       if (nextOpt.isEmpty) None
-      else selectValue(nextOpt.get, path.tail, f)
+      else select(nextOpt.get, path.tail, extract, result)
     }
 
   final def containsBranch[T, T1 >: T](node: NodeTree[T], branch: Iterable[T1]): Boolean =

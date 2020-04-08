@@ -35,7 +35,8 @@ trait NodeTreeOps[+T] extends TreeLike[T] {
   final override def valueOption: Option[T] = Some(node.value)
   final def isEmpty: Boolean = node.size == 0
 
-  private def all[A]: A => Boolean = _ => true
+  @`inline` final def all[A]: A => Boolean = _ => true
+  @`inline` final def identity[A, A1 >: A]: A => A1 = x => x
 
   final override def values: List[T] = NodeTree.values[T](all, node)
   final override def valuesUnsafe: List[T] = node.value :: node.subtrees.flatMap(_.valuesUnsafe)
@@ -105,10 +106,13 @@ trait NodeTreeOps[+T] extends TreeLike[T] {
   }
 
   final override def selectValue[K](path: Iterable[K], f: T => K): Option[T] =
-    NodeTree.selectValue(node, path, f)
+    NodeTree.select(node, path, f, (n: NodeTree[T]) => n.value)
 
   final override def selectTree[T1 >: T: ClassTag](path: Iterable[T1]): Option[Tree[T]] =
-    NodeTree.selectTree(node, path)
+    NodeTree.select(node, path, identity[T, T1], (n: NodeTree[T]) => n)
+
+  final override def selectTree[K](path: Iterable[K], f: T => K): Option[Tree[T]] =
+    NodeTree.select(node, path, f, (n: NodeTree[T]) => n)
 
   final override def containsBranch[T1 >: T](branch: Iterable[T1]): Boolean = NodeTree.containsBranch(node, branch)
   final override def containsPath[T1 >: T](path: Iterable[T1]): Boolean = NodeTree.containsPath(node, path)

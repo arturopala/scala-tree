@@ -386,6 +386,44 @@ class ArrayTreeSpec extends AnyWordSpec with Matchers {
       selectValue(List("a", "c"), 3, Array(0, 0, 1, 2), Array("d", "c", "b", "a"), id) shouldBe None
     }
 
+    "select a tree by the path" in {
+      selectTree(List("a"), -1, IntSlice(), Slice.empty[String]) shouldBe None
+      selectTree(List("a"), 0, IntSlice(0), Slice("a")) shouldBe Some(Tree("a"))
+      selectTree(List("a", "b"), 0, IntSlice(0), Slice("a")) shouldBe None
+      selectTree(List("a", "a"), 0, IntSlice(0), Slice("a")) shouldBe None
+      selectTree(List("a", "b"), 0, IntSlice(0, 1), Slice("b", "a")) shouldBe None
+      selectTree(List("a", "b"), 1, IntSlice(0, 1), Slice("b", "a")) shouldBe Some(Tree("b"))
+      selectTree(List("a", "b"), 1, IntSlice(0, 1), Slice("c", "a")) shouldBe None
+      selectTree(List("a", "b"), 2, IntSlice(0, 0, 2), Slice("c", "b", "a")) shouldBe Some(Tree("b"))
+      selectTree(List("a", "c"), 2, IntSlice(0, 0, 2), Slice("c", "b", "a")) shouldBe Some(Tree("c"))
+      selectTree(List("a", "d"), 3, IntSlice(0, 0, 1, 2), Slice("d", "c", "b", "a")) shouldBe Some(Tree("d"))
+      selectTree(List("a", "b", "c"), 3, IntSlice(0, 0, 1, 2), Slice("d", "c", "b", "a")) shouldBe Some(Tree("c"))
+      selectTree(List("a", "b", "c"), 3, IntSlice(0, 0, 1, 2), Slice("d", "c", "b", "a")) shouldBe Some(Tree("c"))
+      selectTree(List("a", "b"), 3, IntSlice(0, 0, 1, 2), Slice("d", "c", "b", "a")) shouldBe Some(Tree("b", Tree("c")))
+      selectTree(List("a", "c"), 3, IntSlice(0, 0, 1, 2), Slice("d", "c", "b", "a")) shouldBe None
+    }
+
+    "select a tree by the path using extractor function" in {
+      val length: String => Int = (s: String) => s.length
+      selectTree(List(1), -1, IntSlice(), Slice.empty[String], length) shouldBe None
+      selectTree(List(1), 0, IntSlice(0), Slice("a"), length) shouldBe Some(Tree("a"))
+      selectTree(List(0), 0, IntSlice(0), Slice("a"), length) shouldBe None
+      selectTree(List(1), 1, IntSlice(0, 1), Slice("b", "a"), length) shouldBe Some(Tree("a", Tree("b")))
+      selectTree(List(1, 1), 1, IntSlice(0, 1), Slice("b", "a"), length) shouldBe Some(Tree("b"))
+      selectTree(List(1, 0), 1, IntSlice(0, 1), Slice("b", "a"), length) shouldBe None
+      selectTree(List(0, 1), 1, IntSlice(0, 1), Slice("b", "a"), length) shouldBe None
+      selectTree(List(1, 1), 2, IntSlice(0, 0, 2), Slice("c", "b", "a"), length) shouldBe Some(Tree("c"))
+      selectTree(List(1, 2, 3), 4, IntSlice(0, 1, 0, 1, 2), Slice("aaaaa", "aaaa", "aaa", "aa", "a"), length) shouldBe Some(
+        Tree("aaa")
+      )
+      selectTree(List(1, 4), 4, IntSlice(0, 1, 0, 1, 2), Slice("aaaaa", "aaaa", "aaa", "aa", "a"), length) shouldBe Some(
+        Tree("aaaa", Tree("aaaaa"))
+      )
+      selectTree(List(1, 2), 4, IntSlice(0, 1, 0, 1, 2), Slice("aaaaa", "aaaa", "aaa", "aa", "a"), length) shouldBe Some(
+        Tree("aa", Tree("aaa"))
+      )
+    }
+
     "flatMap a tree" in {
       val f0: String => Tree[Int] = s => Tree(s.length)
       flatMapDistinct(IntSlice(), Slice.empty[String], f0) shouldBe Tree.empty

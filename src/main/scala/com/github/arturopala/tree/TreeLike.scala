@@ -226,9 +226,16 @@ trait TreeLike[+T] {
   def selectValue[K](path: Iterable[K], f: T => K): Option[T]
 
   /** Selects a sub-tree anchored at the node reachable by the provided path, if any.
-    * @param path list of values forming a path from the root to the node.
+    * @param path list of node's values forming a path from the root to the node.
     * @group paths */
   def selectTree[T1 >: T: ClassTag](path: Iterable[T1]): Option[Tree[T]]
+
+  /** Selects a sub-tree anchored at the node reachable by the provided path, if any.
+    * @param path list of K items forming a path from the root to the node.
+    * @param f extractor of the K item from the tree value
+    * @tparam K type of path item
+    * @group paths */
+  def selectTree[K](path: Iterable[K], f: T => K): Option[Tree[T]]
 
   /** Checks if the tree contains provided branch (full match).
     *

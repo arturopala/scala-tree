@@ -27,6 +27,8 @@ import scala.reflect.ClassTag
 /** Collection of operations on the linear, array-based, representation of the tree. */
 object ArrayTree {
 
+  @`inline` final def identity[T, T1 >: T]: T => T1 = x => x
+
   /** List indexes of the children values of the parent node, if any.
     * @note tree structure as returned by [[com.github.arturopala.tree.Tree.toArrays]] */
   final def childrenIndexes(parentIndex: Int, treeStructure: Int => Int): List[Int] = {
@@ -484,8 +486,6 @@ object ArrayTree {
     foldLeftBranchesIndexLists(startIndex, treeStructure, new StringBuilder(), renderBranch)
   }
 
-  @`inline` final def identity[T, T1 >: T]: T => T1 = x => x
-
   /** Follows the given path of values into the tree.
     * @return a tuple consisting of:
     *         - an array of travelled indexes,
@@ -587,7 +587,7 @@ object ArrayTree {
     unmatched.isEmpty
   }
 
-  /** Selects node's value accessible by path using value converter function. */
+  /** Selects node's value accessible by path using item extractor function. */
   @`inline` final def selectValue[T, K](
     path: Iterable[K],
     startIndex: Int,
@@ -608,6 +608,22 @@ object ArrayTree {
     treeValues: Slice[T]
   ): Option[Tree[T]] =
     followPath(path, startIndex, treeStructure, treeValues) match {
+      case (indexes, None, _, _) if indexes.nonEmpty =>
+        val tree = treeAt[T](indexes.last, treeStructure, treeValues)
+        Some(tree)
+
+      case _ => None
+    }
+
+  /** Selects tree accessible by path using item extractor function. */
+  @`inline` final def selectTree[T: ClassTag, K](
+    path: Iterable[K],
+    startIndex: Int,
+    treeStructure: IntSlice,
+    treeValues: Slice[T],
+    f: T => K
+  ): Option[Tree[T]] =
+    followPath(path, startIndex, treeStructure, treeValues, f) match {
       case (indexes, None, _, _) if indexes.nonEmpty =>
         val tree = treeAt[T](indexes.last, treeStructure, treeValues)
         Some(tree)

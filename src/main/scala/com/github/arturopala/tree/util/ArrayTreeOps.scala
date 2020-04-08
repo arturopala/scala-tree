@@ -94,6 +94,9 @@ trait ArrayTreeOps[T] extends TreeLike[T] {
   final override def selectTree[T1 >: T: ClassTag](path: Iterable[T1]): Option[Tree[T]] =
     ArrayTree.selectTree(path, tree.structure.length - 1, tree.structure, tree.content)
 
+  final override def selectTree[K](path: Iterable[K], f: T => K): Option[Tree[T]] =
+    ArrayTree.selectTree(path, tree.structure.length - 1, tree.structure, tree.content, f)
+
   final override def containsBranch[T1 >: T](branch: Iterable[T1]): Boolean =
     ArrayTree.containsBranch(branch, tree.structure.length - 1, tree.structure, tree.content)
 

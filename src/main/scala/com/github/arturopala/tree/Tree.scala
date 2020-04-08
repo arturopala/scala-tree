@@ -69,10 +69,13 @@ sealed trait Tree[+T] extends TreeLike[T] {
   // Tree is immutable so should calculate hashcode once
   protected lazy val hashcode: Int = Tree.hashCodeOf(this)
 
-  override def toString: String =
+  override def toString: String = {
+    def stringify(o: Any): String = if (o.isInstanceOf[String]) s""""$o"""" else o.toString
+
     if (size < 50)
-      s"Tree(${valueOption.get}${if (size > 1) s", ${children.map(_.toString).mkString(",")}" else ""})"
+      s"Tree(${stringify(valueOption.get)}${if (size > 1) s", ${children.map(_.toString).mkString(",")}" else ""})"
     else s"Tree(size=$size, width=$width, height=$height, hashCode=${hashCode()})"
+  }
 }
 
 /**
@@ -81,19 +84,24 @@ sealed trait Tree[+T] extends TreeLike[T] {
   */
 object Tree {
 
-  /** Creates an empty Tree, same as [[Tree.empty]]. */
+  /** Creates an empty Tree, same as [[Tree.empty]].
+    * @group Creation */
   final def apply[T](): Tree[T] = empty
 
-  /** Creates a leaf tree. */
+  /** Creates a leaf tree.
+    * @group Creation */
   final def apply[T](value: T): NodeTree[T] = new Leaf(value)
 
-  /** Creates a tree having a single subtree. */
+  /** Creates a tree having a single subtree.
+    * @group Creation */
   final def apply[T](value: T, subtree: NodeTree[T]): NodeTree[T] = new Unary(value, subtree)
 
-  /** Creates a tree having two subtrees. */
+  /** Creates a tree having two subtrees.
+    * @group Creation */
   final def apply[T](value: T, left: NodeTree[T], right: NodeTree[T]): NodeTree[T] = new Binary(value, left, right)
 
-  /** Creates a tree node from the value and multiple subtrees */
+  /** Creates a tree node from the value and multiple subtrees.
+    * @group Creation */
   final def apply[T](
     value: T,
     subtree1: NodeTree[T],
@@ -103,7 +111,8 @@ object Tree {
   ): NodeTree[T] =
     new Bunch(value, subtree1 :: subtree2 :: subtree3 :: others.toList)
 
-  /** Creates a tree node from the value and list of subtrees */
+  /** Creates a tree node from the value and list of subtrees.
+    * @group Creation */
   final def apply[T](value: T, subtrees: List[NodeTree[T]]): NodeTree[T] = subtrees match {
     case Nil           => new Leaf(value)
     case x :: Nil      => new Unary(value, x)
@@ -111,7 +120,8 @@ object Tree {
     case _             => new Bunch(value, subtrees)
   }
 
-  /** Deflates the tree, if inflated, otherwise returns as is. */
+  /** Deflates the tree, if inflated, otherwise returns as is.
+    * @group Utilities */
   final def deflate[T: ClassTag](tree: Tree[T]): Tree[T] = tree match {
     case `empty`                 => Tree.empty
     case arrayTree: ArrayTree[T] => arrayTree
@@ -120,7 +130,8 @@ object Tree {
       new ArrayTree[T](IntSlice.of(structure), Slice.of(values), tree.width, tree.height)
   }
 
-  /** Inflates the tree, if deflated, otherwise returns as is. */
+  /** Inflates the tree, if deflated, otherwise returns as is.
+    * @group Utilities */
   final def inflate[T](tree: Tree[T]): Tree[T] = tree match {
     case `empty`                 => Tree.empty
     case arrayTree: ArrayTree[T] => arrayTree.inflated
@@ -222,14 +233,16 @@ object Tree {
     override val toString: String = "Tree.empty"
   }
 
-  /** Checks equality of the two trees. */
+  /** Checks equality of the two trees.
+    * @group Utilities */
   final def equals[T](tree1: Tree[T], tree2: Tree[T]): Boolean =
     tree1.eq(tree2) || (tree1.size == tree2.size &&
       tree1.width == tree2.width &&
       tree1.height == tree2.height &&
       tree1.valueOption == tree2.valueOption && Compare.sameTrees(tree1, tree2))
 
-  /** Computes hashcode of the tree. */
+  /** Computes hashcode of the tree.
+    * @group Utilities */
   final def hashCodeOf[T](tree: Tree[T]): Int = {
     var hash = 17
     hash = hash * 31 + tree.valueOption.hashCode()
