@@ -70,8 +70,8 @@ trait EmptyTreeOps extends TreeLike[Nothing] {
   final override def selectValue[K](path: Iterable[K], f: Nothing => K): Option[Nothing] = None
   final override def selectTree[T1: ClassTag](path: Iterable[T1]): Option[Tree[Nothing]] = None
   final override def selectTree[K](path: Iterable[K], f: Nothing => K): Option[Tree[Nothing]] = None
-  final override def containsBranch[T1](branch: Iterable[T1]): Boolean = branch.isEmpty
-  final override def containsPath[T1 >: Nothing](path: Iterable[T1]): Boolean = path.isEmpty
+  final override def containsBranch[T1](branch: Iterable[T1]): Boolean = false
+  final override def containsPath[T1 >: Nothing](path: Iterable[T1]): Boolean = false
   final override def map[K: ClassTag](f: Nothing => K): Tree[K] = empty
   final override def mapUnsafe[K: ClassTag](f: Nothing => K): Tree[K] = empty
   final override def flatMap[K: ClassTag](f: Nothing => Tree[K]): Tree[K] = empty
