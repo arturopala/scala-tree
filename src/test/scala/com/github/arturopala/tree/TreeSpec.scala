@@ -521,36 +521,66 @@ trait TreeSpec extends AnyWordSpec with Matchers {
     }
 
     "list all nodes" in {
-      val tree = Tree.empty
-      tree.valuesUnsafe shouldBe Nil
-      val tree1 = Tree(0)
-      tree1.valuesUnsafe shouldBe List(0)
-      val tree2 = Tree(0, Tree(11, Tree(20, Tree(30))), Tree(12, Tree(21, Tree(31)), Tree(22, Tree(32))))
-      tree2.valuesUnsafe shouldBe List(0, 11, 20, 30, 12, 21, 31, 22, 32)
-    }
-
-    "list all nodes using tail safe method" in {
-      val tree = Tree.empty
-      tree.values shouldBe Nil
-      val tree1 = Tree(0)
-      tree1.values shouldBe List(0)
-      val tree2 = Tree(0, Tree(11, Tree(20, Tree(30))), Tree(12, Tree(21, Tree(31)), Tree(22, Tree(32))))
-      tree2.values shouldBe List(0, 11, 20, 30, 12, 21, 31, 22, 32)
+      tree0.values shouldBe Nil
+      tree1.values shouldBe List("a")
+      tree2.values shouldBe List("a", "b")
+      tree3_1.values shouldBe List("a", "b", "c")
+      tree3_2.values shouldBe List("a", "b", "c")
+      tree4_1.values shouldBe List("a", "b", "c", "d")
+      tree4_2.values shouldBe List("a", "b", "c", "d")
+      tree4_3.values shouldBe List("a", "b", "c", "d")
+      tree7.values shouldBe List("a", "b", "c", "d", "e", "f", "g")
+      tree9.values shouldBe List("a", "b", "c", "d", "e", "f", "g", "h", "i")
     }
 
     "iterate over nodes with filter" in {
-      Tree.empty.valueIterator(_ => true).toList shouldBe Nil
+      val all: String => Boolean = _ => true
+      tree0.valueIterator(all).toList shouldBe Nil
+      tree1.valueIterator(all).toList shouldBe List("a")
+      tree2.valueIterator(all).toList shouldBe List("a", "b")
+      tree3_1.valueIterator(all).toList shouldBe List("a", "b", "c")
+      tree3_2.valueIterator(all).toList shouldBe List("a", "b", "c")
+      tree4_1.valueIterator(all).toList shouldBe List("a", "b", "c", "d")
+      tree4_2.valueIterator(all).toList shouldBe List("a", "b", "c", "d")
+      tree4_3.valueIterator(all).toList shouldBe List("a", "b", "c", "d")
+      tree7.valueIterator(all).toList shouldBe List("a", "b", "c", "d", "e", "f", "g")
+      tree9.valueIterator(all).toList shouldBe List("a", "b", "c", "d", "e", "f", "g", "h", "i")
 
-      val tree1 = Tree(0)
-      tree1.valueIterator(_ > 1).toList shouldBe Nil
-      tree1.valueIterator(_ < 1).toList shouldBe List(0)
+      val none: String => Boolean = _ => false
+      tree0.valueIterator(none).toList shouldBe Nil
+      tree1.valueIterator(none).toList shouldBe Nil
+      tree2.valueIterator(none).toList shouldBe Nil
+      tree3_1.valueIterator(none).toList shouldBe Nil
+      tree3_2.valueIterator(none).toList shouldBe Nil
+      tree4_1.valueIterator(none).toList shouldBe Nil
+      tree4_2.valueIterator(none).toList shouldBe Nil
+      tree4_3.valueIterator(none).toList shouldBe Nil
+      tree7.valueIterator(none).toList shouldBe Nil
+      tree9.valueIterator(none).toList shouldBe Nil
 
-      val tree2 = Tree(0, Tree(11, Tree(20, Tree(30))), Tree(12, Tree(21, Tree(31)), Tree(22, Tree(32))))
-      tree2.valueIterator(_ >= 0).toList shouldBe List(0, 11, 20, 30, 12, 21, 31, 22, 32)
-      tree2.valueIterator(_ > 15).toList shouldBe List(20, 30, 21, 31, 22, 32)
-      tree2.valueIterator(_ > 100).toList shouldBe Nil
-      tree2.valueIterator(_ < 15).toList shouldBe List(0, 11, 12)
-      tree2.valueIterator(_ < 0).toList shouldBe Nil
+      val even: String => Boolean = s => s.head.toInt % 2 == 0
+      tree0.valueIterator(even).toList shouldBe Nil
+      tree1.valueIterator(even).toList shouldBe Nil
+      tree2.valueIterator(even).toList shouldBe List("b")
+      tree3_1.valueIterator(even).toList shouldBe List("b")
+      tree3_2.valueIterator(even).toList shouldBe List("b")
+      tree4_1.valueIterator(even).toList shouldBe List("b", "d")
+      tree4_2.valueIterator(even).toList shouldBe List("b", "d")
+      tree4_3.valueIterator(even).toList shouldBe List("b", "d")
+      tree7.valueIterator(even).toList shouldBe List("b", "d", "f")
+      tree9.valueIterator(even).toList shouldBe List("b", "d", "f", "h")
+
+      val odd: String => Boolean = s => s.head.toInt % 2 != 0
+      tree0.valueIterator(odd).toList shouldBe Nil
+      tree1.valueIterator(odd).toList shouldBe List("a")
+      tree2.valueIterator(odd).toList shouldBe List("a")
+      tree3_1.valueIterator(odd).toList shouldBe List("a", "c")
+      tree3_2.valueIterator(odd).toList shouldBe List("a", "c")
+      tree4_1.valueIterator(odd).toList shouldBe List("a", "c")
+      tree4_2.valueIterator(odd).toList shouldBe List("a", "c")
+      tree4_3.valueIterator(odd).toList shouldBe List("a", "c")
+      tree7.valueIterator(odd).toList shouldBe List("a", "c", "e", "g")
+      tree9.valueIterator(odd).toList shouldBe List("a", "c", "e", "g", "i")
     }
 
     "stream all nodes" in {
@@ -705,35 +735,6 @@ trait TreeSpec extends AnyWordSpec with Matchers {
           |a0 > c0""".stripMargin
 
       val result4 = tree7.map(f)
-      showAsGraph(result4) shouldBe
-        """a0 > b0 > c0
-          |a0 > d0 > e0 > f0
-          |a0 > g0""".stripMargin
-    }
-
-    "mapUnsafe all nodes" in {
-      val f: String => String = _ + "0"
-
-      val result0 = tree0.mapUnsafe(f)
-      showAsGraph(result0) shouldBe ""
-
-      val result1 = tree1.mapUnsafe(f)
-      showAsGraph(result1) shouldBe "a0"
-
-      val result2 = tree2.mapUnsafe(f)
-      showAsGraph(result2) shouldBe
-        """a0 > b0""".stripMargin
-
-      val result3_1 = tree3_1.mapUnsafe(f)
-      showAsGraph(result3_1) shouldBe
-        """a0 > b0 > c0""".stripMargin
-
-      val result3_2 = tree3_2.mapUnsafe(f)
-      showAsGraph(result3_2) shouldBe
-        """a0 > b0
-          |a0 > c0""".stripMargin
-
-      val result4 = tree7.mapUnsafe(f)
       showAsGraph(result4) shouldBe
         """a0 > b0 > c0
           |a0 > d0 > e0 > f0

@@ -16,6 +16,9 @@
 
 package com.github.arturopala.tree
 
+import com.github.arturopala.tree.Tree.NodeTree
+import com.github.arturopala.tree.TreeFormat.showAsGraph
+
 class InflatedTreeSpec extends TreeSpec {
 
   override def name = "An inflated Tree"
@@ -31,5 +34,34 @@ class InflatedTreeSpec extends TreeSpec {
   override val tree7: Tree[String] = TestTrees.tree7
   override val tree9: Tree[String] = TestTrees.tree9
   override val allTrees: Seq[Tree[String]] = TestTrees.allTrees
+
+  "NodeTree" should {
+
+    "mapUnsafe all nodes" in {
+      val f: String => String = _ + "0"
+
+      val result1 = tree1.asInstanceOf[NodeTree[String]].mapUnsafe(f)
+      showAsGraph(result1) shouldBe "a0"
+
+      val result2 = tree2.asInstanceOf[NodeTree[String]].mapUnsafe(f)
+      showAsGraph(result2) shouldBe
+        """a0 > b0""".stripMargin
+
+      val result3_1 = tree3_1.asInstanceOf[NodeTree[String]].mapUnsafe(f)
+      showAsGraph(result3_1) shouldBe
+        """a0 > b0 > c0""".stripMargin
+
+      val result3_2 = tree3_2.asInstanceOf[NodeTree[String]].mapUnsafe(f)
+      showAsGraph(result3_2) shouldBe
+        """a0 > b0
+          |a0 > c0""".stripMargin
+
+      val result4 = tree7.asInstanceOf[NodeTree[String]].mapUnsafe(f)
+      showAsGraph(result4) shouldBe
+        """a0 > b0 > c0
+          |a0 > d0 > e0 > f0
+          |a0 > g0""".stripMargin
+    }
+  }
 
 }

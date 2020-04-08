@@ -120,7 +120,7 @@ final class IntSlice private (
   /** Returns iterator over Slice values. */
   def iterator: Iterator[Int] = new Iterator[Int] {
 
-    var i = fromIndex
+    var i: Int = fromIndex
 
     override def hasNext: Boolean = i < toIndex
 
@@ -134,7 +134,7 @@ final class IntSlice private (
   /** Returns iterator over Slice values in the reverse order. */
   def reverseIterator: Iterator[Int] = new Iterator[Int] {
 
-    var i = toIndex - 1
+    var i: Int = toIndex - 1
 
     override def hasNext: Boolean = i >= fromIndex
 
@@ -148,9 +148,9 @@ final class IntSlice private (
   /** Returns iterator over Slice values, fulfilling the predicate, in the reverse order. */
   def reverseIterator(pred: Int => Boolean): Iterator[Int] = new Iterator[Int] {
 
-    var i = toIndex - 1
+    var i: Int = toIndex - 1
 
-    if (i >= fromIndex) seekNext
+    seekNext
 
     override def hasNext: Boolean = i >= fromIndex
 
@@ -161,13 +161,14 @@ final class IntSlice private (
       value
     }
 
-    def seekNext: Unit = {
-      var v = array(i)
-      while (!pred(v) && i >= fromIndex) {
-        i = i - 1
-        if (i > fromIndex) v = array(i)
-      }
-    }
+    def seekNext: Unit =
+      if (i >= fromIndex) {
+        var v = array(i)
+        while (!pred(v) && i >= fromIndex) {
+          i = i - 1
+          if (i >= fromIndex) v = array(i)
+        }
+      } else ()
   }
 
   /** Returns minimal copy of an underlying array, trimmed to the actual range.

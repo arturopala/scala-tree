@@ -94,12 +94,6 @@ trait TreeLike[+T] {
     * @group values */
   def values: List[T]
 
-  /** Lists all the node's values in the tree.
-    *
-    * @note Uses unsafe nested recursions, result same as [[valueIterator()]].
-    * @group values */
-  def valuesUnsafe: List[T]
-
   /** Iterates over filtered node's values, top-down, depth-first.
     * @param pred return true to include the value in the result, false otherwise.
     * @group values */
@@ -124,13 +118,6 @@ trait TreeLike[+T] {
     * Top tree is listed first, then children depth-first.
     * @group sub-trees */
   def trees: List[Tree[T]]
-
-  /** Lists all the possible subtrees in the tree inclusive.
-    * Top tree is listed first, then children depth-first.
-    *
-    * @note Uses unsafe nested recursions, result same as [[treeIterator()]].
-    * @group sub-trees */
-  def treesUnsafe: List[Tree[T]]
 
   /** Iterates over filtered subtrees in the tree inclusive, top-down, depth-first.
     * Top tree is returned first, then children depth-first.
@@ -159,10 +146,6 @@ trait TreeLike[+T] {
     * @note Uses unsafe nested recursions, result same as [[branchIterator()]].
     * @group branches */
   def branches: List[List[T]]
-
-  /** Lists all the branches of the tree starting at the root.
-    * @group branches */
-  def branchesUnsafe: List[List[T]]
 
   /** Iterates over filtered branches of the tree starting at the root.
     * @param pred return true to include the branch in the result, false otherwise.
@@ -206,11 +189,6 @@ trait TreeLike[+T] {
   /** Maps all nodes of the tree using provided function and returns a new tree.
     * @group transformations */
   def map[K: ClassTag](f: T => K): Tree[K]
-
-  /** Maps all nodes of the tree using provided function and returns a new tree.
-    * @note Uses nested recursions.
-    * @group transformations */
-  def mapUnsafe[K: ClassTag](f: T => K): Tree[K]
 
   /** Flat-maps all nodes of the tree using provided function and returns a new tree.
     * @group transformations */

@@ -63,12 +63,17 @@ class ArraySliceSpec extends AnyWordSpec with Matchers {
     }
 
     "reverse-iterate with filter over slice of values" in {
+      Slice.of(Array.empty[Int]).reverseIterator(_                       % 2 == 0).toList shouldBe Nil
+      Slice.of(Array(1)).reverseIterator(_                               % 2 == 0).toList shouldBe Nil
+      Slice.of(Array(1, 2)).reverseIterator(_                            % 2 != 0).toList shouldBe List(1)
+      Slice.of(Array(1)).reverseIterator(_                               % 2 != 0).toList shouldBe List(1)
       Slice.of(Array(1, 2, 3, 4, 5, 6, 7, 8, 9)).reverseIterator(_       % 2 == 0).toList shouldBe List(8, 6, 4, 2)
       Slice.of(Array(1, 2, 3, 4, 5, 6, 7, 8, 9), 2, 7).reverseIterator(_ % 2 == 0).toList shouldBe List(6, 4)
       Slice.of(Array(1, 2, 3, 4, 5, 6, 7, 8, 9), 2, 5).reverseIterator(_ % 2 == 0).toList shouldBe List(4)
-      Slice.of(Array(1, 2, 3, 4, 5, 6, 7, 8, 9), 3, 5).reverseIterator(_ % 2 == 0).toList shouldBe List()
-      Slice.of(Array(1, 2, 3, 4, 5, 6, 7, 8, 9), 0, 0).reverseIterator(_ % 2 == 0).toList shouldBe List()
-      Slice.of(Array(1, 2, 3, 4, 5, 6, 7, 8, 9), 5, 5).reverseIterator(_ % 2 == 0).toList shouldBe List()
+      Slice.of(Array(1, 2, 3, 4, 5, 6, 7, 8, 9), 3, 5).reverseIterator(_ % 2 == 0).toList shouldBe List(4)
+      Slice.of(Array(1, 2, 3, 4, 5, 6, 7, 8, 9), 4, 5).reverseIterator(_ % 2 == 0).toList shouldBe Nil
+      Slice.of(Array(1, 2, 3, 4, 5, 6, 7, 8, 9), 0, 0).reverseIterator(_ % 2 == 0).toList shouldBe Nil
+      Slice.of(Array(1, 2, 3, 4, 5, 6, 7, 8, 9), 5, 5).reverseIterator(_ % 2 == 0).toList shouldBe Nil
       Slice.of(Array(1, 2, 3, 4, 5, 6, 7, 8, 9), 0, 9).reverseIterator(_ % 2 == 0).toList shouldBe List(8, 6, 4, 2)
     }
 

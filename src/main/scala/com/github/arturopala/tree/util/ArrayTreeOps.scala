@@ -38,7 +38,6 @@ trait ArrayTreeOps[T] extends TreeLike[T] {
 
   final override def valueOption: Option[T] = Some(tree.content.last)
   final override def values: List[T] = tree.content.reverseIterator.toList
-  final override def valuesUnsafe: List[T] = values
   final override def valueIterator(pred: T => Boolean): Iterator[T] = tree.content.reverseIterator(pred)
   final override def valueStream: Stream[T] = valueStream(all)
   final override def valueStream(pred: T => Boolean): Stream[T] = streamFromIterator(valueIterator(pred))
@@ -52,7 +51,6 @@ trait ArrayTreeOps[T] extends TreeLike[T] {
       .map(ArrayTree.treeAt(_, tree.structure, tree.content))
 
   final override def trees: List[Tree[T]] = treeIterator(all).toList
-  final override def treesUnsafe: List[Tree[T]] = trees
   final override def treeIterator(pred: Tree[T] => Boolean): Iterator[Tree[T]] =
     ArrayTree.treeIterator(tree.structure.length - 1, tree.structure, tree.content, pred)
 
@@ -60,7 +58,6 @@ trait ArrayTreeOps[T] extends TreeLike[T] {
   final override def treeStream(pred: Tree[T] => Boolean): Stream[Tree[T]] = streamFromIterator(treeIterator(pred))
 
   final override def branches: List[List[T]] = branchIterator(all).map(_.toList).toList
-  final override def branchesUnsafe: List[List[T]] = branches
   final override def branchIterator(pred: Iterable[T] => Boolean): Iterator[Iterable[T]] =
     ArrayTree.branchIterator(tree.structure.length - 1, tree.structure, tree.content, pred)
 
@@ -82,8 +79,6 @@ trait ArrayTreeOps[T] extends TreeLike[T] {
 
   final override def map[K: ClassTag](f: T => K): Tree[K] =
     new ArrayTree[K](tree.structure, tree.content.map(f), tree.width, tree.height)
-
-  final override def mapUnsafe[K: ClassTag](f: T => K): Tree[K] = map(f)
 
   final override def flatMap[K: ClassTag](f: T => Tree[K]): Tree[K] =
     ArrayTree.flatMap(tree.structure, tree.content, f)

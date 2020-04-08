@@ -39,21 +39,21 @@ trait NodeTreeOps[+T] extends TreeLike[T] {
   @`inline` final def identity[A, A1 >: A]: A => A1 = x => x
 
   final override def values: List[T] = NodeTree.values[T](all, node)
-  final override def valuesUnsafe: List[T] = node.value :: node.subtrees.flatMap(_.valuesUnsafe)
+  final def valuesUnsafe: List[T] = node.value :: node.subtrees.flatMap(_.valuesUnsafe)
   final override def valueIterator(pred: T => Boolean): Iterator[T] = NodeTree.valueIterator(pred, node)
   final override def valueStream: Stream[T] = valueStream(all)
   final override def valueStream(pred: T => Boolean): Stream[T] = NodeTree.valueStream(pred, node)
   final override def childrenValues: List[T] = node.subtrees.map(_.value)
   final override def children: List[Tree[T]] = node.subtrees
   final override def trees: List[Tree[T]] = NodeTree.trees[T](all, node)
-  final override def treesUnsafe: List[Tree[T]] = node :: node.subtrees.flatMap(_.treesUnsafe)
+  final def treesUnsafe: List[Tree[T]] = node :: node.subtrees.flatMap(_.treesUnsafe)
   final override def treeIterator(pred: Tree[T] => Boolean): Iterator[Tree[T]] = NodeTree.treeIterator(pred, node)
   final override def treeStream: Stream[Tree[T]] = treeStream(all)
   final override def treeStream(pred: Tree[T] => Boolean): Stream[Tree[T]] = NodeTree.treeStream(pred, node)
 
   final override def branches: List[List[T]] = NodeTree.branches[T](all, node)
 
-  final override def branchesUnsafe: List[List[T]] = node.subtrees match {
+  final def branchesUnsafe: List[List[T]] = node.subtrees match {
     case Nil => List(List(node.value))
     case _ =>
       node.subtrees.flatMap(_.branchesUnsafe).map(node.value :: _)
@@ -95,7 +95,7 @@ trait NodeTreeOps[+T] extends TreeLike[T] {
     TreeBuilder.fromIterators(structure.iterator, values.iterator).headOption.getOrElse(empty)
   }
 
-  final override def mapUnsafe[K: ClassTag](f: T => K): Tree[K] = {
+  final def mapUnsafe[K: ClassTag](f: T => K): Tree[K] = {
     def mapNodeUnsafe(n: NodeTree[T]): NodeTree[K] = Tree(f(n.value), n.subtrees.map(mapNodeUnsafe))
     mapNodeUnsafe(node)
   }

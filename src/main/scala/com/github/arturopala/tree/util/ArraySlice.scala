@@ -127,7 +127,7 @@ abstract class ArraySlice[T] private[util] (fromIndex: Int, toIndex: Int) extend
   /** Returns iterator over Slice values. */
   final def iterator: Iterator[T] = new Iterator[T] {
 
-    var i = fromIndex
+    var i: Int = fromIndex
 
     def hasNext: Boolean = i < toIndex
 
@@ -141,7 +141,7 @@ abstract class ArraySlice[T] private[util] (fromIndex: Int, toIndex: Int) extend
   /** Returns iterator over Slice values in the reverse order. */
   final def reverseIterator: Iterator[T] = new Iterator[T] {
 
-    var i = toIndex - 1
+    var i: Int = toIndex - 1
 
     def hasNext: Boolean = i >= fromIndex
 
@@ -155,9 +155,9 @@ abstract class ArraySlice[T] private[util] (fromIndex: Int, toIndex: Int) extend
   /** Returns iterator over Slice values, fulfilling the predicate, in the reverse order. */
   final def reverseIterator(pred: T => Boolean): Iterator[T] = new Iterator[T] {
 
-    var i = toIndex - 1
+    var i: Int = toIndex - 1
 
-    if (i >= fromIndex) seekNext
+    seekNext
 
     def hasNext: Boolean = i >= fromIndex
 
@@ -168,13 +168,14 @@ abstract class ArraySlice[T] private[util] (fromIndex: Int, toIndex: Int) extend
       value
     }
 
-    def seekNext: Unit = {
-      var v = mapF(array(i))
-      while (!pred(v) && i >= fromIndex) {
-        i = i - 1
-        if (i > fromIndex) v = mapF(array(i))
-      }
-    }
+    def seekNext: Unit =
+      if (i >= fromIndex) {
+        var v = mapF(array(i))
+        while (!pred(v) && i >= fromIndex) {
+          i = i - 1
+          if (i >= fromIndex) v = mapF(array(i))
+        }
+      } else ()
   }
 
   /** Returns minimal copy of an underlying array, trimmed to the actual range.

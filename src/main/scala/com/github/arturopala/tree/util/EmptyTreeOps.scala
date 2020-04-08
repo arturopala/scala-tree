@@ -37,19 +37,16 @@ trait EmptyTreeOps extends TreeLike[Nothing] {
   final override val childrenCount: Int = 0
   final override val valueOption: Option[Nothing] = None
   final override val values: List[Nothing] = Nil
-  final override val valuesUnsafe: List[Nothing] = Nil
   final override def valueIterator(pred: Nothing => Boolean): Iterator[Nothing] = Iterator.empty
   final override def valueStream: Stream[Nothing] = Stream.empty
   final override def valueStream(pred: Nothing => Boolean): Stream[Nothing] = Stream.empty
   final override val childrenValues: List[Nothing] = Nil
   final override val children: List[Tree[Nothing]] = Nil
   final override val trees: List[Tree[Nothing]] = List(empty)
-  final override val treesUnsafe: List[Tree[Nothing]] = List(empty)
   final override def treeIterator(pred: Tree[Nothing] => Boolean): Iterator[Tree[Nothing]] = Iterator.empty
   final override val treeStream: Stream[Nothing] = Stream.empty
   final override def treeStream(pred: Tree[Nothing] => Boolean): Stream[Nothing] = Stream.empty
   final override val branches: List[List[Nothing]] = Nil
-  final override val branchesUnsafe: List[List[Nothing]] = Nil
   final override def branchIterator(pred: Iterable[Nothing] => Boolean): Iterator[List[Nothing]] = Iterator.empty
   final override val branchStream: Stream[List[Nothing]] = Stream.empty
   final override def branchStream(pred: Iterable[Nothing] => Boolean): Stream[List[Nothing]] = Stream.empty
@@ -73,7 +70,6 @@ trait EmptyTreeOps extends TreeLike[Nothing] {
   final override def containsBranch[T1](branch: Iterable[T1]): Boolean = false
   final override def containsPath[T1 >: Nothing](path: Iterable[T1]): Boolean = false
   final override def map[K: ClassTag](f: Nothing => K): Tree[K] = empty
-  final override def mapUnsafe[K: ClassTag](f: Nothing => K): Tree[K] = empty
   final override def flatMap[K: ClassTag](f: Nothing => Tree[K]): Tree[K] = empty
   final override def toPairsIterator: Iterator[(Int, Nothing)] = Iterator.empty
   final override def toArrays[T1: ClassTag]: (Array[Int], Array[T1]) = (Array.empty[Int], Array.empty[T1])
