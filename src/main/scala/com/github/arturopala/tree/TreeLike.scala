@@ -269,10 +269,12 @@ trait TreeLike[+T] {
     * @group serialization */
   def toArrays[T1 >: T: ClassTag]: (Array[Int], Array[T1])
 
-  /** Outputs tree linearisation as a pair of slices. */
+  /** Outputs tree linearisation as a pair of slices.
+    * @group serialization */
   def toSlices[T1 >: T: ClassTag]: (IntSlice, Slice[T1])
 
-  /** Outputs tree linearisation as a pair of buffers. */
+  /** Outputs tree linearisation as a pair of buffers.
+    * @group serialization */
   def toBuffers[T1 >: T: ClassTag]: (IntBuffer, Buffer[T1])
 
   /** Outputs the tree's structure linearisation as an array.
