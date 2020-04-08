@@ -118,6 +118,19 @@ object NodeTree {
       else selectTree(nextOpt.get, path.tail)
     }
 
+  @tailrec
+  final def selectValue[T, K](node: NodeTree[T], path: Iterable[K], f: T => K): Option[T] =
+    if (path.isEmpty || (path.nonEmpty && path.head != f(node.value))) None
+    else if (path.tail.isEmpty) {
+      if (path.head == f(node.value)) Some(node.value) else None
+    } else {
+      val nextOpt = node.subtrees.collect {
+        case nextNode if path.tail.head == f(nextNode.value) => nextNode
+      }.lastOption
+      if (nextOpt.isEmpty) None
+      else selectValue(nextOpt.get, path.tail, f)
+    }
+
   final def containsBranch[T, T1 >: T](node: NodeTree[T], branch: Iterable[T1]): Boolean =
     contains(node, branch, fullMatch = true)
 

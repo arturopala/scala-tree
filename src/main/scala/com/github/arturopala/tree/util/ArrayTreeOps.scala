@@ -88,8 +88,8 @@ trait ArrayTreeOps[T] extends TreeLike[T] {
   final override def flatMap[K: ClassTag](f: T => Tree[K]): Tree[K] =
     ArrayTree.flatMap(tree.structure, tree.content, f)
 
-  final override def selectValue[T1 >: T](path: Iterable[T1]): Option[T] =
-    ArrayTree.selectValue(path, tree.structure.length - 1, tree.structure, tree.content)
+  final override def selectValue[K](path: Iterable[K], f: T => K): Option[T] =
+    ArrayTree.selectValue(path, tree.structure.length - 1, tree.structure, tree.content, f)
 
   final override def selectTree[T1 >: T: ClassTag](path: Iterable[T1]): Option[Tree[T]] =
     ArrayTree.selectTree(path, tree.structure.length - 1, tree.structure, tree.content)

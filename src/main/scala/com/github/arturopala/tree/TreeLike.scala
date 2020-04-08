@@ -219,9 +219,11 @@ trait TreeLike[+T] {
   // PATH-BASED OPERATIONS
 
   /** Selects a value of the node reachable by the provided path, if any.
-    * @param path list of values forming a path from the root to the node.
+    * @param path list of K items forming a path from the root to the node.
+    * @param f extractor of the K item from the tree value
+    * @tparam K type of path item
     * @group paths */
-  def selectValue[T1 >: T](path: Iterable[T1]): Option[T]
+  def selectValue[K](path: Iterable[K], f: T => K): Option[T]
 
   /** Selects a sub-tree anchored at the node reachable by the provided path, if any.
     * @param path list of values forming a path from the root to the node.

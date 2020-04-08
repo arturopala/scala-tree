@@ -43,7 +43,6 @@ trait NodeTreeOps[+T] extends TreeLike[T] {
   final override def valueStream: Stream[T] = valueStream(all)
   final override def valueStream(pred: T => Boolean): Stream[T] = NodeTree.valueStream(pred, node)
   final override def childrenValues: List[T] = node.subtrees.map(_.value)
-
   final override def children: List[Tree[T]] = node.subtrees
   final override def trees: List[Tree[T]] = NodeTree.trees[T](all, node)
   final override def treesUnsafe: List[Tree[T]] = node :: node.subtrees.flatMap(_.treesUnsafe)
@@ -105,15 +104,14 @@ trait NodeTreeOps[+T] extends TreeLike[T] {
     TreeBuilder.fromTreeList(list, Nil, 0, TreeBuilder.TreeMergeStrategy.Join).headOption.getOrElse(empty)
   }
 
-  final override def selectValue[T1 >: T](path: Iterable[T1]): Option[T] =
-    NodeTree.selectTree(node, path).map(_.value)
+  final override def selectValue[K](path: Iterable[K], f: T => K): Option[T] =
+    NodeTree.selectValue(node, path, f)
 
   final override def selectTree[T1 >: T: ClassTag](path: Iterable[T1]): Option[Tree[T]] =
     NodeTree.selectTree(node, path)
 
   final override def containsBranch[T1 >: T](branch: Iterable[T1]): Boolean = NodeTree.containsBranch(node, branch)
   final override def containsPath[T1 >: T](path: Iterable[T1]): Boolean = NodeTree.containsPath(node, path)
-
   final override def toPairsIterator: Iterator[(Int, T)] = NodeTree.toPairsList(node).iterator
   final override def toArrays[T1 >: T: ClassTag]: (Array[Int], Array[T1]) = NodeTree.toArrays(node)
   final override def toSlices[T1 >: T: ClassTag]: (IntSlice, Slice[T1]) = NodeTree.toSlices(node)

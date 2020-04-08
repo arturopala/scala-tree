@@ -329,6 +329,62 @@ trait TreeSpec extends AnyWordSpec with Matchers {
       )
     }
 
+    "select a node by path" in {
+      tree0.selectValue(List(), _.length) shouldBe None
+      tree1.selectValue(List(), _.length) shouldBe None
+      tree1.selectValue(List(1), _.length) shouldBe Some("a")
+      tree1.selectValue(List("a"), identity) shouldBe Some("a")
+      tree1.selectValue(List("a", "b"), identity) shouldBe None
+      tree2.selectValue(List("a", "b"), identity) shouldBe Some("b")
+      tree2.selectValue(List(1, 1), _.length) shouldBe Some("b")
+      tree2.selectValue(List(1), _.length) shouldBe Some("a")
+      tree2.selectValue(List(1, 0), _.length) shouldBe None
+      tree2.selectValue(List(0, 1), _.length) shouldBe None
+      tree2.selectValue(List(0, 0), _.length) shouldBe None
+      tree3_1.selectValue(List(), _.length) shouldBe None
+      tree3_1.selectValue(List(1, 1, 1), _.length) shouldBe Some("c")
+      tree3_1.selectValue(List(1, 1), _.length) shouldBe Some("b")
+      tree3_1.selectValue(List(1), _.length) shouldBe Some("a")
+      tree3_2.selectValue(List(), _.length) shouldBe None
+      tree3_2.selectValue(List(1), _.length) shouldBe Some("a")
+      tree3_2.selectValue(List(1, 1), _.length) shouldBe Some("c")
+      tree3_2.selectValue(List("a"), identity) shouldBe Some("a")
+      tree3_2.selectValue(List("a", "b"), identity) shouldBe Some("b")
+      tree3_2.selectValue(List("a", "c"), identity) shouldBe Some("c")
+      tree3_2.selectValue(List("a", "d"), identity) shouldBe None
+      tree3_2.selectValue(List("a", "a"), identity) shouldBe None
+      tree3_2.selectValue(List("c", "a"), identity) shouldBe None
+      tree3_2.selectValue(List("b", "a"), identity) shouldBe None
+      tree4_1.selectValue(List("a", "b"), identity) shouldBe Some("b")
+      tree4_1.selectValue(List("a", "b", "c"), identity) shouldBe Some("c")
+      tree4_1.selectValue(List("a", "b", "c", "d"), identity) shouldBe Some("d")
+      tree4_1.selectValue(List("a", "c"), identity) shouldBe None
+      tree4_1.selectValue(List("a", "d"), identity) shouldBe None
+      tree4_2.selectValue(List(), identity) shouldBe None
+      tree4_2.selectValue(List("a"), identity) shouldBe Some("a")
+      tree4_2.selectValue(List("a", "b"), identity) shouldBe Some("b")
+      tree4_2.selectValue(List("a", "b", "d"), identity) shouldBe None
+      tree4_2.selectValue(List("a", "b", "c"), identity) shouldBe Some("c")
+      tree4_2.selectValue(List("a", "d"), identity) shouldBe Some("d")
+      tree4_2.selectValue(List("a", "d", "c"), identity) shouldBe None
+      tree4_2.selectValue(List("b", "c"), identity) shouldBe None
+      tree4_2.selectValue(List("d"), identity) shouldBe None
+      tree4_3.selectValue(List("a", "b"), identity) shouldBe Some("b")
+      tree4_3.selectValue(List(), identity) shouldBe None
+      tree4_3.selectValue(List("a"), identity) shouldBe Some("a")
+      tree4_3.selectValue(List("a", "c"), identity) shouldBe Some("c")
+      tree4_3.selectValue(List("a", "d"), identity) shouldBe Some("d")
+      tree4_3.selectValue(List("a", "a"), identity) shouldBe None
+      tree4_3.selectValue(List("a", "e"), identity) shouldBe None
+      tree4_3.selectValue(List("a", "b", "c"), identity) shouldBe None
+      tree4_3.selectValue(List("a", "b", "b"), identity) shouldBe None
+      tree4_3.selectValue(List("a", "a", "a"), identity) shouldBe None
+      tree9.selectValue(List("a", "b", "c", "d"), identity) shouldBe Some("d")
+      tree9.selectValue(List("a", "e", "f", "g"), identity) shouldBe Some("g")
+      tree9.selectValue(List("a", "e", "h", "i"), identity) shouldBe Some("i")
+      tree9.selectValue(List("a", "e", "f", "i"), identity) shouldBe None
+    }
+
     "select an existing subtree" in {
       val tree = Tree(0, Tree(1, Tree(2, Tree(3), Tree(4), Tree(5))))
       tree.selectTree(List(0, 1)) shouldBe Some(Tree(1, Tree(2, Tree(3), Tree(4), Tree(5))))

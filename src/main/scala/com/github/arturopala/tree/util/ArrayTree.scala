@@ -484,7 +484,9 @@ object ArrayTree {
     foldLeftBranchesIndexLists(startIndex, treeStructure, new StringBuilder(), renderBranch)
   }
 
-  /** Follows the given path into the tree.
+  @`inline` final def identity[T, T1 >: T]: T => T1 = x => x
+
+  /** Follows the given path of values into the tree.
     * @return a tuple consisting of:
     *         - an array of travelled indexes,
     *         - optionally non matching path segment,
@@ -499,34 +501,65 @@ object ArrayTree {
     *          but if the tree does not contain the path then the returned tuple
     *          will be (indexes (maybe empty), Some(segment), some iterator (maybe empty), true or false).
     */
-  final def followPath[T, T1 >: T](
+  @`inline` final def followPath[T, T1 >: T](
     path: Iterable[T1],
     startIndex: Int,
     treeStructure: Int => Int,
     treeValues: Int => T
-  ): (Array[Int], Option[T1], Iterator[T1], Boolean) = {
+  ): (Array[Int], Option[T1], Iterator[T1], Boolean) =
+    followPath(path, startIndex, treeStructure, treeValues, identity[T, T1])
+
+  /** Follows the given path into the tree using extractor function.
+    * @param f function to extract path segment from the tree node value.
+    * @return a tuple consisting of:
+    *         - an array of travelled indexes,
+    *         - optionally non matching path segment,
+    *         - remaining path iterator,
+    *         - flag set to true if path matched an entire branch.
+    *
+    * @note 1. Assumes distinct values of children in each node.
+    *       2. To check if the path exists within the tree it is sufficient to validate
+    *          that returned non matching segment is empty.
+    *       3. Generally, if the tree contains the path then the returned tuple
+    *          will be (non empty indexes, None, empty iterator, true or false),
+    *          but if the tree does not contain the path then the returned tuple
+    *          will be (indexes (maybe empty), Some(segment), some iterator (maybe empty), true or false).
+    */
+  final def followPath[T, K](
+    path: Iterable[K],
+    startIndex: Int,
+    treeStructure: Int => Int,
+    treeValues: Int => T,
+    f: T => K
+  ): (Array[Int], Option[K], Iterator[K], Boolean) = {
 
     val indexes = new IntBuffer() // travelled indexes
     val children = new IntBuffer().push(startIndex) // children indexes to consider
     val pathIterator = path.iterator
 
-    var pathSegment: Option[T1] = None
+    var pathSegment: Option[K] = None
 
     while (children.nonEmpty && pathIterator.hasNext) {
-      val c = children.reset + 1
       pathSegment = Some(pathIterator.next())
-      var n = 0
-      while (n >= 0 && n < c) {
-        val ci = children(n) // child index
-        if (ci >= 0 && pathSegment.contains(treeValues(ci))) {
-          indexes.push(ci)
-          writeChildrenIndexes(ci, treeStructure, children, 0)
-          pathSegment = None
-          n = -1 // force inner loop exit
-        } else {
-          n = n + 1
+      if (children.nonEmpty) {
+        val c = children.reset + 1
+        var n = 0
+        while (n >= 0 && n < c) {
+          val ci = children(n) // child index
+          if (ci >= 0 && pathSegment.contains(f(treeValues(ci)))) {
+            indexes.push(ci)
+            writeChildrenIndexes(ci, treeStructure, children, 0)
+            pathSegment = None
+            n = -1 // force inner loop exit
+          } else {
+            n = n + 1
+          }
         }
       }
+    }
+
+    if (pathSegment.isEmpty && pathIterator.hasNext) {
+      pathSegment = Some(pathIterator.next())
     }
 
     (indexes.toArray, pathSegment, pathIterator, pathSegment.isEmpty && children.isEmpty)
@@ -554,14 +587,15 @@ object ArrayTree {
     unmatched.isEmpty
   }
 
-  /** Selects node's value accessible by path. */
-  @`inline` final def selectValue[T, T1 >: T](
-    path: Iterable[T1],
+  /** Selects node's value accessible by path using value converter function. */
+  @`inline` final def selectValue[T, K](
+    path: Iterable[K],
     startIndex: Int,
     treeStructure: Int => Int,
-    treeValues: Int => T
+    treeValues: Int => T,
+    f: T => K
   ): Option[T] =
-    followPath(path, startIndex, treeStructure, treeValues) match {
+    followPath(path, startIndex, treeStructure, treeValues, f) match {
       case (indexes, None, _, _) if indexes.nonEmpty => Some(treeValues(indexes.last))
       case _                                         => None
     }

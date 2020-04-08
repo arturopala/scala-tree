@@ -29,6 +29,8 @@ class ArrayTreeSpec extends AnyWordSpec with Matchers {
   val aa_aaa_aa_a = Slice("aa", "aaa", "aa", "a")
   val aa_a_aaa_aa_a = Slice("aa", "a", "aaa", "aa", "a")
 
+  final val id: String => String = x => x
+
   "ArrayTree" should {
     "list children indexes" in {
       childrenIndexes(0, Array(0)) shouldBe Nil
@@ -322,12 +324,14 @@ class ArrayTreeSpec extends AnyWordSpec with Matchers {
       countBranches[String](9, Array(0, 0, 2, 0, 0, 1, 2, 2, 0, 2), v, f) shouldBe 4
     }
 
-    "follow the path into tree" in {
+    "follow path into tree" in {
       def see[T](t: (Array[Int], Option[String], Iterator[T], Boolean)): (List[Int], Option[String], List[T], Boolean) =
         (t._1.toList, t._2, t._3.toList, t._4)
 
       see(followPath(List("a"), -1, Array.empty[Int], Array.empty[String])) shouldBe (Nil, Some("a"), Nil, false)
       see(followPath(List("a"), 0, Array(0), Array("a"))) shouldBe (List(0), None, Nil, true)
+      see(followPath(List("a", "a"), 0, Array(0), Array("a"))) shouldBe (List(0), Some("a"), Nil, false)
+      see(followPath(List("a", "b", "c"), 0, Array(0), Array("a"))) shouldBe (List(0), Some("b"), List("c"), false)
       see(followPath(List("a", "b"), 1, Array(0, 1), Array("b", "a"))) shouldBe (List(1, 0), None, Nil, true)
       see(followPath(List("a", "b"), 1, Array(0, 1), Array("c", "a"))) shouldBe (List(1), Some("b"), Nil, false)
       see(followPath(List("a", "b", "c"), 2, Array(0, 1, 1), Array("c", "b", "a"))) shouldBe (List(2, 1, 0), None, Nil, true)
@@ -363,6 +367,23 @@ class ArrayTreeSpec extends AnyWordSpec with Matchers {
       see(followPath(List("a", "b", "e"), 6, s7_2, v7)) shouldBe (List(6, 5, 2), None, Nil, false)
       see(followPath(List("a", "b", "e", "f"), 6, s7_2, v7)) shouldBe (List(6, 5, 2, 1), None, Nil, false)
       see(followPath(List("a", "b", "e", "f", "g"), 6, s7_2, v7)) shouldBe (List(6, 5, 2, 1, 0), None, Nil, true)
+    }
+
+    "select a value by the path" in {
+      selectValue(List("a"), -1, IntSlice(), Slice.empty[String], id) shouldBe None
+      selectValue(List("a"), 0, Array(0), Array("a"), id) shouldBe Some("a")
+      selectValue(List("a", "b"), 0, Array(0), Array("a"), id) shouldBe None
+      selectValue(List("a", "a"), 0, Array(0), Array("a"), id) shouldBe None
+      selectValue(List("a", "b"), 0, Array(0, 1), Array("b", "a"), id) shouldBe None
+      selectValue(List("a", "b"), 1, Array(0, 1), Array("b", "a"), id) shouldBe Some("b")
+      selectValue(List("a", "b"), 1, Array(0, 1), Array("c", "a"), id) shouldBe None
+      selectValue(List("a", "b"), 2, Array(0, 0, 2), Array("c", "b", "a"), id) shouldBe Some("b")
+      selectValue(List("a", "c"), 2, Array(0, 0, 2), Array("c", "b", "a"), id) shouldBe Some("c")
+      selectValue(List("a", "d"), 3, Array(0, 0, 1, 2), Array("d", "c", "b", "a"), id) shouldBe Some("d")
+      selectValue(List("a", "b", "c"), 3, Array(0, 0, 1, 2), Array("d", "c", "b", "a"), id) shouldBe Some("c")
+      selectValue(List("a", "b", "c"), 3, Array(0, 0, 1, 2), Array("d", "c", "b", "a"), id) shouldBe Some("c")
+      selectValue(List("a", "b"), 3, Array(0, 0, 1, 2), Array("d", "c", "b", "a"), id) shouldBe Some("b")
+      selectValue(List("a", "c"), 3, Array(0, 0, 1, 2), Array("d", "c", "b", "a"), id) shouldBe None
     }
 
     "flatMap a tree" in {
@@ -435,8 +456,6 @@ class ArrayTreeSpec extends AnyWordSpec with Matchers {
           Tree(1, Tree(2, Tree(4, Tree(5))))
         )
     }
-
-    "debug" in {}
 
     "flatMap distinct a tree" in {
       val f0: String => Tree[Int] = s => Tree(s.length)
