@@ -33,7 +33,7 @@ class TreeBuilderSpec extends AnyWordSpec with Matchers {
       trees.head.size shouldBe 4
       trees.head.width shouldBe 3
       trees.head shouldBe Tree("d", Tree("c"), Tree("b"), Tree("a"))
-      showAsGraph(trees.head) shouldBe
+      showAsGraph(trees.head, "\n") shouldBe
         """d > c
           |d > b
           |d > a""".stripMargin
@@ -58,7 +58,7 @@ class TreeBuilderSpec extends AnyWordSpec with Matchers {
       trees.head.size shouldBe 4
       trees.head.width shouldBe 3
       trees.head shouldBe Tree("d", Tree("c"), Tree("b"), Tree("a"))
-      showAsGraph(trees.head) shouldBe
+      showAsGraph(trees.head, "\n") shouldBe
         """d > c
           |d > b
           |d > a""".stripMargin
@@ -74,7 +74,7 @@ class TreeBuilderSpec extends AnyWordSpec with Matchers {
       trees.head.size shouldBe 8
       trees.head.width shouldBe 4
       trees.head shouldBe Tree("d", Tree("c", Tree("C")), Tree("b", Tree("B")), Tree("a", Tree("A")), Tree("D"))
-      showAsGraph(trees.head) shouldBe
+      showAsGraph(trees.head, "\n") shouldBe
         """d > c > C
           |d > b > B
           |d > a > A
@@ -91,7 +91,7 @@ class TreeBuilderSpec extends AnyWordSpec with Matchers {
       trees.head.size shouldBe 8
       trees.head.width shouldBe 4
       trees.head shouldBe Tree("d", Tree("c", Tree("b", Tree("a", Tree("A")), Tree("B")), Tree("C")), Tree("D"))
-      showAsGraph(trees.head) shouldBe
+      showAsGraph(trees.head, "\n") shouldBe
         """d > c > b > a > A
           |d > c > b > B
           |d > c > C
@@ -108,7 +108,7 @@ class TreeBuilderSpec extends AnyWordSpec with Matchers {
       trees.head.size shouldBe 2
       trees.head.width shouldBe 1
       trees.head shouldBe Tree("d", Tree("D"))
-      showAsGraph(trees.head) shouldBe "d > D"
+      showAsGraph(trees.head, "\n") shouldBe "d > D"
     }
 
     "create a new tree from the pair of arrays" in {

@@ -21,13 +21,13 @@ package com.github.arturopala.tree
   */
 object TreeFormat {
 
-  final def showAsArrays[T <: Any](tree: Tree[T]): String =
-    tree.mkStringUsingBranches(_.toString, ",", "\n", "[", "]")
+  final def showAsArrays[T <: Any](tree: TreeLike[T], separator: String): String =
+    tree.mkStringUsingBranches(_.toString, ",", separator, "[", "]")
 
-  final def showAsGraph[T <: Any](tree: Tree[T]): String =
-    tree.mkStringUsingBranches(_.toString, " > ", "\n", "", "")
+  final def showAsGraph[T <: Any](tree: TreeLike[T], separator: String): String =
+    tree.mkStringUsingBranches(_.toString, " > ", separator, "", "")
 
-  final def showAsPaths[T <: Any](tree: Tree[T]): String =
-    tree.mkStringUsingBranches(_.toString, "/", "\n", "", "")
+  final def showAsPaths[T <: Any](tree: TreeLike[T], separator: String): String =
+    tree.mkStringUsingBranches(_.toString, "/", separator, "", "")
 
 }

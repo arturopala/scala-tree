@@ -27,7 +27,7 @@ import scala.reflect.ClassTag
   * [[Tree.empty]] final override functions implementations.
   * Extracted from [[Tree]] to de-clutter its codebase.
   */
-trait EmptyTreeOps extends TreeLike[Nothing] {
+trait EmptyTreeLike extends TreeLike[Nothing] {
 
   final override val size: Int = 0
   final override val width: Int = 0
@@ -42,7 +42,7 @@ trait EmptyTreeOps extends TreeLike[Nothing] {
   final override def valueStream(pred: Nothing => Boolean): Stream[Nothing] = Stream.empty
   final override val childrenValues: List[Nothing] = Nil
   final override val children: List[Tree[Nothing]] = Nil
-  final override val trees: List[Tree[Nothing]] = List(empty)
+  final override val trees: List[Tree[Nothing]] = Nil
   final override def treeIterator(pred: Tree[Nothing] => Boolean): Iterator[Tree[Nothing]] = Iterator.empty
   final override val treeStream: Stream[Nothing] = Stream.empty
   final override def treeStream(pred: Tree[Nothing] => Boolean): Stream[Nothing] = Stream.empty

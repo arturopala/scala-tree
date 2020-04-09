@@ -231,7 +231,7 @@ object NodeTree {
     }
 
   final def branches[T](pred: List[T] => Boolean, node: NodeTree[T]): List[List[T]] =
-    branches(pred, Nil, node.subtrees.map((List(node.value), _)))
+    branches(pred, Nil, List((Nil, node)))
 
   @tailrec
   private def branches[T](

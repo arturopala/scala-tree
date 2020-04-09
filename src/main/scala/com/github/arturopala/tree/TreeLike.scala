@@ -296,3 +296,15 @@ trait TreeLike[+T] {
   ): String
 
 }
+
+/** [[TreeLike]] companion object. */
+object TreeLike {
+
+  /** Useful extensions of tree interface. */
+  implicit class TreeLikeExtensions[T](tree: TreeLike[T]) {
+    def showAsGraph(separator: String = "\n"): String = TreeFormat.showAsGraph(tree, separator)
+    def showAsArrays(separator: String = ","): String = TreeFormat.showAsArrays(tree, separator)
+    def showAsPaths(separator: String): String = TreeFormat.showAsPaths(tree, separator)
+  }
+
+}

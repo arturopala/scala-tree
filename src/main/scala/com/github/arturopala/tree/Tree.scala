@@ -144,7 +144,7 @@ object Tree {
     *
     * Concrete, specialized node types are [[Leaf]], [[Unary]], [[Binary]], and [[Bunch]].
     */
-  sealed trait NodeTree[+T] extends Tree[T] with NodeTreeOps[T] {
+  sealed trait NodeTree[+T] extends Tree[T] with NodeTreeLike[T] {
 
     override protected val node: NodeTree[T] = this
 
@@ -206,7 +206,7 @@ object Tree {
     delayedWidth: => Int,
     delayedHeight: => Int
   )(implicit val classTag: ClassTag[T])
-      extends Tree[T] with ArrayTreeOps[T] {
+      extends Tree[T] with ArrayTreeLike[T] {
 
     assert(content.nonEmpty, "When creating an ArrayTree, `values` must not be empty.")
     assert(
@@ -227,7 +227,7 @@ object Tree {
   /**
     * An empty Tree singleton.
     */
-  final case object empty extends Tree[Nothing] with EmptyTreeOps {
+  final case object empty extends Tree[Nothing] with EmptyTreeLike {
 
     override protected lazy val hashcode: Int = 0
     override val toString: String = "Tree.empty"

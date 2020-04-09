@@ -27,7 +27,7 @@ import scala.reflect.ClassTag
   * [[Tree.ArrayTree]] final functions implementations.
   * Extracted from [[Tree]] to de-clutter its codebase.
   */
-trait ArrayTreeOps[T] extends TreeLike[T] {
+trait ArrayTreeLike[T] extends TreeLike[T] {
 
   protected val tree: ArrayTree[T]
   protected val classTag: ClassTag[T]

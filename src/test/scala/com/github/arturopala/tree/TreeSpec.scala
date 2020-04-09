@@ -36,6 +36,11 @@ trait TreeSpec extends AnyWordSpec with Matchers {
   val tree9: Tree[String]
   val allTrees: Seq[Tree[String]]
 
+  def all[T]: T => Boolean = _ => true
+  def none[T]: T => Boolean = _ => false
+  val even: String => Boolean = s => s.head.toInt % 2 == 0
+  val odd: String => Boolean = s => s.head.toInt  % 2 != 0
+
   s"$name" should {
 
     "create an empty Tree" in {
@@ -46,7 +51,7 @@ trait TreeSpec extends AnyWordSpec with Matchers {
       tree0.childrenValues shouldBe Nil
       tree0.countBranches(_.nonEmpty) shouldBe 0
       tree0.countBranches(_.isEmpty) shouldBe 0
-      showAsArrays(tree0) shouldBe ""
+      showAsArrays(tree0, "\n") shouldBe ""
       tree0.map(_ + 1) shouldBe Tree.empty
     }
 
@@ -59,7 +64,7 @@ trait TreeSpec extends AnyWordSpec with Matchers {
       tree1.childrenValues shouldBe Nil
       tree1.countBranches(_.nonEmpty) shouldBe 1
       tree1.countBranches(_.isEmpty) shouldBe 0
-      showAsArrays(tree1) shouldBe "[a]"
+      showAsArrays(tree1, "\n") shouldBe "[a]"
       tree1.map(_ + 1) shouldBe Tree("a1")
     }
 
@@ -71,7 +76,7 @@ trait TreeSpec extends AnyWordSpec with Matchers {
       tree2.childrenValues shouldBe List("b")
       tree2.countBranches(_.nonEmpty) shouldBe 1
       tree2.countBranches(_.isEmpty) shouldBe 0
-      showAsArrays(tree2) shouldBe "[a,b]"
+      showAsArrays(tree2, "\n") shouldBe "[a,b]"
       tree2.map(_ + 1) shouldBe Tree("a1", Tree("b1"))
     }
 
@@ -82,7 +87,7 @@ trait TreeSpec extends AnyWordSpec with Matchers {
       tree3_1.isLeaf shouldBe false
       tree3_1.childrenValues shouldBe List("b")
       tree3_1.countBranches(_.nonEmpty) shouldBe 1
-      val arrays1 = showAsArrays(tree3_1)
+      val arrays1 = showAsArrays(tree3_1, "\n")
       arrays1 shouldBe "[a,b,c]"
       val newTree3_1 = tree3_1.map(_ + 1)
       newTree3_1 shouldBe Tree("a1", Tree("b1", Tree("c1")))
@@ -93,7 +98,7 @@ trait TreeSpec extends AnyWordSpec with Matchers {
       tree3_2.isLeaf shouldBe false
       tree3_2.childrenValues shouldBe List("b", "c")
       tree3_2.countBranches(_.nonEmpty) shouldBe 2
-      val arrays2 = showAsArrays(tree3_2)
+      val arrays2 = showAsArrays(tree3_2, "\n")
       arrays2 shouldBe
         """[a,b]
           |[a,c]""".stripMargin
@@ -108,7 +113,7 @@ trait TreeSpec extends AnyWordSpec with Matchers {
       tree4_1.isLeaf shouldBe false
       tree4_1.countBranches(_.nonEmpty) shouldBe 1
       tree4_1.childrenValues shouldBe List("b")
-      showAsArrays(tree4_1) shouldBe "[a,b,c,d]"
+      showAsArrays(tree4_1, "\n") shouldBe "[a,b,c,d]"
       tree4_1.map(_ + 1) shouldBe Tree("a1", Tree("b1", Tree("c1", Tree("d1"))))
 
       tree4_2.size shouldBe 4
@@ -117,7 +122,7 @@ trait TreeSpec extends AnyWordSpec with Matchers {
       tree4_2.isLeaf shouldBe false
       tree4_2.childrenValues shouldBe List("b", "d")
       tree4_2.countBranches(_.nonEmpty) shouldBe 2
-      showAsArrays(tree4_2) shouldBe
+      showAsArrays(tree4_2, "\n") shouldBe
         """[a,b,c]
           |[a,d]""".stripMargin
       tree4_2.map(_ + 1) shouldBe Tree("a1", Tree("b1", Tree("c1")), Tree("d1"))
@@ -129,7 +134,7 @@ trait TreeSpec extends AnyWordSpec with Matchers {
       tree4_3.childrenValues shouldBe List("b", "c", "d")
       tree4_3.countBranches(_.nonEmpty) shouldBe 3
       tree4_3.countBranches(_.toSeq.contains("c")) shouldBe 1
-      showAsArrays(tree4_3) shouldBe
+      showAsArrays(tree4_3, "\n") shouldBe
         """[a,b]
           |[a,c]
           |[a,d]""".stripMargin
@@ -143,7 +148,7 @@ trait TreeSpec extends AnyWordSpec with Matchers {
       tree9.isLeaf shouldBe false
       tree9.countBranches(_.nonEmpty) shouldBe 3
       tree9.countBranches(_.toSeq.contains("e")) shouldBe 2
-      showAsArrays(tree9) shouldBe
+      showAsArrays(tree9, "\n") shouldBe
         """[a,b,c,d]
           |[a,e,f,g]
           |[a,e,h,i]""".stripMargin
@@ -534,7 +539,6 @@ trait TreeSpec extends AnyWordSpec with Matchers {
     }
 
     "iterate over nodes with filter" in {
-      val all: String => Boolean = _ => true
       tree0.valueIterator(all).toList shouldBe Nil
       tree1.valueIterator(all).toList shouldBe List("a")
       tree2.valueIterator(all).toList shouldBe List("a", "b")
@@ -546,7 +550,6 @@ trait TreeSpec extends AnyWordSpec with Matchers {
       tree7.valueIterator(all).toList shouldBe List("a", "b", "c", "d", "e", "f", "g")
       tree9.valueIterator(all).toList shouldBe List("a", "b", "c", "d", "e", "f", "g", "h", "i")
 
-      val none: String => Boolean = _ => false
       tree0.valueIterator(none).toList shouldBe Nil
       tree1.valueIterator(none).toList shouldBe Nil
       tree2.valueIterator(none).toList shouldBe Nil
@@ -558,7 +561,6 @@ trait TreeSpec extends AnyWordSpec with Matchers {
       tree7.valueIterator(none).toList shouldBe Nil
       tree9.valueIterator(none).toList shouldBe Nil
 
-      val even: String => Boolean = s => s.head.toInt % 2 == 0
       tree0.valueIterator(even).toList shouldBe Nil
       tree1.valueIterator(even).toList shouldBe Nil
       tree2.valueIterator(even).toList shouldBe List("b")
@@ -570,7 +572,6 @@ trait TreeSpec extends AnyWordSpec with Matchers {
       tree7.valueIterator(even).toList shouldBe List("b", "d", "f")
       tree9.valueIterator(even).toList shouldBe List("b", "d", "f", "h")
 
-      val odd: String => Boolean = s => s.head.toInt % 2 != 0
       tree0.valueIterator(odd).toList shouldBe Nil
       tree1.valueIterator(odd).toList shouldBe List("a")
       tree2.valueIterator(odd).toList shouldBe List("a")
@@ -583,53 +584,109 @@ trait TreeSpec extends AnyWordSpec with Matchers {
       tree9.valueIterator(odd).toList shouldBe List("a", "c", "e", "g", "i")
     }
 
-    "stream all nodes" in {
-      val tree = Tree.empty
-      tree.valueStream.toList shouldBe Nil
-      val tree1 = Tree(0)
-      tree1.valueStream.toList shouldBe List(0)
-      val tree2 = Tree(0, Tree(11, Tree(20, Tree(30))), Tree(12, Tree(21, Tree(31)), Tree(22, Tree(32))))
-      tree2.valueStream.toList shouldBe List(0, 11, 20, 30, 12, 21, 31, 22, 32)
+    "stream all values" in {
+      tree0.valueStream.toList shouldBe Nil
+      tree1.valueStream.toList shouldBe List("a")
+      tree2.valueStream.toList shouldBe List("a", "b")
+      tree3_1.valueStream.toList shouldBe List("a", "b", "c")
+      tree3_2.valueStream.toList shouldBe List("a", "b", "c")
+      tree4_1.valueStream.toList shouldBe List("a", "b", "c", "d")
+      tree4_2.valueStream.toList shouldBe List("a", "b", "c", "d")
+      tree4_3.valueStream.toList shouldBe List("a", "b", "c", "d")
+      tree7.valueStream.toList shouldBe List("a", "b", "c", "d", "e", "f", "g")
+      tree9.valueStream.toList shouldBe List("a", "b", "c", "d", "e", "f", "g", "h", "i")
     }
 
     "stream filtered nodes" in {
-      val tree1 = Tree(0)
-      tree1.valueStream(_ > 15).toList shouldBe Nil
-      val tree2 = Tree(0, Tree(11, Tree(20, Tree(30))), Tree(12, Tree(21, Tree(31)), Tree(22, Tree(32))))
-      tree2.valueStream(_ > 15).toList shouldBe List(20, 30, 21, 31, 22, 32)
+      tree0.valueStream(all).toList shouldBe Nil
+      tree1.valueStream(all).toList shouldBe List("a")
+      tree2.valueStream(all).toList shouldBe List("a", "b")
+      tree3_1.valueStream(all).toList shouldBe List("a", "b", "c")
+      tree3_2.valueStream(all).toList shouldBe List("a", "b", "c")
+      tree4_1.valueStream(all).toList shouldBe List("a", "b", "c", "d")
+      tree4_2.valueStream(all).toList shouldBe List("a", "b", "c", "d")
+      tree4_3.valueStream(all).toList shouldBe List("a", "b", "c", "d")
+      tree7.valueStream(all).toList shouldBe List("a", "b", "c", "d", "e", "f", "g")
+      tree9.valueStream(all).toList shouldBe List("a", "b", "c", "d", "e", "f", "g", "h", "i")
+
+      tree0.valueStream(none).toList shouldBe Nil
+      tree1.valueStream(none).toList shouldBe Nil
+      tree2.valueStream(none).toList shouldBe Nil
+      tree3_1.valueStream(none).toList shouldBe Nil
+      tree3_2.valueStream(none).toList shouldBe Nil
+      tree4_1.valueStream(none).toList shouldBe Nil
+      tree4_2.valueStream(none).toList shouldBe Nil
+      tree4_3.valueStream(none).toList shouldBe Nil
+      tree7.valueStream(none).toList shouldBe Nil
+      tree9.valueStream(none).toList shouldBe Nil
+
+      tree0.valueStream(even).toList shouldBe Nil
+      tree1.valueStream(even).toList shouldBe Nil
+      tree2.valueStream(even).toList shouldBe List("b")
+      tree3_1.valueStream(even).toList shouldBe List("b")
+      tree3_2.valueStream(even).toList shouldBe List("b")
+      tree4_1.valueStream(even).toList shouldBe List("b", "d")
+      tree4_2.valueStream(even).toList shouldBe List("b", "d")
+      tree4_3.valueStream(even).toList shouldBe List("b", "d")
+      tree7.valueStream(even).toList shouldBe List("b", "d", "f")
+      tree9.valueStream(even).toList shouldBe List("b", "d", "f", "h")
+
+      tree0.valueStream(odd).toList shouldBe Nil
+      tree1.valueStream(odd).toList shouldBe List("a")
+      tree2.valueStream(odd).toList shouldBe List("a")
+      tree3_1.valueStream(odd).toList shouldBe List("a", "c")
+      tree3_2.valueStream(odd).toList shouldBe List("a", "c")
+      tree4_1.valueStream(odd).toList shouldBe List("a", "c")
+      tree4_2.valueStream(odd).toList shouldBe List("a", "c")
+      tree4_3.valueStream(odd).toList shouldBe List("a", "c")
+      tree7.valueStream(odd).toList shouldBe List("a", "c", "e", "g")
+      tree9.valueStream(odd).toList shouldBe List("a", "c", "e", "g", "i")
     }
 
     "list all branches" in {
-      val tree = Tree(0, Tree(11, Tree(20, Tree(30))), Tree(12, Tree(21, Tree(31)), Tree(22, Tree(32))))
-      val expected = """0 > 11 > 20 > 30
-                       |0 > 12 > 21 > 31
-                       |0 > 12 > 22 > 32""".stripMargin
-
-      val branches: List[List[Int]] = tree.branchesUnsafe
-
-      val graph = branches.map(_.mkString(" > ")).mkString("\n")
-      graph should be(expected)
-      graph shouldBe showAsGraph(tree)
-      branches.forall(tree.containsBranch) shouldBe true
-      branches.reverse.foldLeft[Tree[Int]](Tree.empty)(_.insertBranch(_)) shouldBe tree
-    }
-
-    "list all branches using tail safe method" in {
-      val tree = Tree(0, Tree(11, Tree(20, Tree(30))), Tree(12, Tree(21, Tree(31)), Tree(22, Tree(32))))
-      val expected = """0 > 11 > 20 > 30
-                       |0 > 12 > 21 > 31
-                       |0 > 12 > 22 > 32""".stripMargin
-
-      val branches: List[List[Int]] = tree.branches
-
-      val graph = branches.map(_.mkString(" > ")).mkString("\n")
-      graph should be(expected)
-      graph shouldBe showAsGraph(tree)
-      branches.forall(tree.containsBranch) shouldBe true
-      branches.reverse.foldLeft[Tree[Int]](Tree.empty)(_.insertBranch(_)) shouldBe tree
+      tree0.branches shouldBe Nil
+      tree1.branches shouldBe List(List("a"))
+      tree2.branches shouldBe List(List("a", "b"))
+      tree3_1.branches shouldBe List(List("a", "b", "c"))
+      tree3_2.branches shouldBe List(List("a", "b"), List("a", "c"))
+      tree4_1.branches shouldBe List(List("a", "b", "c", "d"))
+      tree4_2.branches shouldBe List(List("a", "b", "c"), List("a", "d"))
+      tree4_3.branches shouldBe List(List("a", "b"), List("a", "c"), List("a", "d"))
+      tree7.branches shouldBe List(List("a", "b", "c"), List("a", "d", "e", "f"), List("a", "g"))
+      tree9.branches shouldBe List(List("a", "b", "c", "d"), List("a", "e", "f", "g"), List("a", "e", "h", "i"))
     }
 
     "iterate over branches with filter" in {
+      tree0.branchIterator(all).map(_.toList).toList shouldBe Nil
+      tree1.branchIterator(all).map(_.toList).toList shouldBe List(List("a"))
+      tree2.branchIterator(all).map(_.toList).toList shouldBe List(List("a", "b"))
+      tree3_1.branchIterator(all).map(_.toList).toList shouldBe List(List("a", "b", "c"))
+      tree3_2.branchIterator(all).map(_.toList).toList shouldBe List(List("a", "b"), List("a", "c"))
+      tree4_1.branchIterator(all).map(_.toList).toList shouldBe List(List("a", "b", "c", "d"))
+      tree4_2.branchIterator(all).map(_.toList).toList shouldBe List(List("a", "b", "c"), List("a", "d"))
+      tree4_3.branchIterator(all).map(_.toList).toList shouldBe List(List("a", "b"), List("a", "c"), List("a", "d"))
+      tree7.branchIterator(all).map(_.toList).toList shouldBe List(
+        List("a", "b", "c"),
+        List("a", "d", "e", "f"),
+        List("a", "g")
+      )
+      tree9.branchIterator(all).map(_.toList).toList shouldBe List(
+        List("a", "b", "c", "d"),
+        List("a", "e", "f", "g"),
+        List("a", "e", "h", "i")
+      )
+
+      tree0.branchIterator(none).toList shouldBe Nil
+      tree1.branchIterator(none).toList shouldBe Nil
+      tree2.branchIterator(none).toList shouldBe Nil
+      tree3_1.branchIterator(none).toList shouldBe Nil
+      tree3_2.branchIterator(none).toList shouldBe Nil
+      tree4_1.branchIterator(none).toList shouldBe Nil
+      tree4_2.branchIterator(none).toList shouldBe Nil
+      tree4_3.branchIterator(none).toList shouldBe Nil
+      tree7.branchIterator(none).toList shouldBe Nil
+      tree9.branchIterator(none).toList shouldBe Nil
+
       tree0.branchIterator(_.size > 3).toList shouldBe Nil
       tree1.branchIterator(_.size > 1).toList shouldBe Nil
       tree2.branchIterator(_.size > 1).map(_.toList).toList shouldBe List(List("a", "b"))
@@ -638,104 +695,276 @@ trait TreeSpec extends AnyWordSpec with Matchers {
       tree4_2.branchIterator(_.last == "d").map(_.toList).toList shouldBe List(List("a", "d"))
       tree4_2.branchIterator(_.size > 2).map(_.toList).toList shouldBe List(List("a", "b", "c"))
       tree7.branchIterator(_.size > 3).map(_.toList).toList shouldBe List(List("a", "d", "e", "f"))
+      tree9.branchIterator(_.size > 3).map(_.toList).toList shouldBe List(
+        List("a", "b", "c", "d"),
+        List("a", "e", "f", "g"),
+        List("a", "e", "h", "i")
+      )
+      tree9.branchIterator(_.toList.contains("e")).map(_.toList).toList shouldBe List(
+        List("a", "e", "f", "g"),
+        List("a", "e", "h", "i")
+      )
+      tree9.branchIterator(_.toList.contains("h")).map(_.toList).toList shouldBe List(List("a", "e", "h", "i"))
+      tree9.branchIterator(_.size < 3).map(_.toList).toList shouldBe Nil
     }
 
     "stream all branches" in {
-      val tree0 = Tree()
-      tree0.branchStream.toList shouldBe Nil
+      tree0.branchStream shouldBe Nil
+      tree1.branchStream shouldBe List(List("a"))
+      tree2.branchStream shouldBe List(List("a", "b"))
+      tree3_1.branchStream shouldBe List(List("a", "b", "c"))
+      tree3_2.branchStream shouldBe List(List("a", "b"), List("a", "c"))
+      tree4_1.branchStream shouldBe List(List("a", "b", "c", "d"))
+      tree4_2.branchStream shouldBe List(List("a", "b", "c"), List("a", "d"))
+      tree4_3.branchStream shouldBe List(List("a", "b"), List("a", "c"), List("a", "d"))
+      tree7.branchStream shouldBe List(List("a", "b", "c"), List("a", "d", "e", "f"), List("a", "g"))
+      tree9.branchStream shouldBe List(List("a", "b", "c", "d"), List("a", "e", "f", "g"), List("a", "e", "h", "i"))
+    }
 
-      val tree1 = Tree(0)
-      tree1.branchStream.toList shouldBe List(List(0))
+    "stream filtered branches" in {
+      tree0.branchStream(all).map(_.toList).toList shouldBe Nil
+      tree1.branchStream(all).map(_.toList).toList shouldBe List(List("a"))
+      tree2.branchStream(all).map(_.toList).toList shouldBe List(List("a", "b"))
+      tree3_1.branchStream(all).map(_.toList).toList shouldBe List(List("a", "b", "c"))
+      tree3_2.branchStream(all).map(_.toList).toList shouldBe List(List("a", "b"), List("a", "c"))
+      tree4_1.branchStream(all).map(_.toList).toList shouldBe List(List("a", "b", "c", "d"))
+      tree4_2.branchStream(all).map(_.toList).toList shouldBe List(List("a", "b", "c"), List("a", "d"))
+      tree4_3.branchStream(all).map(_.toList).toList shouldBe List(List("a", "b"), List("a", "c"), List("a", "d"))
+      tree7.branchStream(all).map(_.toList).toList shouldBe List(
+        List("a", "b", "c"),
+        List("a", "d", "e", "f"),
+        List("a", "g")
+      )
+      tree9.branchStream(all).map(_.toList).toList shouldBe List(
+        List("a", "b", "c", "d"),
+        List("a", "e", "f", "g"),
+        List("a", "e", "h", "i")
+      )
 
-      val tree2 = Tree(0, Tree(1))
-      tree2.branchStream.toList shouldBe List(List(0, 1))
+      tree0.branchStream(none).toList shouldBe Nil
+      tree1.branchStream(none).toList shouldBe Nil
+      tree2.branchStream(none).toList shouldBe Nil
+      tree3_1.branchStream(none).toList shouldBe Nil
+      tree3_2.branchStream(none).toList shouldBe Nil
+      tree4_1.branchStream(none).toList shouldBe Nil
+      tree4_2.branchStream(none).toList shouldBe Nil
+      tree4_3.branchStream(none).toList shouldBe Nil
+      tree7.branchStream(none).toList shouldBe Nil
+      tree9.branchStream(none).toList shouldBe Nil
 
-      val tree3 = Tree(0, Tree(1), Tree(2))
-      tree3.branchStream.toList shouldBe List(List(0, 1), List(0, 2))
-
-      val tree4 = Tree(0, Tree(11, Tree(20, Tree(30))), Tree(12, Tree(21, Tree(31)), Tree(22, Tree(32))))
-      val graph = tree4.branchStream.map(_.mkString(" > ")).mkString("\n")
-      graph shouldBe """0 > 11 > 20 > 30
-                       |0 > 12 > 21 > 31
-                       |0 > 12 > 22 > 32""".stripMargin
-      graph shouldBe showAsGraph(tree4)
+      tree0.branchStream(_.size > 3).toList shouldBe Nil
+      tree1.branchStream(_.size > 1).toList shouldBe Nil
+      tree2.branchStream(_.size > 1).map(_.toList).toList shouldBe List(List("a", "b"))
+      tree3_1.branchStream(_.last == "c").map(_.toList).toList shouldBe List(List("a", "b", "c"))
+      tree3_2.branchStream(_.last == "c").map(_.toList).toList shouldBe List(List("a", "c"))
+      tree4_2.branchStream(_.last == "d").map(_.toList).toList shouldBe List(List("a", "d"))
+      tree4_2.branchStream(_.size > 2).map(_.toList).toList shouldBe List(List("a", "b", "c"))
+      tree7.branchStream(_.size > 3).map(_.toList).toList shouldBe List(List("a", "d", "e", "f"))
+      tree9.branchStream(_.size > 3).map(_.toList).toList shouldBe List(
+        List("a", "b", "c", "d"),
+        List("a", "e", "f", "g"),
+        List("a", "e", "h", "i")
+      )
+      tree9.branchStream(_.toList.contains("e")).map(_.toList).toList shouldBe List(
+        List("a", "e", "f", "g"),
+        List("a", "e", "h", "i")
+      )
+      tree9.branchStream(_.toList.contains("h")).map(_.toList).toList shouldBe List(List("a", "e", "h", "i"))
+      tree9.branchStream(_.size < 3).map(_.toList).toList shouldBe Nil
     }
 
     "list all sub-trees" in {
-      val tree = Tree(0, Tree(11, Tree(20, Tree(30))), Tree(12, Tree(21, Tree(31)), Tree(22, Tree(32))))
-      val expected = """0 > 11 > 20 > 30
-                       |0 > 12 > 21 > 31
-                       |0 > 12 > 22 > 32
-                       |
-                       |11 > 20 > 30
-                       |
-                       |20 > 30
-                       |
-                       |30
-                       |
-                       |12 > 21 > 31
-                       |12 > 22 > 32
-                       |
-                       |21 > 31
-                       |
-                       |31
-                       |
-                       |22 > 32
-                       |
-                       |32""".stripMargin
-
-      val trees: List[Tree[Int]] = tree.treesUnsafe
-      val treesGraph = trees.map(showAsGraph).mkString("\n\n")
-
-      treesGraph should be(expected)
+      tree0.trees shouldBe Nil
+      tree1.trees shouldBe List(tree1)
+      tree2.trees shouldBe List(tree2, Tree("b"))
+      tree3_1.trees shouldBe List(tree3_1, Tree("b", Tree("c")), Tree("c"))
+      tree3_2.trees shouldBe List(tree3_2, Tree("b"), Tree("c"))
+      tree4_1.trees shouldBe List(tree4_1, Tree("b", Tree("c", Tree("d"))), Tree("c", Tree("d")), Tree("d"))
+      tree4_2.trees shouldBe List(tree4_2, Tree("b", Tree("c")), Tree("c"), Tree("d"))
+      tree4_3.trees shouldBe List(tree4_3, Tree("b"), Tree("c"), Tree("d"))
+      tree7.trees.map(_.showAsArrays()).mkString("\n") shouldBe
+        """[a,b,c],[a,d,e,f],[a,g]
+          |[b,c]
+          |[c]
+          |[d,e,f]
+          |[e,f]
+          |[f]
+          |[g]""".stripMargin
+      tree9.trees.map(_.showAsArrays()).mkString("\n") shouldBe
+        """[a,b,c,d],[a,e,f,g],[a,e,h,i]
+          |[b,c,d]
+          |[c,d]
+          |[d]
+          |[e,f,g],[e,h,i]
+          |[f,g]
+          |[g]
+          |[h,i]
+          |[i]""".stripMargin
     }
 
     "iterate over filtered subtrees" in {
+      tree0.treeIterator(all).toList shouldBe Nil
+      tree1.treeIterator(all).toList shouldBe List(tree1)
+      tree2.treeIterator(all).toList shouldBe List(tree2, Tree("b"))
+      tree3_1.treeIterator(all).toList shouldBe List(tree3_1, Tree("b", Tree("c")), Tree("c"))
+      tree3_2.treeIterator(all).toList shouldBe List(tree3_2, Tree("b"), Tree("c"))
+      tree4_1.treeIterator(all).toList shouldBe List(
+        tree4_1,
+        Tree("b", Tree("c", Tree("d"))),
+        Tree("c", Tree("d")),
+        Tree("d")
+      )
+      tree4_2.treeIterator(all).toList shouldBe List(tree4_2, Tree("b", Tree("c")), Tree("c"), Tree("d"))
+      tree4_3.treeIterator(all).toList shouldBe List(tree4_3, Tree("b"), Tree("c"), Tree("d"))
+      tree7.treeIterator(all).toList.map(_.showAsArrays()).mkString("\n") shouldBe
+        """[a,b,c],[a,d,e,f],[a,g]
+          |[b,c]
+          |[c]
+          |[d,e,f]
+          |[e,f]
+          |[f]
+          |[g]""".stripMargin
+      tree9.treeIterator(all).toList.map(_.showAsArrays()).mkString("\n") shouldBe
+        """[a,b,c,d],[a,e,f,g],[a,e,h,i]
+          |[b,c,d]
+          |[c,d]
+          |[d]
+          |[e,f,g],[e,h,i]
+          |[f,g]
+          |[g]
+          |[h,i]
+          |[i]""".stripMargin
+
+      tree0.treeIterator(none).toList shouldBe Nil
+      tree1.treeIterator(none).toList shouldBe Nil
+      tree2.treeIterator(none).toList shouldBe Nil
+      tree3_1.treeIterator(none).toList shouldBe Nil
+      tree3_2.treeIterator(none).toList shouldBe Nil
+      tree4_1.treeIterator(none).toList shouldBe Nil
+      tree4_2.treeIterator(none).toList shouldBe Nil
+      tree4_3.treeIterator(none).toList shouldBe Nil
+      tree7.treeIterator(none).toList shouldBe Nil
+      tree9.treeIterator(none).toList shouldBe Nil
+
       tree0.treeIterator(_.size > 0).toList shouldBe Nil
       tree1.treeIterator(_.size > 0).toList shouldBe List(tree1)
       tree2.treeIterator(_.size > 0).toList shouldBe List(tree2, Tree("b"))
       tree3_2.treeIterator(_.size < 2).toList shouldBe List(Tree("b"), Tree("c"))
       tree7.treeIterator(_.height == 2).toList shouldBe List(Tree("b", Tree("c")), Tree("e", Tree("f")))
+      tree9.treeIterator(_.height == 2).map(_.showAsArrays()).mkString("\n") shouldBe
+        """[c,d]
+          |[f,g]
+          |[h,i]""".stripMargin
+      tree9.treeIterator(_.height > 2).map(_.showAsArrays()).mkString("\n") shouldBe
+        """[a,b,c,d],[a,e,f,g],[a,e,h,i]
+          |[b,c,d]
+          |[e,f,g],[e,h,i]""".stripMargin
+      tree9.treeIterator(_.width >= 2).map(_.showAsArrays()).mkString("\n") shouldBe
+        """[a,b,c,d],[a,e,f,g],[a,e,h,i]
+          |[e,f,g],[e,h,i]""".stripMargin
+    }
 
-      val tree9 = Tree(0, Tree(11, Tree(20, Tree(30))), Tree(12, Tree(21, Tree(31)), Tree(22, Tree(32))))
-      tree9.treeIterator(_.size == 2).toList shouldBe List(Tree(20, Tree(30)), Tree(21, Tree(31)), Tree(22, Tree(32)))
+    "stream all subtrees" in {
+      tree0.treeStream.toList shouldBe Nil
+      tree1.treeStream.toList shouldBe List(tree1)
+      tree2.treeStream.toList shouldBe List(tree2, Tree("b"))
+      tree3_1.treeStream.toList shouldBe List(tree3_1, Tree("b", Tree("c")), Tree("c"))
+      tree3_2.treeStream.toList shouldBe List(tree3_2, Tree("b"), Tree("c"))
+      tree4_1.treeStream.toList shouldBe List(tree4_1, Tree("b", Tree("c", Tree("d"))), Tree("c", Tree("d")), Tree("d"))
+      tree4_2.treeStream.toList shouldBe List(tree4_2, Tree("b", Tree("c")), Tree("c"), Tree("d"))
+      tree4_3.treeStream.toList shouldBe List(tree4_3, Tree("b"), Tree("c"), Tree("d"))
+      tree7.treeStream.toList.map(_.showAsArrays()).mkString("\n") shouldBe
+        """[a,b,c],[a,d,e,f],[a,g]
+          |[b,c]
+          |[c]
+          |[d,e,f]
+          |[e,f]
+          |[f]
+          |[g]""".stripMargin
+      tree9.treeStream.toList.map(_.showAsArrays()).mkString("\n") shouldBe
+        """[a,b,c,d],[a,e,f,g],[a,e,h,i]
+          |[b,c,d]
+          |[c,d]
+          |[d]
+          |[e,f,g],[e,h,i]
+          |[f,g]
+          |[g]
+          |[h,i]
+          |[i]""".stripMargin
     }
 
     "stream filtered subtrees" in {
+      tree0.treeStream(all).toList shouldBe Nil
+      tree1.treeStream(all).toList shouldBe List(tree1)
+      tree2.treeStream(all).toList shouldBe List(tree2, Tree("b"))
+      tree3_1.treeStream(all).toList shouldBe List(tree3_1, Tree("b", Tree("c")), Tree("c"))
+      tree3_2.treeStream(all).toList shouldBe List(tree3_2, Tree("b"), Tree("c"))
+      tree4_1.treeStream(all).toList shouldBe List(
+        tree4_1,
+        Tree("b", Tree("c", Tree("d"))),
+        Tree("c", Tree("d")),
+        Tree("d")
+      )
+      tree4_2.treeStream(all).toList shouldBe List(tree4_2, Tree("b", Tree("c")), Tree("c"), Tree("d"))
+      tree4_3.treeStream(all).toList shouldBe List(tree4_3, Tree("b"), Tree("c"), Tree("d"))
+      tree7.treeStream(all).toList.map(_.showAsArrays()).mkString("\n") shouldBe
+        """[a,b,c],[a,d,e,f],[a,g]
+          |[b,c]
+          |[c]
+          |[d,e,f]
+          |[e,f]
+          |[f]
+          |[g]""".stripMargin
+      tree9.treeStream(all).toList.map(_.showAsArrays()).mkString("\n") shouldBe
+        """[a,b,c,d],[a,e,f,g],[a,e,h,i]
+          |[b,c,d]
+          |[c,d]
+          |[d]
+          |[e,f,g],[e,h,i]
+          |[f,g]
+          |[g]
+          |[h,i]
+          |[i]""".stripMargin
+
+      tree0.treeStream(none).toList shouldBe Nil
+      tree1.treeStream(none).toList shouldBe Nil
+      tree2.treeStream(none).toList shouldBe Nil
+      tree3_1.treeStream(none).toList shouldBe Nil
+      tree3_2.treeStream(none).toList shouldBe Nil
+      tree4_1.treeStream(none).toList shouldBe Nil
+      tree4_2.treeStream(none).toList shouldBe Nil
+      tree4_3.treeStream(none).toList shouldBe Nil
+      tree7.treeStream(none).toList shouldBe Nil
+      tree9.treeStream(none).toList shouldBe Nil
+
       tree0.treeStream(_.size > 0).toList shouldBe Nil
       tree1.treeStream(_.size > 0).toList shouldBe List(tree1)
       tree2.treeStream(_.size > 0).toList shouldBe List(tree2, Tree("b"))
       tree3_2.treeStream(_.size < 2).toList shouldBe List(Tree("b"), Tree("c"))
       tree7.treeStream(_.height == 2).toList shouldBe List(Tree("b", Tree("c")), Tree("e", Tree("f")))
-
-      val tree9 = Tree(0, Tree(11, Tree(20, Tree(30))), Tree(12, Tree(21, Tree(31)), Tree(22, Tree(32))))
-      tree9.treeStream(_.size == 2).toList shouldBe List(Tree(20, Tree(30)), Tree(21, Tree(31)), Tree(22, Tree(32)))
+      tree9.treeStream(_.height == 2).map(_.showAsArrays()).mkString("\n") shouldBe
+        """[c,d]
+          |[f,g]
+          |[h,i]""".stripMargin
+      tree9.treeStream(_.height > 2).map(_.showAsArrays()).mkString("\n") shouldBe
+        """[a,b,c,d],[a,e,f,g],[a,e,h,i]
+          |[b,c,d]
+          |[e,f,g],[e,h,i]""".stripMargin
+      tree9.treeStream(_.width >= 2).map(_.showAsArrays()).mkString("\n") shouldBe
+        """[a,b,c,d],[a,e,f,g],[a,e,h,i]
+          |[e,f,g],[e,h,i]""".stripMargin
     }
 
     "map all nodes" in {
       val f: String => String = _ + "0"
-
-      val result0 = tree0.map(f)
-      showAsGraph(result0) shouldBe ""
-
-      val result1 = tree1.map(f)
-      showAsGraph(result1) shouldBe "a0"
-
-      val result2 = tree2.map(f)
-      showAsGraph(result2) shouldBe
-        """a0 > b0""".stripMargin
-
-      val result3_1 = tree3_1.map(f)
-      showAsGraph(result3_1) shouldBe
-        """a0 > b0 > c0""".stripMargin
-
-      val result3_2 = tree3_2.map(f)
-      showAsGraph(result3_2) shouldBe
+      tree0.map(f).showAsGraph() shouldBe ""
+      tree1.map(f).showAsGraph() shouldBe "a0"
+      tree2.map(f).showAsGraph() shouldBe """a0 > b0"""
+      tree3_1.map(f).showAsGraph() shouldBe """a0 > b0 > c0"""
+      tree3_2.map(f).showAsGraph() shouldBe
         """a0 > b0
           |a0 > c0""".stripMargin
-
-      val result4 = tree7.map(f)
-      showAsGraph(result4) shouldBe
+      tree7.map(f).showAsGraph() shouldBe
         """a0 > b0 > c0
           |a0 > d0 > e0 > f0
           |a0 > g0""".stripMargin
@@ -743,32 +972,20 @@ trait TreeSpec extends AnyWordSpec with Matchers {
 
     "flatMap all nodes" in {
       val f: String => Tree[String] = x => Tree(x, Tree(x + "0"))
-
-      val result0 = tree0.flatMap(f)
-      showAsGraph(result0) shouldBe ""
-
-      val result1 = tree1.flatMap(f)
-      showAsGraph(result1) shouldBe "a > a0"
-
-      val result2 = tree2.flatMap(f)
-      showAsGraph(result2) shouldBe
+      tree0.flatMap(f).showAsGraph() shouldBe ""
+      tree1.flatMap(f).showAsGraph() shouldBe "a > a0"
+      tree2.flatMap(f).showAsGraph() shouldBe
         """a > b > b0
           |a > a0""".stripMargin
-
-      val result3_1 = tree3_1.flatMap(f)
-      showAsGraph(result3_1) shouldBe
+      tree3_1.flatMap(f).showAsGraph() shouldBe
         """a > b > c > c0
           |a > b > b0
           |a > a0""".stripMargin
-
-      val result3_2 = tree3_2.flatMap(f)
-      showAsGraph(result3_2) shouldBe
+      tree3_2.flatMap(f).showAsGraph() shouldBe
         """a > b > b0
           |a > c > c0
           |a > a0""".stripMargin
-
-      val result4 = tree7.flatMap(f)
-      showAsGraph(result4) shouldBe
+      tree7.flatMap(f).showAsGraph() shouldBe
         """a > b > c > c0
           |a > b > b0
           |a > d > e > f > f0
