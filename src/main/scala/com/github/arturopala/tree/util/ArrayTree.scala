@@ -287,11 +287,11 @@ object ArrayTree {
       val branchIndexes = new IntBuffer()
       var i = 0
       var ci = 0
-      while (ci < counters.length) {
-        branchIndexes.push(indexes(i))
-        val c = counters(ci)
-        i = i + c
-        ci = ci + 1
+      while (ci < counters.length) { // for all counters
+        branchIndexes.push(indexes(i)) // read and push index at position
+        val c = counters(ci) // read next child ordinal
+        i = i + c // advance position to the next child
+        ci = ci + 1 // increment counter ordinal
       }
       branchIndexes
     }
@@ -363,7 +363,7 @@ object ArrayTree {
     }
   }
 
-  private val readBranchSlice: (IntBuffer, IntBuffer, Int) => IntSlice =
+  @`inline` final val readBranchSlice: (IntBuffer, IntBuffer, Int) => IntSlice =
     (counters, indexes, i) => BranchIteratorUtils.readBranch(counters, indexes).push(i).toSlice
 
   /** Fold tree's branches as index lists. */
@@ -371,11 +371,12 @@ object ArrayTree {
     startIndex: Int,
     treeStructure: Int => Int,
     initialValue: A,
-    fold: (A, IntSlice, Int) => A
+    fold: (A, IntSlice, Int) => A,
+    maxDepth: Int = Int.MaxValue
   ): A =
-    foldLeftBranches(startIndex, treeStructure, initialValue, readBranchSlice, fold)
+    foldLeftBranches(startIndex, treeStructure, initialValue, readBranchSlice, fold, maxDepth)
 
-  private val readBranchLength: (IntBuffer, IntBuffer, Int) => Int =
+  @`inline` final val readBranchLength: (IntBuffer, IntBuffer, Int) => Int =
     (counters, _, _) => BranchIteratorUtils.sizeBranch(counters) + 1
 
   /** Fold tree's branch lengths. */
@@ -387,17 +388,23 @@ object ArrayTree {
   ): A =
     foldLeftBranches(startIndex, treeStructure, initialValue, readBranchLength, fold)
 
+  /** Fold tree branches using provided read and fold functions.
+    * @param read function to read counters and indexes buffer into result
+    * @param fold function to fold value, result and branch number into accumulated value
+    * @param maxDepth maximum depth of the tree to travel
+    * */
   final def foldLeftBranches[A, R](
     startIndex: Int,
     treeStructure: Int => Int,
     initialValue: A,
     read: (IntBuffer, IntBuffer, Int) => R,
-    fold: (A, R, Int) => A
+    fold: (A, R, Int) => A,
+    maxDepth: Int = Int.MaxValue
   ): A = {
 
-    var value = initialValue
+    var result = initialValue
 
-    if (startIndex >= 0) {
+    if (startIndex >= 0 && maxDepth > 0) {
 
       val counters = new IntBuffer()
       val indexes = new IntBuffer()
@@ -409,15 +416,15 @@ object ArrayTree {
       do {
         val i = indexes.peek
         if (i < 0) {
-          val newValue = read(counters, indexes, 0)
-          value = fold(value, newValue, n)
+          val value = read(counters, indexes, 0)
+          result = fold(result, value, n)
           BranchIteratorUtils.retract(counters, indexes)
           n = n + 1
         } else {
           val c = treeStructure(i)
-          if (c == 0) {
+          if (c == 0 || counters.length >= maxDepth - 1) {
             val newValue = read(counters, indexes, i)
-            value = fold(value, newValue, n)
+            result = fold(result, newValue, n)
             BranchIteratorUtils.retract(counters, indexes)
             n = n + 1
           } else {
@@ -428,7 +435,7 @@ object ArrayTree {
       } while (counters.nonEmpty)
     }
 
-    value
+    result
   }
 
   /** Calculates the height of the tree, i.e. the length of the longest branch. */
@@ -483,7 +490,7 @@ object ArrayTree {
       builder.append(branchEnd)
     }
 
-    foldLeftBranchesIndexLists(startIndex, treeStructure, new StringBuilder(), renderBranch)
+    foldLeftBranchesIndexLists(startIndex, treeStructure, new StringBuilder(), renderBranch, maxDepth)
   }
 
   /** Follows the given path of values into the tree.

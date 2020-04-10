@@ -221,6 +221,20 @@ class ArrayTreeSpec extends AnyWordSpec with Matchers {
       foldLeftBranchesIndexLists(4, Array(0, 0, 0, 0, 4), (0, 0, 0), fold) shouldBe (4, 2, 8)
     }
 
+    "fold branches as index lists with maxDepth set" in {
+      val fold = (s: Int, a: IntSlice, _: Int) => Math.max(s, a.length)
+      foldLeftBranchesIndexLists(-1, Array.empty[Int], 0, fold, 2) shouldBe 0
+      foldLeftBranchesIndexLists(0, Array(0), 0, fold, 2) shouldBe 1
+      foldLeftBranchesIndexLists(1, Array(0, 1), 0, fold, 2) shouldBe 2
+      foldLeftBranchesIndexLists(2, Array(0, 1, 1), 0, fold, 2) shouldBe 2
+      foldLeftBranchesIndexLists(2, Array(0, 0, 2), 0, fold, 2) shouldBe 2
+      foldLeftBranchesIndexLists(4, Array(0, 1, 0, 1, 2), 0, fold, 2) shouldBe 2
+      foldLeftBranchesIndexLists(4, Array(0, 0, 0, 1, 3), 0, fold, 2) shouldBe 2
+      foldLeftBranchesIndexLists(4, Array(0, 1, 1, 1, 1), 0, fold, 3) shouldBe 3
+      foldLeftBranchesIndexLists(4, Array(0, 0, 0, 2, 2), 0, fold, 2) shouldBe 2
+      foldLeftBranchesIndexLists(4, Array(0, 0, 0, 0, 4), 0, fold, 2) shouldBe 2
+    }
+
     "fold branches lengths" in {
       val fold = (s: (Int, Int, Int), l: Int, _: Int) => (s._1 + 1, Math.max(s._2, l), s._3 + l)
       foldLeftBranchesLengths(-1, Array.empty[Int], (0, 0, 0), fold) shouldBe (0, 0, 0)

@@ -524,16 +524,18 @@ object NodeTree {
     branchEnd: String,
     maxDepth: Int
   ): StringBuilder =
-    mkStringUsingBranches(
-      show,
-      valueSeparator,
-      branchSeparator,
-      branchEnd,
-      maxDepth,
-      new StringBuilder(branchStart),
-      List((0, branchStart, node)),
-      newBranch = false
-    )
+    if (maxDepth <= 0) new StringBuilder
+    else
+      mkStringUsingBranches(
+        show,
+        valueSeparator,
+        branchSeparator,
+        branchEnd,
+        maxDepth,
+        new StringBuilder(branchStart),
+        List((1, branchStart, node)),
+        newBranch = false
+      )
 
   @tailrec
   private def mkStringUsingBranches[T](
@@ -552,7 +554,7 @@ object NodeTree {
         val string = show(value)
         if (level <= maxDepth) {
           if (newBranch) builder.append(branchSeparator).append(prefix)
-          if (level > 0) builder.append(valueSeparator)
+          if (level > 1) builder.append(valueSeparator)
           builder.append(string)
         }
         val subtrees2 = if (level >= maxDepth) Nil else subtrees
@@ -576,7 +578,7 @@ object NodeTree {
               branchEnd,
               maxDepth,
               builder,
-              subtrees.map((level + 1, prefix + (if (level > 0) valueSeparator else "") + string, _)) ::: xs,
+              subtrees.map((level + 1, prefix + (if (level > 1) valueSeparator else "") + string, _)) ::: xs,
               newBranch = false
             )
         }

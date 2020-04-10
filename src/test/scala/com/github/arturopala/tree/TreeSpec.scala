@@ -996,12 +996,28 @@ trait TreeSpec extends AnyWordSpec with Matchers {
     }
 
     "transform a tree using for-comprehension" in {
-      val tree = Tree(2, Tree(5, Tree(10)))
-      val nodeList = for {
-        n       <- tree
-        subtree <- Tree(n, Tree(n * n))
-      } yield subtree
-      nodeList shouldBe Tree(2, Tree(5, Tree(10, Tree(100)), Tree(25)), Tree(4))
+      (for {
+        n       <- tree9
+        subtree <- Tree(n, Tree(n + n), Tree(n + n + n))
+      } yield subtree).showAsGraph() shouldBe
+        """a > b > c > d > dd
+          |a > b > c > d > ddd
+          |a > b > c > cc
+          |a > b > c > ccc
+          |a > b > bb
+          |a > b > bbb
+          |a > e > f > g > gg
+          |a > e > f > g > ggg
+          |a > e > f > ff
+          |a > e > f > fff
+          |a > e > h > i > ii
+          |a > e > h > i > iii
+          |a > e > h > hh
+          |a > e > h > hhh
+          |a > e > ee
+          |a > e > eee
+          |a > aa
+          |a > aaa""".stripMargin
     }
 
     "serialize a tree to a list of (numberOfChildren, value) pairs" in {
@@ -1017,19 +1033,16 @@ trait TreeSpec extends AnyWordSpec with Matchers {
     }
 
     "serialize a tree to a pair of arrays and deserialize it back using fromArrays" in {
-      val tree0: Tree[String] = Tree()
       val (structure0, values0) = tree0.toArrays
       structure0.length shouldBe 0
       values0.length shouldBe 0
       TreeBuilder.fromArrays(structure0, values0) shouldBe List(tree0)
 
-      val tree1 = Tree(1)
       val (structure1, values1) = tree1.toArrays
       structure1.length shouldBe 1
       values1.length shouldBe 1
       TreeBuilder.fromArrays(structure1, values1) shouldBe List(tree1)
 
-      val tree2 = Tree("a", Tree("b"))
       val (structure2, values2) = tree2.toArrays
       structure2.length shouldBe 2
       structure2 shouldBe Array(0, 1)
@@ -1037,72 +1050,76 @@ trait TreeSpec extends AnyWordSpec with Matchers {
       values2 shouldBe Array("b", "a")
       TreeBuilder.fromArrays(structure2, values2) shouldBe List(tree2)
 
-      val tree3 = Tree("a", Tree("b"), Tree("c"))
-      val (structure3, values3) = tree3.toArrays
+      val (structure3, values3) = tree3_1.toArrays
       structure3.length shouldBe 3
-      structure3 shouldBe Array(0, 0, 2)
+      structure3 shouldBe Array(0, 1, 1)
       values3.length shouldBe 3
       values3 shouldBe Array("c", "b", "a")
-      val t = TreeBuilder.fromArrays(structure3, values3)
-      t shouldBe List(tree3)
+      TreeBuilder.fromArrays(structure3, values3) shouldBe List(tree3_1)
 
-      val tree4 = Tree("a", Tree("b", Tree("c")), Tree("d"))
-      val (structure4, values4) = tree4.toArrays
+      val (structure3_2, values3_2) = tree3_2.toArrays
+      structure3_2.length shouldBe 3
+      structure3_2 shouldBe Array(0, 0, 2)
+      values3_2.length shouldBe 3
+      values3_2 shouldBe Array("c", "b", "a")
+      TreeBuilder.fromArrays(structure3_2, values3_2) shouldBe List(tree3_2)
+
+      val (structure4, values4) = tree4_1.toArrays
       structure4.length shouldBe 4
-      structure4 shouldBe Array(0, 0, 1, 2)
+      structure4 shouldBe Array(0, 1, 1, 1)
       values4.length shouldBe 4
       values4 shouldBe Array("d", "c", "b", "a")
-      TreeBuilder.fromArrays(structure4, values4) shouldBe List(tree4)
+      TreeBuilder.fromArrays(structure4, values4) shouldBe List(tree4_1)
 
-      val tree7 = Tree("a", Tree("b1", Tree("c1")), Tree("b2", Tree("c2", Tree("d2"))), Tree("b3"))
+      val (structure4_2, values4_2) = tree4_2.toArrays
+      structure4_2.length shouldBe 4
+      structure4_2 shouldBe Array(0, 0, 1, 2)
+      values4_2.length shouldBe 4
+      values4_2 shouldBe Array("d", "c", "b", "a")
+      TreeBuilder.fromArrays(structure4_2, values4_2) shouldBe List(tree4_2)
+
       val (structure7, values7) = tree7.toArrays
       structure7.length shouldBe 7
       structure7 shouldBe Array(0, 0, 1, 1, 0, 1, 3)
       values7.length shouldBe 7
-      values7 shouldBe Array("b3", "d2", "c2", "b2", "c1", "b1", "a")
+      values7 shouldBe Array("g", "f", "e", "d", "c", "b", "a")
       TreeBuilder.fromArrays(structure7, values7) shouldBe List(tree7)
-      val tree10 = Tree(
-        "a",
-        Tree("b1", Tree("c1"), Tree("d1")),
-        Tree("b2", Tree("c2", Tree("d2"))),
-        Tree("b3"),
-        Tree("b4", Tree("c4"))
-      )
-      val (structure10, values10) = tree10.toArrays
-      structure10.length shouldBe 10
-      structure10 shouldBe Array(0, 1, 0, 0, 1, 1, 0, 0, 2, 4)
-      values10.length shouldBe 10
-      values10 shouldBe Array("c4", "b4", "b3", "d2", "c2", "b2", "d1", "c1", "b1", "a")
-      TreeBuilder.fromArraysHead(structure10, values10) shouldBe tree10
     }
 
     "serialize a tree to a structure array" in {
-      Tree.empty.toStructureArray shouldBe Array.empty[Int]
-      Tree(1).toStructureArray shouldBe Array(0)
-      Tree(1, Tree(2)).toStructureArray shouldBe Array(0, 1)
-      Tree(1, Tree(2, Tree(3))).toStructureArray shouldBe Array(0, 1, 1)
-      Tree(1, Tree(2), Tree(3)).toStructureArray shouldBe Array(0, 0, 2)
-      Tree(1, Tree(2), Tree(3, Tree(4))).toStructureArray shouldBe Array(0, 1, 0, 2)
-      Tree(1, Tree(2, Tree(5)), Tree(3, Tree(4))).toStructureArray shouldBe Array(0, 1, 0, 1, 2)
-      Tree(1, Tree(2, Tree(5)), Tree(3, Tree(4), Tree(6))).toStructureArray shouldBe Array(0, 0, 2, 0, 1, 2)
-      Tree(1, Tree(2, Tree(5)), Tree(3, Tree(4), Tree(6)), Tree(7)).toStructureArray shouldBe Array(0, 0, 0, 2, 0, 1, 3)
+      tree0.toStructureArray shouldBe Array.empty[Int]
+      tree1.toStructureArray shouldBe Array(0)
+      tree2.toStructureArray shouldBe Array(0, 1)
+      tree3_1.toStructureArray shouldBe Array(0, 1, 1)
+      tree3_2.toStructureArray shouldBe Array(0, 0, 2)
+      tree4_1.toStructureArray shouldBe Array(0, 1, 1, 1)
+      tree4_2.toStructureArray shouldBe Array(0, 0, 1, 2)
+      tree4_3.toStructureArray shouldBe Array(0, 0, 0, 3)
+      tree7.toStructureArray shouldBe Array(0, 0, 1, 1, 0, 1, 3)
+      tree9.toStructureArray shouldBe Array(0, 1, 0, 1, 2, 0, 1, 1, 2)
     }
 
     "visualize the branches of the tree" in {
-      val tree =
-        Tree("a", Tree("b1", Tree("c1")), Tree("b2", Tree("c2", Tree("d2", Tree("e1"), Tree("e2")))), Tree("b3"))
-      tree.mkStringUsingBranches(_.toString, ",", ",", "[", "]") shouldBe "[a,b1,c1],[a,b2,c2,d2,e1],[a,b2,c2,d2,e2],[a,b3]"
+      tree0.showAsArrays() shouldBe ""
+      tree1.showAsArrays() shouldBe "[a]"
+      tree2.showAsArrays() shouldBe "[a,b]"
+      tree3_1.showAsArrays() shouldBe "[a,b,c]"
+      tree3_2.showAsArrays() shouldBe "[a,b],[a,c]"
+      tree4_1.showAsArrays() shouldBe "[a,b,c,d]"
+      tree4_2.showAsArrays() shouldBe "[a,b,c],[a,d]"
+      tree4_3.showAsArrays() shouldBe "[a,b],[a,c],[a,d]"
+      tree7.showAsArrays() shouldBe "[a,b,c],[a,d,e,f],[a,g]"
+      tree9.showAsArrays() shouldBe "[a,b,c,d],[a,e,f,g],[a,e,h,i]"
     }
 
     "visualize the branches of the tree limiting the depth" in {
-      val tree =
-        Tree("a", Tree("b1", Tree("c1")), Tree("b2", Tree("c2", Tree("d2", Tree("e1"), Tree("e2")))), Tree("b3"))
-      def mkStringWithMaxDepth(n: Int) = tree.mkStringUsingBranches(_.toString, ",", ",", "[", "]", n)
-      mkStringWithMaxDepth(0) shouldBe "[a]"
-      mkStringWithMaxDepth(1) shouldBe "[a,b1],[a,b2],[a,b3]"
-      mkStringWithMaxDepth(2) shouldBe "[a,b1,c1],[a,b2,c2],[a,b3]"
-      mkStringWithMaxDepth(3) shouldBe "[a,b1,c1],[a,b2,c2,d2],[a,b3]"
-      mkStringWithMaxDepth(4) shouldBe "[a,b1,c1],[a,b2,c2,d2,e1],[a,b2,c2,d2,e2],[a,b3]"
+      def mkStringWithMaxDepth(n: Int) = tree9.mkStringUsingBranches(_.toString, ",", ",", "[", "]", n)
+      mkStringWithMaxDepth(0) shouldBe ""
+      mkStringWithMaxDepth(1) shouldBe "[a]"
+      mkStringWithMaxDepth(2) shouldBe "[a,b],[a,e]"
+      mkStringWithMaxDepth(3) shouldBe "[a,b,c],[a,e,f],[a,e,h]"
+      mkStringWithMaxDepth(4) shouldBe "[a,b,c,d],[a,e,f,g],[a,e,h,i]"
+      mkStringWithMaxDepth(5) shouldBe "[a,b,c,d],[a,e,f,g],[a,e,h,i]"
     }
 
     "be equal to the other tree if both have same structure and content" in {
