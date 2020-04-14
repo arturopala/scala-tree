@@ -51,30 +51,62 @@ object NodeTree {
     def unapply[T](node: Binary[T]): Option[(T, NodeTree[T], NodeTree[T])] = Some((node.value, node.left, node.right))
   }
 
-  /** Returns an iterator over the nodes of the tree, goes depth-first. */
+  /** Returns an iterator over the filtered nodes of the tree, goes depth-first with maxDepth limit. */
   final def valueIterator[T](pred: T => Boolean, node: NodeTree[T]): Iterator[T] = new Iterator[T] {
 
-    type Queue = List[NodeTree[T]]
-    var queue: Queue = seekNext(List(node))
+    type Queue = List[(Int, NodeTree[T])]
+    var queue: Queue = seekNext(List((1, node)))
 
     override def hasNext: Boolean = queue.nonEmpty
 
     @tailrec
     override def next(): T = queue match {
       case Nil => throw new NoSuchElementException()
-      case Node(value, subtrees) :: xs =>
-        queue = seekNext(subtrees ::: xs)
+      case (level, Node(value, subtrees)) :: xs =>
+        queue = seekNext(subtrees.map((level + 1, _)) ::: xs)
         if (pred(value)) value else next()
     }
 
     @tailrec
     private def seekNext(q: Queue): Queue = q match {
       case Nil => q
-      case Node(value, subtrees) :: xs =>
+      case (level, Node(value, subtrees)) :: xs =>
         if (pred(value)) q
-        else seekNext(subtrees ::: xs)
+        else seekNext(subtrees.map((level + 1, _)) ::: xs)
     }
   }
+
+  /** Returns an iterator over the filtered nodes of the tree, goes depth-first with maxDepth limit. */
+  final def valueIteratorWithLimit[T](pred: T => Boolean, node: NodeTree[T], maxDepth: Int): Iterator[T] =
+    new Iterator[T] {
+
+      type Queue = List[(Int, NodeTree[T])]
+      var queue: Queue =
+        if (maxDepth > 0) seekNext(List((1, node)))
+        else Nil
+
+      override def hasNext: Boolean = queue.nonEmpty
+
+      @tailrec
+      override def next(): T = queue match {
+        case Nil => throw new NoSuchElementException()
+        case (level, Node(value, subtrees)) :: xs =>
+          queue =
+            if (level < maxDepth) seekNext(subtrees.map((level + 1, _)) ::: xs)
+            else seekNext(xs)
+
+          if (pred(value)) value else next()
+      }
+
+      @tailrec
+      private def seekNext(q: Queue): Queue = q match {
+        case Nil => q
+        case (level, Node(value, subtrees)) :: xs =>
+          if (pred(value)) q
+          else if (level < maxDepth) seekNext(subtrees.map((level + 1, _)) ::: xs)
+          else seekNext(xs)
+      }
+    }
 
   final def values[T](pred: T => Boolean, node: NodeTree[T]): List[T] = values(pred, Nil, List(node))
 

@@ -38,9 +38,13 @@ trait ArrayTreeLike[T] extends TreeLike[T] {
 
   final override def valueOption: Option[T] = Some(tree.content.last)
   final override def values: List[T] = tree.content.reverseIterator.toList
-  final override def valueIterator(pred: T => Boolean): Iterator[T] = tree.content.reverseIterator(pred)
+  final override def valueIterator(pred: T => Boolean, maxDepth: Int = Int.MaxValue): Iterator[T] =
+    if (maxDepth == Int.MaxValue) tree.content.reverseIterator(pred)
+    else
+      ArrayTree.valueIterator(tree.structure.length - 1, tree.structure, tree.content, pred, maxDepth)
+
   final override def valueStream: Stream[T] = valueStream(all)
-  final override def valueStream(pred: T => Boolean): Stream[T] = streamFromIterator(valueIterator(pred))
+  final override def valueStream(pred: T => Boolean): Stream[T] = streamFromIterator(valueIterator(pred, Int.MaxValue))
 
   final override def childrenValues: List[T] =
     ArrayTree.childrenIndexes(tree.structure.length - 1, tree.structure).map(tree.content)

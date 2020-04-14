@@ -10,9 +10,20 @@ efficient tree-like data structure with rich API.
 Motivation
 ---
 
-A Tree is one of the most useful data structure concepts with numerous flavours and implementations. 
+A Tree is one of the most useful data structure concepts with numerous flavours and implementations.
 
-This library implements the version, where the tree can be either empty or a node. Each node has a value and links to zero or more subtrees.
+While the concept is simple, practical implementation details of immutable tree pose significant challenges, e.g.
+
+    - traversing and transforming the tree using stack-safe algorithms
+    - using reasonable amount of memory resources to represent large trees
+    - keeping children distinct when inserting or merging trees
+    - supporting numerous use cases in the balanced API
+
+Design
+---
+
+This library implements the tree which can be either empty 
+or a node having a value, and linking to zero or more subtrees.
 
 Dependencies
 ---

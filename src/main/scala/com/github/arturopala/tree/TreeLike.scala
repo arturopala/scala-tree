@@ -96,8 +96,9 @@ trait TreeLike[+T] {
 
   /** Iterates over filtered node's values, top-down, depth-first.
     * @param pred return true to include the value in the result, false otherwise.
+    * @param maxDepth number of levels to go inside the tree
     * @group values */
-  def valueIterator(pred: T => Boolean): Iterator[T]
+  def valueIterator(pred: T => Boolean, maxDepth: Int = Int.MaxValue): Iterator[T]
 
   /** Lazy stream of the node's values in the tree.
     * @group values */
@@ -119,12 +120,13 @@ trait TreeLike[+T] {
     * @group sub-trees */
   def trees: List[Tree[T]]
 
-  /** Iterates over filtered subtrees in the tree inclusive, top-down, depth-first.
-    * Top tree is returned first, then children depth-first.
+  /** Iterates over filtered trees in this tree inclusive, top-down, depth-first.
+    * Top tree is returned first, then children left-to-right and depth-first.
     *
     * @param pred return true to include the tree in the result, false otherwise.
+    * @param maxDepth number of levels to go inside the tree
     * @group sub-trees */
-  def treeIterator(pred: Tree[T] => Boolean): Iterator[Tree[T]]
+  def treeIterator(pred: Tree[T] => Boolean /*, maxDepth: Int*/ ): Iterator[Tree[T]]
 
   /** Lazy stream of the possible subtrees of the tree inclusive.
     * Top tree is streamed first, then children depth-first.
@@ -149,9 +151,10 @@ trait TreeLike[+T] {
 
   /** Iterates over filtered branches of the tree starting at the root.
     * @param pred return true to include the branch in the result, false otherwise.
+    * @param maxDepth number of levels to go inside the tree
     * @group branches
     */
-  def branchIterator(pred: Iterable[T] => Boolean): Iterator[Iterable[T]]
+  def branchIterator(pred: Iterable[T] => Boolean /*, maxDepth: Int*/ ): Iterator[Iterable[T]]
 
   /** Lazy stream of all the branches of the tree starting at the root.
     * @group branches */

@@ -140,6 +140,94 @@ class ArrayTreeSpec extends AnyWordSpec with Matchers {
       nodeIndexIterator(-1, Array.empty[Int]).toList shouldBe List()
     }
 
+    "iterate over tree's node indexes depth-first with depth limit" in {
+      nodeIndexIteratorWithLimit(0, Array(0), 0).toList shouldBe Nil
+      nodeIndexIteratorWithLimit(0, Array(0), 1).toList shouldBe List(0)
+      nodeIndexIteratorWithLimit(0, Array(0), 2).toList shouldBe List(0)
+      nodeIndexIteratorWithLimit(1, Array(0, 1), 0).toList shouldBe Nil
+      nodeIndexIteratorWithLimit(1, Array(0, 1), 1).toList shouldBe List(1)
+      nodeIndexIteratorWithLimit(1, Array(0, 1), 2).toList shouldBe List(1, 0)
+      nodeIndexIteratorWithLimit(1, Array(0, 1), 3).toList shouldBe List(1, 0)
+      nodeIndexIteratorWithLimit(2, Array(0, 1, 1), 0).toList shouldBe Nil
+      nodeIndexIteratorWithLimit(2, Array(0, 1, 1), 1).toList shouldBe List(2)
+      nodeIndexIteratorWithLimit(2, Array(0, 1, 1), 2).toList shouldBe List(2, 1)
+      nodeIndexIteratorWithLimit(2, Array(0, 1, 1), 3).toList shouldBe List(2, 1, 0)
+      nodeIndexIteratorWithLimit(2, Array(0, 0, 2), 0).toList shouldBe Nil
+      nodeIndexIteratorWithLimit(2, Array(0, 0, 2), 1).toList shouldBe List(2)
+      nodeIndexIteratorWithLimit(2, Array(0, 0, 2), 2).toList shouldBe List(2, 1, 0)
+      nodeIndexIteratorWithLimit(2, Array(0, 0, 2), 3).toList shouldBe List(2, 1, 0)
+      nodeIndexIteratorWithLimit(3, Array(0, 0, 1, 2), 0).toList shouldBe Nil
+      nodeIndexIteratorWithLimit(3, Array(0, 0, 1, 2), 1).toList shouldBe List(3)
+      nodeIndexIteratorWithLimit(3, Array(0, 0, 1, 2), 2).toList shouldBe List(3, 2, 0)
+      nodeIndexIteratorWithLimit(3, Array(0, 0, 1, 2), 3).toList shouldBe List(3, 2, 1, 0)
+      nodeIndexIteratorWithLimit(3, Array(0, 1, 0, 2), 0).toList shouldBe Nil
+      nodeIndexIteratorWithLimit(3, Array(0, 1, 0, 2), 1).toList shouldBe List(3)
+      nodeIndexIteratorWithLimit(3, Array(0, 1, 0, 2), 2).toList shouldBe List(3, 2, 1)
+      nodeIndexIteratorWithLimit(3, Array(0, 1, 0, 2), 3).toList shouldBe List(3, 2, 1, 0)
+      nodeIndexIteratorWithLimit(4, Array(0, 0, 0, 0, 4), 0).toList shouldBe Nil
+      nodeIndexIteratorWithLimit(4, Array(0, 0, 0, 0, 4), 1).toList shouldBe List(4)
+      nodeIndexIteratorWithLimit(4, Array(0, 0, 0, 0, 4), 2).toList shouldBe List(4, 3, 2, 1, 0)
+      nodeIndexIteratorWithLimit(4, Array(0, 0, 0, 0, 4), 3).toList shouldBe List(4, 3, 2, 1, 0)
+      nodeIndexIteratorWithLimit(4, Array(0, 1, 0, 0, 3), 0).toList shouldBe Nil
+      nodeIndexIteratorWithLimit(4, Array(0, 1, 0, 0, 3), 1).toList shouldBe List(4)
+      nodeIndexIteratorWithLimit(4, Array(0, 1, 0, 0, 3), 2).toList shouldBe List(4, 3, 2, 1)
+      nodeIndexIteratorWithLimit(4, Array(0, 1, 0, 0, 3), 3).toList shouldBe List(4, 3, 2, 1, 0)
+      nodeIndexIteratorWithLimit(4, Array(0, 0, 1, 0, 3), 0).toList shouldBe Nil
+      nodeIndexIteratorWithLimit(4, Array(0, 0, 1, 0, 3), 1).toList shouldBe List(4)
+      nodeIndexIteratorWithLimit(4, Array(0, 0, 1, 0, 3), 2).toList shouldBe List(4, 3, 2, 0)
+      nodeIndexIteratorWithLimit(4, Array(0, 0, 1, 0, 3), 3).toList shouldBe List(4, 3, 2, 1, 0)
+      nodeIndexIteratorWithLimit(4, Array(0, 0, 0, 1, 3), 0).toList shouldBe Nil
+      nodeIndexIteratorWithLimit(4, Array(0, 0, 0, 1, 3), 1).toList shouldBe List(4)
+      nodeIndexIteratorWithLimit(4, Array(0, 0, 0, 1, 3), 2).toList shouldBe List(4, 3, 1, 0)
+      nodeIndexIteratorWithLimit(4, Array(0, 0, 0, 1, 3), 3).toList shouldBe List(4, 3, 2, 1, 0)
+      nodeIndexIteratorWithLimit(4, Array(0, 0, 0, 2, 2), 0).toList shouldBe Nil
+      nodeIndexIteratorWithLimit(4, Array(0, 0, 0, 2, 2), 1).toList shouldBe List(4)
+      nodeIndexIteratorWithLimit(4, Array(0, 0, 0, 2, 2), 2).toList shouldBe List(4, 3, 0)
+      nodeIndexIteratorWithLimit(4, Array(0, 0, 0, 2, 2), 3).toList shouldBe List(4, 3, 2, 1, 0)
+      nodeIndexIteratorWithLimit(4, Array(0, 0, 2, 0, 2), 0).toList shouldBe Nil
+      nodeIndexIteratorWithLimit(4, Array(0, 0, 2, 0, 2), 1).toList shouldBe List(4)
+      nodeIndexIteratorWithLimit(4, Array(0, 0, 2, 0, 2), 2).toList shouldBe List(4, 3, 2)
+      nodeIndexIteratorWithLimit(4, Array(0, 0, 2, 0, 2), 3).toList shouldBe List(4, 3, 2, 1, 0)
+      nodeIndexIteratorWithLimit(3, Array(0, 1, 0, 1, 2), 0).toList shouldBe Nil
+      nodeIndexIteratorWithLimit(3, Array(0, 1, 0, 1, 2), 1).toList shouldBe List(3)
+      nodeIndexIteratorWithLimit(3, Array(0, 1, 0, 1, 2), 2).toList shouldBe List(3, 2)
+      nodeIndexIteratorWithLimit(2, Array(0, 1, 0, 1, 2), 0).toList shouldBe Nil
+      nodeIndexIteratorWithLimit(2, Array(0, 1, 0, 1, 2), 1).toList shouldBe List(2)
+      nodeIndexIteratorWithLimit(1, Array(0, 1, 0, 1, 2), 0).toList shouldBe Nil
+      nodeIndexIteratorWithLimit(1, Array(0, 1, 0, 1, 2), 1).toList shouldBe List(1)
+      nodeIndexIteratorWithLimit(1, Array(0, 1, 0, 1, 2), 2).toList shouldBe List(1, 0)
+      nodeIndexIteratorWithLimit(-1, Array.empty[Int], 0).toList shouldBe Nil
+      nodeIndexIteratorWithLimit(-1, Array.empty[Int], 1).toList shouldBe Nil
+    }
+
+    "iterate over tree's values with depth limit" in {
+      val all: String => Boolean = _ => true
+      val none: String => Boolean = _ => false
+      valueIterator(0, Array(0), Array("a"), all, 0).toList shouldBe Nil
+      valueIterator(0, Array(0), Array("a"), all, 1).toList shouldBe List("a")
+      valueIterator(0, Array(0), Array("a"), none, 1).toList shouldBe Nil
+      valueIterator(1, Array(0, 1), Array("b", "a"), all, 0).toList shouldBe Nil
+      valueIterator(1, Array(0, 1), Array("b", "a"), all, 1).toList shouldBe List("a")
+      valueIterator(1, Array(0, 1), Array("b", "a"), all, 2).toList shouldBe List("a", "b")
+      valueIterator(2, Array(0, 1, 1), Array("c", "b", "a"), all, 0).toList shouldBe Nil
+      valueIterator(2, Array(0, 1, 1), Array("c", "b", "a"), all, 1).toList shouldBe List("a")
+      valueIterator(2, Array(0, 1, 1), Array("c", "b", "a"), all, 2).toList shouldBe List("a", "b")
+      valueIterator(2, Array(0, 1, 1), Array("c", "b", "a"), all, 3).toList shouldBe List("a", "b", "c")
+      valueIterator(2, Array(0, 1, 1), Array("c", "b", "a"), none, 3).toList shouldBe Nil
+      valueIterator(2, Array(0, 0, 2), Array("c", "b", "a"), all, 0).toList shouldBe Nil
+      valueIterator(2, Array(0, 0, 2), Array("c", "b", "a"), all, 1).toList shouldBe List("a")
+      valueIterator(2, Array(0, 0, 2), Array("c", "b", "a"), all, 2).toList shouldBe List("a", "b", "c")
+      valueIterator(2, Array(0, 0, 2), Array("c", "b", "a"), none, 2).toList shouldBe Nil
+      valueIterator(3, Array(0, 0, 1, 2), Array("d", "c", "b", "a"), all, 0).toList shouldBe Nil
+      valueIterator(3, Array(0, 0, 1, 2), Array("d", "c", "b", "a"), all, 1).toList shouldBe List("a")
+      valueIterator(3, Array(0, 0, 1, 2), Array("d", "c", "b", "a"), all, 2).toList shouldBe List("a", "b", "d")
+      valueIterator(3, Array(0, 0, 1, 2), Array("d", "c", "b", "a"), all, 3).toList shouldBe List("a", "b", "c", "d")
+      valueIterator(3, Array(0, 1, 0, 2), Array("d", "c", "b", "a"), all, 0).toList shouldBe Nil
+      valueIterator(3, Array(0, 1, 0, 2), Array("d", "c", "b", "a"), all, 1).toList shouldBe List("a")
+      valueIterator(3, Array(0, 1, 0, 2), Array("d", "c", "b", "a"), all, 2).toList shouldBe List("a", "b", "c")
+      valueIterator(3, Array(0, 1, 0, 2), Array("d", "c", "b", "a"), all, 3).toList shouldBe List("a", "b", "c", "d")
+    }
+
     "calculate subtree size" in {
       treeSize(0, Array(0)) shouldBe 1
       treeSize(0, Array(0, 1)) shouldBe 1
@@ -183,6 +271,66 @@ class ArrayTreeSpec extends AnyWordSpec with Matchers {
       )
       branchesIndexListIterator(3, Array(0, 0, 2, 1)).map(_.toList).toList shouldBe List(List(3, 2, 1), List(3, 2, 0))
       branchesIndexListIterator(9, Array(0, 1, 0, 0, 1, 1, 0, 0, 2, 4)).map(_.toList).toList shouldBe List(
+        List(9, 8, 7),
+        List(9, 8, 6),
+        List(9, 5, 4, 3),
+        List(9, 2),
+        List(9, 1, 0)
+      )
+    }
+
+    "iterate over tree's branches as index lists with depth limit" in {
+      branchesIndexListIterator(0, Array(0), 0).map(_.toList).toList shouldBe List()
+      branchesIndexListIterator(0, Array(0), 1).map(_.toList).toList shouldBe List(List(0))
+      branchesIndexListIterator(1, Array(0, 1), 0).map(_.toList).toList shouldBe List()
+      branchesIndexListIterator(1, Array(0, 1), 1).map(_.toList).toList shouldBe List(List(1))
+      branchesIndexListIterator(1, Array(0, 1), 2).map(_.toList).toList shouldBe List(List(1, 0))
+      branchesIndexListIterator(1, Array(0, 1), 3).map(_.toList).toList shouldBe List(List(1, 0))
+      branchesIndexListIterator(2, Array(0, 1, 1), 0).map(_.toList).toList shouldBe List()
+      branchesIndexListIterator(2, Array(0, 1, 1), 1).map(_.toList).toList shouldBe List(List(2))
+      branchesIndexListIterator(2, Array(0, 1, 1), 2).map(_.toList).toList shouldBe List(List(2, 1))
+      branchesIndexListIterator(2, Array(0, 1, 1), 3).map(_.toList).toList shouldBe List(List(2, 1, 0))
+      branchesIndexListIterator(2, Array(0, 1, 1), 4).map(_.toList).toList shouldBe List(List(2, 1, 0))
+      branchesIndexListIterator(2, Array(0, 0, 2), 0).map(_.toList).toList shouldBe List()
+      branchesIndexListIterator(2, Array(0, 0, 2), 1).map(_.toList).toList shouldBe List(List(2))
+      branchesIndexListIterator(2, Array(0, 0, 2), 2).map(_.toList).toList shouldBe List(List(2, 1), List(2, 0))
+      branchesIndexListIterator(2, Array(0, 0, 2), 3).map(_.toList).toList shouldBe List(List(2, 1), List(2, 0))
+      branchesIndexListIterator(3, Array(0, 0, 0, 3), 0).map(_.toList).toList shouldBe List()
+      branchesIndexListIterator(3, Array(0, 0, 0, 3), 1).map(_.toList).toList shouldBe List(
+        List(3)
+      )
+      branchesIndexListIterator(3, Array(0, 0, 0, 3), 2).map(_.toList).toList shouldBe List(
+        List(3, 2),
+        List(3, 1),
+        List(3, 0)
+      )
+      branchesIndexListIterator(3, Array(0, 0, 2, 1), 0).map(_.toList).toList shouldBe List()
+      branchesIndexListIterator(3, Array(0, 0, 2, 1), 1).map(_.toList).toList shouldBe List(List(3))
+      branchesIndexListIterator(3, Array(0, 0, 2, 1), 2).map(_.toList).toList shouldBe List(List(3, 2))
+      branchesIndexListIterator(3, Array(0, 0, 2, 1), 3).map(_.toList).toList shouldBe List(
+        List(3, 2, 1),
+        List(3, 2, 0)
+      )
+      branchesIndexListIterator(3, Array(0, 0, 2, 1), 4).map(_.toList).toList shouldBe List(
+        List(3, 2, 1),
+        List(3, 2, 0)
+      )
+      branchesIndexListIterator(9, Array(0, 1, 0, 0, 1, 1, 0, 0, 2, 4), 0).map(_.toList).toList shouldBe List()
+      branchesIndexListIterator(9, Array(0, 1, 0, 0, 1, 1, 0, 0, 2, 4), 1).map(_.toList).toList shouldBe List(List(9))
+      branchesIndexListIterator(9, Array(0, 1, 0, 0, 1, 1, 0, 0, 2, 4), 2).map(_.toList).toList shouldBe List(
+        List(9, 8),
+        List(9, 5),
+        List(9, 2),
+        List(9, 1)
+      )
+      branchesIndexListIterator(9, Array(0, 1, 0, 0, 1, 1, 0, 0, 2, 4), 3).map(_.toList).toList shouldBe List(
+        List(9, 8, 7),
+        List(9, 8, 6),
+        List(9, 5, 4),
+        List(9, 2),
+        List(9, 1, 0)
+      )
+      branchesIndexListIterator(9, Array(0, 1, 0, 0, 1, 1, 0, 0, 2, 4), 4).map(_.toList).toList shouldBe List(
         List(9, 8, 7),
         List(9, 8, 6),
         List(9, 5, 4, 3),

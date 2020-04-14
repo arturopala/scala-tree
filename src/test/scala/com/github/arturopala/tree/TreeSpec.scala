@@ -584,6 +584,98 @@ trait TreeSpec extends AnyWordSpec with Matchers {
       tree9.valueIterator(odd).toList shouldBe List("a", "c", "e", "g", "i")
     }
 
+    "iterate over nodes with filter and maxDepth" in {
+      tree0.valueIterator(all, 0).toList shouldBe Nil
+      tree0.valueIterator(all, 1).toList shouldBe Nil
+      tree1.valueIterator(all, 0).toList shouldBe Nil
+      tree1.valueIterator(all, 1).toList shouldBe List("a")
+      tree1.valueIterator(all, 2).toList shouldBe List("a")
+      tree2.valueIterator(all, 0).toList shouldBe Nil
+      tree2.valueIterator(all, 1).toList shouldBe List("a")
+      tree2.valueIterator(all, 2).toList shouldBe List("a", "b")
+      tree2.valueIterator(all, 3).toList shouldBe List("a", "b")
+      tree3_1.valueIterator(all, 0).toList shouldBe Nil
+      tree3_1.valueIterator(all, 1).toList shouldBe List("a")
+      tree3_1.valueIterator(all, 2).toList shouldBe List("a", "b")
+      tree3_1.valueIterator(all, 3).toList shouldBe List("a", "b", "c")
+      tree3_1.valueIterator(all, 4).toList shouldBe List("a", "b", "c")
+      tree3_2.valueIterator(all, 0).toList shouldBe Nil
+      tree3_2.valueIterator(all, 1).toList shouldBe List("a")
+      tree3_2.valueIterator(all, 2).toList shouldBe List("a", "b", "c")
+      tree3_2.valueIterator(all, 3).toList shouldBe List("a", "b", "c")
+      tree3_2.valueIterator(all, 4).toList shouldBe List("a", "b", "c")
+      tree4_1.valueIterator(all, 0).toList shouldBe Nil
+      tree4_1.valueIterator(all, 1).toList shouldBe List("a")
+      tree4_1.valueIterator(all, 2).toList shouldBe List("a", "b")
+      tree4_1.valueIterator(all, 3).toList shouldBe List("a", "b", "c")
+      tree4_1.valueIterator(all, 4).toList shouldBe List("a", "b", "c", "d")
+      tree4_2.valueIterator(all, 0).toList shouldBe Nil
+      tree4_2.valueIterator(all, 1).toList shouldBe List("a")
+      tree4_2.valueIterator(all, 2).toList shouldBe List("a", "b", "d")
+      tree4_2.valueIterator(all, 3).toList shouldBe List("a", "b", "c", "d")
+      tree4_2.valueIterator(all, 4).toList shouldBe List("a", "b", "c", "d")
+      tree4_3.valueIterator(all, 0).toList shouldBe Nil
+      tree4_3.valueIterator(all, 1).toList shouldBe List("a")
+      tree4_3.valueIterator(all, 2).toList shouldBe List("a", "b", "c", "d")
+      tree4_3.valueIterator(all, 3).toList shouldBe List("a", "b", "c", "d")
+      tree7.valueIterator(all, 0).toList shouldBe Nil
+      tree7.valueIterator(all, 1).toList shouldBe List("a")
+      tree7.valueIterator(all, 2).toList shouldBe List("a", "b", "d", "g")
+      tree7.valueIterator(all, 3).toList shouldBe List("a", "b", "c", "d", "e", "g")
+      tree7.valueIterator(all, 4).toList shouldBe List("a", "b", "c", "d", "e", "f", "g")
+      tree9.valueIterator(all, 0).toList shouldBe Nil
+      tree9.valueIterator(all, 1).toList shouldBe List("a")
+      tree9.valueIterator(all, 2).toList shouldBe List("a", "b", "e")
+      tree9.valueIterator(all, 3).toList shouldBe List("a", "b", "c", "e", "f", "h")
+      tree9.valueIterator(all, 4).toList shouldBe List("a", "b", "c", "d", "e", "f", "g", "h", "i")
+      tree9.valueIterator(all, 5).toList shouldBe List("a", "b", "c", "d", "e", "f", "g", "h", "i")
+
+      tree0.valueIterator(none, 10).toList shouldBe Nil
+      tree1.valueIterator(none, 10).toList shouldBe Nil
+      tree2.valueIterator(none, 10).toList shouldBe Nil
+      tree3_1.valueIterator(none, 10).toList shouldBe Nil
+      tree3_2.valueIterator(none, 10).toList shouldBe Nil
+      tree4_1.valueIterator(none, 10).toList shouldBe Nil
+      tree4_2.valueIterator(none, 10).toList shouldBe Nil
+      tree4_3.valueIterator(none, 10).toList shouldBe Nil
+      tree7.valueIterator(none, 10).toList shouldBe Nil
+      tree9.valueIterator(none, 10).toList shouldBe Nil
+
+      tree0.valueIterator(even, 10).toList shouldBe Nil
+      tree1.valueIterator(even, 10).toList shouldBe Nil
+      tree2.valueIterator(even, 1).toList shouldBe Nil
+      tree2.valueIterator(even, 2).toList shouldBe List("b")
+      tree3_1.valueIterator(even, 1).toList shouldBe Nil
+      tree3_1.valueIterator(even, 2).toList shouldBe List("b")
+      tree3_1.valueIterator(even, 3).toList shouldBe List("b")
+      tree3_2.valueIterator(even, 0).toList shouldBe Nil
+      tree3_2.valueIterator(even, 1).toList shouldBe Nil
+      tree3_2.valueIterator(even, 2).toList shouldBe List("b")
+      tree3_2.valueIterator(even, 3).toList shouldBe List("b")
+      tree4_1.valueIterator(even, 0).toList shouldBe Nil
+      tree4_1.valueIterator(even, 1).toList shouldBe Nil
+      tree4_1.valueIterator(even, 2).toList shouldBe List("b")
+      tree4_1.valueIterator(even, 3).toList shouldBe List("b")
+      tree4_1.valueIterator(even, 4).toList shouldBe List("b", "d")
+      tree4_2.valueIterator(even, 0).toList shouldBe Nil
+      tree4_2.valueIterator(even, 1).toList shouldBe Nil
+      tree4_2.valueIterator(even, 2).toList shouldBe List("b", "d")
+      tree4_2.valueIterator(even, 3).toList shouldBe List("b", "d")
+      tree4_3.valueIterator(even, 0).toList shouldBe Nil
+      tree4_3.valueIterator(even, 1).toList shouldBe Nil
+      tree4_3.valueIterator(even, 2).toList shouldBe List("b", "d")
+      tree4_3.valueIterator(even, 3).toList shouldBe List("b", "d")
+      tree7.valueIterator(even, 1).toList shouldBe Nil
+      tree7.valueIterator(even, 2).toList shouldBe List("b", "d")
+      tree7.valueIterator(even, 3).toList shouldBe List("b", "d")
+      tree7.valueIterator(even, 4).toList shouldBe List("b", "d", "f")
+      tree9.valueIterator(even, 1).toList shouldBe Nil
+      tree9.valueIterator(even, 2).toList shouldBe List("b")
+      tree9.valueIterator(even, 3).toList shouldBe List("b", "f", "h")
+      tree9.valueIterator(even, 4).toList shouldBe List("b", "d", "f", "h")
+      tree9.valueIterator(even, 5).toList shouldBe List("b", "d", "f", "h")
+    }
+
     "stream all values" in {
       tree0.valueStream.toList shouldBe Nil
       tree1.valueStream.toList shouldBe List("a")

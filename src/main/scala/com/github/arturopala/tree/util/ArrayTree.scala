@@ -241,7 +241,55 @@ object ArrayTree {
   }
 
   /** Iterates over tree's branches as index lists, depth first. */
-  final def branchesIndexListIterator(startIndex: Int, treeStructure: Int => Int): Iterator[IntSlice] =
+  final def nodeIndexIteratorWithLimit(
+    startIndex: Int,
+    treeStructure: Int => Int,
+    maxDepth: Int = Int.MaxValue
+  ): Iterator[Int] =
+    new Iterator[Int] {
+
+      var hasNext: Boolean = false
+      var i: Int = startIndex
+
+      val counters = new IntBuffer()
+      val indexes = new IntBuffer()
+
+      if (maxDepth > 0) {
+        indexes.push(startIndex)
+        seekNext(false)
+      }
+
+      override def next(): Int =
+        if (hasNext) {
+          val result = i
+          seekNext(true)
+          result
+        } else throw new NoSuchElementException
+
+      def seekNext(check: Boolean): Unit =
+        if (check && counters.isEmpty) { hasNext = false }
+        else {
+          i = indexes.peek
+          if (i < 0) { hasNext = false }
+          else {
+            hasNext = true
+            val c = treeStructure(i)
+            if (c == 0 || counters.length >= maxDepth - 1) {
+              BranchIteratorUtils.retract(counters, indexes)
+            } else {
+              counters.push(c)
+              writeChildrenIndexes(i, treeStructure, indexes, indexes.length)
+            }
+          }
+        }
+    }
+
+  /** Iterates over tree's branches as index lists, depth first. */
+  final def branchesIndexListIterator(
+    startIndex: Int,
+    treeStructure: Int => Int,
+    maxDepth: Int = Int.MaxValue
+  ): Iterator[IntSlice] =
     new Iterator[IntSlice] {
 
       var hasNext: Boolean = false
@@ -250,8 +298,10 @@ object ArrayTree {
       val counters = new IntBuffer()
       val indexes = new IntBuffer()
 
-      indexes.push(startIndex)
-      seekNext(false)
+      if (maxDepth > 0) {
+        indexes.push(startIndex)
+        seekNext(false)
+      }
 
       override def next(): IntSlice =
         if (hasNext) {
@@ -268,7 +318,7 @@ object ArrayTree {
           if (i < 0) { hasNext = false }
           else {
             val c = treeStructure(i)
-            if (c == 0) {
+            if (c == 0 || counters.length >= maxDepth - 1) {
               array = BranchIteratorUtils.readBranch(counters, indexes).push(i).toSlice
               hasNext = true
               BranchIteratorUtils.retract(counters, indexes)
@@ -319,9 +369,32 @@ object ArrayTree {
         }
         if (value != 0) counters.push(value)
       }
+
+    def retract(counters: IntBuffer): Unit =
+      if (counters.length >= 1) {
+        var value = counters.pop - 1
+        while (value == 0 && counters.length >= 1) {
+          value = counters.pop - 1
+        }
+        if (value != 0) counters.push(value)
+      }
   }
 
-  /** Iterates over tree's branches with pred. */
+  /** Iterates over filtered values, top-down, depth-first. */
+  final def valueIterator[T: ClassTag](
+    startIndex: Int,
+    treeStructure: Int => Int,
+    treeValues: Int => T,
+    pred: T => Boolean,
+    maxDepth: Int
+  ): Iterator[T] =
+    new MapFilterIterator[Int, T](
+      nodeIndexIteratorWithLimit(startIndex, treeStructure, maxDepth),
+      treeValues,
+      pred
+    )
+
+  /** Iterates over filtered tree's branches with pred. */
   final def branchIterator[T: ClassTag](
     startIndex: Int,
     treeStructure: Int => Int,
@@ -334,7 +407,7 @@ object ArrayTree {
       pred
     )
 
-  /** Iterates over all subtrees (including the tree itself), top-down, depth-first. */
+  /** Iterates over filtered subtrees (including the tree itself), top-down, depth-first. */
   final def treeIterator[T: ClassTag](
     startIndex: Int,
     treeStructure: IntSlice,
