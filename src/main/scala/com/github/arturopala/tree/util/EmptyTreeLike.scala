@@ -44,7 +44,10 @@ trait EmptyTreeLike extends TreeLike[Nothing] {
   final override val childrenValues: List[Nothing] = Nil
   final override val children: List[Tree[Nothing]] = Nil
   final override val trees: List[Tree[Nothing]] = Nil
-  final override def treeIterator(pred: Tree[Nothing] => Boolean): Iterator[Tree[Nothing]] = Iterator.empty
+  final override def treeIterator(
+    pred: Tree[Nothing] => Boolean,
+    maxDepth: Int = Int.MaxValue
+  ): Iterator[Tree[Nothing]] = Iterator.empty
   final override val treeStream: Stream[Nothing] = Stream.empty
   final override def treeStream(pred: Tree[Nothing] => Boolean): Stream[Nothing] = Stream.empty
   final override val branches: List[List[Nothing]] = Nil

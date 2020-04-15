@@ -55,8 +55,10 @@ trait ArrayTreeLike[T] extends TreeLike[T] {
       .map(ArrayTree.treeAt(_, tree.structure, tree.content))
 
   final override def trees: List[Tree[T]] = treeIterator(all).toList
-  final override def treeIterator(pred: Tree[T] => Boolean): Iterator[Tree[T]] =
-    ArrayTree.treeIterator(tree.structure.length - 1, tree.structure, tree.content, pred)
+
+  final override def treeIterator(pred: Tree[T] => Boolean, maxDepth: Int = Int.MaxValue): Iterator[Tree[T]] =
+    if (maxDepth == Int.MaxValue) ArrayTree.treeIterator(tree.structure.length - 1, tree.structure, tree.content, pred)
+    else ArrayTree.treeIteratorWithLimit(tree.structure.length - 1, tree.structure, tree.content, pred, maxDepth)
 
   final override def treeStream: Stream[Tree[T]] = treeStream(all)
   final override def treeStream(pred: Tree[T] => Boolean): Stream[Tree[T]] = streamFromIterator(treeIterator(pred))

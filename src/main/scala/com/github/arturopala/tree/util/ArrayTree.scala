@@ -425,6 +425,25 @@ object ArrayTree {
     )
   }
 
+  /** Iterates over filtered subtrees (including the tree itself) with depth limit, top-down, depth-first. */
+  final def treeIteratorWithLimit[T: ClassTag](
+    startIndex: Int,
+    treeStructure: IntSlice,
+    treeValues: Slice[T],
+    pred: Tree[T] => Boolean,
+    maxDepth: Int
+  ): Iterator[Tree[T]] = {
+    assert(
+      treeStructure.length == treeValues.length,
+      "When iterating over the tree's subtrees, structure and values mst be the same size."
+    )
+    new MapFilterIterator[Int, Tree[T]](
+      nodeIndexIteratorWithLimit(startIndex, treeStructure, maxDepth),
+      treeAt(_, treeStructure, treeValues),
+      pred
+    )
+  }
+
   /** Returns tree rooted at the given index. */
   final def treeAt[T: ClassTag](index: Int, treeStructure: IntSlice, treeValues: Slice[T]): Tree[T] = {
     val size = treeSize(index, treeStructure)

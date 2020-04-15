@@ -121,15 +121,15 @@ trait TreeLike[+T] {
   def trees: List[Tree[T]]
 
   /** Iterates over filtered trees in this tree inclusive, top-down, depth-first.
-    * Top tree is returned first, then children left-to-right and depth-first.
+    * The top tree is returned first, then children left-to-right and depth-first.
     *
     * @param pred return true to include the tree in the result, false otherwise.
     * @param maxDepth number of levels to go inside the tree
     * @group sub-trees */
-  def treeIterator(pred: Tree[T] => Boolean /*, maxDepth: Int*/ ): Iterator[Tree[T]]
+  def treeIterator(pred: Tree[T] => Boolean, maxDepth: Int = Int.MaxValue): Iterator[Tree[T]]
 
   /** Lazy stream of the possible subtrees of the tree inclusive.
-    * Top tree is streamed first, then children depth-first.
+    * The top tree is streamed first, then children depth-first.
     *
     * @group sub-trees */
   def treeStream: Stream[Tree[T]]

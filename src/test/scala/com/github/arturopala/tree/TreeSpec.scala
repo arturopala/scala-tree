@@ -956,6 +956,109 @@ trait TreeSpec extends AnyWordSpec with Matchers {
           |[e,f,g],[e,h,i]""".stripMargin
     }
 
+    "iterate over filtered subtrees with depth limit" in {
+      tree0.treeIterator(all, 0).toList shouldBe Nil
+      tree0.treeIterator(all, 1).toList shouldBe Nil
+      tree1.treeIterator(all, 0).toList shouldBe Nil
+      tree1.treeIterator(all, 1).toList shouldBe List(tree1)
+      tree1.treeIterator(all, 2).toList shouldBe List(tree1)
+      tree2.treeIterator(all, 0).toList shouldBe Nil
+      tree2.treeIterator(all, 1).toList shouldBe List(tree2)
+      tree2.treeIterator(all, 2).toList shouldBe List(tree2, Tree("b"))
+      tree2.treeIterator(all, 3).toList shouldBe List(tree2, Tree("b"))
+      tree3_1.treeIterator(all, 0).toList shouldBe Nil
+      tree3_1.treeIterator(all, 1).toList shouldBe List(tree3_1)
+      tree3_1.treeIterator(all, 2).toList shouldBe List(tree3_1, Tree("b", Tree("c")))
+      tree3_1.treeIterator(all, 3).toList shouldBe List(tree3_1, Tree("b", Tree("c")), Tree("c"))
+      tree3_2.treeIterator(all, 0).toList shouldBe Nil
+      tree3_2.treeIterator(all, 1).toList shouldBe List(tree3_2)
+      tree3_2.treeIterator(all, 2).toList shouldBe List(tree3_2, Tree("b"), Tree("c"))
+      tree4_1.treeIterator(all, 0).toList shouldBe Nil
+      tree4_1.treeIterator(all, 1).toList shouldBe List(tree4_1)
+      tree4_1.treeIterator(all, 2).toList shouldBe List(
+        tree4_1,
+        Tree("b", Tree("c", Tree("d")))
+      )
+      tree4_1.treeIterator(all, 3).toList shouldBe List(
+        tree4_1,
+        Tree("b", Tree("c", Tree("d"))),
+        Tree("c", Tree("d"))
+      )
+      tree4_1.treeIterator(all, 4).toList shouldBe List(
+        tree4_1,
+        Tree("b", Tree("c", Tree("d"))),
+        Tree("c", Tree("d")),
+        Tree("d")
+      )
+      tree4_2.treeIterator(all, 0).toList shouldBe Nil
+      tree4_2.treeIterator(all, 1).toList shouldBe List(tree4_2)
+      tree4_2.treeIterator(all, 2).toList shouldBe List(tree4_2, Tree("b", Tree("c")), Tree("d"))
+      tree4_2.treeIterator(all, 3).toList shouldBe List(tree4_2, Tree("b", Tree("c")), Tree("c"), Tree("d"))
+      tree4_2.treeIterator(all, 4).toList shouldBe List(tree4_2, Tree("b", Tree("c")), Tree("c"), Tree("d"))
+      tree4_3.treeIterator(all, 0).toList shouldBe Nil
+      tree4_3.treeIterator(all, 1).toList shouldBe List(tree4_3)
+      tree4_3.treeIterator(all, 2).toList shouldBe List(tree4_3, Tree("b"), Tree("c"), Tree("d"))
+      tree4_3.treeIterator(all, 3).toList shouldBe List(tree4_3, Tree("b"), Tree("c"), Tree("d"))
+      tree7.treeIterator(all, 0).toList shouldBe Nil
+      tree7.treeIterator(all, 1).toList.map(_.showAsArrays()).mkString("\n") shouldBe
+        """[a,b,c],[a,d,e,f],[a,g]""".stripMargin
+      tree7.treeIterator(all, 2).toList.map(_.showAsArrays()).mkString("\n") shouldBe
+        """[a,b,c],[a,d,e,f],[a,g]
+          |[b,c]
+          |[d,e,f]
+          |[g]""".stripMargin
+      tree7.treeIterator(all, 3).toList.map(_.showAsArrays()).mkString("\n") shouldBe
+        """[a,b,c],[a,d,e,f],[a,g]
+          |[b,c]
+          |[c]
+          |[d,e,f]
+          |[e,f]
+          |[g]""".stripMargin
+      tree7.treeIterator(all, 4).toList.map(_.showAsArrays()).mkString("\n") shouldBe
+        """[a,b,c],[a,d,e,f],[a,g]
+          |[b,c]
+          |[c]
+          |[d,e,f]
+          |[e,f]
+          |[f]
+          |[g]""".stripMargin
+      tree9.treeIterator(all, 0).toList shouldBe Nil
+      tree9.treeIterator(all, 1).toList.map(_.showAsArrays()).mkString("\n") shouldBe
+        """[a,b,c,d],[a,e,f,g],[a,e,h,i]""".stripMargin
+      tree9.treeIterator(all, 2).toList.map(_.showAsArrays()).mkString("\n") shouldBe
+        """[a,b,c,d],[a,e,f,g],[a,e,h,i]
+          |[b,c,d]
+          |[e,f,g],[e,h,i]""".stripMargin
+      tree9.treeIterator(all, 3).toList.map(_.showAsArrays()).mkString("\n") shouldBe
+        """[a,b,c,d],[a,e,f,g],[a,e,h,i]
+          |[b,c,d]
+          |[c,d]
+          |[e,f,g],[e,h,i]
+          |[f,g]
+          |[h,i]""".stripMargin
+      tree9.treeIterator(all, 4).toList.map(_.showAsArrays()).mkString("\n") shouldBe
+        """[a,b,c,d],[a,e,f,g],[a,e,h,i]
+          |[b,c,d]
+          |[c,d]
+          |[d]
+          |[e,f,g],[e,h,i]
+          |[f,g]
+          |[g]
+          |[h,i]
+          |[i]""".stripMargin
+
+      tree0.treeIterator(none, 10).toList shouldBe Nil
+      tree1.treeIterator(none, 10).toList shouldBe Nil
+      tree2.treeIterator(none, 10).toList shouldBe Nil
+      tree3_1.treeIterator(none, 10).toList shouldBe Nil
+      tree3_2.treeIterator(none, 10).toList shouldBe Nil
+      tree4_1.treeIterator(none, 10).toList shouldBe Nil
+      tree4_2.treeIterator(none, 10).toList shouldBe Nil
+      tree4_3.treeIterator(none, 10).toList shouldBe Nil
+      tree7.treeIterator(none, 10).toList shouldBe Nil
+      tree9.treeIterator(none, 10).toList shouldBe Nil
+    }
+
     "stream all subtrees" in {
       tree0.treeStream.toList shouldBe Nil
       tree1.treeStream.toList shouldBe List(tree1)

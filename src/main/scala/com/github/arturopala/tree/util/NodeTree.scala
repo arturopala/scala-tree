@@ -172,7 +172,7 @@ object NodeTree {
       else contains(nextOpt.get, branch.tail, fullMatch)
     }
 
-  /** Returns an iterator over (sub)trees of the tree, goes depth-first. */
+  /** Returns an iterator over filtered (sub)trees of the tree, goes depth-first. */
   final def treeIterator[T](pred: Tree[T] => Boolean, node: NodeTree[T]): Iterator[Tree[T]] = new Iterator[Tree[T]] {
 
     type Queue = List[NodeTree[T]]
@@ -196,6 +196,35 @@ object NodeTree {
         else seekNext(subtrees ::: xs)
     }
   }
+
+  /** Returns an iterator over filtered (sub)trees of the tree with depth limit, goes depth-first. */
+  final def treeIteratorWithLimit[T](pred: Tree[T] => Boolean, node: NodeTree[T], maxDepth: Int): Iterator[Tree[T]] =
+    new Iterator[Tree[T]] {
+
+      type Queue = List[(Int, NodeTree[T])]
+      var queue: Queue = if (maxDepth > 0) seekNext(List((1, node))) else Nil
+
+      override def hasNext: Boolean = queue.nonEmpty
+
+      @tailrec
+      override def next(): Tree[T] = queue match {
+        case Nil => throw new NoSuchElementException()
+        case (level, node @ Node(_, subtrees)) :: xs =>
+          queue =
+            if (level < maxDepth) seekNext(subtrees.map((level + 1, _)) ::: xs)
+            else seekNext(xs)
+          if (pred(node)) node else next()
+      }
+
+      @tailrec
+      private def seekNext(q: Queue): Queue = q match {
+        case Nil => q
+        case (level, node @ Node(_, subtrees)) :: xs =>
+          if (pred(node)) q
+          else if (level < maxDepth) seekNext(subtrees.map((level + 1, _)) ::: xs)
+          else seekNext(xs)
+      }
+    }
 
   final def trees[T](pred: Tree[T] => Boolean, node: NodeTree[T]): List[NodeTree[T]] = trees(pred, Nil, List(node))
 

@@ -50,7 +50,10 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
   final override def children: List[Tree[T]] = node.subtrees
   final override def trees: List[Tree[T]] = NodeTree.trees[T](all, node)
   final def treesUnsafe: List[Tree[T]] = node :: node.subtrees.flatMap(_.treesUnsafe)
-  final override def treeIterator(pred: Tree[T] => Boolean): Iterator[Tree[T]] = NodeTree.treeIterator(pred, node)
+  final override def treeIterator(pred: Tree[T] => Boolean, maxDepth: Int = Int.MaxValue): Iterator[Tree[T]] =
+    if (maxDepth == Int.MaxValue) NodeTree.treeIterator(pred, node)
+    else NodeTree.treeIteratorWithLimit(pred, node, maxDepth)
+
   final override def treeStream: Stream[Tree[T]] = treeStream(all)
   final override def treeStream(pred: Tree[T] => Boolean): Stream[Tree[T]] = NodeTree.treeStream(pred, node)
 
