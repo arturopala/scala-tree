@@ -399,10 +399,11 @@ object ArrayTree {
     startIndex: Int,
     treeStructure: Int => Int,
     treeValues: Int => T,
-    pred: Iterable[T] => Boolean
+    pred: Iterable[T] => Boolean,
+    maxDepth: Int
   ): Iterator[Iterable[T]] =
     new MapFilterIterator[IntSlice, Iterable[T]](
-      branchesIndexListIterator(startIndex, treeStructure),
+      branchesIndexListIterator(startIndex, treeStructure, maxDepth),
       _.map(treeValues).asIterable,
       pred
     )

@@ -342,16 +342,27 @@ class ArrayTreeSpec extends AnyWordSpec with Matchers {
     "iterate over tree's branches as values lists without filter" in {
       val v: Int => Int = _ * 10
       val f: Iterable[Int] => Boolean = _ => true
-      branchIterator(0, Array(0), v, f).map(_.toList).toList shouldBe List(List(0))
-      branchIterator(1, Array(0, 1), v, f).map(_.toList).toList shouldBe List(List(10, 0))
-      branchIterator(2, Array(0, 1, 1), v, f).map(_.toList).toList shouldBe List(List(20, 10, 0))
-      branchIterator(2, Array(0, 0, 2), v, f).map(_.toList).toList shouldBe List(List(20, 10), List(20, 0))
-      branchIterator(3, Array(0, 0, 0, 3), v, f).map(_.toList).toList shouldBe List(
+      branchIterator(0, Array(0), v, f, 0).map(_.toList).toList shouldBe Nil
+      branchIterator(0, Array(0), v, f, 10).map(_.toList).toList shouldBe List(List(0))
+      branchIterator(1, Array(0, 1), v, f, 10).map(_.toList).toList shouldBe List(List(10, 0))
+      branchIterator(2, Array(0, 1, 1), v, f, 10).map(_.toList).toList shouldBe List(List(20, 10, 0))
+      branchIterator(2, Array(0, 0, 2), v, f, 10).map(_.toList).toList shouldBe List(List(20, 10), List(20, 0))
+      branchIterator(3, Array(0, 0, 0, 3), v, f, 10).map(_.toList).toList shouldBe List(
         List(30, 20),
         List(30, 10),
         List(30, 0)
       )
-      branchIterator(3, Array(0, 0, 2, 1), v, f).map(_.toList).toList shouldBe List(List(30, 20, 10), List(30, 20, 0))
+      branchIterator(3, Array(0, 0, 2, 1), v, f, 10).map(_.toList).toList shouldBe List(
+        List(30, 20, 10),
+        List(30, 20, 0)
+      )
+      branchIterator(3, Array(0, 0, 2, 1), v, f, 0).map(_.toList).toList shouldBe Nil
+      branchIterator(3, Array(0, 0, 2, 1), v, f, 1).map(_.toList).toList shouldBe List(List(30))
+      branchIterator(3, Array(0, 0, 2, 1), v, f, 2).map(_.toList).toList shouldBe List(List(30, 20))
+      branchIterator(3, Array(0, 0, 2, 1), v, f, 3).map(_.toList).toList shouldBe List(
+        List(30, 20, 10),
+        List(30, 20, 0)
+      )
     }
 
     "fold branches as index lists" in {

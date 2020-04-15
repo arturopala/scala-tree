@@ -39,7 +39,7 @@ trait ArrayTreeLike[T] extends TreeLike[T] {
   final override def valueOption: Option[T] = Some(tree.content.last)
   final override def values: List[T] = tree.content.reverseIterator.toList
   final override def valueIterator(pred: T => Boolean, maxDepth: Int = Int.MaxValue): Iterator[T] =
-    if (maxDepth == Int.MaxValue) tree.content.reverseIterator(pred)
+    if (maxDepth >= height) tree.content.reverseIterator(pred)
     else
       ArrayTree.valueIterator(tree.structure.length - 1, tree.structure, tree.content, pred, maxDepth)
 
@@ -57,15 +57,15 @@ trait ArrayTreeLike[T] extends TreeLike[T] {
   final override def trees: List[Tree[T]] = treeIterator(all).toList
 
   final override def treeIterator(pred: Tree[T] => Boolean, maxDepth: Int = Int.MaxValue): Iterator[Tree[T]] =
-    if (maxDepth == Int.MaxValue) ArrayTree.treeIterator(tree.structure.length - 1, tree.structure, tree.content, pred)
+    if (maxDepth >= height) ArrayTree.treeIterator(tree.structure.length - 1, tree.structure, tree.content, pred)
     else ArrayTree.treeIteratorWithLimit(tree.structure.length - 1, tree.structure, tree.content, pred, maxDepth)
 
   final override def treeStream: Stream[Tree[T]] = treeStream(all)
   final override def treeStream(pred: Tree[T] => Boolean): Stream[Tree[T]] = streamFromIterator(treeIterator(pred))
 
   final override def branches: List[List[T]] = branchIterator(all).map(_.toList).toList
-  final override def branchIterator(pred: Iterable[T] => Boolean): Iterator[Iterable[T]] =
-    ArrayTree.branchIterator(tree.structure.length - 1, tree.structure, tree.content, pred)
+  final override def branchIterator(pred: Iterable[T] => Boolean, maxDepth: Int = Int.MaxValue): Iterator[Iterable[T]] =
+    ArrayTree.branchIterator(tree.structure.length - 1, tree.structure, tree.content, pred, maxDepth)
 
   final override def branchStream: Stream[List[T]] = branchStream(all).map(_.toList)
   final override def branchStream(pred: Iterable[T] => Boolean): Stream[Iterable[T]] =

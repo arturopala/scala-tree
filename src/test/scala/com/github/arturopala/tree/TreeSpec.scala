@@ -630,16 +630,16 @@ trait TreeSpec extends AnyWordSpec with Matchers {
       tree9.valueIterator(all, 4).toList shouldBe List("a", "b", "c", "d", "e", "f", "g", "h", "i")
       tree9.valueIterator(all, 5).toList shouldBe List("a", "b", "c", "d", "e", "f", "g", "h", "i")
 
-      tree0.valueIterator(none, 10).toList shouldBe Nil
-      tree1.valueIterator(none, 10).toList shouldBe Nil
-      tree2.valueIterator(none, 10).toList shouldBe Nil
-      tree3_1.valueIterator(none, 10).toList shouldBe Nil
-      tree3_2.valueIterator(none, 10).toList shouldBe Nil
-      tree4_1.valueIterator(none, 10).toList shouldBe Nil
-      tree4_2.valueIterator(none, 10).toList shouldBe Nil
-      tree4_3.valueIterator(none, 10).toList shouldBe Nil
-      tree7.valueIterator(none, 10).toList shouldBe Nil
-      tree9.valueIterator(none, 10).toList shouldBe Nil
+      tree0.valueIterator(none, 0).toList shouldBe Nil
+      tree1.valueIterator(none, 1).toList shouldBe Nil
+      tree2.valueIterator(none, 2).toList shouldBe Nil
+      tree3_1.valueIterator(none, 3).toList shouldBe Nil
+      tree3_2.valueIterator(none, 2).toList shouldBe Nil
+      tree4_1.valueIterator(none, 4).toList shouldBe Nil
+      tree4_2.valueIterator(none, 3).toList shouldBe Nil
+      tree4_3.valueIterator(none, 2).toList shouldBe Nil
+      tree7.valueIterator(none, 4).toList shouldBe Nil
+      tree9.valueIterator(none, 4).toList shouldBe Nil
 
       tree0.valueIterator(even, 10).toList shouldBe Nil
       tree1.valueIterator(even, 10).toList shouldBe Nil
@@ -798,6 +798,82 @@ trait TreeSpec extends AnyWordSpec with Matchers {
       )
       tree9.branchIterator(_.toList.contains("h")).map(_.toList).toList shouldBe List(List("a", "e", "h", "i"))
       tree9.branchIterator(_.size < 3).map(_.toList).toList shouldBe Nil
+    }
+
+    "iterate over branches with filter and depth limit" in {
+      tree0.branchIterator(all, 0).map(_.toList).toList shouldBe Nil
+      tree0.branchIterator(all, 1).map(_.toList).toList shouldBe Nil
+      tree1.branchIterator(all, 0).map(_.toList).toList shouldBe Nil
+      tree1.branchIterator(all, 1).map(_.toList).toList shouldBe List(List("a"))
+      tree1.branchIterator(all, 2).map(_.toList).toList shouldBe List(List("a"))
+      tree2.branchIterator(all, 0).map(_.toList).toList shouldBe Nil
+      tree2.branchIterator(all, 1).map(_.toList).toList shouldBe List(List("a"))
+      tree2.branchIterator(all, 2).map(_.toList).toList shouldBe List(List("a", "b"))
+      tree2.branchIterator(all, 3).map(_.toList).toList shouldBe List(List("a", "b"))
+      tree3_1.branchIterator(all, 0).map(_.toList).toList shouldBe Nil
+      tree3_1.branchIterator(all, 1).map(_.toList).toList shouldBe List(List("a"))
+      tree3_1.branchIterator(all, 2).map(_.toList).toList shouldBe List(List("a", "b"))
+      tree3_1.branchIterator(all, 3).map(_.toList).toList shouldBe List(List("a", "b", "c"))
+      tree3_1.branchIterator(all, 4).map(_.toList).toList shouldBe List(List("a", "b", "c"))
+      tree3_2.branchIterator(all, 0).map(_.toList).toList shouldBe Nil
+      tree3_2.branchIterator(all, 1).map(_.toList).toList shouldBe List(List("a"))
+      tree3_2.branchIterator(all, 2).map(_.toList).toList shouldBe List(List("a", "b"), List("a", "c"))
+      tree3_2.branchIterator(all, 3).map(_.toList).toList shouldBe List(List("a", "b"), List("a", "c"))
+      tree4_1.branchIterator(all, 0).map(_.toList).toList shouldBe Nil
+      tree4_1.branchIterator(all, 1).map(_.toList).toList shouldBe List(List("a"))
+      tree4_1.branchIterator(all, 2).map(_.toList).toList shouldBe List(List("a", "b"))
+      tree4_1.branchIterator(all, 3).map(_.toList).toList shouldBe List(List("a", "b", "c"))
+      tree4_1.branchIterator(all, 4).map(_.toList).toList shouldBe List(List("a", "b", "c", "d"))
+      tree4_2.branchIterator(all, 0).map(_.toList).toList shouldBe Nil
+      tree4_2.branchIterator(all, 1).map(_.toList).toList shouldBe List(List("a"))
+      tree4_2.branchIterator(all, 2).map(_.toList).toList shouldBe List(List("a", "b"), List("a", "d"))
+      tree4_2.branchIterator(all, 3).map(_.toList).toList shouldBe List(List("a", "b", "c"), List("a", "d"))
+      tree4_2.branchIterator(all, 4).map(_.toList).toList shouldBe List(List("a", "b", "c"), List("a", "d"))
+      tree4_3.branchIterator(all, 0).map(_.toList).toList shouldBe Nil
+      tree4_3.branchIterator(all, 1).map(_.toList).toList shouldBe List(List("a"))
+      tree4_3.branchIterator(all, 2).map(_.toList).toList shouldBe List(List("a", "b"), List("a", "c"), List("a", "d"))
+      tree4_3.branchIterator(all, 3).map(_.toList).toList shouldBe List(List("a", "b"), List("a", "c"), List("a", "d"))
+      tree7.branchIterator(all, 0).map(_.toList).toList shouldBe Nil
+      tree7.branchIterator(all, 1).map(_.toList).toList shouldBe List(List("a"))
+      tree7.branchIterator(all, 2).map(_.toList).toList shouldBe List(
+        List("a", "b"),
+        List("a", "d"),
+        List("a", "g")
+      )
+      tree7.branchIterator(all, 3).map(_.toList).toList shouldBe List(
+        List("a", "b", "c"),
+        List("a", "d", "e"),
+        List("a", "g")
+      )
+      tree7.branchIterator(all, 4).map(_.toList).toList shouldBe List(
+        List("a", "b", "c"),
+        List("a", "d", "e", "f"),
+        List("a", "g")
+      )
+      tree9.branchIterator(all, 0).map(_.toList).toList shouldBe Nil
+      tree9.branchIterator(all, 1).map(_.toList).toList shouldBe List(List("a"))
+      tree9.branchIterator(all, 2).map(_.toList).toList shouldBe List(List("a", "b"), List("a", "e"))
+      tree9.branchIterator(all, 3).map(_.toList).toList shouldBe List(
+        List("a", "b", "c"),
+        List("a", "e", "f"),
+        List("a", "e", "h")
+      )
+      tree9.branchIterator(all, 4).map(_.toList).toList shouldBe List(
+        List("a", "b", "c", "d"),
+        List("a", "e", "f", "g"),
+        List("a", "e", "h", "i")
+      )
+
+      tree0.branchIterator(none, 0).toList shouldBe Nil
+      tree1.branchIterator(none, 1).toList shouldBe Nil
+      tree2.branchIterator(none, 2).toList shouldBe Nil
+      tree3_1.branchIterator(none, 3).toList shouldBe Nil
+      tree3_2.branchIterator(none, 2).toList shouldBe Nil
+      tree4_1.branchIterator(none, 4).toList shouldBe Nil
+      tree4_2.branchIterator(none, 3).toList shouldBe Nil
+      tree4_3.branchIterator(none, 2).toList shouldBe Nil
+      tree7.branchIterator(none, 4).toList shouldBe Nil
+      tree9.branchIterator(none, 4).toList shouldBe Nil
     }
 
     "stream all branches" in {

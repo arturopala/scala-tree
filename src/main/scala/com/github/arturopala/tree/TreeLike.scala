@@ -154,7 +154,7 @@ trait TreeLike[+T] {
     * @param maxDepth number of levels to go inside the tree
     * @group branches
     */
-  def branchIterator(pred: Iterable[T] => Boolean /*, maxDepth: Int*/ ): Iterator[Iterable[T]]
+  def branchIterator(pred: Iterable[T] => Boolean, maxDepth: Int = Int.MaxValue): Iterator[Iterable[T]]
 
   /** Lazy stream of all the branches of the tree starting at the root.
     * @group branches */

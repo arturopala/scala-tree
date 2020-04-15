@@ -1,5 +1,6 @@
-- trim tree
+- Tree.trim(maxDepth)
 - iterate breadth first
 - MutableTree
 - UnitTree
-- LazyTree
+- LazyTree (or TreeBuilder.fromFunction)
+- Tree.filterBranches

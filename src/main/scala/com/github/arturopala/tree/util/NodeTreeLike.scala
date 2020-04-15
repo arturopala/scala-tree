@@ -41,7 +41,7 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
   final override def values: List[T] = NodeTree.values[T](all, node)
   final def valuesUnsafe: List[T] = node.value :: node.subtrees.flatMap(_.valuesUnsafe)
   final override def valueIterator(pred: T => Boolean, maxDepth: Int = Int.MaxValue): Iterator[T] =
-    if (maxDepth == Int.MaxValue) NodeTree.valueIterator(pred, node)
+    if (maxDepth >= height) NodeTree.valueIterator(pred, node)
     else NodeTree.valueIteratorWithLimit(pred, node, maxDepth)
 
   final override def valueStream: Stream[T] = valueStream(all)
@@ -51,7 +51,7 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
   final override def trees: List[Tree[T]] = NodeTree.trees[T](all, node)
   final def treesUnsafe: List[Tree[T]] = node :: node.subtrees.flatMap(_.treesUnsafe)
   final override def treeIterator(pred: Tree[T] => Boolean, maxDepth: Int = Int.MaxValue): Iterator[Tree[T]] =
-    if (maxDepth == Int.MaxValue) NodeTree.treeIterator(pred, node)
+    if (maxDepth >= height) NodeTree.treeIterator(pred, node)
     else NodeTree.treeIteratorWithLimit(pred, node, maxDepth)
 
   final override def treeStream: Stream[Tree[T]] = treeStream(all)
@@ -65,8 +65,9 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
       node.subtrees.flatMap(_.branchesUnsafe).map(node.value :: _)
   }
 
-  final override def branchIterator(pred: Iterable[T] => Boolean): Iterator[Iterable[T]] =
-    NodeTree.branchIterator(pred, node)
+  final override def branchIterator(pred: Iterable[T] => Boolean, maxDepth: Int = Int.MaxValue): Iterator[Iterable[T]] =
+    if (maxDepth >= height) NodeTree.branchIterator(pred, node)
+    else NodeTree.branchIteratorWithLimit(pred, node, maxDepth)
 
   final override def branchStream: Stream[List[T]] = branchStream(all).map(_.toList)
 

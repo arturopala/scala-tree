@@ -241,7 +241,7 @@ object NodeTree {
         else trees(pred, result, subtrees ::: xs)
     }
 
-  /** Returns lazy subtree stream, goes depth-first */
+  /** Returns lazy subtree stream, goes depth-first. */
   final def treeStream[T](pred: Tree[T] => Boolean, node: NodeTree[T]): Stream[Tree[T]] = treeStream(pred, node, Nil)
 
   private def treeStream[T](pred: Tree[T] => Boolean, node: NodeTree[T], queue: List[NodeTree[T]]): Stream[Tree[T]] = {
@@ -258,7 +258,7 @@ object NodeTree {
     if (pred(node)) Stream.cons(node, continue) else continue
   }
 
-  /** Returns an iterator over branches of the tree */
+  /** Returns an iterator over filtered branches of the tree. */
   final def branchIterator[T](pred: Iterable[T] => Boolean, node: NodeTree[T]): Iterator[Iterable[T]] =
     new Iterator[Iterable[T]] {
 
@@ -267,16 +267,12 @@ object NodeTree {
 
       override def hasNext: Boolean = queue.nonEmpty
 
-      @tailrec
       override def next(): Iterable[T] = queue match {
         case Nil => throw new NoSuchElementException()
         case (acc, Node(value, subtrees)) :: xs =>
           val branch = acc :+ value
           queue = seekNext(subtrees.map((branch, _)) ::: xs)
-          subtrees match {
-            case Nil if pred(branch) => branch
-            case _                   => next()
-          }
+          branch
       }
 
       @tailrec
@@ -287,6 +283,45 @@ object NodeTree {
           subtrees match {
             case Nil if pred(branch) => q
             case _                   => seekNext(subtrees.map((branch, _)) ::: xs)
+          }
+      }
+    }
+
+  /** Returns an iterator over filtered branches of the tree with depth limit. */
+  final def branchIteratorWithLimit[T](
+    pred: Iterable[T] => Boolean,
+    node: NodeTree[T],
+    maxDepth: Int
+  ): Iterator[Iterable[T]] =
+    new Iterator[Iterable[T]] {
+
+      type Queue = List[(Vector[T], NodeTree[T])]
+      var queue: Queue =
+        if (maxDepth > 0) seekNext(List((Vector.empty, node)))
+        else Nil
+
+      override def hasNext: Boolean = queue.nonEmpty
+
+      override def next(): Iterable[T] = queue match {
+        case Nil => throw new NoSuchElementException()
+        case (acc, Node(value, subtrees)) :: xs =>
+          val branch = acc :+ value
+          queue =
+            if (branch.length < maxDepth) seekNext(subtrees.map((branch, _)) ::: xs)
+            else seekNext(xs)
+          branch
+      }
+
+      @tailrec
+      private def seekNext(q: Queue): Queue = q match {
+        case Nil => q
+        case (acc, Node(value, subtrees)) :: xs =>
+          val branch = acc :+ value
+          subtrees match {
+            case s if (s.isEmpty || branch.length >= maxDepth) && pred(branch) => q
+            case _ =>
+              if (branch.length < maxDepth) seekNext(subtrees.map((branch, _)) ::: xs)
+              else seekNext(xs)
           }
       }
     }
