@@ -267,11 +267,9 @@ object ArrayTree {
         } else throw new NoSuchElementException
 
       def seekNext(check: Boolean): Unit =
-        if (check && counters.isEmpty) { hasNext = false }
-        else {
+        if (check && counters.isEmpty) { hasNext = false } else {
           i = indexes.peek
-          if (i < 0) { hasNext = false }
-          else {
+          if (i < 0) { hasNext = false } else {
             hasNext = true
             val c = treeStructure(i)
             if (c == 0 || counters.length >= maxDepth - 1) {
@@ -312,11 +310,9 @@ object ArrayTree {
 
       @tailrec
       def seekNext(check: Boolean): Unit =
-        if (check && counters.isEmpty) { hasNext = false }
-        else {
+        if (check && counters.isEmpty) { hasNext = false } else {
           val i = indexes.peek
-          if (i < 0) { hasNext = false }
-          else {
+          if (i < 0) { hasNext = false } else {
             val c = treeStructure(i)
             if (c == 0 || counters.length >= maxDepth - 1) {
               array = BranchIteratorUtils.readBranch(counters, indexes).push(i).toSlice
@@ -610,7 +606,7 @@ object ArrayTree {
     followPath(path, startIndex, treeStructure, treeValues, identity[T, T1])
 
   /** Follows the given path into the tree using extractor function.
-    * @param f function to extract path segment from the tree node value.
+    * @param toPathItem function to extract path item from the tree's node value.
     * @return a tuple consisting of:
     *         - an array of travelled indexes,
     *         - optionally non matching path segment,
@@ -630,7 +626,7 @@ object ArrayTree {
     startIndex: Int,
     treeStructure: Int => Int,
     treeValues: Int => T,
-    f: T => K
+    toPathItem: T => K
   ): (Array[Int], Option[K], Iterator[K], Boolean) = {
 
     val indexes = new IntBuffer() // travelled indexes
@@ -646,7 +642,7 @@ object ArrayTree {
         var n = 0
         while (n >= 0 && n < c) {
           val ci = children(n) // child index
-          if (ci >= 0 && pathSegment.contains(f(treeValues(ci)))) {
+          if (ci >= 0 && pathSegment.contains(toPathItem(treeValues(ci)))) {
             indexes.push(ci)
             writeChildrenIndexes(ci, treeStructure, children, 0)
             pathSegment = None
@@ -665,7 +661,7 @@ object ArrayTree {
     (indexes.toArray, pathSegment, pathIterator, pathSegment.isEmpty && children.isEmpty)
   }
 
-  /** Checks tree contains branch. */
+  /** Checks if the tree contains given branch. */
   @`inline` final def containsBranch[T, T1 >: T](
     branch: Iterable[T1],
     startIndex: Int,
@@ -676,7 +672,19 @@ object ArrayTree {
     fullMatch && unmatched.isEmpty
   }
 
-  /** Checks tree contains path (branch prefix). */
+  /** Checks if the tree contains given branch. */
+  @`inline` final def containsBranch[T, K](
+    branch: Iterable[K],
+    startIndex: Int,
+    treeStructure: Int => Int,
+    treeValues: Int => T,
+    toPathItem: T => K
+  ): Boolean = {
+    val (_, unmatched, _, fullMatch) = followPath(branch, startIndex, treeStructure, treeValues, toPathItem)
+    fullMatch && unmatched.isEmpty
+  }
+
+  /** Checks if the tree contains given path (as a branch prefix). */
   @`inline` final def containsPath[T, T1 >: T](
     path: Iterable[T1],
     startIndex: Int,
@@ -687,15 +695,27 @@ object ArrayTree {
     unmatched.isEmpty
   }
 
+  /** Checks if the tree contains given path (as a branch prefix). */
+  @`inline` final def containsPath[T, K](
+    path: Iterable[K],
+    startIndex: Int,
+    treeStructure: Int => Int,
+    treeValues: Int => T,
+    toPathItem: T => K
+  ): Boolean = {
+    val (_, unmatched, _, _) = followPath(path, startIndex, treeStructure, treeValues, toPathItem)
+    unmatched.isEmpty
+  }
+
   /** Selects node's value accessible by path using item extractor function. */
   @`inline` final def selectValue[T, K](
     path: Iterable[K],
     startIndex: Int,
     treeStructure: Int => Int,
     treeValues: Int => T,
-    f: T => K
+    toPathItem: T => K
   ): Option[T] =
-    followPath(path, startIndex, treeStructure, treeValues, f) match {
+    followPath(path, startIndex, treeStructure, treeValues, toPathItem) match {
       case (indexes, None, _, _) if indexes.nonEmpty => Some(treeValues(indexes.last))
       case _                                         => None
     }

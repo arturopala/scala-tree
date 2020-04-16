@@ -137,39 +137,78 @@ object NodeTree {
   }
 
   @tailrec
+  final def select[T, T1 >: T, R](
+    node: NodeTree[T],
+    path: Iterable[T1],
+    result: NodeTree[T] => R
+  ): Option[R] =
+    if (path.isEmpty || (path.nonEmpty && path.head != node.value)) None
+    else if (path.tail.isEmpty) {
+      if (path.head == node.value) Some(result(node)) else None
+    } else {
+      val nextOpt = node.subtrees.collect {
+        case nextNode if path.tail.head == nextNode.value => nextNode
+      }.lastOption
+      if (nextOpt.isEmpty) None
+      else select(nextOpt.get, path.tail, result)
+    }
+
+  @tailrec
   final def select[T, K, R](
     node: NodeTree[T],
     path: Iterable[K],
-    extract: T => K,
-    result: NodeTree[T] => R
+    toResult: NodeTree[T] => R,
+    toPathItem: T => K
   ): Option[R] =
-    if (path.isEmpty || (path.nonEmpty && path.head != extract(node.value))) None
+    if (path.isEmpty || (path.nonEmpty && path.head != toPathItem(node.value))) None
     else if (path.tail.isEmpty) {
-      if (path.head == extract(node.value)) Some(result(node)) else None
+      if (path.head == toPathItem(node.value)) Some(toResult(node)) else None
     } else {
       val nextOpt = node.subtrees.collect {
-        case nextNode if path.tail.head == extract(nextNode.value) => nextNode
+        case nextNode if path.tail.head == toPathItem(nextNode.value) => nextNode
       }.lastOption
       if (nextOpt.isEmpty) None
-      else select(nextOpt.get, path.tail, extract, result)
+      else select(nextOpt.get, path.tail, toResult, toPathItem)
     }
 
   @`inline` final def containsBranch[T, T1 >: T](node: NodeTree[T], branch: Iterable[T1]): Boolean =
-    contains(node, branch, fullMatch = true)
+    contains(node, branch, requiresFullMatch = true)
+
+  @`inline` final def containsBranch[T, K](node: NodeTree[T], branch: Iterable[K], toPathItem: T => K): Boolean =
+    contains(node, branch, requiresFullMatch = true, toPathItem)
 
   @`inline` final def containsPath[T, T1 >: T](node: NodeTree[T], path: Iterable[T1]): Boolean =
-    contains(node, path, fullMatch = false)
+    contains(node, path, requiresFullMatch = false)
+
+  @`inline` final def containsPath[T, K](node: NodeTree[T], path: Iterable[K], toPathItem: T => K): Boolean =
+    contains(node, path, requiresFullMatch = false, toPathItem)
 
   @tailrec
-  final def contains[T, T1 >: T](node: NodeTree[T], branch: Iterable[T1], fullMatch: Boolean): Boolean =
-    if (branch.isEmpty || (branch.nonEmpty && branch.head != node.value)) false
-    else if (branch.tail.isEmpty) (!fullMatch || node.isLeaf) && branch.head == node.value
+  final def contains[T, T1 >: T](node: NodeTree[T], path: Iterable[T1], requiresFullMatch: Boolean): Boolean =
+    if (path.isEmpty || (path.nonEmpty && path.head != node.value)) false
+    else if (path.tail.isEmpty) (!requiresFullMatch || node.isLeaf) && path.head == node.value
     else {
       val nextOpt = node.subtrees.collect {
-        case nextNode if nextNode.value == branch.tail.head => nextNode
+        case nextNode if nextNode.value == path.tail.head => nextNode
       }.lastOption
       if (nextOpt.isEmpty) false
-      else contains(nextOpt.get, branch.tail, fullMatch)
+      else contains(nextOpt.get, path.tail, requiresFullMatch)
+    }
+
+  @tailrec
+  final def contains[T, K](
+    node: NodeTree[T],
+    path: Iterable[K],
+    requiresFullMatch: Boolean,
+    toPathItem: T => K): Boolean =
+    if (path.isEmpty || (path.nonEmpty && path.head != toPathItem(node.value))) false
+    else if (path.tail.isEmpty) (!requiresFullMatch || node.isLeaf) && path.head == toPathItem(node.value)
+    else {
+      val nextOpt = node.subtrees.collect {
+        case nextNode if toPathItem(nextNode.value) == path.tail.head => nextNode
+      }.lastOption
+      if (nextOpt.isEmpty) false
+      else contains(nextOpt.get, path.tail, requiresFullMatch, toPathItem)
     }
 
   /** Returns an iterator over filtered (sub)trees of the tree, goes depth-first. */

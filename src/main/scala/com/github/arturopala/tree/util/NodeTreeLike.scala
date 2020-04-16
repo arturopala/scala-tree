@@ -93,8 +93,7 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
       if (node.value == value) NodeTree.insertBranch(node, iterator) match {
         case None       => node
         case Some(tree) => tree
-      }
-      else node
+      } else node
     }
 
   final override def map[K: ClassTag](f: T => K): Tree[K] = {
@@ -113,16 +112,23 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
   }
 
   final override def selectValue[K](path: Iterable[K], f: T => K): Option[T] =
-    NodeTree.select(node, path, f, (n: NodeTree[T]) => n.value)
+    NodeTree.select(node, path, (n: NodeTree[T]) => n.value, f)
 
   final override def selectTree[T1 >: T: ClassTag](path: Iterable[T1]): Option[Tree[T]] =
-    NodeTree.select(node, path, identity[T, T1], (n: NodeTree[T]) => n)
+    NodeTree.select(node, path, (n: NodeTree[T]) => n)
 
   final override def selectTree[K](path: Iterable[K], f: T => K): Option[Tree[T]] =
-    NodeTree.select(node, path, f, (n: NodeTree[T]) => n)
+    NodeTree.select(node, path, (n: NodeTree[T]) => n, f)
 
-  final override def containsBranch[T1 >: T](branch: Iterable[T1]): Boolean = NodeTree.containsBranch(node, branch)
+  final override def containsBranch[T1 >: T](branch: Iterable[T1]): Boolean =
+    NodeTree.containsBranch(node, branch)
+
+  final override def containsBranch[K](branch: Iterable[K], f: T => K): Boolean =
+    NodeTree.containsBranch(node, branch, f)
+
   final override def containsPath[T1 >: T](path: Iterable[T1]): Boolean = NodeTree.containsPath(node, path)
+  final override def containsPath[K](path: Iterable[K], f: T => K): Boolean = NodeTree.containsPath(node, path, f)
+
   final override def toPairsIterator: Iterator[(Int, T)] = NodeTree.toPairsList(node).iterator
   final override def toArrays[T1 >: T: ClassTag]: (Array[Int], Array[T1]) = NodeTree.toArrays(node)
   final override def toSlices[T1 >: T: ClassTag]: (IntSlice, Slice[T1]) = NodeTree.toSlices(node)

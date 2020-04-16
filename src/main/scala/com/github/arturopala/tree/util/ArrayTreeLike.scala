@@ -101,8 +101,14 @@ trait ArrayTreeLike[T] extends TreeLike[T] {
   final override def containsBranch[T1 >: T](branch: Iterable[T1]): Boolean =
     ArrayTree.containsBranch(branch, tree.structure.length - 1, tree.structure, tree.content)
 
+  final override def containsBranch[K](branch: Iterable[K], f: T => K): Boolean =
+    ArrayTree.containsBranch(branch, tree.structure.length - 1, tree.structure, tree.content, f)
+
   final override def containsPath[T1 >: T](path: Iterable[T1]): Boolean =
     ArrayTree.containsPath(path, tree.structure.length - 1, tree.structure, tree.content)
+
+  final override def containsPath[K](path: Iterable[K], f: T => K): Boolean =
+    ArrayTree.containsPath(path, tree.structure.length - 1, tree.structure, tree.content, f)
 
   final override def toPairsIterator: Iterator[(Int, T)] = tree.structure.iterator.zip(tree.content.iterator)
 

@@ -154,7 +154,7 @@ trait TreeSpec extends AnyWordSpec with Matchers {
           |[a,e,h,i]""".stripMargin
     }
 
-    "check if tree contains a branch" in {
+    "check if the tree contains a branch" in {
       tree0.containsBranch(List()) shouldBe false
       tree0.containsBranch(List("a")) shouldBe false
       tree0.containsBranch(List("a", "b")) shouldBe false
@@ -198,7 +198,52 @@ trait TreeSpec extends AnyWordSpec with Matchers {
       tree9.containsBranch(List("a", "e", "h")) shouldBe false
     }
 
-    "check if tree contains a path" in {
+    "check if the tree contains a branch using an extractor function" in {
+      val codeF: String => Int = s => s.head.toInt
+      tree0.containsBranch(List(), codeF) shouldBe false
+      tree0.containsBranch(List(97), codeF) shouldBe false
+      tree0.containsBranch(List(97, 98), codeF) shouldBe false
+      tree1.containsBranch(List(97), codeF) shouldBe true
+      tree1.containsBranch(List(98), codeF) shouldBe false
+      tree1.containsBranch(List(97, 98), codeF) shouldBe false
+      tree2.containsBranch(List(97), codeF) shouldBe false
+      tree2.containsBranch(List(97, 98), codeF) shouldBe true
+      tree2.containsBranch(List(97, 99), codeF) shouldBe false
+      tree2.containsBranch(List(97, 98, 99), codeF) shouldBe false
+      tree3_1.containsBranch(List(97, 98, 99), codeF) shouldBe true
+      tree3_1.containsBranch(List(97, 98), codeF) shouldBe false
+      tree3_1.containsBranch(List(97, 99), codeF) shouldBe false
+      tree3_1.containsBranch(List(97), codeF) shouldBe false
+      tree3_1.containsBranch(List(98), codeF) shouldBe false
+      tree3_1.containsBranch(List(98, 99), codeF) shouldBe false
+      tree3_2.containsBranch(List(97, 98), codeF) shouldBe true
+      tree3_2.containsBranch(List(97, 99), codeF) shouldBe true
+      tree3_2.containsBranch(List(97, 97), codeF) shouldBe false
+      tree3_2.containsBranch(List(97), codeF) shouldBe false
+      tree3_2.containsBranch(List(98), codeF) shouldBe false
+      tree3_2.containsBranch(List(99), codeF) shouldBe false
+      tree3_2.containsBranch(List(97, 98, 99), codeF) shouldBe false
+      tree3_2.containsBranch(List(97, 99, 98), codeF) shouldBe false
+      tree3_2.containsBranch(List(97, 99, 101), codeF) shouldBe false
+      tree4_1.containsBranch(List(97, 98, 99, 100), codeF) shouldBe true
+      tree4_1.containsBranch(List(97, 98, 99, 100, 101), codeF) shouldBe false
+      tree4_1.containsBranch(List(97, 98, 99), codeF) shouldBe false
+      tree4_1.containsBranch(List(97, 98), codeF) shouldBe false
+      tree4_1.containsBranch(List(97), codeF) shouldBe false
+      tree4_2.containsBranch(List(97, 98, 99), codeF) shouldBe true
+      tree4_2.containsBranch(List(97, 100), codeF) shouldBe true
+      tree4_2.containsBranch(List(97, 98, 99, 100), codeF) shouldBe false
+      tree4_2.containsBranch(List(97, 97, 97), codeF) shouldBe false
+      tree4_2.containsBranch(List(99, 98, 97), codeF) shouldBe false
+      tree4_2.containsBranch(List(100, 97), codeF) shouldBe false
+      tree9.containsBranch(List(97, 98, 99), codeF) shouldBe false
+      tree9.containsBranch(List(97, 101, 104, 105), codeF) shouldBe true
+      tree9.containsBranch(List(97, 101, 99), codeF) shouldBe false
+      tree9.containsBranch(List(97, 101, 102), codeF) shouldBe false
+      tree9.containsBranch(List(97, 101, 104), codeF) shouldBe false
+    }
+
+    "check if the tree contains a path" in {
       tree0.containsPath(List()) shouldBe false
       tree0.containsPath(List("a")) shouldBe false
       tree0.containsPath(List("a", "b")) shouldBe false
@@ -240,6 +285,51 @@ trait TreeSpec extends AnyWordSpec with Matchers {
       tree9.containsPath(List("a", "e", "h", "i")) shouldBe true
       tree9.containsPath(List("a", "e", "f")) shouldBe true
       tree9.containsPath(List("a", "e", "h")) shouldBe true
+    }
+
+    "check if the tree contains a path using an extractor function" in {
+      val codeF: String => Int = s => s.head.toInt
+      tree0.containsPath(List(), codeF) shouldBe false
+      tree0.containsPath(List(97), codeF) shouldBe false
+      tree0.containsPath(List(97, 98), codeF) shouldBe false
+      tree1.containsPath(List(97), codeF) shouldBe true
+      tree1.containsPath(List(98), codeF) shouldBe false
+      tree1.containsPath(List(97, 98), codeF) shouldBe false
+      tree2.containsPath(List(97), codeF) shouldBe true
+      tree2.containsPath(List(97, 98), codeF) shouldBe true
+      tree2.containsPath(List(97, 99), codeF) shouldBe false
+      tree2.containsPath(List(97, 98, 99), codeF) shouldBe false
+      tree3_1.containsPath(List(97, 98, 99), codeF) shouldBe true
+      tree3_1.containsPath(List(97, 98), codeF) shouldBe true
+      tree3_1.containsPath(List(97, 99), codeF) shouldBe false
+      tree3_1.containsPath(List(97), codeF) shouldBe true
+      tree3_1.containsPath(List(98), codeF) shouldBe false
+      tree3_1.containsPath(List(98, 99), codeF) shouldBe false
+      tree3_2.containsPath(List(97, 98), codeF) shouldBe true
+      tree3_2.containsPath(List(97, 99), codeF) shouldBe true
+      tree3_2.containsPath(List(97, 97), codeF) shouldBe false
+      tree3_2.containsPath(List(97), codeF) shouldBe true
+      tree3_2.containsPath(List(98), codeF) shouldBe false
+      tree3_2.containsPath(List(99), codeF) shouldBe false
+      tree3_2.containsPath(List(97, 98, 99), codeF) shouldBe false
+      tree3_2.containsPath(List(97, 99, 98), codeF) shouldBe false
+      tree3_2.containsPath(List(97, 99, 101), codeF) shouldBe false
+      tree4_1.containsPath(List(97, 98, 99, 100), codeF) shouldBe true
+      tree4_1.containsPath(List(97, 98, 99, 100, 101), codeF) shouldBe false
+      tree4_1.containsPath(List(97, 98, 99), codeF) shouldBe true
+      tree4_1.containsPath(List(97, 98), codeF) shouldBe true
+      tree4_1.containsPath(List(97), codeF) shouldBe true
+      tree4_2.containsPath(List(97, 98, 99), codeF) shouldBe true
+      tree4_2.containsPath(List(97, 100), codeF) shouldBe true
+      tree4_2.containsPath(List(97, 98, 99, 100), codeF) shouldBe false
+      tree4_2.containsPath(List(97, 98), codeF) shouldBe true
+      tree4_2.containsPath(List(97, 97, 97), codeF) shouldBe false
+      tree4_2.containsPath(List(99, 98, 97), codeF) shouldBe false
+      tree4_2.containsPath(List(100, 97), codeF) shouldBe false
+      tree9.containsPath(List(97, 98, 99), codeF) shouldBe true
+      tree9.containsPath(List(97, 101, 104, 105), codeF) shouldBe true
+      tree9.containsPath(List(97, 101, 102), codeF) shouldBe true
+      tree9.containsPath(List(97, 101, 104), codeF) shouldBe true
     }
 
     "insert new node to a tree" in {

@@ -75,7 +75,9 @@ trait EmptyTreeLike extends TreeLike[Nothing] {
   final override def selectTree[T1: ClassTag](path: Iterable[T1]): Option[Tree[Nothing]] = None
   final override def selectTree[K](path: Iterable[K], f: Nothing => K): Option[Tree[Nothing]] = None
   final override def containsBranch[T1](branch: Iterable[T1]): Boolean = false
+  final override def containsBranch[K](branch: Iterable[K], f: Nothing => K): Boolean = false
   final override def containsPath[T1 >: Nothing](path: Iterable[T1]): Boolean = false
+  final override def containsPath[K](path: Iterable[K], f: Nothing => K): Boolean = false
   final override def map[K: ClassTag](f: Nothing => K): Tree[K] = empty
   final override def flatMap[K: ClassTag](f: Nothing => Tree[K]): Tree[K] = empty
   final override def toPairsIterator: Iterator[(Int, Nothing)] = Iterator.empty

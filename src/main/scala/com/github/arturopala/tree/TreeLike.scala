@@ -180,7 +180,7 @@ trait TreeLike[+T] {
     * @group modifications */
   def insertTree[T1 >: T: ClassTag](subtree: Tree[T1]): Tree[T1]
 
-  /** Inserts a new branch of values and returns an updated tree.
+  /** Inserts a new branch of values and returns updated tree.
     * Keeps children distinct by default.
     * @param branch list of values forming a path from the root to the leaf.
     * @note New branch must start with the existing root element of the tree, otherwise the tree will stay intact.
@@ -200,8 +200,8 @@ trait TreeLike[+T] {
   // PATH-BASED OPERATIONS
 
   /** Selects a value of the node reachable by the provided path, if any.
-    * @param path list of K items forming a path from the root to the node.
-    * @param f extractor of the K item from the tree value
+    * @param path list of K path items forming a path from the root to the node
+    * @param f extractor of the K path item from the tree's node value
     * @tparam K type of path item
     * @group paths */
   def selectValue[K](path: Iterable[K], f: T => K): Option[T]
@@ -212,23 +212,33 @@ trait TreeLike[+T] {
   def selectTree[T1 >: T: ClassTag](path: Iterable[T1]): Option[Tree[T]]
 
   /** Selects a sub-tree anchored at the node reachable by the provided path, if any.
-    * @param path list of K items forming a path from the root to the node.
-    * @param f extractor of the K item from the tree value
+    * @param path list of K path items forming a path from the root to the node.
+    * @param f extractor of the K path item from the tree's node value
     * @tparam K type of path item
     * @group paths */
   def selectTree[K](path: Iterable[K], f: T => K): Option[Tree[T]]
 
   /** Checks if the tree contains provided branch (full match).
-    *
     * @param branch list of values forming a branch from the root to the leaf.
     * @group paths */
   def containsBranch[T1 >: T](branch: Iterable[T1]): Boolean
 
+  /** Checks if the tree contains provided branch (full match).
+    * @param branch list of K path items forming a path from the root to the leaf
+    * @param f extractor of the K path item from the tree's node value
+    * @group paths */
+  def containsBranch[K](branch: Iterable[K], f: T => K): Boolean
+
   /** Checks if the tree contains provided path (prefix match).
-    *
     * @param path list of values forming a path from the root to the node.
     * @group paths */
   def containsPath[T1 >: T](path: Iterable[T1]): Boolean
+
+  /** Checks if the tree contains provided path (prefix match).
+    * @param path list of K path items forming a path from the root to the node
+    * @param f extractor of the K path item from the tree's node value
+    * @group paths */
+  def containsPath[K](path: Iterable[K], f: T => K): Boolean
 
   // SERIALIZATION
 
