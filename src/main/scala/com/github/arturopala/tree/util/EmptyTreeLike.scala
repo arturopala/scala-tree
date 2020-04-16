@@ -59,6 +59,9 @@ trait EmptyTreeLike extends TreeLike[Nothing] {
   final override def branchStream(pred: Iterable[Nothing] => Boolean): Stream[List[Nothing]] = Stream.empty
   final override def countBranches(pred: Iterable[Nothing] => Boolean): Int = 0
   final override def insertValue[T1: ClassTag](value: T1): Tree[T1] = Tree(value)
+  final override def insertValueAt[T1 >: Nothing: ClassTag](path: Iterable[T1], value: T1): Tree[T1] =
+    Tree.empty.insertBranch(path.toList :+ value)
+
   final override def insertTree[T1: ClassTag](subtree: Tree[T1]): Tree[T1] = subtree
 
   final override def insertBranch[T1: ClassTag](branch: Iterable[T1]): Tree[T1] =

@@ -27,12 +27,9 @@ import scala.reflect.ClassTag
   * [[Tree.ArrayTree]] final functions implementations.
   * Extracted from [[Tree]] to de-clutter its codebase.
   */
-trait ArrayTreeLike[T] extends TreeLike[T] {
+abstract class ArrayTreeLike[T: ClassTag] extends TreeLike[T] {
 
   protected val tree: ArrayTree[T]
-  protected val classTag: ClassTag[T]
-
-  private implicit def tag: ClassTag[T] = classTag
 
   private def all[A]: A => Boolean = _ => true
 
@@ -76,6 +73,9 @@ trait ArrayTreeLike[T] extends TreeLike[T] {
 
   final override def insertValue[T1 >: T: ClassTag](value: T1): Tree[T1] =
     ArrayTree.insertValue(tree.structure.length - 1, value, tree)
+
+  final override def insertValueAt[T1 >: T: ClassTag](path: Iterable[T1], value: T1): Tree[T1] =
+    ArrayTree.insertValueAt(path, value, tree)
 
   final override def insertTree[T1 >: T: ClassTag](subtree: Tree[T1]): Tree[T1] =
     ArrayTree.insertSubtree(tree.structure.length - 1, subtree, tree)

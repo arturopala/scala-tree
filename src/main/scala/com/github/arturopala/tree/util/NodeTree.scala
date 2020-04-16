@@ -200,7 +200,8 @@ object NodeTree {
     node: NodeTree[T],
     path: Iterable[K],
     requiresFullMatch: Boolean,
-    toPathItem: T => K): Boolean =
+    toPathItem: T => K
+  ): Boolean =
     if (path.isEmpty || (path.nonEmpty && path.head != toPathItem(node.value))) false
     else if (path.tail.isEmpty) (!requiresFullMatch || node.isLeaf) && path.head == toPathItem(node.value)
     else {
@@ -296,6 +297,39 @@ object NodeTree {
     }
     if (pred(node)) Stream.cons(node, continue) else continue
   }
+
+  final def insertTreeAt[T, T1 >: T: ClassTag](
+    tree: NodeTree[T],
+    branchIterator: Iterator[T1],
+    nodeToInsert: NodeTree[T1]
+  ): Option[NodeTree[T1]] =
+    insertTreeAt(tree, branchIterator, nodeToInsert, Nil)
+
+  @tailrec
+  private def insertTreeAt[T, T1 >: T: ClassTag](
+    tree: NodeTree[T],
+    branchIterator: Iterator[T1],
+    nodeToInsert: NodeTree[T1],
+    queue: List[(T, List[NodeTree[T]], List[NodeTree[T]])]
+  ): Option[NodeTree[T1]] =
+    if (branchIterator.hasNext) {
+      val value = branchIterator.next()
+      splitListWhen[NodeTree[T]](_.value == value, tree.subtrees) match {
+        case None =>
+          val branchTree: NodeTree[T1] =
+            TreeBuilder
+              .fromTreeList((Tree(value) :: branchIterator.map(Tree.apply[T1]).toList) :+ nodeToInsert)
+              .asInstanceOf[NodeTree[T1]]
+          val newNode: NodeTree[T] = Tree(tree.value, branchTree :: tree.subtrees).asInstanceOf[NodeTree[T]]
+          Some(TreeBuilder.fromTreeSplitAndNewNode(newNode, queue).asInstanceOf[NodeTree[T]])
+
+        case Some((left, node, right)) =>
+          insertTreeAt(node, branchIterator, nodeToInsert, (tree.value, left, right) :: queue)
+      }
+    } else {
+      val newNode = tree.insertTree(nodeToInsert).asInstanceOf[NodeTree[T1]]
+      Some(TreeBuilder.fromTreeSplitAndNewNode(newNode, queue).asInstanceOf[NodeTree[T]])
+    }
 
   /** Returns an iterator over filtered branches of the tree. */
   final def branchIterator[T](pred: Iterable[T] => Boolean, node: NodeTree[T]): Iterator[Iterable[T]] =
@@ -437,7 +471,7 @@ object NodeTree {
     subtreesRight match {
       case Nil =>
         val branchTree: NodeTree[T1] =
-          TreeBuilder.fromList(branchHead :: branchTailIterator.toList).asInstanceOf[NodeTree[T1]]
+          TreeBuilder.fromValueList(branchHead :: branchTailIterator.toList).asInstanceOf[NodeTree[T1]]
         branchTree :: subtreesLeft
 
       case head :: tail if head.value == branchHead =>
@@ -462,9 +496,9 @@ object NodeTree {
       splitListWhen[NodeTree[T]](_.value == value, tree.subtrees) match {
         case None =>
           val branchTree: NodeTree[T1] =
-            TreeBuilder.fromList(value :: branchIterator.toList).asInstanceOf[NodeTree[T1]]
+            TreeBuilder.fromValueList(value :: branchIterator.toList).asInstanceOf[NodeTree[T1]]
           val newNode: NodeTree[T] = Tree(tree.value, branchTree :: tree.subtrees).asInstanceOf[NodeTree[T]]
-          Some(queue.foldLeft(newNode) { case (n, (v, l, r)) => Tree(v, l ::: (n :: r)) })
+          Some(TreeBuilder.fromTreeSplitAndNewNode(newNode, queue).asInstanceOf[NodeTree[T1]])
 
         case Some((left, node, right)) =>
           insertBranch(node, branchIterator, (tree.value, left, right) :: queue)

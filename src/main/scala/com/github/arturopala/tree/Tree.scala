@@ -200,13 +200,12 @@ object Tree {
     * A Tree represented internally by two array slices,
     * one encoding the structure, the other holding node's values.
     */
-  final class ArrayTree[T] private[tree] (
+  final class ArrayTree[T: ClassTag] private[tree] (
     val structure: IntSlice,
     val content: Slice[T],
     delayedWidth: => Int,
     delayedHeight: => Int
-  )(implicit val classTag: ClassTag[T])
-      extends Tree[T] with ArrayTreeLike[T] {
+  ) extends ArrayTreeLike[T] with Tree[T] {
 
     assert(content.nonEmpty, "When creating an ArrayTree, `values` must not be empty.")
     assert(

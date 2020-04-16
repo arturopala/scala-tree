@@ -16,7 +16,7 @@
 
 package com.github.arturopala.tree
 
-import com.github.arturopala.tree.TreeBuilder.{fromArrays, fromPairsIterable, fromTreeList}
+import com.github.arturopala.tree.TreeBuilder._
 import com.github.arturopala.tree.TreeFormat.showAsGraph
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
@@ -52,7 +52,7 @@ class TreeBuilderSpec extends AnyWordSpec with Matchers {
     "create a new tree from the list of single-node trees" in {
       val list: List[(Int, Tree[String])] = List((0, Tree("a")), (0, Tree("b")), (0, Tree("c")), (3, Tree("d")))
 
-      val trees = fromTreeList(list)
+      val trees = fromTreePairsList(list)
 
       trees.size shouldBe 1
       trees.head.size shouldBe 4
@@ -68,7 +68,7 @@ class TreeBuilderSpec extends AnyWordSpec with Matchers {
       val list: List[(Int, Tree[String])] =
         List((0, Tree("a", Tree("A"))), (0, Tree("b", Tree("B"))), (0, Tree("c", Tree("C"))), (3, Tree("d", Tree("D"))))
 
-      val trees = fromTreeList(list)
+      val trees = fromTreePairsList(list)
 
       trees.size shouldBe 1
       trees.head.size shouldBe 8
@@ -85,7 +85,7 @@ class TreeBuilderSpec extends AnyWordSpec with Matchers {
       val list: List[(Int, Tree[String])] =
         List((0, Tree("a", Tree("A"))), (1, Tree("b", Tree("B"))), (1, Tree("c", Tree("C"))), (1, Tree("d", Tree("D"))))
 
-      val trees = fromTreeList(list)
+      val trees = fromTreePairsList(list)
 
       trees.size shouldBe 1
       trees.head.size shouldBe 8
@@ -102,7 +102,7 @@ class TreeBuilderSpec extends AnyWordSpec with Matchers {
       val list: List[(Int, Tree[String])] =
         List((0, Tree("a", Tree("A"))), (0, Tree("b", Tree("B"))), (0, Tree("c", Tree("C"))), (3, Tree("d", Tree("D"))))
 
-      val trees = fromTreeList(list, strategy = TreeBuilder.TreeMergeStrategy.Replace)
+      val trees = fromTreePairsList(list, strategy = TreeBuilder.TreeMergeStrategy.Replace)
 
       trees.size shouldBe 1
       trees.head.size shouldBe 2
@@ -124,6 +124,26 @@ class TreeBuilderSpec extends AnyWordSpec with Matchers {
       fromArrays(Array(0, 0, 0), Array("aaa", "aa", "a")) shouldBe List(Tree("a"), Tree("aa"), Tree("aaa"))
       fromArrays(Array(0, 1, 0), Array("aaa", "aa", "a")) shouldBe List(Tree("a"), Tree("aa", Tree("aaa")))
       fromArrays(Array(1, 0, 0), Array("aaa", "aa", "a")) shouldBe List(Tree("a"), Tree("aa"), Tree.empty)
+    }
+
+    "create a new single-branch tree from a list of values" in {
+      fromValueList(List()) shouldBe Tree.empty
+      fromValueList(List("a")) shouldBe Tree("a")
+      fromValueList(List("a", "b", "c")) shouldBe Tree("a", Tree("b", Tree("c")))
+      fromValueList(List("a", "a", "a")) shouldBe Tree("a", Tree("a", Tree("a")))
+    }
+
+    "create a new main-branch tree from a list of trees" in {
+      fromTreeList(List()) shouldBe Tree.empty
+      fromTreeList(List(Tree("a"))) shouldBe Tree("a")
+      fromTreeList(List(Tree("a"), Tree("b"), Tree("c"))) shouldBe Tree("a", Tree("b", Tree("c")))
+      fromTreeList(List(Tree("c"), Tree("b"), Tree("a"))) shouldBe Tree("c", Tree("b", Tree("a")))
+      fromTreeList(List(Tree("a"), Tree("a"), Tree("a"))) shouldBe Tree("a", Tree("a", Tree("a")))
+      fromTreeList(List(Tree("a", Tree("b")), Tree("a", Tree("c")), Tree("a", Tree("d"), Tree("e")))) shouldBe Tree(
+        "a",
+        Tree("a", Tree("a", Tree("d"), Tree("e")), Tree("c")),
+        Tree("b")
+      )
     }
   }
 

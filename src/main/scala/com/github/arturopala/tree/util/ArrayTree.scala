@@ -267,9 +267,11 @@ object ArrayTree {
         } else throw new NoSuchElementException
 
       def seekNext(check: Boolean): Unit =
-        if (check && counters.isEmpty) { hasNext = false } else {
+        if (check && counters.isEmpty) { hasNext = false }
+        else {
           i = indexes.peek
-          if (i < 0) { hasNext = false } else {
+          if (i < 0) { hasNext = false }
+          else {
             hasNext = true
             val c = treeStructure(i)
             if (c == 0 || counters.length >= maxDepth - 1) {
@@ -310,9 +312,11 @@ object ArrayTree {
 
       @tailrec
       def seekNext(check: Boolean): Unit =
-        if (check && counters.isEmpty) { hasNext = false } else {
+        if (check && counters.isEmpty) { hasNext = false }
+        else {
           val i = indexes.peek
-          if (i < 0) { hasNext = false } else {
+          if (i < 0) { hasNext = false }
+          else {
             val c = treeStructure(i)
             if (c == 0 || counters.length >= maxDepth - 1) {
               array = BranchIteratorUtils.readBranch(counters, indexes).push(i).toSlice
@@ -811,7 +815,25 @@ object ArrayTree {
     if (trees.size == 1) trees.head else Tree.empty
   }
 
-  /** Inserts a subtree to a tree at an index.
+  /** Inserts a value to a tree at a path.
+    * @return modified tree */
+  final def insertValueAt[T: ClassTag](
+    path: Iterable[T],
+    value: T,
+    target: Tree[T]
+  ): Tree[T] = {
+    val (structure, content) = target.toSlices
+    val (indexes, unmatched, remaining, _) = followPath(path, target.size - 1, structure, content)
+    indexes.lastOption match {
+      case None => target
+      case Some(index) =>
+        val valueList = unmatched.map(_ :: remaining.toList).getOrElse(remaining.toList) :+ value
+        val newNode: Tree[T] = TreeBuilder.fromValueList(valueList)
+        insertSubtree(index, newNode, target)
+    }
+  }
+
+  /** Inserts a value to a tree at an index.
     * @return modified tree */
   final def insertValue[T: ClassTag](
     index: Int,

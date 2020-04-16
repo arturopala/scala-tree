@@ -144,7 +144,7 @@ object TreeBuilder {
     *       - The sum of all numberOfChildren values must be the size of the list minus one.
     */
   @tailrec
-  final def fromTreeList[T](
+  final def fromTreePairsList[T](
     list: List[(Int, Tree[T])],
     result: List[NodeTree[T]] = Nil,
     offset: Int = 0,
@@ -156,10 +156,10 @@ object TreeBuilder {
         tree match {
           case Tree.empty =>
             val offset = if (strategy.keepOrphanedSubtrees) size else -1
-            fromTreeList(xs, result.drop(size - offset), offset, strategy)
+            fromTreePairsList(xs, result.drop(size - offset), offset, strategy)
           case node: NodeTree[T] =>
             val merged = strategy.merge(node, result.take(size))
-            fromTreeList(xs, merged :: result.drop(size), 0, strategy)
+            fromTreePairsList(xs, merged :: result.drop(size), 0, strategy)
         }
     }
 
@@ -186,11 +186,38 @@ object TreeBuilder {
       ArrayTree.calculateHeight(structure)
     )
 
-  /** Builds a single branch tree from list of values. */
-  final def fromList[T: ClassTag](list: List[T]): Tree[T] = list.reverse match {
+  /** Builds a single-branch tree from a list of values. */
+  final def fromValueList[T: ClassTag](list: List[T]): Tree[T] = list.reverse match {
     case Nil => Tree.empty
     case value :: tail =>
       tail.foldLeft(Tree(value))((t, v) => Tree(v, t))
+  }
+
+  /** Builds a main-branch tree from a list of trees. */
+  final def fromTreeList[T: ClassTag](list: List[Tree[T]]): Tree[T] = list.reverse match {
+    case Nil => Tree.empty
+    case value :: tail =>
+      tail.foldLeft(value)((t, v) => v.insertTree(t))
+  }
+
+  /** Builds a tree from the list of tree splits (nodeValue, leftChildrenList, rightChildrenList). */
+  final def fromTreeSplitAndNewNode[T](
+    newNode: Tree[T],
+    list: List[(T, List[NodeTree[T]], List[NodeTree[T]])]
+  ): Tree[T] = list match {
+    case Nil => newNode
+    case (hv, hl, hr) :: xs =>
+      newNode match {
+        case Tree.empty =>
+          val newNode = Tree(hv, hl ::: hr)
+          xs.foldLeft(newNode) { case (n, (v, l, r)) => Tree(v, l ::: (n :: r)) }
+
+        case tree: NodeTree[T] =>
+          list.foldLeft(tree) { case (n, (v, l, r)) => Tree(v, l ::: (n :: r)) }
+
+        case tree: ArrayTree[T] => //TODO build ArrayTree instead
+          list.foldLeft(tree.inflated.asInstanceOf[NodeTree[T]]) { case (n, (v, l, r)) => Tree(v, l ::: (n :: r)) }
+      }
   }
 
   /** There are multiple ways to merge the tree after expanding a node.

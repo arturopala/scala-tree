@@ -170,11 +170,23 @@ trait TreeLike[+T] {
     * @group branches */
   def countBranches(pred: Iterable[T] => Boolean): Int
 
-  // MODIFICATION
+  // MODIFICATIONS
 
   /** Inserts a new node holding the value and returns updated tree.
     * @group modifications */
   def insertValue[T1 >: T: ClassTag](value: T1): Tree[T1]
+
+  /** Inserts, at the given path, a new node holding the value and returns a whole tree updated.
+    * @param path list of node's values forming a path from the root to the parent node.
+    * @param value a value to insert as a new child
+    * @group modifications */
+  def insertValueAt[T1 >: T: ClassTag](path: Iterable[T1], value: T1): Tree[T1]
+
+  /** Inserts, at the given path, a new node holding the value and returns a whole tree updated.
+    * @param path list of node's values forming a path from the root to the parent node.
+    * @param f extractor of the K path item from the tree's node value
+    * @group modifications */
+  //def insertValueAt[K, T1 >: T: ClassTag](path: Iterable[K], value: T1, f: T => K): Tree[T1]
 
   /** Inserts a new sub-tree and returns updated tree.
     * @group modifications */
@@ -187,7 +199,7 @@ trait TreeLike[+T] {
     * @group modifications */
   def insertBranch[T1 >: T: ClassTag](branch: Iterable[T1]): Tree[T1]
 
-  // TRANSFORMATION
+  // TRANSFORMATIONS
 
   /** Maps all nodes of the tree using provided function and returns a new tree.
     * @group transformations */

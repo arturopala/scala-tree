@@ -333,16 +333,8 @@ trait TreeSpec extends AnyWordSpec with Matchers {
     }
 
     "insert new node to a tree" in {
-      val result0 = tree0.insertValue("a")
-      result0 shouldBe Tree("a")
-      result0.size shouldBe 1
-      result0.width shouldBe 1
-
-      val result1 = tree1.insertValue("b")
-      result1 shouldBe Tree("a", Tree("b"))
-      result1.size shouldBe 2
-      result1.width shouldBe 1
-
+      tree0.insertValue("a") shouldBe Tree("a")
+      tree1.insertValue("b") shouldBe Tree("a", Tree("b"))
       tree2.insertValue("c") shouldBe Tree("a", Tree("c"), Tree("b"))
       tree3_1.insertValue("d") shouldBe Tree("a", Tree("d"), Tree("b", Tree("c")))
       tree3_1.insertValue("b") shouldBe Tree("a", Tree("b"), Tree("b", Tree("c")))
@@ -350,17 +342,31 @@ trait TreeSpec extends AnyWordSpec with Matchers {
       tree3_2.insertValue("c") shouldBe Tree("a", Tree("c"), Tree("b"), Tree("c"))
     }
 
+    "insert new node to a tree at specified path" in {
+      tree0.insertValueAt(List("a", "b"), "a") shouldBe Tree("a", Tree("b", Tree("a")))
+      tree1.insertValueAt(List("a", "b"), "a") shouldBe Tree("a", Tree("b", Tree("a")))
+      tree1.insertValueAt(List("a", "c", "c"), "a") shouldBe Tree("a", Tree("c", Tree("c", Tree("a"))))
+      tree2.insertValueAt(List("a", "b"), "a") shouldBe Tree("a", Tree("b", Tree("a")))
+      tree2.insertValueAt(List("a", "c"), "a") shouldBe Tree("a", Tree("c", Tree("a")), Tree("b"))
+      tree2.insertValueAt(List("a", "b", "c"), "a") shouldBe Tree("a", Tree("b", Tree("c", Tree("a"))))
+      tree2.insertValueAt(List("a", "c", "c"), "a") shouldBe Tree("a", Tree("c", Tree("c", Tree("a"))), Tree("b"))
+      tree3_1
+        .insertValueAt(List("a", "b", "c", "d"), "a") shouldBe Tree("a", Tree("b", Tree("c", Tree("d", Tree("a")))))
+      tree3_1.insertValueAt(List("a", "b", "c"), "a") shouldBe Tree("a", Tree("b", Tree("c", Tree("a"))))
+      tree3_1.insertValueAt(List("a", "b"), "a") shouldBe Tree("a", Tree("b", Tree("a"), Tree("c")))
+      tree3_1.insertValueAt(List("a", "b"), "c") shouldBe Tree("a", Tree("b", Tree("c"), Tree("c")))
+      tree3_1.insertValueAt(List("a"), "b") shouldBe Tree("a", Tree("b"), Tree("b", Tree("c")))
+      tree3_1.insertValueAt(List("a"), "c") shouldBe Tree("a", Tree("c"), Tree("b", Tree("c")))
+      tree3_2.insertValueAt(List("a"), "c") shouldBe Tree("a", Tree("c"), Tree("b"), Tree("c"))
+      tree3_2.insertValueAt(List("a"), "a") shouldBe Tree("a", Tree("a"), Tree("b"), Tree("c"))
+      tree3_2.insertValueAt(List("a", "b"), "c") shouldBe Tree("a", Tree("b", Tree("c")), Tree("c"))
+      tree3_2.insertValueAt(List("a", "c"), "c") shouldBe Tree("a", Tree("b"), Tree("c", Tree("c")))
+      tree3_2.insertValueAt(List("a", "c", "d"), "c") shouldBe Tree("a", Tree("b"), Tree("c", Tree("d", Tree("c"))))
+    }
+
     "insert new subtree to a tree" in {
-      val result0 = tree0.insertTree(Tree("a"))
-      result0 shouldBe Tree("a")
-      result0.size shouldBe 1
-      result0.width shouldBe 1
-
-      val result1 = tree1.insertTree(Tree("b"))
-      result1 shouldBe Tree("a", Tree("b"))
-      result1.size shouldBe 2
-      result1.width shouldBe 1
-
+      tree0.insertTree(Tree("a")) shouldBe Tree("a")
+      tree1.insertTree(Tree("b")) shouldBe Tree("a", Tree("b"))
       tree2.insertTree(Tree("c")) shouldBe Tree("a", Tree("c"), Tree("b"))
       tree3_1.insertTree(Tree("d")) shouldBe Tree("a", Tree("d"), Tree("b", Tree("c")))
       tree3_1.insertTree(Tree("b")) shouldBe Tree("a", Tree("b"), Tree("b", Tree("c")))
@@ -453,8 +459,10 @@ trait TreeSpec extends AnyWordSpec with Matchers {
     "insert new branch to a tree" in {
       tree0.insertBranch(List("a", "b", "c", "d")) shouldBe Tree("a", Tree("b", Tree("c", Tree("d"))))
       tree1.insertBranch(List("a", "b", "c", "d")) shouldBe Tree("a", Tree("b", Tree("c", Tree("d"))))
+      tree1.insertBranch(List("a", "c", "c", "d")) shouldBe Tree("a", Tree("c", Tree("c", Tree("d"))))
       tree1.insertBranch(List("b", "c", "d")) shouldBe Tree("a")
       tree2.insertBranch(List("a", "b", "c", "d")) shouldBe Tree("a", Tree("b", Tree("c", Tree("d"))))
+      tree2.insertBranch(List("a", "c", "c", "d")) shouldBe Tree("a", Tree("c", Tree("c", Tree("d"))), Tree("b"))
       tree2
         .insertBranch(List("a", "b", "c", "d"))
         .insertBranch(List("a", "b", "e", "f")) shouldBe Tree(

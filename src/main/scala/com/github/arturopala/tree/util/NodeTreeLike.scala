@@ -80,6 +80,14 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
   final override def insertValue[T1 >: T: ClassTag](newValue: T1): NodeTree[T1] =
     Tree(node.value, Tree(newValue) :: node.subtrees)
 
+  final override def insertValueAt[T1 >: T: ClassTag](path: Iterable[T1], value: T1): Tree[T1] =
+    if (path.isEmpty) insertValue(value)
+    else {
+      val iterator = path.iterator
+      val head = iterator.next
+      if (node.value == head) NodeTree.insertTreeAt(node, iterator, Tree(value)).getOrElse(node) else node
+    }
+
   final override def insertTree[T1 >: T: ClassTag](tree: Tree[T1]): Tree[T1] = tree match {
     case `empty`         => node
     case n: NodeTree[T1] => Tree(node.value, n :: node.subtrees)
@@ -90,10 +98,7 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
     else {
       val iterator = branch.iterator
       val value = iterator.next
-      if (node.value == value) NodeTree.insertBranch(node, iterator) match {
-        case None       => node
-        case Some(tree) => tree
-      } else node
+      if (node.value == value) NodeTree.insertBranch(node, iterator).getOrElse(node) else node
     }
 
   final override def map[K: ClassTag](f: T => K): Tree[K] = {
@@ -108,7 +113,7 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
 
   final override def flatMap[K: ClassTag](f: T => Tree[K]): Tree[K] = {
     val list: List[(Int, Tree[K])] = NodeTree.listFlatMap(f, List((node.subtrees.size, f(node.value))), node.subtrees)
-    TreeBuilder.fromTreeList(list, Nil, 0, TreeBuilder.TreeMergeStrategy.Join).headOption.getOrElse(empty)
+    TreeBuilder.fromTreePairsList(list, Nil, 0, TreeBuilder.TreeMergeStrategy.Join).headOption.getOrElse(empty)
   }
 
   final override def selectValue[K](path: Iterable[K], f: T => K): Option[T] =
