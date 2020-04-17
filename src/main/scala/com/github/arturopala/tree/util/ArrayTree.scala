@@ -833,6 +833,26 @@ object ArrayTree {
     }
   }
 
+  /** Inserts a value to a tree at a path.
+    * @return modified tree */
+  final def insertValueAt[T: ClassTag, T1 >: T: ClassTag, K](
+    path: Iterable[K],
+    value: T1,
+    target: Tree[T],
+    toPathItem: T => K
+  ): Tree[T1] = {
+    val (structure, content) = target.toSlices
+    val (indexes, unmatched, _, _) = followPath(path, target.size - 1, structure, content, toPathItem)
+    indexes.lastOption match {
+      case None => target
+      case Some(index) =>
+        if (unmatched.isDefined) target
+        else {
+          insertValue(index, value, target)
+        }
+    }
+  }
+
   /** Inserts a value to a tree at an index.
     * @return modified tree */
   final def insertValue[T: ClassTag](

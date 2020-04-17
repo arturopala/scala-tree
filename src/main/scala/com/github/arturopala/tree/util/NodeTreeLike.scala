@@ -77,16 +77,16 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
   final override def countBranches(pred: Iterable[T] => Boolean): Int =
     NodeTree.countBranches(pred, node)
 
+  // MODIFICATIONS
+
   final override def insertValue[T1 >: T: ClassTag](newValue: T1): NodeTree[T1] =
     Tree(node.value, Tree(newValue) :: node.subtrees)
 
   final override def insertValueAt[T1 >: T: ClassTag](path: Iterable[T1], value: T1): Tree[T1] =
-    if (path.isEmpty) insertValue(value)
-    else {
-      val iterator = path.iterator
-      val head = iterator.next
-      if (node.value == head) NodeTree.insertTreeAt(node, iterator, Tree(value)).getOrElse(node) else node
-    }
+    NodeTree.insertTreeAt(node, path.iterator, Tree(value)).getOrElse(node)
+
+  final override def insertValueAt[K, T1 >: T: ClassTag](path: Iterable[K], value: T1, f: T => K): Tree[T1] =
+    NodeTree.insertTreeAt(node, path.iterator, f, Tree(value)).getOrElse(node)
 
   final override def insertTree[T1 >: T: ClassTag](tree: Tree[T1]): Tree[T1] = tree match {
     case `empty`         => node
@@ -94,12 +94,7 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
   }
 
   final override def insertBranch[T1 >: T: ClassTag](branch: Iterable[T1]): Tree[T1] =
-    if (branch.isEmpty) node
-    else {
-      val iterator = branch.iterator
-      val value = iterator.next
-      if (node.value == value) NodeTree.insertBranch(node, iterator).getOrElse(node) else node
-    }
+    NodeTree.insertBranch(node, branch.iterator).getOrElse(node)
 
   final override def map[K: ClassTag](f: T => K): Tree[K] = {
     val (structure, values) = NodeTree.arrayMap(f, node)

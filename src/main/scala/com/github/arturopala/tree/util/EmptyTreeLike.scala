@@ -16,8 +16,8 @@
 
 package com.github.arturopala.tree.util
 
-import com.github.arturopala.tree.{Tree, TreeLike}
 import com.github.arturopala.tree.Tree.empty
+import com.github.arturopala.tree.{Tree, TreeBuilder, TreeLike}
 
 import scala.collection.Iterator
 import scala.collection.immutable.Stream
@@ -58,21 +58,24 @@ trait EmptyTreeLike extends TreeLike[Nothing] {
   final override val branchStream: Stream[List[Nothing]] = Stream.empty
   final override def branchStream(pred: Iterable[Nothing] => Boolean): Stream[List[Nothing]] = Stream.empty
   final override def countBranches(pred: Iterable[Nothing] => Boolean): Int = 0
+
+  // MODIFICATIONS
+
   final override def insertValue[T1: ClassTag](value: T1): Tree[T1] = Tree(value)
   final override def insertValueAt[T1 >: Nothing: ClassTag](path: Iterable[T1], value: T1): Tree[T1] =
     Tree.empty.insertBranch(path.toList :+ value)
+
+  final override def insertValueAt[K, T1 >: Nothing: ClassTag](
+    path: Iterable[K],
+    value: T1,
+    f: Nothing => K
+  ): Tree[T1] = Tree.empty
 
   final override def insertTree[T1: ClassTag](subtree: Tree[T1]): Tree[T1] = subtree
 
   final override def insertBranch[T1: ClassTag](branch: Iterable[T1]): Tree[T1] =
     if (branch.isEmpty) Tree.empty
-    else {
-      val iterator = branch.iterator
-      NodeTree.insertBranch(Tree(iterator.next()), iterator) match {
-        case None       => empty
-        case Some(tree) => tree
-      }
-    }
+    else TreeBuilder.fromValueList(branch.toList)
 
   final override def selectValue[K](path: Iterable[K], f: Nothing => K): Option[Nothing] = None
   final override def selectTree[T1: ClassTag](path: Iterable[T1]): Option[Tree[Nothing]] = None

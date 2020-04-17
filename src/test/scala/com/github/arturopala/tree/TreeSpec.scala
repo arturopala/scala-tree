@@ -332,7 +332,7 @@ trait TreeSpec extends AnyWordSpec with Matchers {
       tree9.containsPath(List(97, 101, 104), codeF) shouldBe true
     }
 
-    "insert new node to a tree" in {
+    "insert new value to a tree" in {
       tree0.insertValue("a") shouldBe Tree("a")
       tree1.insertValue("b") shouldBe Tree("a", Tree("b"))
       tree2.insertValue("c") shouldBe Tree("a", Tree("c"), Tree("b"))
@@ -342,10 +342,10 @@ trait TreeSpec extends AnyWordSpec with Matchers {
       tree3_2.insertValue("c") shouldBe Tree("a", Tree("c"), Tree("b"), Tree("c"))
     }
 
-    "insert new node to a tree at specified path" in {
-      tree0.insertValueAt(List("a", "b"), "a") shouldBe Tree("a", Tree("b", Tree("a")))
+    "insert new value to a tree at specified path" in {
+      /*tree0.insertValueAt(List("a", "b"), "a") shouldBe Tree("a", Tree("b", Tree("a")))
       tree1.insertValueAt(List("a", "b"), "a") shouldBe Tree("a", Tree("b", Tree("a")))
-      tree1.insertValueAt(List("a", "c", "c"), "a") shouldBe Tree("a", Tree("c", Tree("c", Tree("a"))))
+      tree1.insertValueAt(List("a", "c", "c"), "a") shouldBe Tree("a", Tree("c", Tree("c", Tree("a"))))*/
       tree2.insertValueAt(List("a", "b"), "a") shouldBe Tree("a", Tree("b", Tree("a")))
       tree2.insertValueAt(List("a", "c"), "a") shouldBe Tree("a", Tree("c", Tree("a")), Tree("b"))
       tree2.insertValueAt(List("a", "b", "c"), "a") shouldBe Tree("a", Tree("b", Tree("c", Tree("a"))))
@@ -362,6 +362,22 @@ trait TreeSpec extends AnyWordSpec with Matchers {
       tree3_2.insertValueAt(List("a", "b"), "c") shouldBe Tree("a", Tree("b", Tree("c")), Tree("c"))
       tree3_2.insertValueAt(List("a", "c"), "c") shouldBe Tree("a", Tree("b"), Tree("c", Tree("c")))
       tree3_2.insertValueAt(List("a", "c", "d"), "c") shouldBe Tree("a", Tree("b"), Tree("c", Tree("d", Tree("c"))))
+    }
+
+    "insert new value to a tree at specified path with path item extractor" in {
+      val codeF: String => Int = s => s.head.toInt
+      tree0.insertValueAt(List(97), "a", codeF) shouldBe tree0
+      tree1.insertValueAt(List(97), "b", codeF) shouldBe Tree("a", Tree("b"))
+      tree1.insertValueAt(List(98), "b", codeF) shouldBe tree1
+      tree1.insertValueAt(List(97), "a", codeF) shouldBe Tree("a", Tree("a"))
+      tree2.insertValueAt(List(97), "b", codeF) shouldBe Tree("a", Tree("b"), Tree("b"))
+      tree2.insertValueAt(List(97), "a", codeF) shouldBe Tree("a", Tree("a"), Tree("b"))
+      tree2.insertValueAt(List(98), "a", codeF) shouldBe tree2
+      tree2.insertValueAt(List(97, 98), "a", codeF) shouldBe Tree("a", Tree("b", Tree("a")))
+      tree2.insertValueAt(List(97, 98), "b", codeF) shouldBe Tree("a", Tree("b", Tree("b")))
+      tree2.insertValueAt(List(97, 98), "c", codeF) shouldBe Tree("a", Tree("b", Tree("c")))
+      tree2.insertValueAt(List(97, 97), "c", codeF) shouldBe tree2
+      tree2.insertValueAt(List(98, 97), "c", codeF) shouldBe tree2
     }
 
     "insert new subtree to a tree" in {

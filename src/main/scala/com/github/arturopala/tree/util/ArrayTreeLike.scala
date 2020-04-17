@@ -71,11 +71,16 @@ abstract class ArrayTreeLike[T: ClassTag] extends TreeLike[T] {
   final override def countBranches(pred: Iterable[T] => Boolean): Int =
     ArrayTree.countBranches(tree.structure.length - 1, tree.structure, tree.content, pred)
 
+  // MODIFICATIONS
+
   final override def insertValue[T1 >: T: ClassTag](value: T1): Tree[T1] =
     ArrayTree.insertValue(tree.structure.length - 1, value, tree)
 
   final override def insertValueAt[T1 >: T: ClassTag](path: Iterable[T1], value: T1): Tree[T1] =
     ArrayTree.insertValueAt(path, value, tree)
+
+  final override def insertValueAt[K, T1 >: T: ClassTag](path: Iterable[K], value: T1, f: T => K): Tree[T1] =
+    ArrayTree.insertValueAt(path, value, tree, f)
 
   final override def insertTree[T1 >: T: ClassTag](subtree: Tree[T1]): Tree[T1] =
     ArrayTree.insertSubtree(tree.structure.length - 1, subtree, tree)
@@ -83,11 +88,15 @@ abstract class ArrayTreeLike[T: ClassTag] extends TreeLike[T] {
   final override def insertBranch[T1 >: T: ClassTag](branch: Iterable[T1]): Tree[T1] =
     ArrayTree.insertBranch(tree.structure.length - 1, branch, tree)
 
+  // TRANSFORMATIONS
+
   final override def map[K: ClassTag](f: T => K): Tree[K] =
     new ArrayTree[K](tree.structure, tree.content.map(f), tree.width, tree.height)
 
   final override def flatMap[K: ClassTag](f: T => Tree[K]): Tree[K] =
     ArrayTree.flatMap(tree.structure, tree.content, f)
+
+  // PATH-BASED OPERATIONS
 
   final override def selectValue[K](path: Iterable[K], f: T => K): Option[T] =
     ArrayTree.selectValue(path, tree.structure.length - 1, tree.structure, tree.content, f)

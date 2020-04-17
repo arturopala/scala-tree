@@ -200,23 +200,24 @@ object TreeBuilder {
       tail.foldLeft(value)((t, v) => v.insertTree(t))
   }
 
-  /** Builds a tree from the list of tree splits (nodeValue, leftChildrenList, rightChildrenList). */
-  final def fromTreeSplitAndNewNode[T](
-    newNode: Tree[T],
-    list: List[(T, List[NodeTree[T]], List[NodeTree[T]])]
+  /** Builds a tree from the list of tree splits (treesLeftOfValue, value, treesRightOfValue).
+    * @param child the tree node who becomes a child of a last value. */
+  final def fromTreeSplitAndChild[T](
+    child: Tree[T],
+    list: List[(List[NodeTree[T]], T, List[NodeTree[T]])]
   ): Tree[T] = list match {
-    case Nil => newNode
-    case (hv, hl, hr) :: xs =>
-      newNode match {
+    case Nil => child
+    case (hl, hv, hr) :: xs =>
+      child match {
         case Tree.empty =>
           val newNode = Tree(hv, hl ::: hr)
-          xs.foldLeft(newNode) { case (n, (v, l, r)) => Tree(v, l ::: (n :: r)) }
+          xs.foldLeft(newNode) { case (n, (l, v, r)) => Tree(v, l ::: (n :: r)) }
 
         case tree: NodeTree[T] =>
-          list.foldLeft(tree) { case (n, (v, l, r)) => Tree(v, l ::: (n :: r)) }
+          list.foldLeft(tree) { case (n, (l, v, r)) => Tree(v, l ::: (n :: r)) }
 
         case tree: ArrayTree[T] => //TODO build ArrayTree instead
-          list.foldLeft(tree.inflated.asInstanceOf[NodeTree[T]]) { case (n, (v, l, r)) => Tree(v, l ::: (n :: r)) }
+          list.foldLeft(tree.inflated.asInstanceOf[NodeTree[T]]) { case (n, (l, v, r)) => Tree(v, l ::: (n :: r)) }
       }
   }
 

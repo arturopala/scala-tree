@@ -177,16 +177,18 @@ trait TreeLike[+T] {
   def insertValue[T1 >: T: ClassTag](value: T1): Tree[T1]
 
   /** Inserts, at the given path, a new node holding the value and returns a whole tree updated.
+    * If any path suffix doesn't exist in the tree, it will be created.
     * @param path list of node's values forming a path from the root to the parent node.
     * @param value a value to insert as a new child
     * @group modifications */
   def insertValueAt[T1 >: T: ClassTag](path: Iterable[T1], value: T1): Tree[T1]
 
   /** Inserts, at the given path, a new node holding the value and returns a whole tree updated.
+    * If any path suffix doesn't exist in the tree, the tree will stay NOT updated.
     * @param path list of node's values forming a path from the root to the parent node.
     * @param f extractor of the K path item from the tree's node value
     * @group modifications */
-  //def insertValueAt[K, T1 >: T: ClassTag](path: Iterable[K], value: T1, f: T => K): Tree[T1]
+  def insertValueAt[K, T1 >: T: ClassTag](path: Iterable[K], value: T1, f: T => K): Tree[T1]
 
   /** Inserts a new sub-tree and returns updated tree.
     * @group modifications */
