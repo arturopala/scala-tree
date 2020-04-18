@@ -40,9 +40,6 @@ abstract class ArrayTreeLike[T: ClassTag] extends TreeLike[T] {
     else
       ArrayTree.valueIterator(tree.structure.length - 1, tree.structure, tree.content, pred, maxDepth)
 
-  final override def valueStream: Stream[T] = valueStream(all)
-  final override def valueStream(pred: T => Boolean): Stream[T] = streamFromIterator(valueIterator(pred, Int.MaxValue))
-
   final override def childrenValues: List[T] =
     ArrayTree.childrenIndexes(tree.structure.length - 1, tree.structure).map(tree.content)
 
@@ -57,16 +54,9 @@ abstract class ArrayTreeLike[T: ClassTag] extends TreeLike[T] {
     if (maxDepth >= height) ArrayTree.treeIterator(tree.structure.length - 1, tree.structure, tree.content, pred)
     else ArrayTree.treeIteratorWithLimit(tree.structure.length - 1, tree.structure, tree.content, pred, maxDepth)
 
-  final override def treeStream: Stream[Tree[T]] = treeStream(all)
-  final override def treeStream(pred: Tree[T] => Boolean): Stream[Tree[T]] = streamFromIterator(treeIterator(pred))
-
   final override def branches: List[List[T]] = branchIterator(all).map(_.toList).toList
   final override def branchIterator(pred: Iterable[T] => Boolean, maxDepth: Int = Int.MaxValue): Iterator[Iterable[T]] =
     ArrayTree.branchIterator(tree.structure.length - 1, tree.structure, tree.content, pred, maxDepth)
-
-  final override def branchStream: Stream[List[T]] = branchStream(all).map(_.toList)
-  final override def branchStream(pred: Iterable[T] => Boolean): Stream[Iterable[T]] =
-    streamFromIterator(branchIterator(pred))
 
   final override def countBranches(pred: Iterable[T] => Boolean): Int =
     ArrayTree.countBranches(tree.structure.length - 1, tree.structure, tree.content, pred)

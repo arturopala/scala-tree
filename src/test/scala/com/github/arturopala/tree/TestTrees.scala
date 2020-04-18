@@ -16,6 +16,8 @@
 
 package com.github.arturopala.tree
 
+import com.github.arturopala.tree.Tree.NodeTree
+
 object TestTrees {
 
   val tree0: Tree[String] = Tree[String]()
@@ -23,55 +25,55 @@ object TestTrees {
   /**
     * [a]
     */
-  val tree1: Tree[String] = Tree("a")
+  val tree1: NodeTree[String] = Tree("a")
 
   /**
     * [a,b]
     */
-  val tree2: Tree[String] = Tree("a", Tree("b"))
+  val tree2: NodeTree[String] = Tree("a", Tree("b"))
 
   /**
     * [a,b,c]
     */
-  val tree3_1: Tree[String] = Tree("a", Tree("b", Tree("c")))
+  val tree3_1: NodeTree[String] = Tree("a", Tree("b", Tree("c")))
 
   /**
     * [a,b]
     * [a,c]
     */
-  val tree3_2: Tree[String] = Tree("a", Tree("b"), Tree("c"))
+  val tree3_2: NodeTree[String] = Tree("a", Tree("b"), Tree("c"))
 
   /**
     * [a,b,c,d]
     */
-  val tree4_1: Tree[String] = Tree("a", Tree("b", Tree("c", Tree("d"))))
+  val tree4_1: NodeTree[String] = Tree("a", Tree("b", Tree("c", Tree("d"))))
 
   /**
     * [a,b,c]
     * [a,d]
     */
-  val tree4_2: Tree[String] = Tree("a", Tree("b", Tree("c")), Tree("d"))
+  val tree4_2: NodeTree[String] = Tree("a", Tree("b", Tree("c")), Tree("d"))
 
   /**
     * [a,b]
     * [a,c]
     * [a,d]
     */
-  val tree4_3: Tree[String] = Tree("a", Tree("b"), Tree("c"), Tree("d"))
+  val tree4_3: NodeTree[String] = Tree("a", Tree("b"), Tree("c"), Tree("d"))
 
   /**
     * [a,b,c]
     * [a,d,e,f]
     * [a,g]
     */
-  val tree7: Tree[String] = Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e", Tree("f"))), Tree("g"))
+  val tree7: NodeTree[String] = Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e", Tree("f"))), Tree("g"))
 
   /**
     * [a,b,c,d]
     * [a,e,f,g]
     * [a,e,h,i]
     */
-  val tree9: Tree[String] =
+  val tree9: NodeTree[String] =
     Tree("a", Tree("b", Tree("c", Tree("d"))), Tree("e", Tree("f", Tree("g")), Tree("h", Tree("i"))))
 
   val allTrees: Seq[Tree[String]] =

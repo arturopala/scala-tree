@@ -100,15 +100,6 @@ trait TreeLike[+T] {
     * @group values */
   def valueIterator(pred: T => Boolean, maxDepth: Int = Int.MaxValue): Iterator[T]
 
-  /** Lazy stream of the node's values in the tree.
-    * @group values */
-  def valueStream: Stream[T]
-
-  /** Filtered lazy stream of the node's values in the tree.
-    * @param pred return true to include the value in the result, false otherwise.
-    * @group values */
-  def valueStream(pred: T => Boolean): Stream[T]
-
   // TREES
 
   /** Returns direct children trees, i.e. the subtrees.
@@ -128,19 +119,6 @@ trait TreeLike[+T] {
     * @group sub-trees */
   def treeIterator(pred: Tree[T] => Boolean, maxDepth: Int = Int.MaxValue): Iterator[Tree[T]]
 
-  /** Lazy stream of the possible subtrees of the tree inclusive.
-    * The top tree is streamed first, then children depth-first.
-    *
-    * @group sub-trees */
-  def treeStream: Stream[Tree[T]]
-
-  /** Filtered lazy stream of the possible subtrees in the tree inclusive.
-    * Top tree is streamed first, then children depth-first.
-    *
-    * @param pred return true to include the subtree in the result, false otherwise.
-    * @group sub-trees */
-  def treeStream(pred: Tree[T] => Boolean): Stream[Tree[T]]
-
   // BRANCHES
 
   /** Lists all the branches of the tree starting at the root.
@@ -155,15 +133,6 @@ trait TreeLike[+T] {
     * @group branches
     */
   def branchIterator(pred: Iterable[T] => Boolean, maxDepth: Int = Int.MaxValue): Iterator[Iterable[T]]
-
-  /** Lazy stream of all the branches of the tree starting at the root.
-    * @group branches */
-  def branchStream: Stream[List[T]]
-
-  /** Filtered lazy stream of all the branches of the tree starting at the root.
-    * @param pred return true to include the branch in the result, false otherwise.
-    * @group branches */
-  def branchStream(pred: Iterable[T] => Boolean): Stream[Iterable[T]]
 
   /** Returns the number of distinct branches accepted by the filter, starting at the root of the tree.
     * @param pred return true to count the branch, false otherwise.
