@@ -16,5 +16,9 @@ dist
 /RUNNING_PID
 /.settings
 *.iws
+.metals/
+.bloop/
+project/metals.sbt
+launch.json
 
     
