@@ -322,14 +322,16 @@ object NodeTree {
     branchIterator: Iterator[K],
     toPathItem: T => K,
     nodeToInsert: NodeTree[T1]
-  ): Option[Tree[T1]] =
-    splitTreeByPath(tree, branchIterator, toPathItem).flatMap {
-      case (_, Some(_), _, _) => None // when path left unmatched items
+  ): Either[Tree[T], Tree[T1]] =
+    splitTreeByPath(tree, branchIterator, toPathItem)
+      .map {
+        case (_, Some(_), _, _) => Left(tree) // when path left unmatched items
 
-      case (treeSplit, None, _, remainingTree) =>
-        val newNode = Tree(remainingTree.value, nodeToInsert :: remainingTree.subtrees)
-        Some(TreeBuilder.fromTreeSplitAndChild(newNode, treeSplit))
-    }
+        case (treeSplit, None, _, remainingTree) =>
+          val newNode = Tree(remainingTree.value, nodeToInsert :: remainingTree.subtrees)
+          Right(TreeBuilder.fromTreeSplitAndChild(newNode, treeSplit))
+      }
+      .getOrElse(Left(tree))
 
   /** Splits the tree following the path.
     * The tree children split is a triple of (children list left of value, a value, children list right of value)

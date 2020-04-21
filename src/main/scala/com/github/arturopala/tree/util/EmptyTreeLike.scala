@@ -24,7 +24,7 @@ import scala.collection.immutable.Stream
 import scala.reflect.ClassTag
 
 /**
-  * [[Tree.empty]] final override functions implementations.
+  * The [[Tree.empty]] final override functions implementations.
   * Extracted from [[Tree]] to de-clutter its codebase.
   */
 trait EmptyTreeLike extends TreeLike[Nothing] {
@@ -57,6 +57,7 @@ trait EmptyTreeLike extends TreeLike[Nothing] {
   // MODIFICATIONS
 
   final override def insertValue[T1: ClassTag](value: T1): Tree[T1] = Tree(value)
+
   final override def insertValueAt[T1 >: Nothing: ClassTag](path: Iterable[T1], value: T1): Tree[T1] =
     Tree.empty.insertBranch(path.toList :+ value)
 
@@ -64,9 +65,20 @@ trait EmptyTreeLike extends TreeLike[Nothing] {
     path: Iterable[K],
     value: T1,
     f: Nothing => K
-  ): Tree[T1] = Tree.empty
+  ): Either[Tree[Nothing], Tree[T1]] = Left(Tree.empty)
 
   final override def insertTree[T1: ClassTag](subtree: Tree[T1]): Tree[T1] = subtree
+
+  final override def insertTreeAt[T1 >: Nothing: ClassTag](path: Iterable[T1], subtree: Tree[T1]): Tree[T1] =
+    if (path.isEmpty) subtree
+    else if (subtree.isEmpty) empty
+    else TreeBuilder.fromValueList(path.toList).insertTreeAt(path, subtree)
+
+  final override def insertTreeAt[K, T1 >: Nothing: ClassTag](
+    path: Iterable[K],
+    subtree: Tree[T1],
+    f: Nothing => K
+  ): Either[Tree[Nothing], Tree[T1]] = if (path.isEmpty) Right(subtree) else Left(empty)
 
   final override def insertBranch[T1: ClassTag](branch: Iterable[T1]): Tree[T1] =
     if (branch.isEmpty) Tree.empty

@@ -577,7 +577,7 @@ object ArrayTree {
       val iter = branch.iterator
       while (iter.hasNext) {
         if (i > 0) builder.append(valueSeparator)
-        builder.append(treeValues(iter.next()))
+        builder.append(show(treeValues(iter.next())))
         i = i + 1
       }
       builder.append(branchEnd)
@@ -833,22 +833,22 @@ object ArrayTree {
     }
   }
 
-  /** Inserts a value to a tree at a path.
+  /** Inserts a value to a tree at a path using an extractor function.
     * @return modified tree */
   final def insertValueAt[T: ClassTag, T1 >: T: ClassTag, K](
     path: Iterable[K],
     value: T1,
     target: Tree[T],
     toPathItem: T => K
-  ): Tree[T1] = {
+  ): Either[Tree[T], Tree[T1]] = {
     val (structure, content) = target.toSlices
     val (indexes, unmatched, _, _) = followPath(path, target.size - 1, structure, content, toPathItem)
     indexes.lastOption match {
-      case None => target
+      case None => Left(target)
       case Some(index) =>
-        if (unmatched.isDefined) target
+        if (unmatched.isDefined) Left(target)
         else {
-          insertValue(index, value, target)
+          Right(insertValue(index, value, target))
         }
     }
   }
@@ -880,6 +880,42 @@ object ArrayTree {
 
       new ArrayTree[T](newTreeStructure, newTreeValues, width, calculateHeight(newTreeStructure))
     }
+
+  /** Inserts a subtree to a tree at a path.
+    * @return modified tree */
+  final def insertTreeAt[T: ClassTag](
+    path: Iterable[T],
+    subtree: Tree[T],
+    target: Tree[T]
+  ): Tree[T] = {
+    val (structure, content) = target.toSlices
+    val (indexes, unmatched, remaining, _) = followPath(path, target.size - 1, structure, content)
+    indexes.lastOption match {
+      case None => target
+      case Some(index) =>
+        val treeList = unmatched.map(_ :: remaining.toList).getOrElse(remaining.toList).map(Tree.apply[T]) :+ subtree
+        val newNode: Tree[T] = TreeBuilder.fromTreeList(treeList)
+        insertSubtree(index, newNode, target)
+    }
+  }
+
+  /** Inserts a subtree to a tree at a path using an extractor function.
+    * @return modified tree */
+  final def insertTreeAt[T: ClassTag, T1 >: T: ClassTag, K](
+    path: Iterable[K],
+    subtree: Tree[T1],
+    target: Tree[T],
+    toPathItem: T => K
+  ): Either[Tree[T], Tree[T1]] = {
+    val (structure, content) = target.toSlices
+    val (indexes, unmatched, _, _) = followPath(path, target.size - 1, structure, content, toPathItem)
+    indexes.lastOption match {
+      case None => Left(target)
+      case Some(index) =>
+        if (unmatched.isDefined) Left(target)
+        else Right(insertSubtree(index, subtree, target))
+    }
+  }
 
   /** Inserts a subtree to a tree at an index.
     * @return modified tree */

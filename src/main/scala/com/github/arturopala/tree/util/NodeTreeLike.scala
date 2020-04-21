@@ -17,7 +17,7 @@
 package com.github.arturopala.tree.util
 
 import com.github.arturopala.tree.{Tree, TreeBuilder, TreeLike}
-import com.github.arturopala.tree.Tree.{NodeTree, empty}
+import com.github.arturopala.tree.Tree.{ArrayTree, NodeTree, empty}
 
 import scala.collection.Iterator
 import scala.collection.immutable.Stream
@@ -75,13 +75,36 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
   final override def insertValueAt[T1 >: T: ClassTag](path: Iterable[T1], value: T1): Tree[T1] =
     NodeTree.insertTreeAt(node, path.iterator, Tree(value)).getOrElse(node)
 
-  final override def insertValueAt[K, T1 >: T: ClassTag](path: Iterable[K], value: T1, f: T => K): Tree[T1] =
-    NodeTree.insertTreeAt(node, path.iterator, f, Tree(value)).getOrElse(node)
+  final override def insertValueAt[K, T1 >: T: ClassTag](
+    path: Iterable[K],
+    value: T1,
+    f: T => K
+  ): Either[Tree[T], Tree[T1]] =
+    NodeTree.insertTreeAt(node, path.iterator, f, Tree(value))
 
   final override def insertTree[T1 >: T: ClassTag](tree: Tree[T1]): Tree[T1] = tree match {
-    case `empty`         => node
-    case n: NodeTree[T1] => Tree(node.value, n :: node.subtrees)
+    case `empty`            => node
+    case tree: NodeTree[T1] => Tree(node.value, tree :: node.subtrees)
+    case tree: ArrayTree[T] => node.deflated[T1].insertTree(tree)
   }
+
+  final override def insertTreeAt[T1 >: T: ClassTag](path: Iterable[T1], subtree: Tree[T1]): Tree[T1] = subtree match {
+    case Tree.empty          => node
+    case tree: NodeTree[T1]  => NodeTree.insertTreeAt(node, path.iterator, tree).getOrElse(node)
+    case tree: ArrayTree[T1] => node.deflated[T1].insertTreeAt(path, tree)
+  }
+
+  final override def insertTreeAt[K, T1 >: T: ClassTag](
+    path: Iterable[K],
+    subtree: Tree[T1],
+    f: T => K
+  ): Either[Tree[T], Tree[T1]] =
+    subtree match {
+      case Tree.empty         => Left(node)
+      case tree: NodeTree[T1] => NodeTree.insertTreeAt(node, path.iterator, f, tree)
+      case tree: ArrayTree[T1] =>
+        NodeTree.insertTreeAt(node, path.iterator, f, tree.inflated.asInstanceOf[NodeTree[T1]])
+    }
 
   final override def insertBranch[T1 >: T: ClassTag](branch: Iterable[T1]): Tree[T1] =
     NodeTree.insertBranch(node, branch.iterator).getOrElse(node)
