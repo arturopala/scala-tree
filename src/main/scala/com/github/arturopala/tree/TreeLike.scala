@@ -167,11 +167,6 @@ trait TreeLike[+T] {
     */
   def branchIterator(pred: Iterable[T] => Boolean, maxDepth: Int = Int.MaxValue): Iterator[Iterable[T]]
 
-  /** Returns the number of distinct branches accepted by the filter, starting at the root of the tree.
-    * @param pred return true to count the branch, false otherwise.
-    * @group branches */
-  def countBranches(pred: Iterable[T] => Boolean): Int
-
   // CHECKS
 
   /** Checks if given value exists in the whole tree.
@@ -308,6 +303,11 @@ trait TreeLike[+T] {
     * @param f function to fold values with, accepts accumulator and a value
     * @group aggregation */
   def foldBranches[A](initial: A, maxDepth: Int = Int.MaxValue)(f: (A, Iterable[T]) => A): A = ???
+
+  /** Returns the number of distinct branches accepted by the filter, starting at the root of the tree.
+    * @param pred return true to count the branch, false otherwise.
+    * @group aggregation */
+  def countBranches(pred: Iterable[T] => Boolean): Int
 
   // COMPOSITION
 
