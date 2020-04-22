@@ -30,10 +30,13 @@ import scala.reflect.ClassTag
   * @groupdesc properties Basic tree properties.
   * @groupprio values 10
   * @groupname values Values
+  * @groupdesc values Access to values.
   * @groupprio sub-trees 20
   * @groupname sub-trees Trees
+  * @groupdesc sub-trees Access to sub-trees.
   * @groupprio branches 30
   * @groupname branches Branches
+  * @groupdesc branches Access to branches.
   * @groupprio checks 40
   * @groupname checks Check
   * @groupprio selection 41
