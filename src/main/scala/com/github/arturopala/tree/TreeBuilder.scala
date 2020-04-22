@@ -157,8 +157,9 @@ object TreeBuilder {
           case Tree.empty =>
             val offset = if (strategy.keepOrphanedSubtrees) size else -1
             fromTreePairsList(xs, result.drop(size - offset), offset, strategy)
-          case node: NodeTree[T] =>
-            val merged = strategy.merge(node, result.take(size))
+
+          case tree =>
+            val merged = strategy.merge(tree.inflated.asInstanceOf[NodeTree[T]], result.take(size))
             fromTreePairsList(xs, merged :: result.drop(size), 0, strategy)
         }
     }
@@ -247,17 +248,6 @@ object TreeBuilder {
 
       /** Joins orphaned subtrees to the parent node. */
       override final def keepOrphanedSubtrees: Boolean = true
-    }
-
-    /** A strategy to replace existing subtrees with the new ones. */
-    object Replace extends TreeMergeStrategy {
-
-      /** Replaces old subtrees with the new ones. */
-      override final def merge[T](newNode: NodeTree[T], existingSubtrees: List[NodeTree[T]]): NodeTree[T] =
-        newNode
-
-      /** Removes orphaned subtrees completely. */
-      override final def keepOrphanedSubtrees: Boolean = false
     }
 
   }

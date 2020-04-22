@@ -98,19 +98,6 @@ class TreeBuilderSpec extends AnyWordSpec with Matchers {
           |d > D""".stripMargin
     }
 
-    "create a new tree from the list of multi-node trees using replace strategy" in {
-      val list: List[(Int, Tree[String])] =
-        List((0, Tree("a", Tree("A"))), (0, Tree("b", Tree("B"))), (0, Tree("c", Tree("C"))), (3, Tree("d", Tree("D"))))
-
-      val trees = fromTreePairsList(list, strategy = TreeBuilder.TreeMergeStrategy.Replace)
-
-      trees.size shouldBe 1
-      trees.head.size shouldBe 2
-      trees.head.width shouldBe 1
-      trees.head shouldBe Tree("d", Tree("D"))
-      showAsGraph(trees.head, "\n") shouldBe "d > D"
-    }
-
     "create a new tree from the pair of arrays" in {
       fromArrays(Array.empty[Int], Array.empty[String]) shouldBe List(Tree.empty)
       fromArrays(Array(0), Array("a")) shouldBe List(Tree("a"))
