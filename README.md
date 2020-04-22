@@ -14,10 +14,10 @@ A Tree is one of the most useful data structure concepts with numerous flavours 
 
 While the concept is simple, practical implementation details of immutable tree pose significant challenges, e.g.
 
-    - traversing and transforming the tree using stack-safe algorithms
-    - using reasonable amount of memory resources to represent large trees
-    - keeping children distinct when inserting or merging trees
-    - supporting numerous use cases in the balanced API
+- traversing and transforming the tree using stack-safe algorithms
+- using reasonable amount of memory resources to represent large trees
+- keeping children distinct when inserting or merging trees
+- supporting numerous use cases in the balanced API
 
 Design
 ---
