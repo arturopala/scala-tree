@@ -5,7 +5,7 @@ Tree\[+T]
 
 This is a micro-library for Scala providing 
 a general-purpose, covariant, immutable, low overhead, 
-efficient tree-like data structure with rich API.
+efficient tree-like data structure with comprehensive API.
 
 Motivation
 ---

@@ -173,7 +173,7 @@ trait TreeLike[+T] {
 
   /** Checks if given value exists in the whole tree.
     * @param value value to look for
-    * @group search */
+    * @group checks */
   def containsValue[T1 >: T](value: T1): Boolean = ???
 
   /** Checks if the tree contains provided branch (full match).

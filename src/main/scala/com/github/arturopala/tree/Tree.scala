@@ -22,7 +22,7 @@ import scala.reflect.ClassTag
 
 /**
   * A general-purpose, covariant, immutable, low overhead,
-  * efficient tree-like data structure with rich API.
+  * efficient tree-like data structure with comprehensive API.
   *
   * Conceptually, apart from an empty, each node of the tree have:
   *   - a value, and
@@ -203,7 +203,7 @@ object Tree {
   final class ArrayTree[T: ClassTag] private[tree] (
     val structure: IntSlice,
     val content: Slice[T],
-    delayedWidth: => Int,
+    delayedWidth:  => Int,
     delayedHeight: => Int
   ) extends ArrayTreeLike[T] with Tree[T] {
 
