@@ -24,22 +24,23 @@ import scala.reflect.ClassTag
   * A general-purpose, covariant, immutable, low overhead,
   * efficient tree-like data structure with comprehensive API.
   *
-  * Conceptually, apart from an empty, each node of the tree have:
+  * Conceptually, apart from an empty, each node of the tree has:
   *   - a value, and
   *   - a collection of subtrees.
   *
-  * Child is a value of a subtree of a node. By default, tree can have
-  * duplicated children, although most transformation methods comes in two
+  * Child is a value of a subtree of a node. The tree can have duplicated
+  * children values, although most modifications methods comes in two
   * flavours: relaxed and distinct.
   *
   * Internally, there are three main implementations of the Tree:
   *   - [[Tree.empty]], an empty tree singleton,
   *   - [[Tree.NodeTree]], nested hierarchy of immutable nodes (inflated tree),
-  *   - [[Tree.ArrayTree]], double linear array (deflated tree).
+  *   - [[Tree.ArrayTree]], the structure with twin linear arrays (deflated tree).
   *
   * The reason of having an inflated and deflated variant of the tree
   * is such that each exhibits different performance and memory
-  * consumption characteristics.
+  * consumption characteristics, making it possible to optimize for specific
+  * targets while facing the same API.
   */
 sealed trait Tree[+T] extends TreeLike[T] {
 

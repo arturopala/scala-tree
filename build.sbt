@@ -3,7 +3,7 @@ ThisBuild / organization := "com.github.arturopala"
 ThisBuild / organizationName := "Artur Opala"
 ThisBuild / startYear := Some(2020)
 
-lazy val supportedScalaVersions = List("2.13.1", "2.12.11", "2.11.12")
+lazy val supportedScalaVersions = List("2.13.2", "2.12.11", "2.11.12")
 
 lazy val Benchmark = config("benchmark") extend Test
 
