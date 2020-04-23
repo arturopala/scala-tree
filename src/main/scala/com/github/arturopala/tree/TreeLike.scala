@@ -373,7 +373,7 @@ trait TreeLike[+T] {
   /** Inserts a new node holding the value and returns updated tree.
     * Keeps all the node's children distinct.
     * @group distinctInsertion */
-  def insertValueDistinct[T1 >: T: ClassTag](value: T1): Tree[T1] = ???
+  def insertValueDistinct[T1 >: T: ClassTag](value: T1): Tree[T1]
 
   /** Inserts, at the given path, a new child node holding the value and returns a whole tree updated.
     * If path doesn't fully exist in the tree then remaining suffix will be created.

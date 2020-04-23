@@ -30,55 +30,101 @@ object ArrayTree {
   @`inline` final def identity[T, T1 >: T]: T => T1 = x => x
 
   /** List indexes of the children values of the parent node, if any.
-    * @note tree structure as returned by [[com.github.arturopala.tree.Tree.toArrays]] */
-  final def childrenIndexes(parentIndex: Int, treeStructure: Int => Int): List[Int] = {
-    val numberOfChildren = treeStructure(parentIndex)
-    if (numberOfChildren == 0) Nil
+    * @note tree structure as returned by [[Tree.toArrays]] */
+  final def childrenIndexes(parentIndex: Int, treeStructure: Int => Int): List[Int] =
+    if (parentIndex < 0) Nil
     else {
-      var result: List[Int] = List(parentIndex - 1)
-      var n = numberOfChildren - 1
-      var i = parentIndex - 1
-      while (n > 0 && i >= 0) {
-        var a = treeStructure(i)
-        while (a > 0) {
+      val numberOfChildren = treeStructure(parentIndex)
+      if (numberOfChildren == 0) Nil
+      else {
+        var result: List[Int] = List(parentIndex - 1)
+        var n = numberOfChildren - 1
+        var i = parentIndex - 1
+        while (n > 0 && i >= 0) {
+          var a = treeStructure(i)
+          while (a > 0) {
+            i = i - 1
+            a = a - 1 + treeStructure(i)
+          }
           i = i - 1
-          a = a - 1 + treeStructure(i)
+          result = i :: result
+          n = n - 1
         }
-        i = i - 1
-        result = i :: result
-        n = n - 1
+        result.reverse
       }
-      result.reverse
     }
-  }
 
-  /** Appends children indexes to the buffer, starting from the given position. */
+  /** Appends children indexes to the buffer, starting from the given position.
+    * @return number of children appended
+    */
   final def writeChildrenIndexes(
     parentIndex: Int,
     treeStructure: Int => Int,
     buffer: IntBuffer,
     position: Int
-  ): Int = {
-    val numberOfChildren = treeStructure(parentIndex)
-    if (numberOfChildren == 0) 0
+  ): Int =
+    if (parentIndex < 0) 0
     else {
-      var pos = position + numberOfChildren - 1
-      buffer(pos) = parentIndex - 1
-      var n = numberOfChildren - 1
-      var i = parentIndex - 1
-      while (n > 0 && i >= 0) {
-        var a = treeStructure(i)
-        while (a > 0) {
+      val numberOfChildren = treeStructure(parentIndex)
+      if (numberOfChildren == 0) 0
+      else {
+        var pos = position + numberOfChildren - 1
+        buffer(pos) = parentIndex - 1
+        var n = numberOfChildren - 1
+        var i = parentIndex - 1
+        while (n > 0 && i >= 0) {
+          var a = treeStructure(i)
+          while (a > 0) {
+            i = i - 1
+            a = a - 1 + treeStructure(i)
+          }
           i = i - 1
-          a = a - 1 + treeStructure(i)
+          pos = pos - 1
+          buffer(pos) = i
+          n = n - 1
         }
-        i = i - 1
-        pos = pos - 1
-        buffer(pos) = i
-        n = n - 1
+        numberOfChildren - n
       }
-      numberOfChildren - n
     }
+
+  /** Checks if children of the node contains the given value.
+    * @param pred child value predicate
+    * @return index of a child fulfilling predicate
+    */
+  final def findChildIndex[T](
+    parentIndex: Int,
+    pred: T => Boolean,
+    treeStructure: Int => Int,
+    treeValues: Int => T
+  ): Option[Int] = {
+    var result: Option[Int] = None
+    if (parentIndex >= 0) {
+      val numberOfChildren = treeStructure(parentIndex)
+      if (numberOfChildren > 0) {
+        var value = treeValues(parentIndex - 1)
+        if (pred(value)) result = Some(parentIndex - 1)
+        else {
+          var n = numberOfChildren - 1
+          var i = parentIndex - 1
+          while (n > 0 && i >= 0) {
+            var a = treeStructure(i)
+            while (a > 0) {
+              i = i - 1
+              a = a - 1 + treeStructure(i)
+            }
+            i = i - 1
+            value = treeValues(i)
+            if (pred(value)) {
+              result = Some(i)
+              n = -1 // escape
+            } else {
+              n = n - 1
+            }
+          }
+        }
+      }
+    }
+    result
   }
 
   /** Looks for Some index of the child node holding the given value, or None.
@@ -839,7 +885,8 @@ object ArrayTree {
     path: Iterable[K],
     value: T1,
     target: Tree[T],
-    toPathItem: T => K
+    toPathItem: T => K,
+    keepDistinct: Boolean = false
   ): Either[Tree[T], Tree[T1]] = {
     val (structure, content) = target.toSlices
     val (indexes, unmatched, _, _) = followPath(path, target.size - 1, structure, content, toPathItem)
@@ -848,9 +895,16 @@ object ArrayTree {
       case Some(index) =>
         if (unmatched.isDefined) Left(target)
         else {
-          Right(insertValue(index, value, target))
+          Right(insertValue(index, value, target, keepDistinct))
         }
     }
+  }
+
+  /** Checks if children of the tree rooted at the index contains the given value. */
+  final def hasChildValue[T](index: Int, value: T, tree: Tree[T]): Boolean = tree match {
+    case Tree.empty          => false
+    case t: Tree.NodeTree[T] => t.subtrees.exists(_.value == value)
+    case t: ArrayTree[T]     => findChildIndex(index, (v: T) => v == value, t.structure, t.content).isDefined
   }
 
   /** Inserts a value to a tree at an index.
@@ -858,27 +912,32 @@ object ArrayTree {
   final def insertValue[T: ClassTag](
     index: Int,
     value: T,
-    target: Tree[T]
+    target: Tree[T],
+    keepDistinct: Boolean = false
   ): Tree[T] =
     if (target.isEmpty) Tree(value).deflated
     else {
       assert(index >= 0 && index < target.size, "Insertion index must be within target's tree range [0,length).")
 
-      val (structureBuffer, valuesBuffer) = target.toBuffers
-      val leaf = structureBuffer(index) == 0
+      if (keepDistinct && hasChildValue(index, value, target)) target
+      else {
 
-      structureBuffer.increment(index)
-      structureBuffer.shiftRight(index, 1)
-      structureBuffer.update(index, 0)
-      valuesBuffer.shiftRight(index, 1)
-      valuesBuffer.update(index, value)
+        val (structureBuffer, valuesBuffer) = target.toBuffers
+        val leaf = structureBuffer(index) == 0
 
-      val newTreeStructure = structureBuffer.toSlice
-      val newTreeValues = valuesBuffer.toSlice
+        structureBuffer.increment(index)
+        structureBuffer.shiftRight(index, 1)
+        structureBuffer.update(index, 0)
+        valuesBuffer.shiftRight(index, 1)
+        valuesBuffer.update(index, value)
 
-      val width = 1 + target.width - (if (leaf) 1 else 0)
+        val newTreeStructure = structureBuffer.toSlice
+        val newTreeValues = valuesBuffer.toSlice
 
-      new ArrayTree[T](newTreeStructure, newTreeValues, width, calculateHeight(newTreeStructure))
+        val width = 1 + target.width - (if (leaf) 1 else 0)
+
+        new ArrayTree[T](newTreeStructure, newTreeValues, width, calculateHeight(newTreeStructure))
+      }
     }
 
   /** Inserts a subtree to a tree at a path.

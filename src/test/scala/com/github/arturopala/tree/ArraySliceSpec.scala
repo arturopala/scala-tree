@@ -16,11 +16,9 @@
 
 package com.github.arturopala.tree
 
-import com.github.arturopala.tree.util.{ArraySlice, IntSlice, Slice}
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpec
+import com.github.arturopala.tree.util.Slice
 
-class ArraySliceSpec extends AnyWordSpec with Matchers {
+class ArraySliceSpec extends AnyWordSpecCompat {
 
   "Slice" should {
     "wrap a whole array" in {

@@ -18,10 +18,8 @@ package com.github.arturopala.tree
 
 import com.github.arturopala.tree.TreeBuilder._
 import com.github.arturopala.tree.TreeFormat.showAsGraph
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpec
 
-class TreeBuilderSpec extends AnyWordSpec with Matchers {
+class TreeBuilderSpec extends AnyWordSpecCompat {
 
   "TreeBuilder" should {
     "create a new tree from the list of values" in {

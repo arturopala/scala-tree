@@ -16,12 +16,9 @@
 
 package com.github.arturopala.tree
 
-import com.github.arturopala.tree.TreeFormat._
 import com.github.arturopala.tree.util.NodeTree
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpec
 
-class NodeTreeSpec extends AnyWordSpec with Matchers {
+class NodeTreeSpec extends AnyWordSpecCompat {
 
   import TestTrees._
 

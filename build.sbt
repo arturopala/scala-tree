@@ -13,7 +13,7 @@ lazy val root = (project in file("."))
     name := "tree",
     licenses += ("Apache-2.0", new URL("https://www.apache.org/licenses/LICENSE-2.0.txt")),
     libraryDependencies ++= Seq(
-      "org.scalatest"     %% "scalatest"  % "3.1.1" % Test,
+      "org.scalameta" %% "munit" % "0.7.3" % Test,
       "com.storm-enroute" %% "scalameter" % "0.19"  % Test
     ),
     crossScalaVersions := supportedScalaVersions,
@@ -26,8 +26,10 @@ lazy val root = (project in file("."))
       "-groups"
     ),
     git.remoteRepo := "git@github.com:arturopala/scala-tree.git",
+    testFrameworks += new TestFramework("munit.Framework"),
     testFrameworks += new TestFramework("org.scalameter.ScalaMeterFramework"),
     logBuffered := false,
+    parallelExecution in Test := false,
     parallelExecution in Benchmark := false,
   )
   .configs(Benchmark)

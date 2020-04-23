@@ -64,7 +64,10 @@ abstract class ArrayTreeLike[T: ClassTag] extends TreeLike[T] {
   // MODIFICATIONS
 
   final override def insertValue[T1 >: T: ClassTag](value: T1): Tree[T1] =
-    ArrayTree.insertValue(tree.structure.length - 1, value, tree)
+    ArrayTree.insertValue(tree.structure.length - 1, value, tree, keepDistinct = false)
+
+  final override def insertValueDistinct[T1 >: T: ClassTag](value: T1): Tree[T1] =
+    ArrayTree.insertValue(tree.structure.length - 1, value, tree, keepDistinct = true)
 
   final override def insertValueAt[T1 >: T: ClassTag](path: Iterable[T1], value: T1): Tree[T1] =
     ArrayTree.insertValueAt(path, value, tree)

@@ -17,10 +17,8 @@
 package com.github.arturopala.tree
 
 import com.github.arturopala.tree.TreeFormat._
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpec
 
-trait TreeSpec extends AnyWordSpec with Matchers {
+trait TreeSpec extends AnyWordSpecCompat {
 
   def name: String
 
@@ -340,6 +338,44 @@ trait TreeSpec extends AnyWordSpec with Matchers {
       tree3_1.insertValue("b") shouldBe Tree("a", Tree("b"), Tree("b", Tree("c")))
       tree3_1.insertValue("c") shouldBe Tree("a", Tree("c"), Tree("b", Tree("c")))
       tree3_2.insertValue("c") shouldBe Tree("a", Tree("c"), Tree("b"), Tree("c"))
+      tree4_1.insertValue("c") shouldBe Tree("a", Tree("c"), Tree("b", Tree("c", Tree("d"))))
+      tree7.insertValue("b") shouldBe Tree(
+        "a",
+        Tree("b"),
+        Tree("b", Tree("c")),
+        Tree("d", Tree("e", Tree("f"))),
+        Tree("g")
+      )
+    }
+
+    "insert distinct new value to a tree" in {
+      tree0.insertValueDistinct("a") shouldBe Tree("a")
+      tree1.insertValueDistinct("b") shouldBe Tree("a", Tree("b"))
+      tree2.insertValueDistinct("c") shouldBe Tree("a", Tree("c"), Tree("b"))
+      tree3_1.insertValueDistinct("d") shouldBe Tree("a", Tree("d"), Tree("b", Tree("c")))
+      tree3_1.insertValueDistinct("c") shouldBe Tree("a", Tree("c"), Tree("b", Tree("c")))
+      tree4_1.insertValueDistinct("c") shouldBe Tree("a", Tree("c"), Tree("b", Tree("c", Tree("d"))))
+      tree7.insertValueDistinct("e") shouldBe Tree(
+        "a",
+        Tree("e"),
+        Tree("b", Tree("c")),
+        Tree("d", Tree("e", Tree("f"))),
+        Tree("g")
+      )
+
+      tree2.insertValueDistinct("b") shouldBe tree2
+      tree3_1.insertValueDistinct("b") shouldBe tree3_1
+      tree3_2.insertValueDistinct("b") shouldBe tree3_2
+      tree3_2.insertValueDistinct("c") shouldBe tree3_2
+      tree4_1.insertValueDistinct("b") shouldBe tree4_1
+      tree4_2.insertValueDistinct("b") shouldBe tree4_2
+      tree4_2.insertValueDistinct("d") shouldBe tree4_2
+      tree4_3.insertValueDistinct("b") shouldBe tree4_3
+      tree7.insertValueDistinct("b") shouldBe tree7
+      tree7.insertValueDistinct("d") shouldBe tree7
+      tree7.insertValueDistinct("g") shouldBe tree7
+      tree9.insertValueDistinct("b") shouldBe tree9
+      tree9.insertValueDistinct("e") shouldBe tree9
     }
 
     "insert new value to a tree at the specified path" in {

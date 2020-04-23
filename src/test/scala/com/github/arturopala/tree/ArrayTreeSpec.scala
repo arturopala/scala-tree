@@ -18,10 +18,8 @@ package com.github.arturopala.tree
 
 import com.github.arturopala.tree.util.ArrayTree._
 import com.github.arturopala.tree.util.{Buffer, IntBuffer, IntSlice, Slice}
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpec
 
-class ArrayTreeSpec extends AnyWordSpec with Matchers {
+class ArrayTreeSpec extends AnyWordSpecCompat {
 
   val aa_a = Slice("aa", "a")
   val aaa_aa_a = Slice("aaa", "aa", "a")
@@ -66,6 +64,22 @@ class ArrayTreeSpec extends AnyWordSpec with Matchers {
       buffer(4) shouldBe 1
       buffer(5) shouldBe 2
       buffer(6) shouldBe 3
+    }
+
+    "find child index fulfilling the predicate" in {
+      val pred: String => Boolean = _ == "c"
+      findChildIndex(-1, pred, Array.empty[Int], Array.empty[String]) shouldBe None
+      findChildIndex(0, pred, Array(0), Array("a")) shouldBe None
+      findChildIndex(1, pred, Array(0, 1), Array("b", "a")) shouldBe None
+      findChildIndex(1, pred, Array(0, 1), Array("c", "a")) shouldBe Some(0)
+      findChildIndex(2, pred, Array(0, 1, 1), Array("c", "b", "a")) shouldBe None
+      findChildIndex(2, pred, Array(0, 0, 2), Array("c", "b", "a")) shouldBe Some(0)
+      findChildIndex(2, pred, Array(0, 0, 2), Array("b", "c", "a")) shouldBe Some(1)
+      findChildIndex(1, pred, Array(0, 0, 2), Array("b", "c", "a")) shouldBe None
+      findChildIndex(1, pred, Array(0, 1, 1), Array("c", "c", "c")) shouldBe Some(0)
+      findChildIndex(2, pred, Array(0, 1, 1), Array("c", "c", "c")) shouldBe Some(1)
+      findChildIndex(0, pred, Array(0, 1, 1), Array("c", "c", "c")) shouldBe None
+      findChildIndex(2, pred, Array(0, 0, 2, 1), Array("c", "c", "c", "c")) shouldBe Some(1)
     }
 
     "find rightmost index of children's node holding a value" in {

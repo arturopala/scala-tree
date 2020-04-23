@@ -17,10 +17,8 @@
 package com.github.arturopala.tree
 
 import com.github.arturopala.tree.util.IntBuffer
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpec
 
-class IntBufferSpec extends AnyWordSpec with Matchers {
+class IntBufferSpec extends AnyWordSpecCompat {
 
   "IntBuffer" should {
     "access and update a value at an index" in {

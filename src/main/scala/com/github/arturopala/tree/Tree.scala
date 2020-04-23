@@ -204,7 +204,7 @@ object Tree {
   final class ArrayTree[T: ClassTag] private[tree] (
     val structure: IntSlice,
     val content: Slice[T],
-    delayedWidth:  => Int,
+    delayedWidth: => Int,
     delayedHeight: => Int
   ) extends ArrayTreeLike[T] with Tree[T] {
 
