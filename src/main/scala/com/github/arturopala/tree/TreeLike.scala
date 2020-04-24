@@ -381,7 +381,7 @@ trait TreeLike[+T] {
     * @param path list of node's values forming a path from the root to the parent node.
     * @param value a value to insert as a new child
     * @group distinctInsertion */
-  def insertValueDistinctAt[T1 >: T: ClassTag](path: Iterable[T1], value: T1): Tree[T1] = ???
+  def insertValueDistinctAt[T1 >: T: ClassTag](path: Iterable[T1], value: T1): Tree[T1]
 
   /** Attempts to insert, at the given path, a new child node holding the value and returns a whole tree updated.
     * If path doesn't fully exist in the tree then tree will remain NOT updated.
@@ -396,7 +396,7 @@ trait TreeLike[+T] {
   /** Inserts a new sub-tree and returns updated tree.
     * Keeps all the node's children distinct.
     * @group distinctInsertion */
-  def insertTreeDistinct[T1 >: T: ClassTag](subtree: Tree[T1]): Tree[T1] = ???
+  def insertTreeDistinct[T1 >: T: ClassTag](subtree: Tree[T1]): Tree[T1]
 
   /** Inserts, at the given path, a new sub-tree and returns a whole tree updated.
     * If path doesn't fully exist in the tree then remaining suffix will be created.

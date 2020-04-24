@@ -805,16 +805,16 @@ class ArrayTreeSpec extends AnyWordSpecCompat {
     }
 
     "insert a value" in {
-      insertValue(0, "a", Tree.empty) shouldBe Tree("a")
-      insertValue(0, "a", Tree("a")) shouldBe Tree("a", Tree("a"))
-      insertValue(1, "a", Tree("a", Tree("b"))) shouldBe Tree("a", Tree("a"), Tree("b"))
-      insertValue(0, "a", Tree("a", Tree("b"))) shouldBe Tree("a", Tree("b", Tree("a")))
-      insertValue(2, "a", Tree("a", Tree("b"), Tree("c"))) shouldBe Tree("a", Tree("a"), Tree("b"), Tree("c"))
-      insertValue(1, "a", Tree("a", Tree("b"), Tree("c"))) shouldBe Tree("a", Tree("b", Tree("a")), Tree("c"))
-      insertValue(0, "a", Tree("a", Tree("b"), Tree("c"))) shouldBe Tree("a", Tree("b"), Tree("c", Tree("a")))
-      insertValue(0, "a", Tree("a", Tree("b", Tree("c")))) shouldBe Tree("a", Tree("b", Tree("c", Tree("a"))))
-      insertValue(1, "a", Tree("a", Tree("b", Tree("c")))) shouldBe Tree("a", Tree("b", Tree("a"), Tree("c")))
-      insertValue(2, "a", Tree("a", Tree("b", Tree("c")))) shouldBe Tree("a", Tree("a"), Tree("b", Tree("c")))
+      insertValue(0, "a", Tree.empty, false) shouldBe Tree("a")
+      insertValue(0, "a", Tree("a"), false) shouldBe Tree("a", Tree("a"))
+      insertValue(1, "a", Tree("a", Tree("b")), false) shouldBe Tree("a", Tree("a"), Tree("b"))
+      insertValue(0, "a", Tree("a", Tree("b")), false) shouldBe Tree("a", Tree("b", Tree("a")))
+      insertValue(2, "a", Tree("a", Tree("b"), Tree("c")), false) shouldBe Tree("a", Tree("a"), Tree("b"), Tree("c"))
+      insertValue(1, "a", Tree("a", Tree("b"), Tree("c")), false) shouldBe Tree("a", Tree("b", Tree("a")), Tree("c"))
+      insertValue(0, "a", Tree("a", Tree("b"), Tree("c")), false) shouldBe Tree("a", Tree("b"), Tree("c", Tree("a")))
+      insertValue(0, "a", Tree("a", Tree("b", Tree("c"))), false) shouldBe Tree("a", Tree("b", Tree("c", Tree("a"))))
+      insertValue(1, "a", Tree("a", Tree("b", Tree("c"))), false) shouldBe Tree("a", Tree("b", Tree("a"), Tree("c")))
+      insertValue(2, "a", Tree("a", Tree("b", Tree("c"))), false) shouldBe Tree("a", Tree("a"), Tree("b", Tree("c")))
     }
 
     "insert a subtree" in {

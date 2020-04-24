@@ -400,6 +400,51 @@ trait TreeSpec extends AnyWordSpecCompat {
       tree3_2.insertValueAt(List("a", "c", "d"), "c") shouldBe Tree("a", Tree("b"), Tree("c", Tree("d", Tree("c"))))
     }
 
+    "insert distinct new value to a tree at the specified path" in {
+      tree0.insertValueDistinctAt(List(), "a") shouldBe Tree("a")
+      tree0.insertValueDistinctAt(List("a", "b"), "a") shouldBe Tree("a", Tree("b", Tree("a")))
+      tree1.insertValueDistinctAt(List("a"), "b") shouldBe Tree("a", Tree("b"))
+      tree1.insertValueDistinctAt(List("a", "b"), "c") shouldBe Tree("a", Tree("b", Tree("c")))
+      tree2.insertValueDistinctAt(List("a"), "a") shouldBe Tree("a", Tree("a"), Tree("b"))
+      tree2.insertValueDistinctAt(List("a"), "b") shouldBe Tree("a", Tree("b"))
+      tree2.insertValueDistinctAt(List("a", "b"), "b") shouldBe Tree("a", Tree("b", Tree("b")))
+      tree2.insertValueDistinctAt(List("a", "b"), "c") shouldBe Tree("a", Tree("b", Tree("c")))
+      tree2.insertValueDistinctAt(List("a", "b", "c"), "d") shouldBe Tree("a", Tree("b", Tree("c", Tree("d"))))
+      tree3_1.insertValueDistinctAt(List("a", "b", "c"), "d") shouldBe Tree("a", Tree("b", Tree("c", Tree("d"))))
+      tree3_1.insertValueDistinctAt(List("a", "b"), "d") shouldBe Tree("a", Tree("b", Tree("d"), Tree("c")))
+      tree3_1.insertValueDistinctAt(List("a"), "d") shouldBe Tree("a", Tree("d"), Tree("b", Tree("c")))
+      tree3_2.insertValueDistinctAt(List("a"), "d") shouldBe Tree("a", Tree("d"), Tree("b"), Tree("c"))
+      tree3_2.insertValueDistinctAt(List("a"), "b") shouldBe tree3_2
+      tree3_2.insertValueDistinctAt(List("a"), "c") shouldBe tree3_2
+      tree3_2.insertValueDistinctAt(List("a", "b"), "b") shouldBe Tree("a", Tree("b", Tree("b")), Tree("c"))
+      tree3_2.insertValueDistinctAt(List("a", "b"), "c") shouldBe Tree("a", Tree("b", Tree("c")), Tree("c"))
+      tree7.insertValueDistinctAt(List("a", "b"), "c") shouldBe tree7
+      tree7.insertValueDistinctAt(List("a", "b"), "d") shouldBe Tree(
+        "a",
+        Tree("b", Tree("d"), Tree("c")),
+        Tree("d", Tree("e", Tree("f"))),
+        Tree("g")
+      )
+      tree7.insertValueDistinctAt(List("a", "b", "c"), "d") shouldBe Tree(
+        "a",
+        Tree("b", Tree("c", Tree("d"))),
+        Tree("d", Tree("e", Tree("f"))),
+        Tree("g")
+      )
+      tree7.insertValueDistinctAt(List("a", "d", "e"), "d") shouldBe Tree(
+        "a",
+        Tree("b", Tree("c")),
+        Tree("d", Tree("e", Tree("d"), Tree("f"))),
+        Tree("g")
+      )
+      tree7.insertValueDistinctAt(List("a", "g", "e"), "d") shouldBe Tree(
+        "a",
+        Tree("b", Tree("c")),
+        Tree("d", Tree("e", Tree("f"))),
+        Tree("g", Tree("e", Tree("d")))
+      )
+    }
+
     "insert new value to a tree at the specified path with path item extractor" in {
       val codeF: String => Int = s => s.head.toInt
       tree0.insertValueAt(List(97), "a", codeF) shouldBe Left(tree0)

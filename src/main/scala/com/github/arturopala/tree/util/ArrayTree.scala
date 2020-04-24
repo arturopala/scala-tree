@@ -861,21 +861,31 @@ object ArrayTree {
     if (trees.size == 1) trees.head else Tree.empty
   }
 
-  /** Inserts a value to a tree at a path.
+  /** Inserts a value to a sub-tree rooted at the path.
+    * @param path sequence of a node's values forming a path to a sub-tree
+    * @param value value to insert
+    * @param target whole tree
+    * @param keepDistinct if true keeps children distinct
     * @return modified tree */
   final def insertValueAt[T: ClassTag](
     path: Iterable[T],
     value: T,
-    target: Tree[T]
+    target: Tree[T],
+    keepDistinct: Boolean
   ): Tree[T] = {
     val (structure, content) = target.toSlices
     val (indexes, unmatched, remaining, _) = followPath(path, target.size - 1, structure, content)
     indexes.lastOption match {
       case None => target
       case Some(index) =>
-        val valueList = unmatched.map(_ :: remaining.toList).getOrElse(remaining.toList) :+ value
-        val newNode: Tree[T] = TreeBuilder.fromValueList(valueList)
-        insertSubtree(index, newNode, target)
+        unmatched match {
+          case Some(item) =>
+            val valueList = (item :: remaining.toList) :+ value
+            val newNode: Tree[T] = TreeBuilder.fromValueList(valueList)
+            insertSubtree(index, newNode, target)
+          case None =>
+            insertValue(index, value, target, keepDistinct)
+        }
     }
   }
 
@@ -886,7 +896,7 @@ object ArrayTree {
     value: T1,
     target: Tree[T],
     toPathItem: T => K,
-    keepDistinct: Boolean = false
+    keepDistinct: Boolean
   ): Either[Tree[T], Tree[T1]] = {
     val (structure, content) = target.toSlices
     val (indexes, unmatched, _, _) = followPath(path, target.size - 1, structure, content, toPathItem)
@@ -908,12 +918,17 @@ object ArrayTree {
   }
 
   /** Inserts a value to a tree at an index.
-    * @return modified tree */
+    * @param index index of the root of a target sub-tree
+    * @param value value to insert
+    * @param target whole tree
+    * @param keepDistinct if true keeps children distinct
+    * @return modified tree
+    */
   final def insertValue[T: ClassTag](
     index: Int,
     value: T,
     target: Tree[T],
-    keepDistinct: Boolean = false
+    keepDistinct: Boolean
   ): Tree[T] =
     if (target.isEmpty) Tree(value).deflated
     else {

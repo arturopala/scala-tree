@@ -298,10 +298,54 @@ object NodeTree {
     if (pred(node)) Stream.cons(node, continue) else continue
   }
 
+  final def insertTreeDistinct[T, T1 >: T](tree: NodeTree[T], subtree: NodeTree[T1]): Tree[T1] =
+    mergeDistinct(Vector((tree, List(subtree))), Nil)
+
+  @tailrec
+  final def mergeDistinct[T, T1 >: T](
+    queue: Vector[(NodeTree[T], List[NodeTree[T1]])],
+    result: List[(Int, T, List[NodeTree[T1]])]
+  ): Tree[T1] =
+    if (queue.isEmpty) buildTreeFromPartials(result, Nil).headOption.getOrElse(Tree.empty)
+    else {
+
+      val (tree, newSubtrees) = queue.head
+
+      if (newSubtrees.isEmpty) mergeDistinct(queue.drop(1), (0, tree.value, tree.subtrees) :: result)
+      else {
+
+        val (queue2, distinctNewSubtrees) =
+          tree.subtrees.reverse.foldLeft((queue.drop(1), newSubtrees)) {
+            case ((acc, toInsert), node) =>
+              toInsert.find(_.value == node.value) match {
+                case None => ((node, Nil) +: acc, toInsert)
+                case Some(t) =>
+                  ((node, t.subtrees) +: acc, toInsert.filterNot(_.value == node.value))
+              }
+          }
+
+        mergeDistinct(queue2, (queue2.size - queue.size + 1, tree.value, distinctNewSubtrees) :: result)
+      }
+
+    }
+
+  @tailrec
+  final def buildTreeFromPartials[T, T1 >: T](
+    list: List[(Int, T, List[NodeTree[T1]])],
+    result: List[NodeTree[T1]]
+  ): List[NodeTree[T1]] =
+    list match {
+      case Nil => result
+      case (size, value, subtrees) :: xs =>
+        val node = Tree(value, subtrees ::: result.take(size)).asInstanceOf[NodeTree[T1]]
+        buildTreeFromPartials(xs, node :: result.drop(size))
+    }
+
   final def insertTreeAt[T, T1 >: T: ClassTag](
     tree: NodeTree[T],
     branchIterator: Iterator[T1],
-    nodeToInsert: NodeTree[T1]
+    nodeToInsert: NodeTree[T1],
+    keepDistinct: Boolean
   ): Option[Tree[T1]] =
     splitTreeByPath(tree, branchIterator).flatMap {
       case (treeSplit, Some(value), remainingBranchIterator, remainingTree) =>
@@ -313,7 +357,10 @@ object NodeTree {
         Some(TreeBuilder.fromTreeSplitAndChild(newNode, treeSplit))
 
       case (treeSplit, None, _, remainingTree) =>
-        val newNode = remainingTree.insertTree(nodeToInsert).asInstanceOf[NodeTree[T1]]
+        val newNode =
+          if (keepDistinct && !remainingTree.isLeaf)
+            remainingTree.insertTreeDistinct(nodeToInsert).asInstanceOf[NodeTree[T1]]
+          else Tree(remainingTree.value, nodeToInsert :: remainingTree.subtrees)
         Some(TreeBuilder.fromTreeSplitAndChild(newNode, treeSplit))
     }
 
@@ -321,22 +368,27 @@ object NodeTree {
     tree: NodeTree[T],
     branchIterator: Iterator[K],
     toPathItem: T => K,
-    nodeToInsert: NodeTree[T1]
+    nodeToInsert: NodeTree[T1],
+    keepDistinct: Boolean
   ): Either[Tree[T], Tree[T1]] =
     splitTreeByPath(tree, branchIterator, toPathItem)
       .map {
         case (_, Some(_), _, _) => Left(tree) // when path left unmatched items
 
         case (treeSplit, None, _, remainingTree) =>
-          val newNode = Tree(remainingTree.value, nodeToInsert :: remainingTree.subtrees)
+          val newNode =
+            if (keepDistinct && !remainingTree.isLeaf)
+              remainingTree.insertTreeDistinct(nodeToInsert).asInstanceOf[NodeTree[T1]]
+            else Tree(remainingTree.value, nodeToInsert :: remainingTree.subtrees)
           Right(TreeBuilder.fromTreeSplitAndChild(newNode, treeSplit))
       }
       .getOrElse(Left(tree))
 
   /** Splits the tree following the path.
     * The tree children split is a triple of (children list left of value, a value, children list right of value)
-    * @return some quadruple of (the tree split, optionally last unmatched value, remaining path iterator, remaining tree)
-    * or none if the path root doesn't match tree root. */
+    * @return some quadruple of (the tree split, optionally last unmatched path item, remaining path iterator, remaining tree)
+    * or none if the path root doesn't match tree root at all.
+    */
   def splitTreeByPath[T, T1 >: T: ClassTag](
     tree: NodeTree[T],
     branchIterator: Iterator[T1]
