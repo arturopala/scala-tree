@@ -28,13 +28,13 @@ or a node having a value, and linking to zero or more subtrees.
 Dependencies
 ---
 
-Depends only on a standard, built-in Scala library.
+Depends only on a standard built-in Scala library.
 
-Cross-compilation to Scala versions `2.13.1`, `2.12.11`, and `2.11.12` is provided.
+Cross-compiles to Scala versions `2.13.1`, `2.12.11`, `2.11.12`, and Dotty `0.23.0-RC1`.
 
 API
 ---
 
 Provided API allows for a rich set of queries and operations on the tree. 
 
-For details, consult [Scaladoc](https://arturopala.github.io/scala-tree/latest/api/com/github/arturopala/tree/Tree.html).
+For more details, see [Scaladoc](https://arturopala.github.io/scala-tree/latest/api/com/github/arturopala/tree/Tree.html).
