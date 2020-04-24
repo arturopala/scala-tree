@@ -313,11 +313,9 @@ object ArrayTree {
         } else throw new NoSuchElementException
 
       def seekNext(check: Boolean): Unit =
-        if (check && counters.isEmpty) { hasNext = false }
-        else {
+        if (check && counters.isEmpty) { hasNext = false } else {
           i = indexes.peek
-          if (i < 0) { hasNext = false }
-          else {
+          if (i < 0) { hasNext = false } else {
             hasNext = true
             val c = treeStructure(i)
             if (c == 0 || counters.length >= maxDepth - 1) {
@@ -358,11 +356,9 @@ object ArrayTree {
 
       @tailrec
       def seekNext(check: Boolean): Unit =
-        if (check && counters.isEmpty) { hasNext = false }
-        else {
+        if (check && counters.isEmpty) { hasNext = false } else {
           val i = indexes.peek
-          if (i < 0) { hasNext = false }
-          else {
+          if (i < 0) { hasNext = false } else {
             val c = treeStructure(i)
             if (c == 0 || counters.length >= maxDepth - 1) {
               array = BranchIteratorUtils.readBranch(counters, indexes).push(i).toSlice
@@ -1239,7 +1235,7 @@ object ArrayTree {
             if (structureBuffer(i) == 0) { // skip checking duplicates and insert remaining tree at once
               val (structure, values) = tree.toSlices
               val s = treeSize(i, structureBuffer)
-              structureBuffer.increment(i)
+              structureBuffer.modify(i, _ + structure.last)
               val d = insertAt(i - s + 1, structure.init, values.init, structureBuffer, valuesBuffer)
               (d, updatedTail.map(shiftFrom(i - d + 1, d)))
             } else
@@ -1285,7 +1281,7 @@ object ArrayTree {
             if (structureBuffer(i) == 0) { // skip checking duplicates and insert remaining tree at once
               val (structure, values) = tree.toSlices
               val s = treeSize(i, structureBuffer)
-              structureBuffer.increment(i)
+              structureBuffer.modify(i, _ + structure.last)
               val d = insertAt(i - s + 1, structure.init, values.init, structureBuffer, valuesBuffer)
               (d, updatedTail.map(shiftFrom(i - d + 1, d)))
             } else

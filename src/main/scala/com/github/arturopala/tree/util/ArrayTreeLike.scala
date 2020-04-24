@@ -85,7 +85,8 @@ abstract class ArrayTreeLike[T: ClassTag] extends TreeLike[T] {
   final override def insertTree[T1 >: T: ClassTag](subtree: Tree[T1]): Tree[T1] =
     ArrayTree.insertSubtree(tree.structure.length - 1, subtree, tree)
 
-  final override def insertTreeDistinct[T1 >: T: ClassTag](subtree: Tree[T1]): Tree[T1] = ???
+  final override def insertTreeDistinct[T1 >: T: ClassTag](subtree: Tree[T1]): Tree[T1] =
+    ArrayTree.insertSubtreeDistinct(tree.structure.length - 1, subtree, tree)
 
   final override def insertTreeAt[T1 >: T: ClassTag](path: Iterable[T1], subtree: Tree[T1]): Tree[T1] =
     ArrayTree.insertTreeAt(path, subtree, tree)

@@ -503,7 +503,9 @@ trait TreeSpec extends AnyWordSpecCompat {
         Tree("d", Tree("e", Tree("f"))),
         Tree("g")
       )
-      tree7.insertTree(tree7).insertTree(tree7) shouldBe Tree(
+      tree7
+        .insertTree(tree7)
+        .insertTree(tree7) shouldBe Tree(
         "a",
         Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e", Tree("f"))), Tree("g")),
         Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e", Tree("f"))), Tree("g")),
@@ -551,6 +553,56 @@ trait TreeSpec extends AnyWordSpecCompat {
         Tree("a", Tree("b", Tree("c"))),
         Tree("a", Tree("b"))
       )
+    }
+
+    "insert distinct new subtree to a tree" in {
+      tree0.insertTreeDistinct(Tree.empty) shouldBe Tree.empty
+      tree0.insertTreeDistinct(Tree("a")) shouldBe Tree("a")
+      tree0.insertTreeDistinct(tree9) shouldBe tree9
+      tree1.insertTreeDistinct(Tree("a")) shouldBe Tree("a", Tree("a"))
+      tree1.insertTreeDistinct(Tree("b")) shouldBe Tree("a", Tree("b"))
+      tree1.insertTreeDistinct(Tree.empty) shouldBe tree1
+      tree2.insertTreeDistinct(Tree("a")) shouldBe Tree("a", Tree("a"), Tree("b"))
+      tree2.insertTreeDistinct(Tree("a", Tree("b"))) shouldBe Tree("a", Tree("a", Tree("b")), Tree("b"))
+      tree2.insertTreeDistinct(Tree("b")) shouldBe Tree("a", Tree("b"))
+      tree2.insertTreeDistinct(Tree("b", Tree("c"))) shouldBe Tree("a", Tree("b", Tree("c")))
+      tree3_1.insertTreeDistinct(Tree("b", Tree("d"))) shouldBe Tree("a", Tree("b", Tree("d"), Tree("c")))
+      tree3_1.insertTreeDistinct(Tree("b", Tree("d"), Tree("e"))) shouldBe Tree(
+        "a",
+        Tree("b", Tree("d"), Tree("e"), Tree("c")))
+      tree3_2.insertTreeDistinct(Tree("b", Tree("d"))) shouldBe Tree("a", Tree("b", Tree("d")), Tree("c"))
+      tree3_2.insertTreeDistinct(Tree("b", Tree("d"), Tree("e"))) shouldBe Tree(
+        "a",
+        Tree("b", Tree("d"), Tree("e")),
+        Tree("c"))
+      tree4_2.insertTreeDistinct(Tree("b", Tree("c", Tree("d")))) shouldBe Tree(
+        "a",
+        Tree("b", Tree("c", Tree("d"))),
+        Tree("d"))
+      tree4_2.insertTreeDistinct(Tree("d", Tree("c", Tree("d")))) shouldBe Tree(
+        "a",
+        Tree("b", Tree("c")),
+        Tree("d", Tree("c", Tree("d"))))
+      tree7.insertTreeDistinct(Tree("d", Tree("c", Tree("d"), Tree("e"), Tree("f")))) shouldBe Tree(
+        "a",
+        Tree("b", Tree("c")),
+        Tree("d", Tree("c", Tree("d"), Tree("e"), Tree("f")), Tree("e", Tree("f"))),
+        Tree("g"))
+      tree7.insertTreeDistinct(tree7) shouldBe Tree(
+        "a",
+        Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e", Tree("f"))), Tree("g")),
+        Tree("b", Tree("c")),
+        Tree("d", Tree("e", Tree("f"))),
+        Tree("g"))
+      tree7
+        .insertTreeDistinct(tree7)
+        .insertTreeDistinct(tree7) shouldBe Tree(
+        "a",
+        Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e", Tree("f"))), Tree("g")),
+        Tree("b", Tree("c")),
+        Tree("d", Tree("e", Tree("f"))),
+        Tree("g"))
+
     }
 
     "insert new subtree to a tree at the specified path using an extractor function" in {
