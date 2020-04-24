@@ -852,7 +852,8 @@ class ArrayTreeSpec extends AnyWordSpecCompat {
       insertSubtreeDistinct(2, Tree("b", Tree("d"), Tree("e")), Tree("a", Tree("b"), Tree("c"))) shouldBe Tree(
         "a",
         Tree("b", Tree("d"), Tree("e")),
-        Tree("c"))
+        Tree("c")
+      )
     }
 
     "insert a branch into the buffers" in {

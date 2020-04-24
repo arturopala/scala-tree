@@ -461,6 +461,55 @@ trait TreeSpec extends AnyWordSpecCompat {
       tree2.insertValueAt(List(98, 97), "c", codeF) shouldBe Left(tree2)
     }
 
+    "insert distinct new value to a tree at the specified path with path item extractor" in {
+      val codeF: String => Int = s => s.head.toInt
+      tree0.insertValueDistinctAt(List(), "a", codeF) shouldBe Left(tree0)
+      tree0.insertValueDistinctAt(List(97, 98), "a", codeF) shouldBe Left(tree0)
+      tree1.insertValueDistinctAt(List(97), "b", codeF) shouldBe Right(Tree("a", Tree("b")))
+      tree1.insertValueDistinctAt(List(97, 98), "c", codeF) shouldBe Left(tree1)
+      tree2.insertValueDistinctAt(List(97), "a", codeF) shouldBe Right(Tree("a", Tree("a"), Tree("b")))
+      tree2.insertValueDistinctAt(List(97), "b", codeF) shouldBe Right(Tree("a", Tree("b")))
+      tree2.insertValueDistinctAt(List(97, 98), "b", codeF) shouldBe Right(Tree("a", Tree("b", Tree("b"))))
+      tree2.insertValueDistinctAt(List(97, 98), "c", codeF) shouldBe Right(Tree("a", Tree("b", Tree("c"))))
+      tree2.insertValueDistinctAt(List(97, 98, 99), "d", codeF) shouldBe Left(tree2)
+      tree3_1.insertValueDistinctAt(List(97, 98, 99), "d", codeF) shouldBe Right(
+        Tree("a", Tree("b", Tree("c", Tree("d"))))
+      )
+      tree3_1.insertValueDistinctAt(List(97, 98), "d", codeF) shouldBe Right(Tree("a", Tree("b", Tree("d"), Tree("c"))))
+      tree3_1.insertValueDistinctAt(List(97), "d", codeF) shouldBe Right(Tree("a", Tree("d"), Tree("b", Tree("c"))))
+      tree3_2.insertValueDistinctAt(List(97), "d", codeF) shouldBe Right(Tree("a", Tree("d"), Tree("b"), Tree("c")))
+      tree3_2.insertValueDistinctAt(List(97), "b", codeF) shouldBe Right(tree3_2)
+      tree3_2.insertValueDistinctAt(List(97), "c", codeF) shouldBe Right(tree3_2)
+      tree3_2.insertValueDistinctAt(List(97, 98), "b", codeF) shouldBe Right(Tree("a", Tree("b", Tree("b")), Tree("c")))
+      tree3_2.insertValueDistinctAt(List(97, 98), "c", codeF) shouldBe Right(Tree("a", Tree("b", Tree("c")), Tree("c")))
+      tree7.insertValueDistinctAt(List(97, 98), "c", codeF) shouldBe Right(tree7)
+      tree7.insertValueDistinctAt(List(97, 98), "d", codeF) shouldBe Right(
+        Tree(
+          "a",
+          Tree("b", Tree("d"), Tree("c")),
+          Tree("d", Tree("e", Tree("f"))),
+          Tree("g")
+        )
+      )
+      tree7.insertValueDistinctAt(List(97, 98, 99), "d", codeF) shouldBe Right(
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("d"))),
+          Tree("d", Tree("e", Tree("f"))),
+          Tree("g")
+        )
+      )
+      tree7.insertValueDistinctAt(List(97, 100, 101), "d", codeF) shouldBe Right(
+        Tree(
+          "a",
+          Tree("b", Tree("c")),
+          Tree("d", Tree("e", Tree("d"), Tree("f"))),
+          Tree("g")
+        )
+      )
+      tree7.insertValueDistinctAt(List(97, 103, 101), "d", codeF) shouldBe Left(tree7)
+    }
+
     "insert new subtree to a tree" in {
       tree0.insertTree(Tree("a")) shouldBe Tree("a")
       tree1.insertTree(Tree("b")) shouldBe Tree("a", Tree("b"))
@@ -569,31 +618,37 @@ trait TreeSpec extends AnyWordSpecCompat {
       tree3_1.insertTreeDistinct(Tree("b", Tree("d"))) shouldBe Tree("a", Tree("b", Tree("d"), Tree("c")))
       tree3_1.insertTreeDistinct(Tree("b", Tree("d"), Tree("e"))) shouldBe Tree(
         "a",
-        Tree("b", Tree("d"), Tree("e"), Tree("c")))
+        Tree("b", Tree("d"), Tree("e"), Tree("c"))
+      )
       tree3_2.insertTreeDistinct(Tree("b", Tree("d"))) shouldBe Tree("a", Tree("b", Tree("d")), Tree("c"))
       tree3_2.insertTreeDistinct(Tree("b", Tree("d"), Tree("e"))) shouldBe Tree(
         "a",
         Tree("b", Tree("d"), Tree("e")),
-        Tree("c"))
+        Tree("c")
+      )
       tree4_2.insertTreeDistinct(Tree("b", Tree("c", Tree("d")))) shouldBe Tree(
         "a",
         Tree("b", Tree("c", Tree("d"))),
-        Tree("d"))
+        Tree("d")
+      )
       tree4_2.insertTreeDistinct(Tree("d", Tree("c", Tree("d")))) shouldBe Tree(
         "a",
         Tree("b", Tree("c")),
-        Tree("d", Tree("c", Tree("d"))))
+        Tree("d", Tree("c", Tree("d")))
+      )
       tree7.insertTreeDistinct(Tree("d", Tree("c", Tree("d"), Tree("e"), Tree("f")))) shouldBe Tree(
         "a",
         Tree("b", Tree("c")),
         Tree("d", Tree("c", Tree("d"), Tree("e"), Tree("f")), Tree("e", Tree("f"))),
-        Tree("g"))
+        Tree("g")
+      )
       tree7.insertTreeDistinct(tree7) shouldBe Tree(
         "a",
         Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e", Tree("f"))), Tree("g")),
         Tree("b", Tree("c")),
         Tree("d", Tree("e", Tree("f"))),
-        Tree("g"))
+        Tree("g")
+      )
       tree7
         .insertTreeDistinct(tree7)
         .insertTreeDistinct(tree7) shouldBe Tree(
@@ -601,7 +656,8 @@ trait TreeSpec extends AnyWordSpecCompat {
         Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e", Tree("f"))), Tree("g")),
         Tree("b", Tree("c")),
         Tree("d", Tree("e", Tree("f"))),
-        Tree("g"))
+        Tree("g")
+      )
 
     }
 

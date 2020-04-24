@@ -57,6 +57,7 @@ trait EmptyTreeLike extends TreeLike[Nothing] {
   // MODIFICATIONS
 
   final override def insertValue[T1: ClassTag](value: T1): Tree[T1] = Tree(value)
+
   final override def insertValueDistinct[T1: ClassTag](value: T1): Tree[T1] = Tree(value)
 
   final override def insertValueAt[T1: ClassTag](path: Iterable[T1], value: T1): Tree[T1] =
@@ -66,6 +67,12 @@ trait EmptyTreeLike extends TreeLike[Nothing] {
     Tree.empty.insertBranch(path.toList :+ value)
 
   final override def insertValueAt[K, T1: ClassTag](
+    path: Iterable[K],
+    value: T1,
+    f: Nothing => K
+  ): Either[Tree[Nothing], Tree[T1]] = Left(Tree.empty)
+
+  final override def insertValueDistinctAt[K, T1 >: Nothing: ClassTag](
     path: Iterable[K],
     value: T1,
     f: Nothing => K

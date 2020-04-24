@@ -390,8 +390,7 @@ trait TreeLike[+T] {
     * @param f extractor of the K path item from the tree's node value
     * @return either right of modified tree or left with existing unmodified tree
     * @group distinctInsertion */
-  def insertValueDistinctAt[K, T1 >: T: ClassTag](path: Iterable[K], value: T1, f: T => K): Either[Tree[T], Tree[T1]] =
-    ???
+  def insertValueDistinctAt[K, T1 >: T: ClassTag](path: Iterable[K], value: T1, f: T => K): Either[Tree[T], Tree[T1]]
 
   /** Inserts a new sub-tree and returns updated tree.
     * Keeps all the node's children distinct.
