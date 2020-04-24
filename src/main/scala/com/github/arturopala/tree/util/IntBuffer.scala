@@ -20,18 +20,20 @@ package com.github.arturopala.tree.util
   * Unlike [[ArrayBuffer]] allows to address elements outside the range. */
 final class IntBuffer(initialSize: Int = 8) extends ArrayBufferLike[Int] {
 
-  override protected var array = new Array[Int](initialSize)
+  private var _array = new Array[Int](initialSize)
+
+  protected override def array: Array[Int] = _array
 
   /** Returns value at the given index or 0 if out of scope. */
   @`inline` def apply(index: Int): Int =
-    if (index < 0 || index >= array.length) 0
-    else array(index)
+    if (index < 0 || index >= _array.length) 0
+    else _array(index)
 
   override protected def ensureIndex(index: Int): Unit =
-    if (index >= array.length) {
-      val newArray: Array[Int] = new Array(Math.max(array.length * 2, index + 1))
-      java.lang.System.arraycopy(array, 0, newArray, 0, array.length)
-      array = newArray
+    if (index >= _array.length) {
+      val newArray: Array[Int] = new Array(Math.max(_array.length * 2, index + 1))
+      java.lang.System.arraycopy(_array, 0, newArray, 0, _array.length)
+      _array = newArray
     }
 
   /** Increments the value at index.s */
@@ -41,15 +43,15 @@ final class IntBuffer(initialSize: Int = 8) extends ArrayBufferLike[Int] {
   }
 
   /** Returns copy of the underlying array trimmed to length. */
-  def toArray: Array[Int] = java.util.Arrays.copyOf(array, length)
+  def toArray: Array[Int] = java.util.Arrays.copyOf(_array, length)
 
   /** Wraps underlying array as a Slice. */
-  def toSlice: IntSlice = IntSlice.of(array, 0, length)
+  def toSlice: IntSlice = IntSlice.of(_array, 0, length)
 
   /** Copy values directly from IntSlice's array into the buffer array. */
   def copyFrom(index: Int, slice: IntSlice): Unit = {
     ensureIndex(index + slice.length - 1)
-    java.lang.System.arraycopy(slice.array, slice.fromIndex, array, index, slice.length)
+    java.lang.System.arraycopy(slice.array, slice.fromIndex, _array, index, slice.length)
   }
 
 }

@@ -237,7 +237,7 @@ object TreeBuilder {
     def keepOrphanedSubtrees: Boolean
   }
 
-  final object TreeMergeStrategy {
+  object TreeMergeStrategy {
 
     /** Default strategy is to preserve all existing subtrees. */
     object Join extends TreeMergeStrategy {

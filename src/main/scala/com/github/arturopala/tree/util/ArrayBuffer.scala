@@ -20,7 +20,9 @@ package com.github.arturopala.tree.util
   * @tparam T type of the underlying array items */
 final class ArrayBuffer[T](initialArray: Array[T]) extends ArrayBufferLike[T] {
 
-  override protected var array: Array[T] = initialArray
+  private var _array: Array[T] = initialArray
+
+  protected override def array: Array[T] = _array
 
   set(initialArray.length - 1)
 
@@ -30,16 +32,16 @@ final class ArrayBuffer[T](initialArray: Array[T]) extends ArrayBufferLike[T] {
     if (index < 0 || index >= length)
       throw new IndexOutOfBoundsException
     else
-      array(index)
+      _array(index)
 
   override protected def ensureIndex(index: Int): Unit =
-    if (index >= array.length) {
-      array = ArrayOps.copyOf(array, Math.max(array.length * 2, index + 1))
+    if (index >= _array.length) {
+      _array = ArrayOps.copyOf(_array, Math.max(_array.length * 2, index + 1))
     }
 
   /** Returns a copy of the underlying array trimmed to length. */
-  def toArray: Array[T] = ArrayOps.copyOf(array, length)
+  def toArray: Array[T] = ArrayOps.copyOf(_array, length)
 
   /** Wraps underlying array as a Slice. */
-  def toSlice: Slice[T] = Slice.of(array, 0, length)
+  def toSlice: Slice[T] = Slice.of(_array, 0, length)
 }

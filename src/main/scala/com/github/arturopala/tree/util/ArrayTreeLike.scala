@@ -141,7 +141,8 @@ abstract class ArrayTreeLike[T: ClassTag] extends TreeLike[T] {
 
   final override def toArrays[T1 >: T: ClassTag]: (Array[Int], Array[T1]) =
     (tree.structure.toArray, tree.content.toArray.asInstanceOf[Array[T1]])
-  final override def toSlices[T1 >: T: ClassTag]: (IntSlice, Slice[T1]) =
+
+  final def toSlices[T1 >: T: ClassTag]: (IntSlice, Slice[T1]) =
     (tree.structure, tree.content.asInstanceOf[Slice[T1]])
 
   final override def toBuffers[T1 >: T: ClassTag]: (IntBuffer, Buffer[T1]) =

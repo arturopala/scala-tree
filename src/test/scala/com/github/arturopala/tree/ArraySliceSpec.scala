@@ -134,12 +134,12 @@ class ArraySliceSpec extends AnyWordSpecCompat {
     }
 
     "have a slice" in {
-      Slice().slice(-5, 10) shouldBe Slice()
+      Slice[Int]().slice(-5, 10) shouldBe Slice[Int]()
       Slice(1, 2, 3).slice(-5, 10) shouldBe Slice(1, 2, 3)
       Slice(1, 2, 3, 4, 5, 6, 7, 8, 9).slice(-5, 5) shouldBe Slice(1, 2, 3, 4, 5)
       Slice.of(Array(1, 2, 3, 4, 5, 6, 7, 8, 9), 2, 7).slice(-5, 5) shouldBe Slice(3, 4, 5, 6, 7)
-      Slice.of(Array(1, 2, 3, 4, 5, 6, 7, 8, 9), 2, 5).slice(5, 8) shouldBe Slice()
-      Slice.of(Array(1, 2, 3, 4, 5, 6, 7, 8, 9), 5, 5).slice(1, 2) shouldBe Slice()
+      Slice.of(Array(1, 2, 3, 4, 5, 6, 7, 8, 9), 2, 5).slice(5, 8) shouldBe Slice[Int]()
+      Slice.of(Array(1, 2, 3, 4, 5, 6, 7, 8, 9), 5, 5).slice(1, 2) shouldBe Slice[Int]()
       Slice.of(Array(1, 2, 3, 4, 5, 6, 7, 8, 9), 3, 5).slice(1, 2) shouldBe Slice(5)
       Slice.of(Array(1, 2, 3, 4, 5, 6, 7, 8, 9), 0, 9).slice(7, 12) shouldBe Slice(8, 9)
     }

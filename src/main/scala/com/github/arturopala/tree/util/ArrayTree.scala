@@ -377,7 +377,7 @@ object ArrayTree {
         }
     }
 
-  private final object BranchIteratorUtils {
+  private object BranchIteratorUtils {
 
     def readBranch(counters: IntBuffer, indexes: IntBuffer): IntBuffer = {
       val branchIndexes = new IntBuffer()
@@ -552,7 +552,7 @@ object ArrayTree {
 
       indexes.push(startIndex)
 
-      do {
+      while ({
         val i = indexes.peek
         if (i < 0) {
           val value = read(counters, indexes, 0)
@@ -571,7 +571,8 @@ object ArrayTree {
             writeChildrenIndexes(i, treeStructure, indexes, indexes.length)
           }
         }
-      } while (counters.nonEmpty)
+        counters.nonEmpty
+      }) ()
     }
 
     result
@@ -867,13 +868,14 @@ object ArrayTree {
     * @param target whole tree
     * @param keepDistinct if true keeps children distinct
     * @return modified tree */
-  final def insertValueAt[T: ClassTag](
-    path: Iterable[T],
-    value: T,
-    target: Tree[T],
+  final def insertValueAt[T, T1 >: T: ClassTag](
+    path: Iterable[T1],
+    value: T1,
+    target: ArrayTree[T],
     keepDistinct: Boolean
-  ): Tree[T] = {
-    val (structure, content) = target.toSlices
+  ): Tree[T1] = {
+    val structure = target.structure
+    val content = target.content
     val (indexes, unmatched, remaining, _) = followPath(path, target.size - 1, structure, content)
     indexes.lastOption match {
       case None => target
@@ -881,7 +883,7 @@ object ArrayTree {
         unmatched match {
           case Some(item) =>
             val valueList = (item :: remaining.toList) :+ value
-            val newNode: Tree[T] = TreeBuilder.fromValueList(valueList)
+            val newNode: Tree[T1] = TreeBuilder.fromValueList(valueList)
             insertSubtree(index, newNode, target)
           case None =>
             insertValue(index, value, target, keepDistinct)
@@ -891,14 +893,15 @@ object ArrayTree {
 
   /** Inserts a value to a tree at a path using an extractor function.
     * @return modified tree */
-  final def insertValueAt[T: ClassTag, T1 >: T: ClassTag, K](
+  final def insertValueAt[T, T1 >: T: ClassTag, K](
     path: Iterable[K],
     value: T1,
-    target: Tree[T],
+    target: ArrayTree[T],
     toPathItem: T => K,
     keepDistinct: Boolean
   ): Either[Tree[T], Tree[T1]] = {
-    val (structure, content) = target.toSlices
+    val structure = target.structure
+    val content = target.content
     val (indexes, unmatched, _, _) = followPath(path, target.size - 1, structure, content, toPathItem)
     indexes.lastOption match {
       case None => Left(target)
@@ -924,12 +927,12 @@ object ArrayTree {
     * @param keepDistinct if true keeps children distinct
     * @return modified tree
     */
-  final def insertValue[T: ClassTag](
+  final def insertValue[T, T1 >: T: ClassTag](
     index: Int,
-    value: T,
+    value: T1,
     target: Tree[T],
     keepDistinct: Boolean
-  ): Tree[T] =
+  ): Tree[T1] =
     if (target.isEmpty) Tree(value).deflated
     else {
       assert(index >= 0 && index < target.size, "Insertion index must be within target's tree range [0,length).")
@@ -937,7 +940,7 @@ object ArrayTree {
       if (keepDistinct && hasChildValue(index, value, target)) target
       else {
 
-        val (structureBuffer, valuesBuffer) = target.toBuffers
+        val (structureBuffer, valuesBuffer) = target.toBuffers[T1]
         val leaf = structureBuffer(index) == 0
 
         structureBuffer.increment(index)
@@ -951,7 +954,7 @@ object ArrayTree {
 
         val width = 1 + target.width - (if (leaf) 1 else 0)
 
-        new ArrayTree[T](newTreeStructure, newTreeValues, width, calculateHeight(newTreeStructure))
+        new ArrayTree[T1](newTreeStructure, newTreeValues, width, calculateHeight(newTreeStructure))
       }
     }
 
@@ -975,13 +978,14 @@ object ArrayTree {
 
   /** Inserts a subtree to a tree at a path using an extractor function.
     * @return modified tree */
-  final def insertTreeAt[T: ClassTag, T1 >: T: ClassTag, K](
+  final def insertTreeAt[T, T1 >: T: ClassTag, K](
     path: Iterable[K],
     subtree: Tree[T1],
-    target: Tree[T],
+    target: ArrayTree[T],
     toPathItem: T => K
   ): Either[Tree[T], Tree[T1]] = {
-    val (structure, content) = target.toSlices
+    val structure = target.structure
+    val content = target.content
     val (indexes, unmatched, _, _) = followPath(path, target.size - 1, structure, content, toPathItem)
     indexes.lastOption match {
       case None => Left(target)

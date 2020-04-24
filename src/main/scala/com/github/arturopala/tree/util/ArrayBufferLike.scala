@@ -19,7 +19,7 @@ package com.github.arturopala.tree.util
 /** Common buffer functions impl for array-backend buffers. */
 trait ArrayBufferLike[T] extends Buffer[T] {
 
-  protected var array: Array[T]
+  protected def array: Array[T]
 
   /** Updates value at the provided index.
     * Alters underlying array if necessary.

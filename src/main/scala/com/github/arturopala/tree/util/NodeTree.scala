@@ -25,12 +25,12 @@ import scala.reflect.ClassTag
 /** Collection of operations on the hierarchical, node-based, representation of the tree. */
 object NodeTree {
 
-  final object Node {
+  object Node {
     def unapply[T](node: NodeTree[T]): Option[(T, List[NodeTree[T]])] =
       Some((node.value, node.subtrees))
   }
 
-  final object NonEmptySubtree {
+  object NonEmptySubtree {
     def unapply[T](node: NodeTree[T]): Option[(T, NodeTree[T], List[NodeTree[T]])] = node match {
       case _: Leaf[T]      => None
       case node: Unary[T]  => Some((node.value, node.subtree, Nil))
