@@ -16,40 +16,26 @@
 
 package com.github.arturopala.tree
 
-class DeflatedTreeSpec extends TreeSpec {
+class DeflatedTreeSpec extends AnyWordSpecCompat with DeflatedTestTrees {
 
-  override def name = "A deflated Tree"
-
-  override val tree0: Tree[String] = TestTrees.tree0.deflated
-  override val tree1: Tree[String] = TestTrees.tree1.deflated
-  override val tree2: Tree[String] = TestTrees.tree2.deflated
-  override val tree3_1: Tree[String] = TestTrees.tree3_1.deflated
-  override val tree3_2: Tree[String] = TestTrees.tree3_2.deflated
-  override val tree4_1: Tree[String] = TestTrees.tree4_1.deflated
-  override val tree4_2: Tree[String] = TestTrees.tree4_2.deflated
-  override val tree4_3: Tree[String] = TestTrees.tree4_3.deflated
-  override val tree7: Tree[String] = TestTrees.tree7.deflated
-  override val tree9: Tree[String] = TestTrees.tree9.deflated
-  override val allTrees: Seq[Tree[String]] = TestTrees.allTrees.map(_.deflated)
-
-  s"$name also" should {
+  "DeflatedTree" should {
 
     "return nodes in the same order as an inflated tree" in {
-      Tree.inflate(tree3_2).values shouldBe tree3_2.values
-      Tree.inflate(tree7).values shouldBe tree7.values
-      Tree.inflate(tree9).values shouldBe tree9.values
+      TestTrees.tree3_2.values shouldBe tree3_2.values
+      TestTrees.tree7.values shouldBe tree7.values
+      TestTrees.tree9.values shouldBe tree9.values
     }
 
     "return children in the same order as an inflated tree" in {
-      Tree.inflate(tree3_2).childrenValues shouldBe tree3_2.childrenValues
-      Tree.inflate(tree7).childrenValues shouldBe tree7.childrenValues
-      Tree.inflate(tree9).childrenValues shouldBe tree9.childrenValues
+      TestTrees.tree3_2.childrenValues shouldBe tree3_2.childrenValues
+      TestTrees.tree7.childrenValues shouldBe tree7.childrenValues
+      TestTrees.tree9.childrenValues shouldBe tree9.childrenValues
     }
 
     "return branches in the same order as an inflated tree" in {
-      Tree.inflate(tree3_2).branches shouldBe tree3_2.branches
-      Tree.inflate(tree7).branches shouldBe tree7.branches
-      Tree.inflate(tree9).branches shouldBe tree9.branches
+      TestTrees.tree3_2.branches shouldBe tree3_2.branches
+      TestTrees.tree7.branches shouldBe tree7.branches
+      TestTrees.tree9.branches shouldBe tree9.branches
     }
   }
 

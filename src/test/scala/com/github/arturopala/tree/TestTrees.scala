@@ -18,6 +18,22 @@ package com.github.arturopala.tree
 
 import com.github.arturopala.tree.Tree.NodeTree
 
+trait TestTrees {
+
+  val tree0: Tree[String]
+  val tree1: Tree[String]
+  val tree2: Tree[String]
+  val tree3_1: Tree[String]
+  val tree3_2: Tree[String]
+  val tree4_1: Tree[String]
+  val tree4_2: Tree[String]
+  val tree4_3: Tree[String]
+  val tree7: Tree[String]
+  val tree9: Tree[String]
+  val allTrees: Seq[Tree[String]]
+}
+
+/** Collection of simple trees for use in testing. */
 object TestTrees {
 
   val tree0: Tree[String] = Tree[String]()
@@ -78,5 +94,37 @@ object TestTrees {
 
   val allTrees: Seq[Tree[String]] =
     Seq(tree0, tree1, tree2, tree3_1, tree3_2, tree4_1, tree4_2, tree4_3, tree7, tree9)
+
+}
+
+trait InflatedTestTrees extends TestTrees {
+
+  override val tree0: Tree[String] = TestTrees.tree0
+  override val tree1: Tree[String] = TestTrees.tree1
+  override val tree2: Tree[String] = TestTrees.tree2
+  override val tree3_1: Tree[String] = TestTrees.tree3_1
+  override val tree3_2: Tree[String] = TestTrees.tree3_2
+  override val tree4_1: Tree[String] = TestTrees.tree4_1
+  override val tree4_2: Tree[String] = TestTrees.tree4_2
+  override val tree4_3: Tree[String] = TestTrees.tree4_3
+  override val tree7: Tree[String] = TestTrees.tree7
+  override val tree9: Tree[String] = TestTrees.tree9
+  override val allTrees: Seq[Tree[String]] = TestTrees.allTrees
+
+}
+
+trait DeflatedTestTrees extends TestTrees {
+
+  override val tree0: Tree[String] = TestTrees.tree0.deflated
+  override val tree1: Tree[String] = TestTrees.tree1.deflated
+  override val tree2: Tree[String] = TestTrees.tree2.deflated
+  override val tree3_1: Tree[String] = TestTrees.tree3_1.deflated
+  override val tree3_2: Tree[String] = TestTrees.tree3_2.deflated
+  override val tree4_1: Tree[String] = TestTrees.tree4_1.deflated
+  override val tree4_2: Tree[String] = TestTrees.tree4_2.deflated
+  override val tree4_3: Tree[String] = TestTrees.tree4_3.deflated
+  override val tree7: Tree[String] = TestTrees.tree7.deflated
+  override val tree9: Tree[String] = TestTrees.tree9.deflated
+  override val allTrees: Seq[Tree[String]] = TestTrees.allTrees.map(_.deflated)
 
 }
