@@ -16,6 +16,7 @@
 
 package com.github.arturopala.tree
 
+import com.github.arturopala.bufferandslice.{IntSlice, Slice}
 import com.github.arturopala.tree.util._
 
 import scala.reflect.ClassTag

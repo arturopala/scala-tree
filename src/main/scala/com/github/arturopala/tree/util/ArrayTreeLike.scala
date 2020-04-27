@@ -18,6 +18,7 @@ package com.github.arturopala.tree.util
 
 import com.github.arturopala.tree.{Tree, TreeBuilder, TreeLike}
 import com.github.arturopala.tree.Tree.ArrayTree
+import com.github.arturopala.bufferandslice.{Buffer, IntBuffer, IntSlice, Slice}
 
 import scala.collection.Iterator
 import scala.collection.immutable.Stream

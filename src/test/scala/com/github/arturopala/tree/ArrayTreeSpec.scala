@@ -17,7 +17,7 @@
 package com.github.arturopala.tree
 
 import com.github.arturopala.tree.util.ArrayTree._
-import com.github.arturopala.tree.util.{Buffer, IntBuffer, IntSlice, Slice}
+import com.github.arturopala.bufferandslice.{Buffer, IntBuffer, IntSlice, Slice}
 
 class ArrayTreeSpec extends AnyWordSpecCompat {
 

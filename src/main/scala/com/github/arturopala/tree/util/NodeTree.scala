@@ -18,6 +18,7 @@ package com.github.arturopala.tree.util
 
 import com.github.arturopala.tree.{Tree, TreeBuilder}
 import com.github.arturopala.tree.Tree.{Binary, Leaf, NodeTree, Unary}
+import com.github.arturopala.bufferandslice.{Buffer, IntBuffer, IntSlice, Slice}
 
 import scala.annotation.tailrec
 import scala.reflect.ClassTag

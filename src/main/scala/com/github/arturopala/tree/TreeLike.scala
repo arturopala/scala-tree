@@ -16,10 +16,9 @@
 
 package com.github.arturopala.tree
 
-import com.github.arturopala.tree.util.{Buffer, IntBuffer, IntSlice, Slice}
+import com.github.arturopala.bufferandslice.{Buffer, IntBuffer, IntSlice, Slice}
 
 import scala.collection.Iterator
-import scala.collection.immutable.Stream
 import scala.reflect.ClassTag
 
 /**

@@ -18,6 +18,7 @@ package com.github.arturopala.tree.util
 
 import java.util.NoSuchElementException
 
+import com.github.arturopala.bufferandslice.{ArrayBuffer, Buffer, IntBuffer, IntSlice, Slice}
 import com.github.arturopala.tree.{Tree, TreeBuilder}
 import com.github.arturopala.tree.Tree.ArrayTree
 

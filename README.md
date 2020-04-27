@@ -28,7 +28,10 @@ or a node having a value, and linking to zero or more subtrees.
 Dependencies
 ---
 
-Depends only on a standard built-in Scala library.
+Depends on:
+
+- a standard built-in Scala library,
+- [`com.github.arturopala.bufferandslice`](https://github.com/arturopala/buffer-and-slice).
 
 Cross-compiles to Scala versions `2.13.1`, `2.12.11`, `2.11.12`, and Dotty `0.23.0-RC1`.
 
