@@ -313,11 +313,9 @@ object ArrayTree {
         } else throw new NoSuchElementException
 
       def seekNext(check: Boolean): Unit =
-        if (check && counters.isEmpty) { hasNext = false }
-        else {
+        if (check && counters.isEmpty) { hasNext = false } else {
           i = indexes.peek
-          if (i < 0) { hasNext = false }
-          else {
+          if (i < 0) { hasNext = false } else {
             hasNext = true
             val c = treeStructure(i)
             if (c == 0 || counters.length >= maxDepth - 1) {
@@ -358,11 +356,9 @@ object ArrayTree {
 
       @tailrec
       def seekNext(check: Boolean): Unit =
-        if (check && counters.isEmpty) { hasNext = false }
-        else {
+        if (check && counters.isEmpty) { hasNext = false } else {
           val i = indexes.peek
-          if (i < 0) { hasNext = false }
-          else {
+          if (i < 0) { hasNext = false } else {
             val c = treeStructure(i)
             if (c == 0 || counters.length >= maxDepth - 1) {
               array = BranchIteratorUtils.readBranch(counters, indexes).push(i).toSlice
@@ -960,19 +956,25 @@ object ArrayTree {
 
   /** Inserts a subtree to a tree at a path.
     * @return modified tree */
-  final def insertTreeAt[T: ClassTag](
-    path: Iterable[T],
-    subtree: Tree[T],
-    target: Tree[T]
-  ): Tree[T] = {
-    val (structure, content) = target.toSlices
-    val (indexes, unmatched, remaining, _) = followPath(path, target.size - 1, structure, content)
+  final def insertTreeAt[T, T1 >: T: ClassTag](
+    path: Iterable[T1],
+    subtree: Tree[T1],
+    target: ArrayTree[T],
+    keepDistinct: Boolean
+  ): Tree[T1] = {
+    val (indexes, unmatched, remaining, _) = followPath(path, target.size - 1, target.structure, target.content)
     indexes.lastOption match {
       case None => target
       case Some(index) =>
-        val treeList = unmatched.map(_ :: remaining.toList).getOrElse(remaining.toList).map(Tree.apply[T]) :+ subtree
-        val newNode: Tree[T] = TreeBuilder.fromTreeList(treeList)
-        insertSubtree(index, newNode, target)
+        unmatched match {
+          case Some(item) =>
+            val treeList = (Tree(item) :: remaining.toList.map(Tree.apply[T1])) :+ subtree
+            val newNode: Tree[T1] = TreeBuilder.fromTreeList(treeList)
+            insertSubtree(index, newNode, target)
+          case None =>
+            if (keepDistinct) insertSubtreeDistinct(index, subtree, target)
+            else insertSubtree(index, subtree, target)
+        }
     }
   }
 
@@ -982,15 +984,15 @@ object ArrayTree {
     path: Iterable[K],
     subtree: Tree[T1],
     target: ArrayTree[T],
-    toPathItem: T => K
+    toPathItem: T => K,
+    keepDistinct: Boolean
   ): Either[Tree[T], Tree[T1]] = {
-    val structure = target.structure
-    val content = target.content
-    val (indexes, unmatched, _, _) = followPath(path, target.size - 1, structure, content, toPathItem)
+    val (indexes, unmatched, _, _) = followPath(path, target.size - 1, target.structure, target.content, toPathItem)
     indexes.lastOption match {
       case None => Left(target)
       case Some(index) =>
         if (unmatched.isDefined) Left(target)
+        else if (keepDistinct) Right(insertSubtreeDistinct(index, subtree, target))
         else Right(insertSubtree(index, subtree, target))
     }
   }

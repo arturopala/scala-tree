@@ -64,7 +64,7 @@ trait EmptyTreeLike extends TreeLike[Nothing] {
     Tree.empty.insertBranch(path.toList :+ value)
 
   final override def insertValueDistinctAt[T1: ClassTag](path: Iterable[T1], value: T1): Tree[T1] =
-    Tree.empty.insertBranch(path.toList :+ value)
+    insertValueAt(path, value)
 
   final override def insertValueAt[K, T1: ClassTag](
     path: Iterable[K],
@@ -76,7 +76,7 @@ trait EmptyTreeLike extends TreeLike[Nothing] {
     path: Iterable[K],
     value: T1,
     f: Nothing => K
-  ): Either[Tree[Nothing], Tree[T1]] = Left(Tree.empty)
+  ): Either[Tree[Nothing], Tree[T1]] = insertValueAt(path, value, f)
 
   final override def insertTree[T1: ClassTag](subtree: Tree[T1]): Tree[T1] = subtree
 
@@ -87,11 +87,19 @@ trait EmptyTreeLike extends TreeLike[Nothing] {
     else if (subtree.isEmpty) empty
     else TreeBuilder.fromValueList(path.toList).insertTreeAt(path, subtree)
 
+  final override def insertTreeDistinctAt[T1 >: Nothing: ClassTag](path: Iterable[T1], subtree: Tree[T1]): Tree[T1] =
+    insertTreeAt(path, subtree)
+
   final override def insertTreeAt[K, T1: ClassTag](
     path: Iterable[K],
     subtree: Tree[T1],
     f: Nothing => K
   ): Either[Tree[Nothing], Tree[T1]] = if (path.isEmpty) Right(subtree) else Left(empty)
+
+  final override def insertTreeDistinctAt[K, T1 >: Nothing: ClassTag](
+    path: Iterable[K],
+    subtree: Tree[T1],
+    f: Nothing => K): Either[Tree[Nothing], Tree[T1]] = insertTreeAt(path, subtree, f)
 
   final override def insertBranch[T1: ClassTag](branch: Iterable[T1]): Tree[T1] =
     if (branch.isEmpty) Tree.empty

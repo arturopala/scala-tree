@@ -32,6 +32,8 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
   /** [[Tree.NodeTree]] under consideration. */
   protected val node: NodeTree[T]
 
+  val DEFLATE_SIZE_THRESHOLD: Int = 1000
+
   final override def valueOption: Option[T] = Some(node.value)
   final def isEmpty: Boolean = node.size == 0
 
@@ -95,35 +97,68 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
   ): Either[Tree[T], Tree[T1]] =
     NodeTree.insertTreeAt(node, path.iterator, f, Tree(value), keepDistinct = true)
 
+  @`inline` final def preferInflated[T, T1 >: T](node: Tree.NodeTree[T], tree: Tree.ArrayTree[T1]): Boolean =
+    tree.size < DEFLATE_SIZE_THRESHOLD || tree.size <= node.size
+
   final override def insertTree[T1 >: T: ClassTag](subtree: Tree[T1]): Tree[T1] = subtree match {
-    case `empty`             => node
-    case tree: NodeTree[T1]  => Tree(node.value, tree :: node.subtrees)
-    case tree: ArrayTree[T1] => node.deflated[T1].insertTree(tree)
+    case Tree.empty         => node
+    case tree: NodeTree[T1] => Tree(node.value, tree :: node.subtrees)
+    case tree: ArrayTree[T1] =>
+      if (preferInflated(node, tree)) Tree(node.value, tree.inflated.asInstanceOf[NodeTree[T1]] :: node.subtrees)
+      else node.deflated[T1].insertTree(tree)
   }
 
   final override def insertTreeDistinct[T1 >: T: ClassTag](subtree: Tree[T1]): Tree[T1] = subtree match {
-    case `empty`             => node
-    case tree: NodeTree[T1]  => NodeTree.insertTreeDistinct(node, tree)
-    case tree: ArrayTree[T1] => node.deflated[T1].insertTreeDistinct(tree)
+    case Tree.empty         => node
+    case tree: NodeTree[T1] => NodeTree.insertTreeDistinct(node, tree)
+    case tree: ArrayTree[T1] =>
+      if (preferInflated(node, tree)) NodeTree.insertTreeDistinct(node, tree.inflated.asInstanceOf[NodeTree[T1]])
+      else node.deflated[T1].insertTreeDistinct(tree)
   }
 
   final override def insertTreeAt[T1 >: T: ClassTag](path: Iterable[T1], subtree: Tree[T1]): Tree[T1] = subtree match {
-    case Tree.empty          => node
-    case tree: NodeTree[T1]  => NodeTree.insertTreeAt(node, path.iterator, tree, keepDistinct = false).getOrElse(node)
-    case tree: ArrayTree[T1] => node.deflated[T1].insertTreeAt(path, tree)
+    case Tree.empty         => node
+    case tree: NodeTree[T1] => NodeTree.insertTreeAt(node, path.iterator, tree, keepDistinct = false).getOrElse(node)
+    case tree: ArrayTree[T1] =>
+      if (preferInflated(node, tree))
+        NodeTree
+          .insertTreeAt(node, path.iterator, tree.inflated.asInstanceOf[NodeTree[T1]], keepDistinct = false)
+          .getOrElse(node)
+      else node.deflated[T1].insertTreeAt(path, tree)
   }
+
+  final override def insertTreeDistinctAt[T1 >: T: ClassTag](path: Iterable[T1], subtree: Tree[T1]): Tree[T1] =
+    subtree match {
+      case Tree.empty         => node
+      case tree: NodeTree[T1] => NodeTree.insertTreeAt(node, path.iterator, tree, keepDistinct = true).getOrElse(node)
+      case tree: ArrayTree[T1] =>
+        if (preferInflated(node, tree))
+          NodeTree
+            .insertTreeAt(node, path.iterator, tree.inflated.asInstanceOf[NodeTree[T1]], keepDistinct = true)
+            .getOrElse(node)
+        else node.deflated[T1].insertTreeDistinctAt(path, tree)
+    }
 
   final override def insertTreeAt[K, T1 >: T: ClassTag](
     path: Iterable[K],
     subtree: Tree[T1],
     f: T => K
-  ): Either[Tree[T], Tree[T1]] =
-    subtree match {
-      case Tree.empty         => Left(node)
-      case tree: NodeTree[T1] => NodeTree.insertTreeAt(node, path.iterator, f, tree, keepDistinct = false)
-      case tree: ArrayTree[T1] =>
-        NodeTree.insertTreeAt(node, path.iterator, f, tree.inflated.asInstanceOf[NodeTree[T1]], keepDistinct = false)
-    }
+  ): Either[Tree[T], Tree[T1]] = subtree match {
+    case Tree.empty         => Left(node)
+    case tree: NodeTree[T1] => NodeTree.insertTreeAt(node, path.iterator, f, tree, keepDistinct = false)
+    case tree: ArrayTree[T1] =>
+      NodeTree.insertTreeAt(node, path.iterator, f, tree.inflated.asInstanceOf[NodeTree[T1]], keepDistinct = false)
+  }
+
+  final override def insertTreeDistinctAt[K, T1 >: T: ClassTag](
+    path: Iterable[K],
+    subtree: Tree[T1],
+    f: T => K): Either[Tree[T], Tree[T1]] = subtree match {
+    case Tree.empty         => Left(node)
+    case tree: NodeTree[T1] => NodeTree.insertTreeAt(node, path.iterator, f, tree, keepDistinct = true)
+    case tree: ArrayTree[T1] =>
+      NodeTree.insertTreeAt(node, path.iterator, f, tree.inflated.asInstanceOf[NodeTree[T1]], keepDistinct = true)
+  }
 
   final override def insertBranch[T1 >: T: ClassTag](branch: Iterable[T1]): Tree[T1] =
     NodeTree.insertBranch(node, branch.iterator).getOrElse(node)
