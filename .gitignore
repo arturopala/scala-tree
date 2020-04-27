@@ -20,5 +20,6 @@ dist
 .bloop/
 project/metals.sbt
 launch.json
+.DS_Store
 
     
