@@ -479,7 +479,8 @@ class TreeInsertionsSpec extends FunSuite {
         "a",
         Tree("b", Tree("c")),
         Tree("d", Tree("e", Tree("f", Tree("i")), Tree("f"))),
-        Tree("g"))
+        Tree("g")
+      )
     }
 
     "insert new subtree to a tree at the specified path using an extractor function" in {
@@ -694,7 +695,8 @@ class TreeInsertionsSpec extends FunSuite {
         .insertTreeDistinctAt(List("a", "b"), tree2) shouldBe Tree(
         "a",
         Tree("b", Tree("a", Tree("b")), Tree("c")),
-        Tree("d"))
+        Tree("d")
+      )
       tree4_2.insertTreeDistinctAt(List("a", "b", "c"), tree2) shouldBe Tree(
         "a",
         Tree("b", Tree("c", Tree("a", Tree("b")))),
@@ -760,7 +762,8 @@ class TreeInsertionsSpec extends FunSuite {
         "a",
         Tree("b", Tree("c")),
         Tree("d", Tree("e", Tree("f", Tree("i")))),
-        Tree("g"))
+        Tree("g")
+      )
     }
 
     "insert distinct new subtree to a tree at the specified path using an extractor function" in {
@@ -786,7 +789,8 @@ class TreeInsertionsSpec extends FunSuite {
       tree3_1.insertTreeDistinctAt(List(97), Tree("b"), codeF) shouldBe Right(Tree("a", Tree("b", Tree("c"))))
       tree3_1.insertTreeDistinctAt(List(98), Tree("b"), codeF) shouldBe Left(tree3_1)
       tree3_1.insertTreeDistinctAt(List(97, 98), tree1, codeF) shouldBe Right(
-        Tree("a", Tree("b", Tree("a"), Tree("c"))))
+        Tree("a", Tree("b", Tree("a"), Tree("c")))
+      )
       tree3_1.insertTreeDistinctAt(List(97, 98), tree2, codeF) shouldBe Right(
         Tree("a", Tree("b", Tree("a", Tree("b")), Tree("c")))
       )
@@ -804,7 +808,8 @@ class TreeInsertionsSpec extends FunSuite {
       tree3_2.insertTreeDistinctAt(List(97), Tree("b"), codeF) shouldBe Right(Tree("a", Tree("b"), Tree("c")))
       tree3_2.insertTreeDistinctAt(List(98), Tree("b"), codeF) shouldBe Left(tree3_2)
       tree3_2.insertTreeDistinctAt(List(97, 98), tree1, codeF) shouldBe Right(
-        Tree("a", Tree("b", Tree("a")), Tree("c")))
+        Tree("a", Tree("b", Tree("a")), Tree("c"))
+      )
       tree3_2.insertTreeDistinctAt(List(97, 98), tree2, codeF) shouldBe Right(
         Tree("a", Tree("b", Tree("a", Tree("b"))), Tree("c"))
       )

@@ -153,7 +153,8 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
   final override def insertTreeDistinctAt[K, T1 >: T: ClassTag](
     path: Iterable[K],
     subtree: Tree[T1],
-    f: T => K): Either[Tree[T], Tree[T1]] = subtree match {
+    f: T => K
+  ): Either[Tree[T], Tree[T1]] = subtree match {
     case Tree.empty         => Left(node)
     case tree: NodeTree[T1] => NodeTree.insertTreeAt(node, path.iterator, f, tree, keepDistinct = true)
     case tree: ArrayTree[T1] =>

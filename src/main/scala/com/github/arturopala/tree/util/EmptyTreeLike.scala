@@ -99,7 +99,8 @@ trait EmptyTreeLike extends TreeLike[Nothing] {
   final override def insertTreeDistinctAt[K, T1 >: Nothing: ClassTag](
     path: Iterable[K],
     subtree: Tree[T1],
-    f: Nothing => K): Either[Tree[Nothing], Tree[T1]] = insertTreeAt(path, subtree, f)
+    f: Nothing => K
+  ): Either[Tree[Nothing], Tree[T1]] = insertTreeAt(path, subtree, f)
 
   final override def insertBranch[T1: ClassTag](branch: Iterable[T1]): Tree[T1] =
     if (branch.isEmpty) Tree.empty
