@@ -394,7 +394,7 @@ object NodeTree {
     tree: NodeTree[T],
     pathIterator: Iterator[T1]
   ): Option[(List[(List[NodeTree[T]], T, List[NodeTree[T]])], NodeTree[T])] =
-    splitTreeByPath(tree, pathIterator).flatMap {
+    splitTreeByPath[T, T1](tree, pathIterator).flatMap {
       case (_, Some(_), _, _)                  => None
       case (treeSplit, None, _, remainingTree) => Some((treeSplit, remainingTree))
     }
@@ -516,7 +516,7 @@ object NodeTree {
     modify: T => T1,
     keepDistinct: Boolean
   ): Either[Tree[T], Tree[T1]] =
-    splitTreeByFullPath(tree, pathIterator)
+    splitTreeByFullPath[T, T1](tree, pathIterator)
       .map {
         case (treeSplit, recipientTree) =>
           val newNode =
@@ -536,7 +536,7 @@ object NodeTree {
     modify: Tree[T] => Tree[T1],
     keepDistinct: Boolean
   ): Either[Tree[T], Tree[T1]] =
-    splitTreeByFullPath(tree, pathIterator)
+    splitTreeByFullPath[T, T1](tree, pathIterator)
       .map {
         case (treeSplit, recipientTree) =>
           val newNode =
