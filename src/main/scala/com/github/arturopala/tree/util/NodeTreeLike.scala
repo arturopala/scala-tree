@@ -69,7 +69,7 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
   final override def countBranches(pred: Iterable[T] => Boolean): Int =
     NodeTree.countBranches(pred, node)
 
-  // MODIFICATIONS
+  // INSERTIONS
 
   final override def insertValue[T1 >: T: ClassTag](value: T1): NodeTree[T1] =
     Tree(node.value, Tree(value) :: node.subtrees)
@@ -163,6 +163,20 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
 
   final override def insertBranch[T1 >: T: ClassTag](branch: Iterable[T1]): Tree[T1] =
     NodeTree.insertBranch(node, branch.iterator).getOrElse(node)
+
+  // MODIFICATIONS
+
+  final override def modifyValueAt[T1 >: T: ClassTag](path: Iterable[T1], modify: T => T1): Either[Tree[T], Tree[T1]] =
+    NodeTree.modifyValueAt(node, path.iterator, modify, keepDistinct = false)
+
+  final override def modifyValueAt[K, T1 >: T: ClassTag](
+    path: Iterable[K],
+    modify: T => T1,
+    toPathItem: T => K
+  ): Either[Tree[T], Tree[T1]] =
+    NodeTree.modifyValueAt(node, path.iterator, toPathItem, modify, keepDistinct = false)
+
+  // TRANSFORMATIONS
 
   final override def map[K: ClassTag](f: T => K): Tree[K] = {
     val (structure, values) = NodeTree.arrayMap(f, node)

@@ -37,12 +37,12 @@ lazy val root = (project in file("."))
 def dependencies(scalaVersion: String) = {
   CrossVersion.partialVersion(scalaVersion) match {
     case Some((2, _)) => List(
-      "com.github.arturopala" %% "buffer-and-slice" % "1.0.0",
+      "com.github.arturopala" %% "buffer-and-slice" % "1.2.2",
       "org.scalameta" %% "munit" % "0.7.3" % Test,
       "com.storm-enroute" %% "scalameter" % "0.19"  % Test
     )
     case Some((0, _)) => List(
-      "com.github.arturopala" %% "buffer-and-slice" % "1.0.0",
+      "com.github.arturopala" %% "buffer-and-slice" % "1.2.2",
       "org.scalameta" %% "munit" % "0.7.3" % Test
     )
   }

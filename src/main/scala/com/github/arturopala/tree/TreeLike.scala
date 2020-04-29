@@ -429,7 +429,7 @@ trait TreeLike[+T] {
     * @param modify function to modify the value
     * @return either right of modified tree or left with the tree intact
     * @group modification */
-  def modifyValueAt[T1 >: T: ClassTag](path: Iterable[T1], modify: T => T1): Either[Tree[T], Tree[T1]] = ???
+  def modifyValueAt[T1 >: T: ClassTag](path: Iterable[T1], modify: T => T1): Either[Tree[T], Tree[T1]]
 
   /** Modifies the value selected by the given path, and returns a whole tree updated.
     * @param path list of K items forming a path from the root to the parent node.
@@ -441,7 +441,7 @@ trait TreeLike[+T] {
     path: Iterable[K],
     modify: T => T1,
     toPathItem: T => K
-  ): Either[Tree[T], Tree[T1]] = ???
+  ): Either[Tree[T], Tree[T1]]
 
   /** Modifies the tree selected by the given path, and returns a whole tree updated.
     * @param path list of node's values forming a path from the root to the parent node.

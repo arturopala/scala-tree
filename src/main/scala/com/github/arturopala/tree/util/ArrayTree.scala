@@ -635,6 +635,20 @@ object ArrayTree {
   }
 
   /** Follows the given path of values into the tree.
+    * @return a Some of an array of travelled indexes, or None if path doesn't exist.
+    */
+  @`inline` final def followFullPath[T, T1 >: T](
+    path: Iterable[T1],
+    startIndex: Int,
+    treeStructure: Int => Int,
+    treeValues: Int => T
+  ): Option[Array[Int]] =
+    followPath(path, startIndex, treeStructure, treeValues) match {
+      case (indexes, None, _, _) if indexes.nonEmpty => Some(indexes)
+      case _                                         => None
+    }
+
+  /** Follows the given path of values into the tree.
     * @return a tuple consisting of:
     *         - an array of travelled indexes,
     *         - optionally non matching path segment,
@@ -657,7 +671,22 @@ object ArrayTree {
   ): (Array[Int], Option[T1], Iterator[T1], Boolean) =
     followPath(path, startIndex, treeStructure, treeValues, identity[T, T1])
 
-  /** Follows the given path into the tree using extractor function.
+  /** Follows the given path of values into the tree using a path item extractor function.
+    * @return a Some of an array of travelled indexes, or None if path doesn't exist.
+    */
+  @`inline` final def followFullPath[T, K](
+    path: Iterable[K],
+    startIndex: Int,
+    treeStructure: Int => Int,
+    treeValues: Int => T,
+    toPathItem: T => K
+  ): Option[Array[Int]] =
+    followPath(path, startIndex, treeStructure, treeValues, toPathItem) match {
+      case (indexes, None, _, _) if indexes.nonEmpty => Some(indexes)
+      case _                                         => None
+    }
+
+  /** Follows the given path into the tree using a path item extractor function.
     * @param toPathItem function to extract path item from the tree's node value.
     * @return a tuple consisting of:
     *         - an array of travelled indexes,
@@ -742,10 +771,8 @@ object ArrayTree {
     startIndex: Int,
     treeStructure: Int => Int,
     treeValues: Int => T
-  ): Boolean = {
-    val (_, unmatched, _, _) = followPath(path, startIndex, treeStructure, treeValues)
-    unmatched.isEmpty
-  }
+  ): Boolean =
+    followFullPath(path, startIndex, treeStructure, treeValues).isDefined
 
   /** Checks if the tree contains given path (as a branch prefix). */
   @`inline` final def containsPath[T, K](
@@ -779,13 +806,8 @@ object ArrayTree {
     treeStructure: IntSlice,
     treeValues: Slice[T]
   ): Option[Tree[T]] =
-    followPath(path, startIndex, treeStructure, treeValues) match {
-      case (indexes, None, _, _) if indexes.nonEmpty =>
-        val tree = treeAt[T](indexes.last, treeStructure, treeValues)
-        Some(tree)
-
-      case _ => None
-    }
+    followFullPath(path, startIndex, treeStructure, treeValues)
+      .map(indexes => treeAt[T](indexes.last, treeStructure, treeValues))
 
   /** Selects tree accessible by path using item extractor function. */
   @`inline` final def selectTree[T: ClassTag, K](
@@ -1349,5 +1371,45 @@ object ArrayTree {
   final def shiftFrom[T](i: Int, d: Int): ((Int, Tree[T])) => (Int, Tree[T]) = {
     case (p, t) => (shiftIfGreaterOrEqualTo(p, i, d), t)
   }
+
+  /** Modifies value of the node at the index.
+    * @return modified tree */
+  def modifyValueAt[T: ClassTag, T1 >: T: ClassTag](
+    index: Int,
+    modify: T => T1,
+    target: ArrayTree[T],
+    keepDistinct: Boolean
+  ): ArrayTree[T1] =
+    if (keepDistinct) ???
+    else {
+      val valuesArray: Array[T1] = target.content.toArray[T1]
+      valuesArray(index) = modify(target.content(index))
+      new ArrayTree[T1](target.structure, Slice.of(valuesArray), target.width, target.height)
+    }
+
+  /** Modifies value of the node accessible by the path.
+    * @return modified tree */
+  final def modifyValueAt[T: ClassTag, T1 >: T: ClassTag](
+    path: Iterable[T1],
+    modify: T => T1,
+    target: ArrayTree[T],
+    keepDistinct: Boolean
+  ): Either[Tree[T], Tree[T1]] =
+    followFullPath(path, target.size - 1, target.structure, target.content)
+      .map(indexes => Right(modifyValueAt(indexes.last, modify, target, keepDistinct)))
+      .getOrElse(Left(target))
+
+  /** Modifies value of the node accessible by the path.
+    * @return modified tree */
+  final def modifyValueAt[K, T: ClassTag, T1 >: T: ClassTag](
+    path: Iterable[K],
+    modify: T => T1,
+    target: ArrayTree[T],
+    toPathItem: T => K,
+    keepDistinct: Boolean
+  ): Either[Tree[T], Tree[T1]] =
+    followFullPath(path, target.size - 1, target.structure, target.content, toPathItem)
+      .map(indexes => Right(modifyValueAt(indexes.last, modify, target, keepDistinct)))
+      .getOrElse(Left(target))
 
 }
