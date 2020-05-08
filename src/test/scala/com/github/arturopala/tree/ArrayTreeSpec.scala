@@ -17,7 +17,7 @@
 package com.github.arturopala.tree
 
 import com.github.arturopala.tree.util.ArrayTree._
-import com.github.arturopala.bufferandslice.{Buffer, IntBuffer, IntSlice, Slice}
+import com.github.arturopala.bufferandslice.{IntSlice, Slice}
 
 class ArrayTreeSpec extends AnyWordSpecCompat {
 
@@ -30,189 +30,6 @@ class ArrayTreeSpec extends AnyWordSpecCompat {
   final val id: String => String = x => x
 
   "ArrayTree" should {
-    "list children indexes" in {
-      childrenIndexes(0, Array(0)) shouldBe Nil
-      childrenIndexes(1, Array(0, 1)) shouldBe List(0)
-      childrenIndexes(2, Array(0, 1, 1)) shouldBe List(1)
-      childrenIndexes(3, Array(0, 0, 0, 3)) shouldBe List(2, 1, 0)
-      childrenIndexes(4, Array(0, 1, 0, 1, 2)) shouldBe List(3, 1)
-      childrenIndexes(3, Array(0, 1, 0, 1, 2)) shouldBe List(2)
-      childrenIndexes(1, Array(0, 1, 0, 1, 2)) shouldBe List(0)
-      childrenIndexes(6, Array(0, 0, 2, 0, 0, 2, 2)) shouldBe List(5, 2)
-      childrenIndexes(2, Array(0, 0, 2, 0, 0, 2, 2)) shouldBe List(1, 0)
-      childrenIndexes(5, Array(0, 0, 2, 0, 0, 2, 2)) shouldBe List(4, 3)
-      childrenIndexes(0, Array(0, 0, 0, 0, 2, 2, 2)) shouldBe Nil
-      childrenIndexes(1, Array(0, 0, 0, 0, 2, 2, 2)) shouldBe Nil
-      childrenIndexes(2, Array(0, 0, 0, 0, 2, 2, 2)) shouldBe Nil
-      childrenIndexes(3, Array(0, 0, 0, 0, 2, 2, 2)) shouldBe Nil
-      childrenIndexes(4, Array(0, 0, 0, 0, 2, 2, 2)) shouldBe List(3, 2)
-      childrenIndexes(5, Array(0, 0, 0, 0, 2, 2, 2)) shouldBe List(4, 1)
-      childrenIndexes(6, Array(0, 0, 0, 0, 2, 2, 2)) shouldBe List(5, 0)
-    }
-
-    "append children indexes to buffer" in {
-      val buffer = new IntBuffer()
-      writeChildrenIndexes(0, Array(0), buffer, 0) shouldBe 0
-      writeChildrenIndexes(1, Array(0, 1), buffer, 0) shouldBe 1
-      buffer(0) shouldBe 0
-      writeChildrenIndexes(2, Array(0, 0, 2), buffer, 1) shouldBe 2
-      buffer(1) shouldBe 0
-      buffer(2) shouldBe 1
-      writeChildrenIndexes(3, Array(0, 0, 2, 1), buffer, 3) shouldBe 1
-      buffer(3) shouldBe 2
-      writeChildrenIndexes(4, Array(0, 0, 0, 0, 3, 2), buffer, 4) shouldBe 3
-      buffer(4) shouldBe 1
-      buffer(5) shouldBe 2
-      buffer(6) shouldBe 3
-    }
-
-    "find child index fulfilling the predicate" in {
-      val pred: String => Boolean = _ == "c"
-      findChildIndex(-1, pred, Array.empty[Int], Array.empty[String]) shouldBe None
-      findChildIndex(0, pred, Array(0), Array("a")) shouldBe None
-      findChildIndex(1, pred, Array(0, 1), Array("b", "a")) shouldBe None
-      findChildIndex(1, pred, Array(0, 1), Array("c", "a")) shouldBe Some(0)
-      findChildIndex(2, pred, Array(0, 1, 1), Array("c", "b", "a")) shouldBe None
-      findChildIndex(2, pred, Array(0, 0, 2), Array("c", "b", "a")) shouldBe Some(0)
-      findChildIndex(2, pred, Array(0, 0, 2), Array("b", "c", "a")) shouldBe Some(1)
-      findChildIndex(1, pred, Array(0, 0, 2), Array("b", "c", "a")) shouldBe None
-      findChildIndex(1, pred, Array(0, 1, 1), Array("c", "c", "c")) shouldBe Some(0)
-      findChildIndex(2, pred, Array(0, 1, 1), Array("c", "c", "c")) shouldBe Some(1)
-      findChildIndex(0, pred, Array(0, 1, 1), Array("c", "c", "c")) shouldBe None
-      findChildIndex(2, pred, Array(0, 0, 2, 1), Array("c", "c", "c", "c")) shouldBe Some(1)
-    }
-
-    "find rightmost index of children's node holding a value" in {
-      childrenLeftmostIndexFor(2, -1, Array.empty[Int], Array.empty[Int]) shouldBe None
-      childrenLeftmostIndexFor(2, 0, Array(0), Array(2)) shouldBe None
-      childrenLeftmostIndexFor(2, 1, Array(0, 1), Array(2, 1)) shouldBe Some(0)
-      childrenLeftmostIndexFor(2, 3, Array(0, 0, 2, 1), Array(4, 3, 2, 1)) shouldBe Some(2)
-      childrenLeftmostIndexFor(3, 3, Array(0, 0, 2, 1), Array(4, 3, 2, 1)) shouldBe None
-      childrenLeftmostIndexFor(3, 2, Array(0, 0, 2, 1), Array(4, 3, 2, 1)) shouldBe Some(1)
-      childrenLeftmostIndexFor(4, 2, Array(0, 0, 2, 1), Array(4, 3, 2, 1)) shouldBe Some(0)
-      childrenLeftmostIndexFor(3, 1, Array(0, 0, 2, 1), Array(4, 3, 2, 1)) shouldBe None
-      childrenLeftmostIndexFor(1, 2, Array(0, 0, 2, 1), Array(4, 3, 2, 1)) shouldBe None
-      childrenLeftmostIndexFor(1, 2, Array(0, 0, 2, 1), Array(1, 1, 1, 1)) shouldBe Some(1)
-    }
-
-    "find leftmost index of children's node holding a value" in {
-      childrenRightmostIndexFor(2, -1, Array.empty[Int], Array.empty[Int]) shouldBe None
-      childrenRightmostIndexFor(2, 0, Array(0), Array(2)) shouldBe None
-      childrenRightmostIndexFor(2, 1, Array(0, 1), Array(2, 1)) shouldBe Some(0)
-      childrenRightmostIndexFor(2, 3, Array(0, 0, 2, 1), Array(4, 3, 2, 1)) shouldBe Some(2)
-      childrenRightmostIndexFor(3, 3, Array(0, 0, 2, 1), Array(4, 3, 2, 1)) shouldBe None
-      childrenRightmostIndexFor(3, 2, Array(0, 0, 2, 1), Array(4, 3, 2, 1)) shouldBe Some(1)
-      childrenRightmostIndexFor(4, 2, Array(0, 0, 2, 1), Array(4, 3, 2, 1)) shouldBe Some(0)
-      childrenRightmostIndexFor(3, 1, Array(0, 0, 2, 1), Array(4, 3, 2, 1)) shouldBe None
-      childrenRightmostIndexFor(1, 2, Array(0, 0, 2, 1), Array(4, 3, 2, 1)) shouldBe None
-      childrenRightmostIndexFor(1, 2, Array(0, 0, 2, 1), Array(1, 1, 1, 1)) shouldBe Some(0)
-    }
-
-    "list indexes of children's nodes holding a value" in {
-      childrenIndexListFor(1, 2, Array(0, 0, 2, 1), Array(1, 1, 1, 1)) shouldBe List(0, 1)
-    }
-
-    "find parent index" in {
-      parentIndex(0, 2, Array(0, 1)) shouldBe 1
-      parentIndex(0, 3, Array(0, 0, 2)) shouldBe 2
-      parentIndex(1, 3, Array(0, 0, 2)) shouldBe 2
-      parentIndex(0, 4, Array(0, 0, 0, 3)) shouldBe 3
-      parentIndex(1, 4, Array(0, 0, 0, 3)) shouldBe 3
-      parentIndex(2, 4, Array(0, 0, 0, 3)) shouldBe 3
-      parentIndex(0, 7, Array(0, 0, 0, 0, 2, 2, 2)) shouldBe 6
-      parentIndex(1, 7, Array(0, 0, 0, 0, 2, 2, 2)) shouldBe 5
-      parentIndex(2, 7, Array(0, 0, 0, 0, 2, 2, 2)) shouldBe 4
-      parentIndex(3, 7, Array(0, 0, 0, 0, 2, 2, 2)) shouldBe 4
-      parentIndex(4, 7, Array(0, 0, 0, 0, 2, 2, 2)) shouldBe 5
-      parentIndex(5, 7, Array(0, 0, 0, 0, 2, 2, 2)) shouldBe 6
-      parentIndex(6, 7, Array(0, 0, 0, 0, 2, 2, 2)) shouldBe -1
-      parentIndex(0, 7, Array(0, 0, 2, 0, 0, 2, 2)) shouldBe 2
-      parentIndex(1, 7, Array(0, 0, 2, 0, 0, 2, 2)) shouldBe 2
-      parentIndex(2, 7, Array(0, 0, 2, 0, 0, 2, 2)) shouldBe 6
-      parentIndex(3, 7, Array(0, 0, 2, 0, 0, 2, 2)) shouldBe 5
-      parentIndex(4, 7, Array(0, 0, 2, 0, 0, 2, 2)) shouldBe 5
-      parentIndex(5, 7, Array(0, 0, 2, 0, 0, 2, 2)) shouldBe 6
-      parentIndex(6, 7, Array(0, 0, 2, 0, 0, 2, 2)) shouldBe -1
-    }
-
-    "iterate over tree's node indexes depth-first" in {
-      nodeIndexIterator(0, Array(0)).toList shouldBe List(0)
-      nodeIndexIterator(1, Array(0, 1)).toList shouldBe List(1, 0)
-      nodeIndexIterator(2, Array(0, 1, 1)).toList shouldBe List(2, 1, 0)
-      nodeIndexIterator(2, Array(0, 0, 2)).toList shouldBe List(2, 1, 0)
-      nodeIndexIterator(3, Array(0, 0, 1, 2)).toList shouldBe List(3, 2, 1, 0)
-      nodeIndexIterator(3, Array(0, 1, 0, 2)).toList shouldBe List(3, 2, 1, 0)
-      nodeIndexIterator(4, Array(0, 0, 0, 0, 4)).toList shouldBe List(4, 3, 2, 1, 0)
-      nodeIndexIterator(4, Array(0, 1, 0, 0, 3)).toList shouldBe List(4, 3, 2, 1, 0)
-      nodeIndexIterator(4, Array(0, 0, 1, 0, 3)).toList shouldBe List(4, 3, 2, 1, 0)
-      nodeIndexIterator(4, Array(0, 0, 0, 1, 3)).toList shouldBe List(4, 3, 2, 1, 0)
-      nodeIndexIterator(4, Array(0, 0, 0, 2, 2)).toList shouldBe List(4, 3, 2, 1, 0)
-      nodeIndexIterator(4, Array(0, 0, 2, 0, 2)).toList shouldBe List(4, 3, 2, 1, 0)
-      nodeIndexIterator(3, Array(0, 1, 0, 1, 2)).toList shouldBe List(3, 2)
-      nodeIndexIterator(2, Array(0, 1, 0, 1, 2)).toList shouldBe List(2)
-      nodeIndexIterator(1, Array(0, 1, 0, 1, 2)).toList shouldBe List(1, 0)
-      nodeIndexIterator(-1, Array.empty[Int]).toList shouldBe List()
-    }
-
-    "iterate over tree's node indexes depth-first with depth limit" in {
-      nodeIndexIteratorWithLimit(0, Array(0), 0).toList shouldBe Nil
-      nodeIndexIteratorWithLimit(0, Array(0), 1).toList shouldBe List(0)
-      nodeIndexIteratorWithLimit(0, Array(0), 2).toList shouldBe List(0)
-      nodeIndexIteratorWithLimit(1, Array(0, 1), 0).toList shouldBe Nil
-      nodeIndexIteratorWithLimit(1, Array(0, 1), 1).toList shouldBe List(1)
-      nodeIndexIteratorWithLimit(1, Array(0, 1), 2).toList shouldBe List(1, 0)
-      nodeIndexIteratorWithLimit(1, Array(0, 1), 3).toList shouldBe List(1, 0)
-      nodeIndexIteratorWithLimit(2, Array(0, 1, 1), 0).toList shouldBe Nil
-      nodeIndexIteratorWithLimit(2, Array(0, 1, 1), 1).toList shouldBe List(2)
-      nodeIndexIteratorWithLimit(2, Array(0, 1, 1), 2).toList shouldBe List(2, 1)
-      nodeIndexIteratorWithLimit(2, Array(0, 1, 1), 3).toList shouldBe List(2, 1, 0)
-      nodeIndexIteratorWithLimit(2, Array(0, 0, 2), 0).toList shouldBe Nil
-      nodeIndexIteratorWithLimit(2, Array(0, 0, 2), 1).toList shouldBe List(2)
-      nodeIndexIteratorWithLimit(2, Array(0, 0, 2), 2).toList shouldBe List(2, 1, 0)
-      nodeIndexIteratorWithLimit(2, Array(0, 0, 2), 3).toList shouldBe List(2, 1, 0)
-      nodeIndexIteratorWithLimit(3, Array(0, 0, 1, 2), 0).toList shouldBe Nil
-      nodeIndexIteratorWithLimit(3, Array(0, 0, 1, 2), 1).toList shouldBe List(3)
-      nodeIndexIteratorWithLimit(3, Array(0, 0, 1, 2), 2).toList shouldBe List(3, 2, 0)
-      nodeIndexIteratorWithLimit(3, Array(0, 0, 1, 2), 3).toList shouldBe List(3, 2, 1, 0)
-      nodeIndexIteratorWithLimit(3, Array(0, 1, 0, 2), 0).toList shouldBe Nil
-      nodeIndexIteratorWithLimit(3, Array(0, 1, 0, 2), 1).toList shouldBe List(3)
-      nodeIndexIteratorWithLimit(3, Array(0, 1, 0, 2), 2).toList shouldBe List(3, 2, 1)
-      nodeIndexIteratorWithLimit(3, Array(0, 1, 0, 2), 3).toList shouldBe List(3, 2, 1, 0)
-      nodeIndexIteratorWithLimit(4, Array(0, 0, 0, 0, 4), 0).toList shouldBe Nil
-      nodeIndexIteratorWithLimit(4, Array(0, 0, 0, 0, 4), 1).toList shouldBe List(4)
-      nodeIndexIteratorWithLimit(4, Array(0, 0, 0, 0, 4), 2).toList shouldBe List(4, 3, 2, 1, 0)
-      nodeIndexIteratorWithLimit(4, Array(0, 0, 0, 0, 4), 3).toList shouldBe List(4, 3, 2, 1, 0)
-      nodeIndexIteratorWithLimit(4, Array(0, 1, 0, 0, 3), 0).toList shouldBe Nil
-      nodeIndexIteratorWithLimit(4, Array(0, 1, 0, 0, 3), 1).toList shouldBe List(4)
-      nodeIndexIteratorWithLimit(4, Array(0, 1, 0, 0, 3), 2).toList shouldBe List(4, 3, 2, 1)
-      nodeIndexIteratorWithLimit(4, Array(0, 1, 0, 0, 3), 3).toList shouldBe List(4, 3, 2, 1, 0)
-      nodeIndexIteratorWithLimit(4, Array(0, 0, 1, 0, 3), 0).toList shouldBe Nil
-      nodeIndexIteratorWithLimit(4, Array(0, 0, 1, 0, 3), 1).toList shouldBe List(4)
-      nodeIndexIteratorWithLimit(4, Array(0, 0, 1, 0, 3), 2).toList shouldBe List(4, 3, 2, 0)
-      nodeIndexIteratorWithLimit(4, Array(0, 0, 1, 0, 3), 3).toList shouldBe List(4, 3, 2, 1, 0)
-      nodeIndexIteratorWithLimit(4, Array(0, 0, 0, 1, 3), 0).toList shouldBe Nil
-      nodeIndexIteratorWithLimit(4, Array(0, 0, 0, 1, 3), 1).toList shouldBe List(4)
-      nodeIndexIteratorWithLimit(4, Array(0, 0, 0, 1, 3), 2).toList shouldBe List(4, 3, 1, 0)
-      nodeIndexIteratorWithLimit(4, Array(0, 0, 0, 1, 3), 3).toList shouldBe List(4, 3, 2, 1, 0)
-      nodeIndexIteratorWithLimit(4, Array(0, 0, 0, 2, 2), 0).toList shouldBe Nil
-      nodeIndexIteratorWithLimit(4, Array(0, 0, 0, 2, 2), 1).toList shouldBe List(4)
-      nodeIndexIteratorWithLimit(4, Array(0, 0, 0, 2, 2), 2).toList shouldBe List(4, 3, 0)
-      nodeIndexIteratorWithLimit(4, Array(0, 0, 0, 2, 2), 3).toList shouldBe List(4, 3, 2, 1, 0)
-      nodeIndexIteratorWithLimit(4, Array(0, 0, 2, 0, 2), 0).toList shouldBe Nil
-      nodeIndexIteratorWithLimit(4, Array(0, 0, 2, 0, 2), 1).toList shouldBe List(4)
-      nodeIndexIteratorWithLimit(4, Array(0, 0, 2, 0, 2), 2).toList shouldBe List(4, 3, 2)
-      nodeIndexIteratorWithLimit(4, Array(0, 0, 2, 0, 2), 3).toList shouldBe List(4, 3, 2, 1, 0)
-      nodeIndexIteratorWithLimit(3, Array(0, 1, 0, 1, 2), 0).toList shouldBe Nil
-      nodeIndexIteratorWithLimit(3, Array(0, 1, 0, 1, 2), 1).toList shouldBe List(3)
-      nodeIndexIteratorWithLimit(3, Array(0, 1, 0, 1, 2), 2).toList shouldBe List(3, 2)
-      nodeIndexIteratorWithLimit(2, Array(0, 1, 0, 1, 2), 0).toList shouldBe Nil
-      nodeIndexIteratorWithLimit(2, Array(0, 1, 0, 1, 2), 1).toList shouldBe List(2)
-      nodeIndexIteratorWithLimit(1, Array(0, 1, 0, 1, 2), 0).toList shouldBe Nil
-      nodeIndexIteratorWithLimit(1, Array(0, 1, 0, 1, 2), 1).toList shouldBe List(1)
-      nodeIndexIteratorWithLimit(1, Array(0, 1, 0, 1, 2), 2).toList shouldBe List(1, 0)
-      nodeIndexIteratorWithLimit(-1, Array.empty[Int], 0).toList shouldBe Nil
-      nodeIndexIteratorWithLimit(-1, Array.empty[Int], 1).toList shouldBe Nil
-    }
 
     "iterate over tree's values with depth limit" in {
       val all: String => Boolean = _ => true
@@ -242,117 +59,6 @@ class ArrayTreeSpec extends AnyWordSpecCompat {
       valueIterator(3, Array(0, 1, 0, 2), Array("d", "c", "b", "a"), all, 3).toList shouldBe List("a", "b", "c", "d")
     }
 
-    "calculate subtree size" in {
-      treeSize(0, Array(0)) shouldBe 1
-      treeSize(0, Array(0, 1)) shouldBe 1
-      treeSize(1, Array(0, 1)) shouldBe 2
-      treeSize(2, Array(0, 1, 1)) shouldBe 3
-      treeSize(2, Array(0, 0, 2)) shouldBe 3
-      treeSize(3, Array(0, 0, 0, 3)) shouldBe 4
-      treeSize(3, Array(0, 0, 1, 2)) shouldBe 4
-      treeSize(3, Array(0, 0, 2, 1)) shouldBe 4
-      treeSize(3, Array(0, 1, 0, 2)) shouldBe 4
-      treeSize(4, Array(0, 0, 0, 0, 4)) shouldBe 5
-      treeSize(4, Array(0, 0, 0, 2, 2)) shouldBe 5
-      treeSize(4, Array(0, 1, 0, 1, 2)) shouldBe 5
-      treeSize(4, Array(0, 0, 2, 0, 2)) shouldBe 5
-      treeSize(4, Array(0, 1, 1, 0, 2)) shouldBe 5
-      treeSize(4, Array(0, 0, 1, 0, 3)) shouldBe 5
-      treeSize(2, Array(0, 0, 1, 0, 3)) shouldBe 2
-      treeSize(3, Array(0, 0, 1, 0, 3)) shouldBe 1
-      treeSize(1, Array(0, 0, 1, 0, 3)) shouldBe 1
-    }
-
-    "calculate malformed subtree size" in {
-      an[IllegalArgumentException] shouldBe thrownBy(treeSize(0, Array(-1)))
-      an[IllegalArgumentException] shouldBe thrownBy(treeSize(0, Array(1)))
-      an[IllegalArgumentException] shouldBe thrownBy(treeSize(0, Array(2)))
-      an[IllegalArgumentException] shouldBe thrownBy(treeSize(1, Array(0, 2)))
-      an[IllegalArgumentException] shouldBe thrownBy(treeSize(2, Array(0, 2, 1)))
-      treeSize(1, Array(1, 0)) shouldBe 1
-      treeSize(2, Array(0, 0, 1)) shouldBe 2
-    }
-
-    "iterate over tree's branches as index lists" in {
-      branchesIndexListIterator(0, Array(0)).map(_.toList).toList shouldBe List(List(0))
-      branchesIndexListIterator(1, Array(0, 1)).map(_.toList).toList shouldBe List(List(1, 0))
-      branchesIndexListIterator(2, Array(0, 1, 1)).map(_.toList).toList shouldBe List(List(2, 1, 0))
-      branchesIndexListIterator(2, Array(0, 0, 2)).map(_.toList).toList shouldBe List(List(2, 1), List(2, 0))
-      branchesIndexListIterator(3, Array(0, 0, 0, 3)).map(_.toList).toList shouldBe List(
-        List(3, 2),
-        List(3, 1),
-        List(3, 0)
-      )
-      branchesIndexListIterator(3, Array(0, 0, 2, 1)).map(_.toList).toList shouldBe List(List(3, 2, 1), List(3, 2, 0))
-      branchesIndexListIterator(9, Array(0, 1, 0, 0, 1, 1, 0, 0, 2, 4)).map(_.toList).toList shouldBe List(
-        List(9, 8, 7),
-        List(9, 8, 6),
-        List(9, 5, 4, 3),
-        List(9, 2),
-        List(9, 1, 0)
-      )
-    }
-
-    "iterate over tree's branches as index lists with depth limit" in {
-      branchesIndexListIterator(0, Array(0), 0).map(_.toList).toList shouldBe List()
-      branchesIndexListIterator(0, Array(0), 1).map(_.toList).toList shouldBe List(List(0))
-      branchesIndexListIterator(1, Array(0, 1), 0).map(_.toList).toList shouldBe List()
-      branchesIndexListIterator(1, Array(0, 1), 1).map(_.toList).toList shouldBe List(List(1))
-      branchesIndexListIterator(1, Array(0, 1), 2).map(_.toList).toList shouldBe List(List(1, 0))
-      branchesIndexListIterator(1, Array(0, 1), 3).map(_.toList).toList shouldBe List(List(1, 0))
-      branchesIndexListIterator(2, Array(0, 1, 1), 0).map(_.toList).toList shouldBe List()
-      branchesIndexListIterator(2, Array(0, 1, 1), 1).map(_.toList).toList shouldBe List(List(2))
-      branchesIndexListIterator(2, Array(0, 1, 1), 2).map(_.toList).toList shouldBe List(List(2, 1))
-      branchesIndexListIterator(2, Array(0, 1, 1), 3).map(_.toList).toList shouldBe List(List(2, 1, 0))
-      branchesIndexListIterator(2, Array(0, 1, 1), 4).map(_.toList).toList shouldBe List(List(2, 1, 0))
-      branchesIndexListIterator(2, Array(0, 0, 2), 0).map(_.toList).toList shouldBe List()
-      branchesIndexListIterator(2, Array(0, 0, 2), 1).map(_.toList).toList shouldBe List(List(2))
-      branchesIndexListIterator(2, Array(0, 0, 2), 2).map(_.toList).toList shouldBe List(List(2, 1), List(2, 0))
-      branchesIndexListIterator(2, Array(0, 0, 2), 3).map(_.toList).toList shouldBe List(List(2, 1), List(2, 0))
-      branchesIndexListIterator(3, Array(0, 0, 0, 3), 0).map(_.toList).toList shouldBe List()
-      branchesIndexListIterator(3, Array(0, 0, 0, 3), 1).map(_.toList).toList shouldBe List(
-        List(3)
-      )
-      branchesIndexListIterator(3, Array(0, 0, 0, 3), 2).map(_.toList).toList shouldBe List(
-        List(3, 2),
-        List(3, 1),
-        List(3, 0)
-      )
-      branchesIndexListIterator(3, Array(0, 0, 2, 1), 0).map(_.toList).toList shouldBe List()
-      branchesIndexListIterator(3, Array(0, 0, 2, 1), 1).map(_.toList).toList shouldBe List(List(3))
-      branchesIndexListIterator(3, Array(0, 0, 2, 1), 2).map(_.toList).toList shouldBe List(List(3, 2))
-      branchesIndexListIterator(3, Array(0, 0, 2, 1), 3).map(_.toList).toList shouldBe List(
-        List(3, 2, 1),
-        List(3, 2, 0)
-      )
-      branchesIndexListIterator(3, Array(0, 0, 2, 1), 4).map(_.toList).toList shouldBe List(
-        List(3, 2, 1),
-        List(3, 2, 0)
-      )
-      branchesIndexListIterator(9, Array(0, 1, 0, 0, 1, 1, 0, 0, 2, 4), 0).map(_.toList).toList shouldBe List()
-      branchesIndexListIterator(9, Array(0, 1, 0, 0, 1, 1, 0, 0, 2, 4), 1).map(_.toList).toList shouldBe List(List(9))
-      branchesIndexListIterator(9, Array(0, 1, 0, 0, 1, 1, 0, 0, 2, 4), 2).map(_.toList).toList shouldBe List(
-        List(9, 8),
-        List(9, 5),
-        List(9, 2),
-        List(9, 1)
-      )
-      branchesIndexListIterator(9, Array(0, 1, 0, 0, 1, 1, 0, 0, 2, 4), 3).map(_.toList).toList shouldBe List(
-        List(9, 8, 7),
-        List(9, 8, 6),
-        List(9, 5, 4),
-        List(9, 2),
-        List(9, 1, 0)
-      )
-      branchesIndexListIterator(9, Array(0, 1, 0, 0, 1, 1, 0, 0, 2, 4), 4).map(_.toList).toList shouldBe List(
-        List(9, 8, 7),
-        List(9, 8, 6),
-        List(9, 5, 4, 3),
-        List(9, 2),
-        List(9, 1, 0)
-      )
-    }
-
     "iterate over tree's branches as values lists without filter" in {
       val v: Int => Int = _ * 10
       val f: Iterable[Int] => Boolean = _ => true
@@ -379,68 +85,36 @@ class ArrayTreeSpec extends AnyWordSpecCompat {
       )
     }
 
-    "fold branches as index lists" in {
-      val fold =
-        (s: (Int, Int, Int), a: IntSlice, _: Int) => (s._1 + 1, Math.max(s._2, a.length), s._3 + a.length)
-      foldLeftBranchesIndexLists(-1, Array.empty[Int], (0, 0, 0), fold) shouldBe (0, 0, 0)
-      foldLeftBranchesIndexLists(0, Array(0), (0, 0, 0), fold) shouldBe (1, 1, 1)
-      foldLeftBranchesIndexLists(1, Array(0, 1), (0, 0, 0), fold) shouldBe (1, 2, 2)
-      foldLeftBranchesIndexLists(2, Array(0, 1, 1), (0, 0, 0), fold) shouldBe (1, 3, 3)
-      foldLeftBranchesIndexLists(2, Array(0, 0, 2), (0, 0, 0), fold) shouldBe (2, 2, 4)
-      foldLeftBranchesIndexLists(4, Array(0, 1, 0, 1, 2), (0, 0, 0), fold) shouldBe (2, 3, 6)
-      foldLeftBranchesIndexLists(4, Array(0, 0, 0, 1, 3), (0, 0, 0), fold) shouldBe (3, 3, 7)
-      foldLeftBranchesIndexLists(4, Array(0, 1, 1, 1, 1), (0, 0, 0), fold) shouldBe (1, 5, 5)
-      foldLeftBranchesIndexLists(4, Array(0, 0, 0, 2, 2), (0, 0, 0), fold) shouldBe (3, 3, 8)
-      foldLeftBranchesIndexLists(4, Array(0, 0, 0, 0, 4), (0, 0, 0), fold) shouldBe (4, 2, 8)
+    "count branches" in {
+      val v: Int => String = _.toString
+      val f: Iterable[String] => Boolean = _ => true
+      countBranches[String](-1, Array.empty[Int], Array.empty[String], f) shouldBe 0
+      countBranches[String](0, Array(0), v, f) shouldBe 1
+      countBranches[String](0, Array(0, 1), v, f) shouldBe 1
+      countBranches[String](1, Array(0, 1), v, f) shouldBe 1
+      countBranches[String](2, Array(0, 1, 1), v, f) shouldBe 1
+      countBranches[String](2, Array(0, 0, 2), v, f) shouldBe 2
+      countBranches[String](3, Array(0, 0, 0, 3), v, f) shouldBe 3
+      countBranches[String](3, Array(0, 0, 1, 2), v, f) shouldBe 2
+      countBranches[String](2, Array(0, 0, 2, 0, 0, 1, 2, 2), v, f) shouldBe 2
+      countBranches[String](7, Array(0, 0, 2, 0, 0, 1, 2, 2), v, f) shouldBe 4
+      countBranches[String](9, Array(0, 0, 2, 0, 0, 1, 2, 2, 0, 2), v, f) shouldBe 5
     }
 
-    "fold branches as index lists with maxDepth set" in {
-      val fold = (s: Int, a: IntSlice, _: Int) => Math.max(s, a.length)
-      foldLeftBranchesIndexLists(-1, Array.empty[Int], 0, fold, 2) shouldBe 0
-      foldLeftBranchesIndexLists(0, Array(0), 0, fold, 2) shouldBe 1
-      foldLeftBranchesIndexLists(1, Array(0, 1), 0, fold, 2) shouldBe 2
-      foldLeftBranchesIndexLists(2, Array(0, 1, 1), 0, fold, 2) shouldBe 2
-      foldLeftBranchesIndexLists(2, Array(0, 0, 2), 0, fold, 2) shouldBe 2
-      foldLeftBranchesIndexLists(4, Array(0, 1, 0, 1, 2), 0, fold, 2) shouldBe 2
-      foldLeftBranchesIndexLists(4, Array(0, 0, 0, 1, 3), 0, fold, 2) shouldBe 2
-      foldLeftBranchesIndexLists(4, Array(0, 1, 1, 1, 1), 0, fold, 3) shouldBe 3
-      foldLeftBranchesIndexLists(4, Array(0, 0, 0, 2, 2), 0, fold, 2) shouldBe 2
-      foldLeftBranchesIndexLists(4, Array(0, 0, 0, 0, 4), 0, fold, 2) shouldBe 2
-    }
-
-    "fold branches lengths" in {
-      val fold = (s: (Int, Int, Int), l: Int, _: Int) => (s._1 + 1, Math.max(s._2, l), s._3 + l)
-      foldLeftBranchesLengths(-1, Array.empty[Int], (0, 0, 0), fold) shouldBe (0, 0, 0)
-      foldLeftBranchesLengths(0, Array(0), (0, 0, 0), fold) shouldBe (1, 1, 1)
-      foldLeftBranchesLengths(1, Array(0, 1), (0, 0, 0), fold) shouldBe (1, 2, 2)
-      foldLeftBranchesLengths(2, Array(0, 1, 1), (0, 0, 0), fold) shouldBe (1, 3, 3)
-      foldLeftBranchesLengths(2, Array(0, 0, 2), (0, 0, 0), fold) shouldBe (2, 2, 4)
-      foldLeftBranchesLengths(4, Array(0, 1, 0, 1, 2), (0, 0, 0), fold) shouldBe (2, 3, 6)
-      foldLeftBranchesLengths(4, Array(0, 0, 0, 1, 3), (0, 0, 0), fold) shouldBe (3, 3, 7)
-      foldLeftBranchesLengths(4, Array(0, 1, 1, 1, 1), (0, 0, 0), fold) shouldBe (1, 5, 5)
-      foldLeftBranchesLengths(4, Array(0, 0, 0, 2, 2), (0, 0, 0), fold) shouldBe (3, 3, 8)
-      foldLeftBranchesLengths(4, Array(0, 0, 0, 0, 4), (0, 0, 0), fold) shouldBe (4, 2, 8)
-    }
-
-    "calculate height of the tree" in {
-      calculateHeight(-1, Array.empty[Int]) shouldBe 0
-      calculateHeight(0, Array(0)) shouldBe 1
-      calculateHeight(0, Slice(0)) shouldBe 1
-      calculateHeight(1, Array(0, 1)) shouldBe 2
-      calculateHeight(1, Slice(0, 1)) shouldBe 2
-      calculateHeight(2, Array(0, 1, 1)) shouldBe 3
-      calculateHeight(2, Array(0, 0, 2)) shouldBe 2
-      calculateHeight(4, Array(0, 1, 0, 1, 2)) shouldBe 3
-      calculateHeight(4, Array(0, 0, 0, 1, 3)) shouldBe 3
-      calculateHeight(4, Array(0, 1, 1, 1, 1)) shouldBe 5
-      calculateHeight(4, Array(0, 0, 0, 2, 2)) shouldBe 3
-      calculateHeight(4, Array(0, 0, 0, 0, 4)) shouldBe 2
-      calculateHeight(9, Array(0, 1, 0, 0, 1, 1, 0, 0, 2, 4)) shouldBe 4
-    }
-
-    "calculate height of an incomplete tree" in {
-      calculateHeight(0, Array(1)) shouldBe 2
-      calculateHeight(1, Array(1, 1)) shouldBe 3
+    "count branches fulfilling the predicate" in {
+      val v: Int => String = _.toString
+      val f: Iterable[String] => Boolean = _.size > 2
+      countBranches[String](-1, Array.empty[Int], Array.empty[String], f) shouldBe 0
+      countBranches[String](0, Array(0), v, f) shouldBe 0
+      countBranches[String](0, Array(0, 1), v, f) shouldBe 0
+      countBranches[String](1, Array(0, 1), v, f) shouldBe 0
+      countBranches[String](2, Array(0, 1, 1), v, f) shouldBe 1
+      countBranches[String](2, Array(0, 0, 2), v, f) shouldBe 0
+      countBranches[String](3, Array(0, 0, 0, 3), v, f) shouldBe 0
+      countBranches[String](3, Array(0, 0, 1, 2), v, f) shouldBe 1
+      countBranches[String](2, Array(0, 0, 2, 0, 0, 1, 2, 2), v, f) shouldBe 0
+      countBranches[String](7, Array(0, 0, 2, 0, 0, 1, 2, 2), v, f) shouldBe 4
+      countBranches[String](9, Array(0, 0, 2, 0, 0, 1, 2, 2, 0, 2), v, f) shouldBe 4
     }
 
     "access a tree at the index" in {
@@ -477,83 +151,6 @@ class ArrayTreeSpec extends AnyWordSpecCompat {
         Tree("c", Tree("d")),
         Tree("d")
       )
-    }
-
-    "count branches" in {
-      val v: Int => String = _.toString
-      val f: Iterable[String] => Boolean = _ => true
-      countBranches[String](-1, Array.empty[Int], Array.empty[String], f) shouldBe 0
-      countBranches[String](0, Array(0), v, f) shouldBe 1
-      countBranches[String](0, Array(0, 1), v, f) shouldBe 1
-      countBranches[String](1, Array(0, 1), v, f) shouldBe 1
-      countBranches[String](2, Array(0, 1, 1), v, f) shouldBe 1
-      countBranches[String](2, Array(0, 0, 2), v, f) shouldBe 2
-      countBranches[String](3, Array(0, 0, 0, 3), v, f) shouldBe 3
-      countBranches[String](3, Array(0, 0, 1, 2), v, f) shouldBe 2
-      countBranches[String](2, Array(0, 0, 2, 0, 0, 1, 2, 2), v, f) shouldBe 2
-      countBranches[String](7, Array(0, 0, 2, 0, 0, 1, 2, 2), v, f) shouldBe 4
-      countBranches[String](9, Array(0, 0, 2, 0, 0, 1, 2, 2, 0, 2), v, f) shouldBe 5
-    }
-
-    "count branches fulfilling the predicate" in {
-      val v: Int => String = _.toString
-      val f: Iterable[String] => Boolean = _.size > 2
-      countBranches[String](-1, Array.empty[Int], Array.empty[String], f) shouldBe 0
-      countBranches[String](0, Array(0), v, f) shouldBe 0
-      countBranches[String](0, Array(0, 1), v, f) shouldBe 0
-      countBranches[String](1, Array(0, 1), v, f) shouldBe 0
-      countBranches[String](2, Array(0, 1, 1), v, f) shouldBe 1
-      countBranches[String](2, Array(0, 0, 2), v, f) shouldBe 0
-      countBranches[String](3, Array(0, 0, 0, 3), v, f) shouldBe 0
-      countBranches[String](3, Array(0, 0, 1, 2), v, f) shouldBe 1
-      countBranches[String](2, Array(0, 0, 2, 0, 0, 1, 2, 2), v, f) shouldBe 0
-      countBranches[String](7, Array(0, 0, 2, 0, 0, 1, 2, 2), v, f) shouldBe 4
-      countBranches[String](9, Array(0, 0, 2, 0, 0, 1, 2, 2, 0, 2), v, f) shouldBe 4
-    }
-
-    "follow path into tree" in {
-      def see[T](t: (Array[Int], Option[String], Iterator[T], Boolean)): (List[Int], Option[String], List[T], Boolean) =
-        (t._1.toList, t._2, t._3.toList, t._4)
-
-      see(followPath(List("a"), -1, Array.empty[Int], Array.empty[String])) shouldBe (Nil, Some("a"), Nil, false)
-      see(followPath(List("a"), 0, Array(0), Array("a"))) shouldBe (List(0), None, Nil, true)
-      see(followPath(List("a", "a"), 0, Array(0), Array("a"))) shouldBe (List(0), Some("a"), Nil, false)
-      see(followPath(List("a", "b", "c"), 0, Array(0), Array("a"))) shouldBe (List(0), Some("b"), List("c"), false)
-      see(followPath(List("a", "b"), 1, Array(0, 1), Array("b", "a"))) shouldBe (List(1, 0), None, Nil, true)
-      see(followPath(List("a", "b"), 1, Array(0, 1), Array("c", "a"))) shouldBe (List(1), Some("b"), Nil, false)
-      see(followPath(List("a", "b", "c"), 2, Array(0, 1, 1), Array("c", "b", "a"))) shouldBe (List(2, 1, 0), None, Nil, true)
-      see(followPath(List("a", "b"), 2, Array(0, 1, 1), Array("c", "b", "a"))) shouldBe (List(2, 1), None, Nil, false)
-      see(followPath(List("a", "c"), 2, Array(0, 1, 1), Array("c", "b", "a"))) shouldBe (List(2), Some("c"), Nil, false)
-      see(followPath(List("a", "c", "d"), 2, Array(0, 1, 1), Array("c", "b", "a"))) shouldBe (List(2), Some("c"), List(
-        "d"
-      ), false)
-      see(followPath(List("a", "c", "d"), 1, Array(0, 1, 1), Array("c", "b", "a"))) shouldBe (Nil, Some("a"), List(
-        "c",
-        "d"
-      ), false)
-      see(followPath(List("a", "b"), 2, Array(0, 0, 2), Array("c", "b", "a"))) shouldBe (List(2, 1), None, Nil, true)
-      see(followPath(List("a", "c"), 2, Array(0, 0, 2), Array("c", "b", "a"))) shouldBe (List(2, 0), None, Nil, true)
-
-      val v4 = Array("d", "c", "b", "a")
-      val s4_1 = Array(0, 0, 1, 2)
-      see(followPath(List("a", "d"), 3, s4_1, v4)) shouldBe (List(3, 0), None, Nil, true)
-      see(followPath(List("a", "b"), 3, s4_1, v4)) shouldBe (List(3, 2), None, Nil, false)
-      see(followPath(List("a", "b", "c"), 3, s4_1, v4)) shouldBe (List(3, 2, 1), None, Nil, true)
-      see(followPath(List("a", "b", "d"), 3, s4_1, v4)) shouldBe (List(3, 2), Some("d"), Nil, false)
-
-      val v7 = Array("g", "f", "e", "d", "c", "b", "a")
-      val s7_1 = Array(0, 0, 2, 0, 0, 2, 2)
-      see(followPath(List("a", "e", "g"), 6, s7_1, v7)) shouldBe (List(6, 2, 0), None, Nil, true)
-      see(followPath(List("a", "b", "d"), 6, s7_1, v7)) shouldBe (List(6, 5, 3), None, Nil, true)
-      see(followPath(List("a", "b", "e"), 6, s7_1, v7)) shouldBe (List(6, 5), Some("e"), Nil, false)
-
-      val s7_2 = Array(0, 1, 1, 0, 1, 2, 1)
-      see(followPath(List("a", "e", "g"), 6, s7_2, v7)) shouldBe (List(6), Some("e"), List("g"), false)
-      see(followPath(List("a", "b", "c"), 6, s7_2, v7)) shouldBe (List(6, 5, 4), None, Nil, false)
-      see(followPath(List("a", "b", "d"), 6, s7_2, v7)) shouldBe (List(6, 5), Some("d"), Nil, false)
-      see(followPath(List("a", "b", "e"), 6, s7_2, v7)) shouldBe (List(6, 5, 2), None, Nil, false)
-      see(followPath(List("a", "b", "e", "f"), 6, s7_2, v7)) shouldBe (List(6, 5, 2, 1), None, Nil, false)
-      see(followPath(List("a", "b", "e", "f", "g"), 6, s7_2, v7)) shouldBe (List(6, 5, 2, 1, 0), None, Nil, true)
     }
 
     "select a value by the path" in {
@@ -853,20 +450,6 @@ class ArrayTreeSpec extends AnyWordSpecCompat {
         Tree("b", Tree("d"), Tree("e")),
         Tree("c")
       )
-    }
-
-    "insert a branch into the buffers" in {
-      insertBranch(List.empty[String].iterator, 0, IntBuffer.empty, Buffer.empty[String], 0) shouldBe 0
-      insertBranch(List("a").iterator, -1, IntBuffer.empty, Buffer.empty[String], 0) shouldBe 1
-      insertBranch(List("a", "b").iterator, -1, IntBuffer.empty, Buffer.empty[String], 0) shouldBe 2
-      insertBranch(List("b").iterator, 0, IntBuffer(0), Buffer("a"), 0) shouldBe 1
-      insertBranch(List("a").iterator, 0, IntBuffer(0), Buffer("a"), 0) shouldBe 1
-      insertBranch(List("a", "b", "c").iterator, 0, IntBuffer(0), Buffer("a"), 0) shouldBe 3
-      insertBranch(List("b", "c").iterator, 1, IntBuffer(0, 1), Buffer("a", "b"), 0) shouldBe 2
-      insertBranch(List("b", "c").iterator, 1, IntBuffer(0, 1), Buffer("b", "a"), 0) shouldBe 1
-      insertBranch(List("b", "c", "d", "e", "f").iterator, 1, IntBuffer(0, 1), Buffer("b", "a"), 0) shouldBe 4
-      insertBranch(List("b", "c", "d", "e", "f").iterator, 2, IntBuffer(0, 1, 1), Buffer("c", "b", "a"), 0) shouldBe 3
-      insertBranch(List("b", "c", "d", "e", "f").iterator, 2, IntBuffer(0, 0, 2), Buffer("c", "b", "a"), 0) shouldBe 4
     }
 
     "insert a branch into the tree" in {

@@ -18,7 +18,7 @@ package com.github.arturopala.tree
 
 import com.github.arturopala.bufferandslice.{Buffer, IntBuffer, IntSlice, Slice}
 import com.github.arturopala.tree.Tree.{ArrayTree, NodeTree}
-import com.github.arturopala.tree.util.ArrayTree
+import com.github.arturopala.tree.util.{ArrayTree, ArrayTreeFunctions}
 
 import scala.annotation.tailrec
 import scala.collection.Iterator
@@ -83,30 +83,37 @@ object TreeBuilder {
     } else if (result.isEmpty) List(Tree.empty)
     else result
 
-  /** Builds a tree from a pair of arrays:
+  /** Builds a list of trees from a pair of arrays:
     *   - `structure` is an arrays holding linearized tree structure,
     *   - `values` is an arrays holding node's values.
     *
     * @note Both arrays have to return data following rules set in [[Tree.toArrays]].
     */
-  final def fromArrays[T: ClassTag](structure: Array[Int], values: Array[T]): List[Tree[T]] = {
+  @`inline` final def fromArrays[T: ClassTag](structure: Array[Int], values: Array[T]): List[Tree[T]] =
+    fromSlices(IntSlice.of(structure), Slice.of(values))
+
+  /** Builds a list of trees from a pair of slices:
+    *   - `structure` is a slice holding linearized tree structure,
+    *   - `values` is a slice holding node's values.
+    *
+    * @note Both slices have to return data following rules set in [[Tree.toArrays]].
+    */
+  final def fromSlices[T: ClassTag](structure: IntSlice, content: Slice[T]): List[Tree[T]] = {
     assert(
-      structure.length == values.length,
-      "When constructing Tree from arrays, structure and values must be of the same size."
+      structure.length == content.length,
+      "When constructing Tree from slices, structure and values must be of the same size."
     )
 
     if (structure.isEmpty) List(Tree.empty)
     else {
-      val structureSlice = IntSlice.of(structure)
-      val valuesSlice = Slice.of(values)
 
-      val hasSingleTree = ArrayTree.treeSize(structure.length - 1, structure) == structure.length
+      val hasSingleTree = ArrayTreeFunctions.treeSize(structure.length - 1, structure) == structure.length
 
       if (hasSingleTree) {
 
         val width = structure.count(_ == 0)
-        val height = ArrayTree.calculateHeight(structure.length - 1, structure)
-        val tree = new ArrayTree[T](structureSlice, valuesSlice, width, height)
+        val height = ArrayTreeFunctions.calculateHeight(structure.length - 1, structure)
+        val tree = new ArrayTree[T](structure, content, width, height)
         List(tree)
 
       } else {
@@ -117,7 +124,7 @@ object TreeBuilder {
         Try {
           var i = 0
           while (i < length) {
-            val tree = ArrayTree.treeAt(length - i - 1, structureSlice.dropRight(i), valuesSlice.dropRight(i))
+            val tree = ArrayTree.treeAt(length - i - 1, structure.dropRight(i), content.dropRight(i))
             list = tree :: list
             i = i + tree.size
           }
@@ -171,25 +178,20 @@ object TreeBuilder {
     *
     * @note Both buffers have to follow rules set in [[Tree.toArrays]].
     */
-  @`inline` final def fromBuffers[T: ClassTag](structureBuffer: IntBuffer, valuesBuffer: Buffer[T]): Tree[T] =
-    fromSlices(structureBuffer.toSlice, valuesBuffer.toSlice)
+  @`inline` final def fromBuffersHead[T: ClassTag](structureBuffer: IntBuffer, valuesBuffer: Buffer[T]): Tree[T] =
+    fromBuffers(structureBuffer, valuesBuffer).head
 
-  /** Builds a tree from a pair of array slices.
-    *  - `structure` is a slice holding linearized tree structure,
-    *  - `values` is a slice holding node's values.
+  /** Builds a list of trees from a pair of buffers.
+    *  - `structureBuffer` is a buffer holding linearized tree structure,
+    *  - `valuesBuffer` is a buffer holding node's values.
     *
-    * @note Both slices have to follow rules set in [[Tree.toArrays]].
+    * @note Both buffers have to follow rules set in [[Tree.toArrays]].
     */
-  final def fromSlices[T: ClassTag](structure: IntSlice, values: Slice[T]): Tree[T] =
-    new ArrayTree[T](
-      structure,
-      values,
-      ArrayTree.calculateWidth(structure),
-      ArrayTree.calculateHeight(structure)
-    )
+  @`inline` final def fromBuffers[T: ClassTag](structureBuffer: IntBuffer, valuesBuffer: Buffer[T]): List[Tree[T]] =
+    fromSlices(structureBuffer.asSlice, valuesBuffer.asSlice)
 
   /** Builds a single-branch tree from a list of values. */
-  final def fromValueList[T: ClassTag](list: List[T]): Tree[T] = list.reverse match {
+  final def linearTreeFromList[T: ClassTag](list: List[T]): Tree[T] = list.reverse match {
     case Nil => Tree.empty
     case value :: tail =>
       tail.foldLeft(Tree(value))((t, v) => Tree(v, t))

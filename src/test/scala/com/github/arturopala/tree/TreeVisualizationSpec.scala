@@ -37,7 +37,7 @@ class TreeVisualizationSpec extends FunSuite {
     }
 
     "visualize the branches of the tree limiting the depth" in {
-      def mkStringWithMaxDepth(n: Int) = tree9.mkStringUsingBranches(_.toString, ",", ",", "[", "]", n)
+      def mkStringWithMaxDepth(n: Int) = tree9.mkStringFromBranches(_.toString, ",", ",", "[", "]", n)
       mkStringWithMaxDepth(0) shouldBe ""
       mkStringWithMaxDepth(1) shouldBe "[a]"
       mkStringWithMaxDepth(2) shouldBe "[a,b],[a,e]"

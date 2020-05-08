@@ -21,7 +21,6 @@ import com.github.arturopala.tree.Tree.ArrayTree
 import com.github.arturopala.bufferandslice.{Buffer, IntBuffer, IntSlice, Slice}
 
 import scala.collection.Iterator
-import scala.collection.immutable.Stream
 import scala.reflect.ClassTag
 
 /**
@@ -35,27 +34,31 @@ abstract class ArrayTreeLike[T: ClassTag] extends TreeLike[T] {
   private def all[A]: A => Boolean = _ => true
 
   final override def valueOption: Option[T] = Some(tree.content.last)
-  final override def values: List[T] = tree.content.reverseIterator.toList
+  final override def values: Seq[T] = tree.content.reverseIterator.toSeq
   final override def valueIterator(pred: T => Boolean, maxDepth: Int = Int.MaxValue): Iterator[T] =
     if (maxDepth >= height) tree.content.reverseIterator(pred)
     else
       ArrayTree.valueIterator(tree.structure.length - 1, tree.structure, tree.content, pred, maxDepth)
 
-  final override def childrenValues: List[T] =
-    ArrayTree.childrenIndexes(tree.structure.length - 1, tree.structure).map(tree.content)
+  final override def childrenValues: Seq[T] =
+    ArrayTreeFunctions
+      .childrenIndexes(tree.structure.length - 1, tree.structure)
+      .map(tree.content)
+      .toSeq
 
-  final override def children: List[Tree[T]] =
-    ArrayTree
+  final override def children: Seq[Tree[T]] =
+    ArrayTreeFunctions
       .childrenIndexes(tree.structure.length - 1, tree.structure)
       .map(ArrayTree.treeAt(_, tree.structure, tree.content))
+      .toSeq
 
-  final override def trees: List[Tree[T]] = treeIterator(all).toList
+  final override def trees: Seq[Tree[T]] = treeIterator(all).toSeq
 
   final override def treeIterator(pred: Tree[T] => Boolean, maxDepth: Int = Int.MaxValue): Iterator[Tree[T]] =
     if (maxDepth >= height) ArrayTree.treeIterator(tree.structure.length - 1, tree.structure, tree.content, pred)
     else ArrayTree.treeIteratorWithLimit(tree.structure.length - 1, tree.structure, tree.content, pred, maxDepth)
 
-  final override def branches: List[List[T]] = branchIterator(all).map(_.toList).toList
+  final override def branches: Seq[Iterable[T]] = branchIterator(all).toSeq
   final override def branchIterator(pred: Iterable[T] => Boolean, maxDepth: Int = Int.MaxValue): Iterator[Iterable[T]] =
     ArrayTree.branchIterator(tree.structure.length - 1, tree.structure, tree.content, pred, maxDepth)
 
@@ -122,12 +125,25 @@ abstract class ArrayTreeLike[T: ClassTag] extends TreeLike[T] {
   final override def modifyValueAt[T1 >: T: ClassTag](path: Iterable[T1], modify: T => T1): Either[Tree[T], Tree[T1]] =
     ArrayTree.modifyValueAt(path, modify, tree, keepDistinct = false)
 
+  final override def modifyValueDistinctAt[T1 >: T: ClassTag](
+    path: Iterable[T1],
+    modify: T => T1
+  ): Either[Tree[T], Tree[T1]] =
+    ArrayTree.modifyValueAt(path, modify, tree, keepDistinct = true)
+
   final override def modifyValueAt[K, T1 >: T: ClassTag](
     path: Iterable[K],
     modify: T => T1,
     toPathItem: T => K
   ): Either[Tree[T], Tree[T1]] =
     ArrayTree.modifyValueAt(path, modify, tree, toPathItem, keepDistinct = false)
+
+  final override def modifyValueDistinctAt[K, T1 >: T: ClassTag](
+    path: Iterable[K],
+    modify: T => T1,
+    toPathItem: T => K
+  ): Either[Tree[T], Tree[T1]] =
+    ArrayTree.modifyValueAt(path, modify, tree, toPathItem, keepDistinct = true)
 
   // TRANSFORMATIONS
 
@@ -169,10 +185,11 @@ abstract class ArrayTreeLike[T: ClassTag] extends TreeLike[T] {
     (tree.structure, tree.content.asInstanceOf[Slice[T1]])
 
   final override def toBuffers[T1 >: T: ClassTag]: (IntBuffer, Buffer[T1]) =
-    (tree.structure.toBuffer, tree.content.toBuffer.asInstanceOf[Buffer[T1]])
+    (tree.structure.toBuffer, Buffer(tree.content.toArray[T1]))
+
   final override def toStructureArray: Array[Int] = tree.structure.toArray
 
-  final override def mkStringUsingBranches(
+  final override def mkStringFromBranches(
     show: T => String,
     valueSeparator: String,
     branchSeparator: String,
@@ -180,8 +197,8 @@ abstract class ArrayTreeLike[T: ClassTag] extends TreeLike[T] {
     branchEnd: String,
     maxDepth: Int
   ): String =
-    ArrayTree
-      .mkStringUsingBranches(
+    ArrayTreeFunctions
+      .mkStringFromBranches(
         tree.structure.length - 1,
         tree.structure,
         tree.content,

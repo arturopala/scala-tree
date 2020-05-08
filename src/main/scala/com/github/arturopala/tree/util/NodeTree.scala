@@ -52,6 +52,8 @@ object NodeTree {
     def unapply[T](node: Binary[T]): Option[(T, NodeTree[T], NodeTree[T])] = Some((node.value, node.left, node.right))
   }
 
+  type TreeSplit[T] = (List[NodeTree[T]], T, List[NodeTree[T]])
+
   /** Returns an iterator over the filtered nodes of the tree, goes depth-first with maxDepth limit. */
   final def valueIterator[T](pred: T => Boolean, node: NodeTree[T]): Iterator[T] = new Iterator[T] {
 
@@ -299,22 +301,32 @@ object NodeTree {
     if (pred(node)) Stream.cons(node, continue) else continue
   }
 
-  final def insertTreeDistinct[T, T1 >: T](tree: NodeTree[T], subtree: NodeTree[T1]): Tree[T1] =
-    mergeDistinct(Vector((tree, List(subtree))), Nil)
+  /** Inserts subtree into a tree keeping children distinct.
+    * @param prepend if true, subtree is eventually prepended to the existing children,
+    *                if false, subtree is appended.
+    */
+  final def insertTreeDistinct[T, T1 >: T](tree: NodeTree[T], subtree: NodeTree[T1], prepend: Boolean): Tree[T1] =
+    mergeDistinct(Vector((tree, List(subtree))), Nil, prepend)
 
+  /** Merges a new children into an existing tree.
+    * Processes recursively a queue of tuples (tree, newChildren)
+    * while accumulating result list of (numberOfChildrenToCollect, nodeValue, partialChildren).
+    * When queue is finally empty builds a tree from the result list.
+    *
+    * @param prepend if true, new distinct children are eventually prepended to the existing children,
+    *                if false, they are appended.
+    */
   @tailrec
   final def mergeDistinct[T, T1 >: T](
     queue: Vector[(NodeTree[T], List[NodeTree[T1]])],
-    result: List[(Int, T, List[NodeTree[T1]])]
+    result: List[(Int, T, List[NodeTree[T1]])],
+    prepend: Boolean = true
   ): Tree[T1] =
-    if (queue.isEmpty) buildTreeFromPartials(result, Nil).headOption.getOrElse(Tree.empty)
+    if (queue.isEmpty) buildTreeFromPartials(result, Nil, prepend).headOption.getOrElse(Tree.empty)
     else {
-
       val (tree, newSubtrees) = queue.head
-
-      if (newSubtrees.isEmpty) mergeDistinct(queue.drop(1), (0, tree.value, tree.subtrees) :: result)
+      if (newSubtrees.isEmpty) mergeDistinct(queue.drop(1), (0, tree.value, tree.subtrees) :: result, prepend)
       else {
-
         val (queue2, distinctNewSubtrees) =
           tree.subtrees.reverse.foldLeft((queue.drop(1), newSubtrees)) {
             case ((acc, toInsert), node) =>
@@ -324,22 +336,31 @@ object NodeTree {
                   ((node, t.subtrees) +: acc, toInsert.filterNot(_.value == node.value))
               }
           }
-
-        mergeDistinct(queue2, (queue2.size - queue.size + 1, tree.value, distinctNewSubtrees) :: result)
+        mergeDistinct(queue2, (queue2.size - queue.size + 1, tree.value, distinctNewSubtrees) :: result, prepend)
       }
 
     }
 
+  /** Builds a tree from a list of (numberOfChildrenToCollect, nodeValue, partialChildren).
+    * Each tree node must come in the list after its `numberOfPrecedingChildren` children.
+    *
+    * @param prepend if true, partialChildren are eventually prepended to the collected ones,
+    *                if false, they are appended.*/
   @tailrec
   final def buildTreeFromPartials[T, T1 >: T](
     list: List[(Int, T, List[NodeTree[T1]])],
-    result: List[NodeTree[T1]]
+    result: List[NodeTree[T1]],
+    prepend: Boolean = true
   ): List[NodeTree[T1]] =
     list match {
       case Nil => result
-      case (size, value, subtrees) :: xs =>
-        val node = Tree(value, subtrees ::: result.take(size)).asInstanceOf[NodeTree[T1]]
-        buildTreeFromPartials(xs, node :: result.drop(size))
+      case (numberOfChildrenToCollect, nodeValue, partialChildren) :: xs =>
+        val node = Tree(
+          nodeValue,
+          if (prepend) partialChildren ::: result.take(numberOfChildrenToCollect)
+          else result.take(numberOfChildrenToCollect) ::: partialChildren
+        ).asInstanceOf[NodeTree[T1]]
+        buildTreeFromPartials(xs, node :: result.drop(numberOfChildrenToCollect), prepend)
     }
 
   final def insertTreeAt[T, T1 >: T: ClassTag](
@@ -383,7 +404,7 @@ object NodeTree {
       }
       .getOrElse(Left(tree))
 
-  /** Splits the tree following the full path.
+  /** Splits the tree following the path and succeeds only if all path items exists.
     * The tree children split is a triple of (children list left of value, a value, children list right of value)
     * @return some pair of (the tree split, recipient tree holding the last path item)
     *         or none if:
@@ -393,7 +414,7 @@ object NodeTree {
   final def splitTreeByFullPath[T, T1 >: T: ClassTag](
     tree: NodeTree[T],
     pathIterator: Iterator[T1]
-  ): Option[(List[(List[NodeTree[T]], T, List[NodeTree[T]])], NodeTree[T])] =
+  ): Option[(List[TreeSplit[T]], NodeTree[T])] =
     splitTreeByPath[T, T1](tree, pathIterator).flatMap {
       case (_, Some(_), _, _)                  => None
       case (treeSplit, None, _, remainingTree) => Some((treeSplit, remainingTree))
@@ -411,7 +432,7 @@ object NodeTree {
   final def splitTreeByPath[T, T1 >: T: ClassTag](
     tree: NodeTree[T],
     pathIterator: Iterator[T1]
-  ): Option[(List[(List[NodeTree[T]], T, List[NodeTree[T]])], Option[T1], Iterator[T1], NodeTree[T])] =
+  ): Option[(List[TreeSplit[T]], Option[T1], Iterator[T1], NodeTree[T])] =
     if (pathIterator.isEmpty) None
     else {
       val head = pathIterator.next
@@ -422,8 +443,8 @@ object NodeTree {
   private def splitTreeByPath[T, T1 >: T: ClassTag](
     tree: NodeTree[T],
     pathIterator: Iterator[T1],
-    queue: List[(List[NodeTree[T]], T, List[NodeTree[T]])]
-  ): (List[(List[NodeTree[T]], T, List[NodeTree[T]])], Option[T1], Iterator[T1], NodeTree[T]) =
+    queue: List[TreeSplit[T]]
+  ): (List[TreeSplit[T]], Option[T1], Iterator[T1], NodeTree[T]) =
     if (pathIterator.hasNext) {
       val value: T1 = pathIterator.next()
       splitListWhen[NodeTree[T]](_.value == value, tree.subtrees) match {
@@ -437,9 +458,10 @@ object NodeTree {
       (queue, None, pathIterator, tree)
     }
 
-  /** Splits the tree following the full path and using toPathItem extractor function.
+  /** Splits the tree following the path, using toPathItem extractor function,
+    * and succeeds only if all path items exists.
     * The tree children split is a triple of (children list left of value, a value, children list right of value)
-    * @return some pair of (the tree split, recipient tree holding the last path item)
+    * @return some pair of (the tree split, recipient tree matching the last path item)
     *         or none if:
     *         1) the path doesn't exist in full,
     *         2) the path root doesn't match the tree root.
@@ -448,7 +470,7 @@ object NodeTree {
     tree: NodeTree[T],
     pathIterator: Iterator[K],
     toPathItem: T => K
-  ): Option[(List[(List[NodeTree[T]], T, List[NodeTree[T]])], NodeTree[T])] =
+  ): Option[(List[TreeSplit[T]], NodeTree[T])] =
     splitTreeByPath(tree, pathIterator, toPathItem).flatMap {
       case (_, Some(_), _, _)                  => None
       case (treeSplit, None, _, remainingTree) => Some((treeSplit, remainingTree))
@@ -469,7 +491,7 @@ object NodeTree {
     tree: NodeTree[T],
     pathIterator: Iterator[K],
     toPathItem: T => K
-  ): Option[(List[(List[NodeTree[T]], T, List[NodeTree[T]])], Option[K], Iterator[K], NodeTree[T])] =
+  ): Option[(List[TreeSplit[T]], Option[K], Iterator[K], NodeTree[T])] =
     if (pathIterator.isEmpty) None
     else {
       val head = pathIterator.next
@@ -482,8 +504,8 @@ object NodeTree {
     tree: NodeTree[T],
     pathIterator: Iterator[K],
     toPathItem: T => K,
-    queue: List[(List[NodeTree[T]], T, List[NodeTree[T]])]
-  ): (List[(List[NodeTree[T]], T, List[NodeTree[T]])], Option[K], Iterator[K], NodeTree[T]) =
+    queue: List[TreeSplit[T]]
+  ): (List[TreeSplit[T]], Option[K], Iterator[K], NodeTree[T]) =
     if (pathIterator.hasNext) {
       val pathItem: K = pathIterator.next()
       splitListWhen[NodeTree[T]](node => toPathItem(node.value) == pathItem, tree.subtrees) match {
@@ -509,6 +531,63 @@ object NodeTree {
     split(Nil, list)
   }
 
+  /** Joins single treeSplit back into a tree node. */
+  final def join[T](split: TreeSplit[T]): NodeTree[T] = Tree(split._2, split._1 ++ split._3)
+
+  /** Modifies a value of a child, and builds a tree back from the treeSplit. */
+  final def modifyChildValueInSplit[T, T1 >: T: ClassTag](
+    treeSplit: List[TreeSplit[T]],
+    child: NodeTree[T],
+    modify: T => T1,
+    keepDistinct: Boolean
+  ): Tree[T1] = {
+    val newValue = modify(child.value)
+    val newChild = Tree(newValue, child.subtrees)
+    if (keepDistinct && treeSplit.nonEmpty) {
+      val onLeft = treeSplit.head._1.exists(_.value == newValue)
+      val onRight = !onLeft && treeSplit.head._3.exists(_.value == newValue)
+      if (onLeft || onRight) {
+        val newHeadTree = insertTreeDistinct(join(treeSplit.head), newChild, prepend = onRight)
+        TreeBuilder.fromTreeSplitAndChild(newHeadTree, treeSplit.tail)
+      } else {
+        TreeBuilder.fromTreeSplitAndChild(newChild, treeSplit)
+      }
+    } else {
+      TreeBuilder.fromTreeSplitAndChild(newChild, treeSplit)
+    }
+  }
+
+  /** Modifies a child, and builds a tree back from the treeSplit. */
+  final def modifyChildInSplit[T, T1 >: T: ClassTag](
+    treeSplit: List[TreeSplit[T]],
+    child: NodeTree[T],
+    modify: Tree[T] => Tree[T1],
+    keepDistinct: Boolean
+  ): Tree[T1] =
+    modify(child) match {
+      case Tree.empty =>
+        TreeBuilder.fromTreeSplitAndChild(Tree.empty, treeSplit)
+      case newChild =>
+        val newValue = newChild.valueOption.get
+        if (keepDistinct && treeSplit.nonEmpty) {
+          val onLeft = treeSplit.head._1.exists(_.value == newValue)
+          val onRight = !onLeft && treeSplit.head._3.exists(_.value == newValue)
+          if (onLeft || onRight) {
+            val newHeadTree = newChild match {
+              case t: NodeTree[T1] =>
+                insertTreeDistinct(join(treeSplit.head), t, prepend = onRight)
+              case t =>
+                join(treeSplit.head).insertTreeDistinct(t) // TODO: add support for prepend flag
+            }
+            TreeBuilder.fromTreeSplitAndChild(newHeadTree, treeSplit.tail)
+          } else {
+            TreeBuilder.fromTreeSplitAndChild(newChild, treeSplit)
+          }
+        } else {
+          TreeBuilder.fromTreeSplitAndChild(newChild, treeSplit)
+        }
+    }
+
   /** Modifies value of the node accessible by the path. */
   final def modifyValueAt[T, T1 >: T: ClassTag](
     tree: NodeTree[T],
@@ -519,13 +598,7 @@ object NodeTree {
     splitTreeByFullPath[T, T1](tree, pathIterator)
       .map {
         case (treeSplit, recipientTree) =>
-          val newNode =
-            if (keepDistinct && !recipientTree.isLeaf) {
-              ???
-            } else {
-              Tree(modify(recipientTree.value), recipientTree.subtrees)
-            }
-          Right(TreeBuilder.fromTreeSplitAndChild(newNode, treeSplit))
+          Right(modifyChildValueInSplit(treeSplit, recipientTree, modify, keepDistinct))
       }
       .getOrElse(Left(tree))
 
@@ -539,13 +612,7 @@ object NodeTree {
     splitTreeByFullPath[T, T1](tree, pathIterator)
       .map {
         case (treeSplit, recipientTree) =>
-          val newNode =
-            if (keepDistinct && !recipientTree.isLeaf) {
-              ???
-            } else {
-              modify(recipientTree)
-            }
-          Right(TreeBuilder.fromTreeSplitAndChild(newNode, treeSplit))
+          Right(modifyChildInSplit(treeSplit, recipientTree, modify, keepDistinct))
       }
       .getOrElse(Left(tree))
 
@@ -560,13 +627,7 @@ object NodeTree {
     splitTreeByFullPath(tree, pathIterator, toPathItem)
       .map {
         case (treeSplit, recipientTree) =>
-          val newNode =
-            if (keepDistinct && !recipientTree.isLeaf) {
-              ???
-            } else {
-              Tree(modify(recipientTree.value), recipientTree.subtrees)
-            }
-          Right(TreeBuilder.fromTreeSplitAndChild(newNode, treeSplit))
+          Right(modifyChildValueInSplit(treeSplit, recipientTree, modify, keepDistinct))
       }
       .getOrElse(Left(tree))
 
@@ -581,13 +642,7 @@ object NodeTree {
     splitTreeByFullPath(tree, pathIterator, toPathItem)
       .map {
         case (treeSplit, recipientTree) =>
-          val newNode =
-            if (keepDistinct && !recipientTree.isLeaf) {
-              ???
-            } else {
-              modify(recipientTree)
-            }
-          Right(TreeBuilder.fromTreeSplitAndChild(newNode, treeSplit))
+          Right(modifyChildInSplit(treeSplit, recipientTree, modify, keepDistinct))
       }
       .getOrElse(Left(tree))
 
@@ -731,7 +786,7 @@ object NodeTree {
     subtreesRight match {
       case Nil =>
         val branchTree: NodeTree[T1] =
-          TreeBuilder.fromValueList(branchHead :: branchTailIterator.toList).asInstanceOf[NodeTree[T1]]
+          TreeBuilder.linearTreeFromList(branchHead :: branchTailIterator.toList).asInstanceOf[NodeTree[T1]]
         branchTree :: subtreesLeft
 
       case head :: tail if head.value == branchHead =>
@@ -746,7 +801,7 @@ object NodeTree {
     splitTreeByPath(tree, branchIterator).flatMap {
       case (treeSplit, Some(value), remainingBranchIterator, remainingTree) =>
         val branchTree: NodeTree[T1] =
-          TreeBuilder.fromValueList(value :: remainingBranchIterator.toList).asInstanceOf[NodeTree[T1]]
+          TreeBuilder.linearTreeFromList(value :: remainingBranchIterator.toList).asInstanceOf[NodeTree[T1]]
 
         val newNode = Tree(remainingTree.value, branchTree :: remainingTree.subtrees)
         Some(TreeBuilder.fromTreeSplitAndChild(newNode, treeSplit))

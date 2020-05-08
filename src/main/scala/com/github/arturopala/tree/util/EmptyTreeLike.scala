@@ -90,7 +90,7 @@ trait EmptyTreeLike extends TreeLike[Nothing] {
   final override def insertTreeAt[T1: ClassTag](path: Iterable[T1], subtree: Tree[T1]): Tree[T1] =
     if (path.isEmpty) subtree
     else if (subtree.isEmpty) empty
-    else TreeBuilder.fromValueList(path.toList).insertTreeAt(path, subtree)
+    else TreeBuilder.linearTreeFromList(path.toList).insertTreeAt(path, subtree)
 
   final override def insertTreeDistinctAt[T1 >: Nothing: ClassTag](path: Iterable[T1], subtree: Tree[T1]): Tree[T1] =
     insertTreeAt(path, subtree)
@@ -109,18 +109,31 @@ trait EmptyTreeLike extends TreeLike[Nothing] {
 
   final override def insertBranch[T1: ClassTag](branch: Iterable[T1]): Tree[T1] =
     if (branch.isEmpty) Tree.empty
-    else TreeBuilder.fromValueList(branch.toList)
+    else TreeBuilder.linearTreeFromList(branch.toList)
 
   final override def modifyValueAt[T1 >: Nothing: ClassTag](
     path: Iterable[T1],
     modify: Nothing => T1
   ): Either[Tree[Nothing], Tree[T1]] = Left(empty)
 
+  final override def modifyValueDistinctAt[T1 >: Nothing: ClassTag](
+    path: Iterable[T1],
+    modify: Nothing => T1
+  ): Either[Tree[Nothing], Tree[T1]] =
+    Left(empty)
+
   final override def modifyValueAt[K, T1 >: Nothing: ClassTag](
     path: Iterable[K],
     modify: Nothing => T1,
     toPathItem: Nothing => K
   ): Either[Tree[Nothing], Tree[T1]] = Left(empty)
+
+  final override def modifyValueDistinctAt[K, T1 >: Nothing: ClassTag](
+    path: Iterable[K],
+    modify: Nothing => T1,
+    toPathItem: Nothing => K
+  ): Either[Tree[Nothing], Tree[T1]] =
+    Left(empty)
 
   final override def selectValue[K](path: Iterable[K], f: Nothing => K): Option[Nothing] = None
   final override def selectTree[T1: ClassTag](path: Iterable[T1]): Option[Tree[Nothing]] = None
@@ -139,7 +152,7 @@ trait EmptyTreeLike extends TreeLike[Nothing] {
   final override def toBuffers[T1: ClassTag]: (IntBuffer, Buffer[T1]) = (IntBuffer.empty, Buffer.empty[T1])
   final override val toStructureArray: Array[Int] = Array.empty[Int]
 
-  final override def mkStringUsingBranches(
+  final override def mkStringFromBranches(
     show: Nothing => String,
     nodeSeparator: String,
     branchSeparator: String,

@@ -113,9 +113,9 @@ class TreeBuilderSpec extends AnyWordSpecCompat {
 
     "create a new single-branch tree from a list of values" in {
       //fromValueList(List()) shouldBe Tree.empty
-      fromValueList(List("a")) shouldBe Tree("a")
-      fromValueList(List("a", "b", "c")) shouldBe Tree("a", Tree("b", Tree("c")))
-      fromValueList(List("a", "a", "a")) shouldBe Tree("a", Tree("a", Tree("a")))
+      linearTreeFromList(List("a")) shouldBe Tree("a")
+      linearTreeFromList(List("a", "b", "c")) shouldBe Tree("a", Tree("b", Tree("c")))
+      linearTreeFromList(List("a", "a", "a")) shouldBe Tree("a", Tree("a", Tree("a")))
     }
 
     "create a new main-branch tree from a list of trees" in {

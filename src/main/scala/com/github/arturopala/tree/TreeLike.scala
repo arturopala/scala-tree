@@ -106,11 +106,11 @@ trait TreeLike[+T] {
 
   /** Returns direct children values, i.e. values of the subtree nodes, if any.
     * @group values */
-  def childrenValues: List[T]
+  def childrenValues: Seq[T]
 
   /** Lists all the node's values in the tree.
     * @group values */
-  def values: List[T]
+  def values: Seq[T]
 
   /** Iterates over filtered node's values, top-down, depth-first.
     * @param pred return true to include the value in the result, false otherwise.
@@ -128,12 +128,12 @@ trait TreeLike[+T] {
 
   /** Returns direct children trees, i.e. the subtrees.
     * @group sub-trees */
-  def children: List[Tree[T]]
+  def children: Seq[Tree[T]]
 
   /** Lists all the possible subtrees in the tree inclusive.
     * Top tree is listed first, then children depth-first.
     * @group sub-trees */
-  def trees: List[Tree[T]]
+  def trees: Seq[Tree[T]]
 
   /** Iterates over filtered trees in this tree inclusive, top-down, depth-first.
     * The top tree is returned first, then children left-to-right and depth-first.
@@ -157,7 +157,7 @@ trait TreeLike[+T] {
     *
     * @note Uses unsafe nested recursions, result same as [[branchIterator()]].
     * @group branches */
-  def branches: List[List[T]]
+  def branches: Seq[Iterable[T]]
 
   /** Iterates over filtered branches of the tree starting at the root.
     * @param pred return true to include the branch in the result, false otherwise.
@@ -471,7 +471,7 @@ trait TreeLike[+T] {
     * @param modify function to modify the value
     * @return either right of modified tree or left with the tree intact
     * @group distinctModification */
-  def modifyValueDistinctAt[T1 >: T: ClassTag](path: Iterable[T1], modify: T => T1): Either[Tree[T], Tree[T1]] = ???
+  def modifyValueDistinctAt[T1 >: T: ClassTag](path: Iterable[T1], modify: T => T1): Either[Tree[T], Tree[T1]]
 
   /** Modifies the value selected by the given path, and returns a whole tree updated.
     * Keeps all the node's children distinct.
@@ -484,7 +484,7 @@ trait TreeLike[+T] {
     path: Iterable[K],
     modify: T => T1,
     toPathItem: T => K
-  ): Either[Tree[T], Tree[T1]] = ???
+  ): Either[Tree[T], Tree[T1]]
 
   /** Modifies the tree selected by the given path, and returns a whole tree updated.
     * Keeps all the node's children distinct.
@@ -619,7 +619,7 @@ trait TreeLike[+T] {
     * @param maxDepth maximum path length (or tree depth) to reveal
     * @group visualization
     */
-  def mkStringUsingBranches(
+  def mkStringFromBranches(
     show: T => String,
     valueSeparator: String,
     branchSeparator: String,

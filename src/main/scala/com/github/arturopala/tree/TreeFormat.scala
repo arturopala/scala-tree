@@ -22,12 +22,12 @@ package com.github.arturopala.tree
 object TreeFormat {
 
   final def showAsArrays[T <: Any](tree: TreeLike[T], separator: String): String =
-    tree.mkStringUsingBranches(_.toString, ",", separator, "[", "]")
+    tree.mkStringFromBranches(_.toString, ",", separator, "[", "]")
 
   final def showAsGraph[T <: Any](tree: TreeLike[T], separator: String): String =
-    tree.mkStringUsingBranches(_.toString, " > ", separator, "", "")
+    tree.mkStringFromBranches(_.toString, " > ", separator, "", "")
 
   final def showAsPaths[T <: Any](tree: TreeLike[T], separator: String): String =
-    tree.mkStringUsingBranches(_.toString, "/", separator, "", "")
+    tree.mkStringFromBranches(_.toString, "/", separator, "", "")
 
 }

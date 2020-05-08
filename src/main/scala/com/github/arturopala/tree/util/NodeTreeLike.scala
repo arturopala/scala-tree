@@ -54,7 +54,7 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
     if (maxDepth >= height) NodeTree.treeIterator(pred, node)
     else NodeTree.treeIteratorWithLimit(pred, node, maxDepth)
 
-  final override def branches: List[List[T]] = NodeTree.branches[T](all, node)
+  final override def branches: Seq[Iterable[T]] = NodeTree.branches[T](all, node)
 
   final def branchesUnsafe: List[List[T]] = node.subtrees match {
     case Nil => List(List(node.value))
@@ -110,9 +110,10 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
 
   final override def insertTreeDistinct[T1 >: T: ClassTag](subtree: Tree[T1]): Tree[T1] = subtree match {
     case Tree.empty         => node
-    case tree: NodeTree[T1] => NodeTree.insertTreeDistinct(node, tree)
+    case tree: NodeTree[T1] => NodeTree.insertTreeDistinct(node, tree, prepend = true)
     case tree: ArrayTree[T1] =>
-      if (preferInflated(node, tree)) NodeTree.insertTreeDistinct(node, tree.inflated.asInstanceOf[NodeTree[T1]])
+      if (preferInflated(node, tree))
+        NodeTree.insertTreeDistinct(node, tree.inflated.asInstanceOf[NodeTree[T1]], prepend = true)
       else node.deflated[T1].insertTreeDistinct(tree)
   }
 
@@ -169,12 +170,25 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
   final override def modifyValueAt[T1 >: T: ClassTag](path: Iterable[T1], modify: T => T1): Either[Tree[T], Tree[T1]] =
     NodeTree.modifyValueAt(node, path.iterator, modify, keepDistinct = false)
 
+  final override def modifyValueDistinctAt[T1 >: T: ClassTag](
+    path: Iterable[T1],
+    modify: T => T1
+  ): Either[Tree[T], Tree[T1]] =
+    NodeTree.modifyValueAt(node, path.iterator, modify, keepDistinct = true)
+
   final override def modifyValueAt[K, T1 >: T: ClassTag](
     path: Iterable[K],
     modify: T => T1,
     toPathItem: T => K
   ): Either[Tree[T], Tree[T1]] =
     NodeTree.modifyValueAt(node, path.iterator, toPathItem, modify, keepDistinct = false)
+
+  final override def modifyValueDistinctAt[K, T1 >: T: ClassTag](
+    path: Iterable[K],
+    modify: T => T1,
+    toPathItem: T => K
+  ): Either[Tree[T], Tree[T1]] =
+    NodeTree.modifyValueAt(node, path.iterator, toPathItem, modify, keepDistinct = true)
 
   // TRANSFORMATIONS
 
@@ -217,7 +231,7 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
   final override def toBuffers[T1 >: T: ClassTag]: (IntBuffer, Buffer[T1]) = NodeTree.toBuffers(node)
   final override def toStructureArray: Array[Int] = NodeTree.toStructureArray(node)
 
-  final override def mkStringUsingBranches(
+  final override def mkStringFromBranches(
     show: T => String,
     valueSeparator: String,
     branchSeparator: String,

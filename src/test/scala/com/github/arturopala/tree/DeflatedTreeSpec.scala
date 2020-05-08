@@ -33,9 +33,9 @@ class DeflatedTreeSpec extends AnyWordSpecCompat with DeflatedTestTrees {
     }
 
     "return branches in the same order as an inflated tree" in {
-      TestTrees.tree3_2.branches shouldBe tree3_2.branches
-      TestTrees.tree7.branches shouldBe tree7.branches
-      TestTrees.tree9.branches shouldBe tree9.branches
+      TestTrees.tree3_2.branches.map(_.toList).toList shouldBe tree3_2.branches.map(_.toList).toList
+      TestTrees.tree7.branches.map(_.toList).toList shouldBe tree7.branches.map(_.toList).toList
+      TestTrees.tree9.branches.map(_.toList).toList shouldBe tree9.branches.map(_.toList).toList
     }
   }
 

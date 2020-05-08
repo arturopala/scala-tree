@@ -24,16 +24,20 @@ class TreeBranchesSpec extends FunSuite {
   sealed trait Spec extends AnyWordSpecCompat with TestTrees {
 
     "list all branches" in {
-      tree0.branches shouldBe Nil
-      tree1.branches shouldBe List(List("a"))
-      tree2.branches shouldBe List(List("a", "b"))
-      tree3_1.branches shouldBe List(List("a", "b", "c"))
-      tree3_2.branches shouldBe List(List("a", "b"), List("a", "c"))
-      tree4_1.branches shouldBe List(List("a", "b", "c", "d"))
-      tree4_2.branches shouldBe List(List("a", "b", "c"), List("a", "d"))
-      tree4_3.branches shouldBe List(List("a", "b"), List("a", "c"), List("a", "d"))
-      tree7.branches shouldBe List(List("a", "b", "c"), List("a", "d", "e", "f"), List("a", "g"))
-      tree9.branches shouldBe List(List("a", "b", "c", "d"), List("a", "e", "f", "g"), List("a", "e", "h", "i"))
+      tree0.branches.map(_.toList).toList shouldBe Nil
+      tree1.branches.map(_.toList).toList shouldBe List(List("a"))
+      tree2.branches.map(_.toList).toList shouldBe List(List("a", "b"))
+      tree3_1.branches.map(_.toList).toList shouldBe List(List("a", "b", "c"))
+      tree3_2.branches.map(_.toList).toList shouldBe List(List("a", "b"), List("a", "c"))
+      tree4_1.branches.map(_.toList).toList shouldBe List(List("a", "b", "c", "d"))
+      tree4_2.branches.map(_.toList).toList shouldBe List(List("a", "b", "c"), List("a", "d"))
+      tree4_3.branches.map(_.toList).toList shouldBe List(List("a", "b"), List("a", "c"), List("a", "d"))
+      tree7.branches.map(_.toList).toList shouldBe List(List("a", "b", "c"), List("a", "d", "e", "f"), List("a", "g"))
+      tree9.branches.map(_.toList).toList shouldBe List(
+        List("a", "b", "c", "d"),
+        List("a", "e", "f", "g"),
+        List("a", "e", "h", "i")
+      )
     }
 
     "iterate over branches with filter" in {
