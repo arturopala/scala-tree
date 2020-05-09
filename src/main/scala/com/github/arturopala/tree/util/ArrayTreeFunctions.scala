@@ -224,18 +224,18 @@ object ArrayTreeFunctions {
 
   /** List indexes of the children values of the parent node holding the given value, if any.
     * @note tree structure as returned by [[com.github.arturopala.tree.Tree.toArrays]] */
-  final def childrenIndexListFor[T](
+  final def childrenIndexesFor[T](
     value: T,
     parentIndex: Int,
     treeStructure: Int => Int,
     treeValues: Int => T
-  ): List[Int] = {
-    var result: List[Int] = Nil
+  ): IntSlice = {
+    var result = new IntBuffer(8)
     if (parentIndex > 0) {
       val numberOfChildren = treeStructure(parentIndex)
       if (numberOfChildren > 0) {
         if (treeValues(parentIndex - 1) == value) {
-          result = (parentIndex - 1) :: result
+          result = result.push(parentIndex - 1)
         }
         var n = numberOfChildren - 1
         var i = parentIndex - 1
@@ -247,13 +247,13 @@ object ArrayTreeFunctions {
           }
           i = i - 1
           if (treeValues(i) == value) {
-            result = i :: result
+            result = result.push(i)
           }
           n = n - 1
         }
       }
     }
-    result
+    result.asSlice
   }
 
   /** Iterates over tree's node indexes, top-down, depth first. */
@@ -286,8 +286,8 @@ object ArrayTreeFunctions {
       var hasNext: Boolean = false
       var i: Int = startIndex
 
-      val counters = new IntBuffer()
-      val indexes = new IntBuffer()
+      val counters = new IntBuffer(8)
+      val indexes = new IntBuffer(8)
 
       if (maxDepth > 0) {
         indexes.push(startIndex)
@@ -330,8 +330,8 @@ object ArrayTreeFunctions {
       var hasNext: Boolean = false
       var array: IntSlice = IntSlice.empty
 
-      val counters = new IntBuffer()
-      val indexes = new IntBuffer()
+      val counters = new IntBuffer(8)
+      val indexes = new IntBuffer(8)
 
       if (maxDepth > 0) {
         indexes.push(startIndex)
@@ -369,7 +369,7 @@ object ArrayTreeFunctions {
   private object BranchIteratorUtils {
 
     def readBranch(counters: IntBuffer, indexes: IntBuffer): IntBuffer = {
-      val branchIndexes = new IntBuffer()
+      val branchIndexes = new IntBuffer(8)
       var i = 0
       var ci = 0
       while (ci < counters.length) { // for all counters
@@ -458,8 +458,8 @@ object ArrayTreeFunctions {
 
     if (startIndex >= 0 && maxDepth > 0) {
 
-      val counters = new IntBuffer()
-      val indexes = new IntBuffer()
+      val counters = new IntBuffer(8)
+      val indexes = new IntBuffer(8)
 
       var n = 0
 
@@ -608,8 +608,8 @@ object ArrayTreeFunctions {
     toPathItem: T => K
   ): (IntSlice, Option[K], Iterator[K], Boolean) = {
 
-    val indexes = new IntBuffer() // travelled indexes
-    val children = new IntBuffer().push(startIndex) // children indexes to consider
+    val indexes = new IntBuffer(8) // travelled indexes
+    val children = new IntBuffer(8).push(startIndex) // children indexes to consider
     val pathIterator = path.iterator
 
     var pathSegment: Option[K] = None

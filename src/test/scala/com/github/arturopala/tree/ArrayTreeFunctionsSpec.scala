@@ -86,7 +86,10 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat {
     }
 
     "list indexes of children's nodes holding a value" in {
-      childrenIndexListFor(1, 2, Array(0, 0, 2, 1), Array(1, 1, 1, 1)) shouldBe List(0, 1)
+      childrenIndexesFor(1, 2, Array(0, 0, 2, 1), Array(1, 1, 1, 1)) shouldBe IntSlice(1, 0)
+      childrenIndexesFor(1, 2, Array(0, 0, 2, 1), Array(1, 1, 1, 1)) shouldBe IntSlice(1, 0)
+      childrenIndexesFor(2, 3, Array(0, 0, 0, 3), Array(1, 1, 1, 1)) shouldBe IntSlice()
+      childrenIndexesFor(2, -1, Array(0, 0, 0, 3), Array(1, 1, 1, 1)) shouldBe IntSlice()
     }
 
     "find parent index" in {

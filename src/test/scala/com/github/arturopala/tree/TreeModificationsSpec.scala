@@ -267,6 +267,10 @@ class TreeModificationsSpec extends FunSuite {
       tree7.modifyValueDistinctAt(List("a", "d", "g"), f) shouldBe Left(tree7)
       tree7.modifyValueDistinctAt(List("a", "b", "c", "d"), f) shouldBe Left(tree7)
       tree7.modifyValueDistinctAt(List("a", "b", "e"), f) shouldBe Left(tree7)
+      // check if it de-duplicates only the modified node
+      tree3_2
+        .insertValue("b")
+        .modifyValueDistinctAt(List("a", "c"), _ => "b") shouldBe Right(Tree("a", Tree("b"), Tree("b")))
     }
 
     "modify distinct a value of a node located at the path in the tree using an extractor function" in {

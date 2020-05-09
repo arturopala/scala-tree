@@ -457,7 +457,7 @@ object ArrayTree {
 
   /** Updates value of the node at the index.
     * @return updated tree */
-  def updateValueAt[T: ClassTag, T1 >: T: ClassTag](
+  final def updateValueAt[T: ClassTag, T1 >: T: ClassTag](
     index: Int,
     parentIndexOpt: Option[Int],
     value: T1,
@@ -471,7 +471,18 @@ object ArrayTree {
         val parentIndex = parentIndexOpt
           .getOrElse(ArrayTreeFunctions.parentIndex(index, structureBuffer.length, structureBuffer))
         if (parentIndex >= 0) {
-          makeChildrenDistinct(parentIndex, structureBuffer, valuesBuffer)
+          childrenIndexesFor(value, parentIndex, structureBuffer, valuesBuffer)
+            .find(_ != index) match {
+            case Some(duplicateIndex) =>
+              mergeTwoTrees(
+                Math.max(index, duplicateIndex),
+                Math.min(index, duplicateIndex),
+                structureBuffer,
+                valuesBuffer
+              )
+            case None =>
+              new ArrayTree(tree.structure, valuesBuffer.asSlice, tree.width, tree.height)
+          }
         }
         -1
       }
@@ -481,7 +492,7 @@ object ArrayTree {
 
   /** Removes node at the index and merges children to parent.
     * @return updated tree */
-  def removeValueAt[T: ClassTag](
+  final def removeValueAt[T: ClassTag](
     index: Int,
     parentIndexOpt: Option[Int],
     tree: ArrayTree[T],
@@ -499,7 +510,7 @@ object ArrayTree {
 
   /** Modifies value of the node at the index.
     * @return modified tree */
-  def modifyValueAt[T: ClassTag, T1 >: T: ClassTag](
+  final def modifyValueAt[T: ClassTag, T1 >: T: ClassTag](
     index: Int,
     parentIndexOpt: Option[Int],
     modify: T => T1,
