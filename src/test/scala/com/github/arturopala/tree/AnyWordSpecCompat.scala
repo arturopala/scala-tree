@@ -64,6 +64,7 @@ trait AnyWordSpecCompat extends munit.FunSuite {
   }
 
   def an[E <: Throwable: ClassTag]: AnWord[E] = new AnWord[E]
+  def a[E <: Throwable: ClassTag]: AnWord[E] = new AnWord[E]
 
   class AnWord[E <: Throwable: ClassTag] {
     def shouldBe[T](thrownBy: ThrownByWord[T]): Unit =

@@ -350,6 +350,90 @@ class TreeModificationsSpec extends FunSuite {
       tree7.modifyValueDistinctAt(List(97, 98, 101), f, e) shouldBe Left(tree7)
     }
 
+    "modify a subtree located at the path" in {
+      tree0.modifyTreeAt(List("a", "b"), _ => tree2) shouldBe Left(tree0)
+      tree1.modifyTreeAt(List("a"), _ => tree2) shouldBe Right(Tree("a", Tree("b")))
+      tree1.modifyTreeAt(List("b"), _ => tree2) shouldBe Left(tree1)
+      tree2.modifyTreeAt(List("a"), _ => tree3_2) shouldBe Right(Tree("a", Tree("b"), Tree("c")))
+      tree2.modifyTreeAt(List("a", "b"), _ => tree3_2) shouldBe Right(Tree("a", Tree("a", Tree("b"), Tree("c"))))
+      tree2.modifyTreeAt(List("a", "c"), _ => tree3_2) shouldBe Left(tree2)
+      tree3_2.modifyTreeAt(List("a", "b"), _ => tree2) shouldBe Right(Tree("a", Tree("a", Tree("b")), Tree("c")))
+      tree3_2.modifyTreeAt(List("a", "b"), _ => tree3_2) shouldBe Right(
+        Tree("a", Tree("a", Tree("b"), Tree("c")), Tree("c"))
+      )
+      tree3_2.modifyTreeAt(List("a", "c"), _ => tree2) shouldBe Right(Tree("a", Tree("b"), Tree("a", Tree("b"))))
+      tree3_2.modifyTreeAt(List("a", "c"), _ => tree3_2) shouldBe Right(
+        Tree("a", Tree("b"), Tree("a", Tree("b"), Tree("c")))
+      )
+      tree3_2.modifyTreeAt(List("a"), _ => tree2) shouldBe Right(tree2)
+      tree3_2.modifyTreeAt(List("a"), _ => tree9) shouldBe Right(tree9)
+      tree3_2.modifyTreeAt(List("a", "a"), _ => tree2) shouldBe Left(tree3_2)
+      tree3_2.modifyTreeAt(List("b", "a"), _ => tree2) shouldBe Left(tree3_2)
+      tree3_2.modifyTreeAt(List("b"), _ => tree2) shouldBe Left(tree3_2)
+      tree3_2.modifyTreeAt(List("b", "b"), _ => tree2) shouldBe Left(tree3_2)
+      tree3_2.modifyTreeAt(List("a", "c"), _ => Tree("b", Tree("d"))) shouldBe Right(
+        Tree("a", Tree("b"), Tree("b", Tree("d")))
+      )
+      tree4_2.modifyTreeAt(List("a", "d"), _ => Tree("b", Tree("c", Tree("e")))) shouldBe Right(
+        Tree("a", Tree("b", Tree("c")), Tree("b", Tree("c", Tree("e"))))
+      )
+      tree4_2.modifyTreeAt(List("a", "b", "c"), _ => Tree("b", Tree("c", Tree("e")))) shouldBe Right(
+        Tree("a", Tree("b", Tree("b", Tree("c", Tree("e")))), Tree("d"))
+      )
+      tree4_2.modifyTreeAt(List("a", "b", "d"), _ => Tree("b", Tree("c", Tree("e")))) shouldBe Left(tree4_2)
+      tree4_2.modifyTreeAt(List("a", "d", "c"), _ => Tree("b", Tree("c", Tree("e")))) shouldBe Left(tree4_2)
+      tree4_2.modifyTreeAt(List("a", "e"), _ => Tree("b", Tree("c", Tree("e")))) shouldBe Left(tree4_2)
+      tree4_2.modifyTreeAt(List("a", "c"), _ => Tree("b", Tree("c", Tree("e")))) shouldBe Left(tree4_2)
+      tree4_2.modifyTreeAt(List("b"), _ => Tree("b", Tree("c", Tree("e")))) shouldBe Left(tree4_2)
+      tree4_2.modifyTreeAt(List("d"), _ => Tree("b", Tree("c", Tree("e")))) shouldBe Left(tree4_2)
+      tree4_2.modifyTreeAt(List("b", "c"), _ => Tree("b", Tree("c", Tree("e")))) shouldBe Left(tree4_2)
+    }
+
+    "modify distinct a subtree located at the path" in {
+      tree0.modifyTreeDistinctAt(List("a", "b"), _ => tree2) shouldBe Left(tree0)
+      tree1.modifyTreeDistinctAt(List("a"), _ => tree2) shouldBe Right(Tree("a", Tree("b")))
+      tree1.modifyTreeDistinctAt(List("b"), _ => tree2) shouldBe Left(tree1)
+      tree2.modifyTreeDistinctAt(List("a"), _ => tree3_2) shouldBe Right(Tree("a", Tree("b"), Tree("c")))
+      tree2.modifyTreeDistinctAt(List("a", "b"), _ => tree3_2) shouldBe Right(
+        Tree("a", Tree("a", Tree("b"), Tree("c")))
+      )
+      tree2.modifyTreeDistinctAt(List("a", "c"), _ => tree3_2) shouldBe Left(tree2)
+      tree3_2.modifyTreeDistinctAt(List("a", "b"), _ => tree2) shouldBe Right(
+        Tree("a", Tree("a", Tree("b")), Tree("c"))
+      )
+      tree3_2.modifyTreeDistinctAt(List("a", "b"), _ => tree3_2) shouldBe Right(
+        Tree("a", Tree("a", Tree("b"), Tree("c")), Tree("c"))
+      )
+      tree3_2.modifyTreeDistinctAt(List("a", "c"), _ => tree2) shouldBe Right(
+        Tree("a", Tree("b"), Tree("a", Tree("b")))
+      )
+      tree3_2.modifyTreeDistinctAt(List("a", "c"), _ => tree3_2) shouldBe Right(
+        Tree("a", Tree("b"), Tree("a", Tree("b"), Tree("c")))
+      )
+      tree3_2.modifyTreeDistinctAt(List("a"), _ => tree2) shouldBe Right(tree2)
+      tree3_2.modifyTreeDistinctAt(List("a"), _ => tree9) shouldBe Right(tree9)
+      tree3_2.modifyTreeDistinctAt(List("a", "a"), _ => tree2) shouldBe Left(tree3_2)
+      tree3_2.modifyTreeDistinctAt(List("b", "a"), _ => tree2) shouldBe Left(tree3_2)
+      tree3_2.modifyTreeDistinctAt(List("b"), _ => tree2) shouldBe Left(tree3_2)
+      tree3_2.modifyTreeDistinctAt(List("b", "b"), _ => tree2) shouldBe Left(tree3_2)
+      tree3_2.modifyTreeDistinctAt(List("a", "c"), _ => Tree("b", Tree("d"))) shouldBe Right(
+        Tree("a", Tree("b", Tree("d")))
+      )
+      tree4_2.modifyTreeDistinctAt(List("a", "d"), _ => Tree("b", Tree("c", Tree("e")))) shouldBe Right(
+        Tree("a", Tree("b", Tree("c", Tree("e"))))
+      )
+      tree4_2.modifyTreeDistinctAt(List("a", "b", "c"), _ => Tree("b", Tree("c", Tree("e")))) shouldBe Right(
+        Tree("a", Tree("b", Tree("b", Tree("c", Tree("e")))), Tree("d"))
+      )
+      tree4_2.modifyTreeDistinctAt(List("a", "b", "d"), _ => Tree("b", Tree("c", Tree("e")))) shouldBe Left(tree4_2)
+      tree4_2.modifyTreeDistinctAt(List("a", "d", "c"), _ => Tree("b", Tree("c", Tree("e")))) shouldBe Left(tree4_2)
+      tree4_2.modifyTreeDistinctAt(List("a", "e"), _ => Tree("b", Tree("c", Tree("e")))) shouldBe Left(tree4_2)
+      tree4_2.modifyTreeDistinctAt(List("a", "c"), _ => Tree("b", Tree("c", Tree("e")))) shouldBe Left(tree4_2)
+      tree4_2.modifyTreeDistinctAt(List("b"), _ => Tree("b", Tree("c", Tree("e")))) shouldBe Left(tree4_2)
+      tree4_2.modifyTreeDistinctAt(List("d"), _ => Tree("b", Tree("c", Tree("e")))) shouldBe Left(tree4_2)
+      tree4_2.modifyTreeDistinctAt(List("b", "c"), _ => Tree("b", Tree("c", Tree("e")))) shouldBe Left(tree4_2)
+    }
+
   }
 
 }

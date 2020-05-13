@@ -35,6 +35,7 @@ trait EmptyTreeLike extends TreeLike[Nothing] {
   final override val isLeaf: Boolean = false
   final override val isEmpty: Boolean = true
   final override val childrenCount: Int = 0
+  final override def value: Nothing = throw new NoSuchElementException
   final override val valueOption: Option[Nothing] = None
   final override val values: List[Nothing] = Nil
 
@@ -60,6 +61,8 @@ trait EmptyTreeLike extends TreeLike[Nothing] {
   final override def countBranches(pred: Iterable[Nothing] => Boolean): Int = 0
 
   // MODIFICATIONS
+
+  final override def prependValue[T1 >: Nothing: ClassTag](value: T1): Tree[T1] = Tree(value)
 
   final override def insertValue[T1: ClassTag](value: T1): Tree[T1] = Tree(value)
 
@@ -131,6 +134,32 @@ trait EmptyTreeLike extends TreeLike[Nothing] {
   final override def modifyValueDistinctAt[K, T1 >: Nothing: ClassTag](
     path: Iterable[K],
     modify: Nothing => T1,
+    toPathItem: Nothing => K
+  ): Either[Tree[Nothing], Tree[T1]] =
+    Left(empty)
+
+  final override def modifyTreeAt[T1 >: Nothing: ClassTag](
+    path: Iterable[T1],
+    modify: Tree[Nothing] => Tree[T1]
+  ): Either[Tree[Nothing], Tree[T1]] =
+    Left(empty)
+
+  final override def modifyTreeDistinctAt[T1: ClassTag](
+    path: Iterable[T1],
+    modify: Tree[Nothing] => Tree[T1]
+  ): Either[Tree[Nothing], Tree[T1]] =
+    Left(empty)
+
+  final override def modifyTreeAt[K, T1 >: Nothing: ClassTag](
+    path: Iterable[K],
+    modify: Tree[Nothing] => Tree[T1],
+    toPathItem: Nothing => K
+  ): Either[Tree[Nothing], Tree[T1]] =
+    Left(empty)
+
+  final override def modifyTreeDistinctAt[K, T1: ClassTag](
+    path: Iterable[K],
+    modify: Tree[Nothing] => Tree[T1],
     toPathItem: Nothing => K
   ): Either[Tree[Nothing], Tree[T1]] =
     Left(empty)

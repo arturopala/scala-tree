@@ -17,7 +17,7 @@
 package com.github.arturopala.tree.util
 
 import com.github.arturopala.tree.{Tree, TreeBuilder, TreeLike}
-import com.github.arturopala.tree.Tree.ArrayTree
+import com.github.arturopala.tree.Tree.{ArrayTree, NodeTree}
 import com.github.arturopala.bufferandslice.{Buffer, IntBuffer, IntSlice, Slice}
 
 import scala.collection.Iterator
@@ -33,6 +33,7 @@ abstract class ArrayTreeLike[T: ClassTag] extends TreeLike[T] {
 
   private def all[A]: A => Boolean = _ => true
 
+  final override def value: T = tree.content.last
   final override def valueOption: Option[T] = Some(tree.content.last)
   final override def values: Seq[T] = tree.content.reverseIterator.toSeq
   final override def valueIterator(pred: T => Boolean, maxDepth: Int = Int.MaxValue): Iterator[T] =
@@ -67,6 +68,9 @@ abstract class ArrayTreeLike[T: ClassTag] extends TreeLike[T] {
 
   // MODIFICATIONS
 
+  final override def prependValue[T1 >: T: ClassTag](value: T1): Tree[T1] =
+    ArrayTree.prependValue(value, tree)
+
   final override def insertValue[T1 >: T: ClassTag](value: T1): Tree[T1] =
     ArrayTree.insertValue(tree.structure.length - 1, value, tree, keepDistinct = false)
 
@@ -92,10 +96,10 @@ abstract class ArrayTreeLike[T: ClassTag] extends TreeLike[T] {
   ): Either[Tree[T], Tree[T1]] = ArrayTree.insertValueAt(path, value, tree, f, keepDistinct = true)
 
   final override def insertTree[T1 >: T: ClassTag](subtree: Tree[T1]): Tree[T1] =
-    ArrayTree.insertSubtree(tree.structure.length - 1, subtree, tree)
+    ArrayTree.insertTree(tree.structure.length - 1, subtree, tree)
 
   final override def insertTreeDistinct[T1 >: T: ClassTag](subtree: Tree[T1]): Tree[T1] =
-    ArrayTree.insertSubtreeDistinct(tree.structure.length - 1, subtree, tree)
+    ArrayTree.insertTreeDistinct(tree.structure.length - 1, subtree, tree)
 
   final override def insertTreeAt[T1 >: T: ClassTag](path: Iterable[T1], subtree: Tree[T1]): Tree[T1] =
     ArrayTree.insertTreeAt(path, subtree, tree, keepDistinct = false)
@@ -144,6 +148,32 @@ abstract class ArrayTreeLike[T: ClassTag] extends TreeLike[T] {
     toPathItem: T => K
   ): Either[Tree[T], Tree[T1]] =
     ArrayTree.modifyValueAt(path, modify, tree, toPathItem, keepDistinct = true)
+
+  final override def modifyTreeAt[T1 >: T: ClassTag](
+    path: Iterable[T1],
+    modify: Tree[T] => Tree[T1]
+  ): Either[Tree[T], Tree[T1]] =
+    ArrayTree.modifyTreeAt(path, modify, tree, keepDistinct = false)
+
+  final override def modifyTreeDistinctAt[T1 >: T: ClassTag](
+    path: Iterable[T1],
+    modify: Tree[T] => Tree[T1]
+  ): Either[Tree[T], Tree[T1]] =
+    ArrayTree.modifyTreeAt(path, modify, tree, keepDistinct = true)
+
+  final override def modifyTreeAt[K, T1 >: T: ClassTag](
+    path: Iterable[K],
+    modify: Tree[T] => Tree[T1],
+    toPathItem: T => K
+  ): Either[Tree[T], Tree[T1]] =
+    ArrayTree.modifyTreeAt(path, modify, tree, toPathItem, keepDistinct = false)
+
+  final override def modifyTreeDistinctAt[K, T1 >: T: ClassTag](
+    path: Iterable[K],
+    modify: Tree[T] => Tree[T1],
+    toPathItem: T => K
+  ): Either[Tree[T], Tree[T1]] =
+    ArrayTree.modifyTreeAt(path, modify, tree, toPathItem, keepDistinct = true)
 
   // TRANSFORMATIONS
 
@@ -215,10 +245,5 @@ abstract class ArrayTreeLike[T: ClassTag] extends TreeLike[T] {
     TreeBuilder.fromIterators(tree.structure.iterator, tree.content.iterator).headOption.getOrElse(Tree.empty)
 
   final def deflated[T1 >: T](implicit tag: ClassTag[T1]): Tree[T1] = tree
-
-  private def streamFromIterator[A](it: Iterator[A]): Stream[A] =
-    if (it.hasNext) {
-      new Stream.Cons(it.next(), streamFromIterator(it))
-    } else Stream.Empty
 
 }

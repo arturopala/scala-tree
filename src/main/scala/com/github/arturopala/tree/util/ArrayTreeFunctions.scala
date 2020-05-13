@@ -644,8 +644,29 @@ object ArrayTreeFunctions {
     * Shifts existing buffer content right, starting from an index.
     * Increments parent's children count.
     * @return buffer length change */
-  def insert[T](index: Int, value: T, structureBuffer: IntBuffer, valuesBuffer: Buffer[T]): Int = {
+  def insertValue[T](index: Int, value: T, structureBuffer: IntBuffer, valuesBuffer: Buffer[T]): Int = {
     structureBuffer.increment(index)
+    structureBuffer.shiftRight(index, 1)
+    structureBuffer.update(index, 0)
+    valuesBuffer.shiftRight(index, 1)
+    valuesBuffer.update(index, value)
+    1
+  }
+
+  /** Inserts new child value of the parent at an index..
+    * Shifts existing buffer content right, starting from an index.
+    * Increments parent's children count.
+    * @return buffer length change */
+  def insertValue[T](
+    index: Int,
+    parentIndex: Int,
+    value: T,
+    structureBuffer: IntBuffer,
+    valuesBuffer: Buffer[T]
+  ): Int = {
+    if (parentIndex >= 0) {
+      structureBuffer.increment(parentIndex)
+    }
     structureBuffer.shiftRight(index, 1)
     structureBuffer.update(index, 0)
     valuesBuffer.shiftRight(index, 1)
@@ -656,22 +677,22 @@ object ArrayTreeFunctions {
   /** Inserts slice's content to the buffers at an index.
     * Shifts existing buffer content right, starting from an index.
     * @return buffer length change */
-  final def insert[T](
+  final def insertTree[T](
     index: Int,
     structure: IntSlice,
     values: Slice[T],
     structureBuffer: IntBuffer,
     valuesBuffer: Buffer[T]
   ): Int = {
-    structureBuffer.insertSlice(index, structure)
-    valuesBuffer.insertSlice(index, values)
+    structureBuffer.insertSlice(Math.max(index, 0), structure)
+    valuesBuffer.insertSlice(Math.max(index, 0), values)
     structure.length
   }
 
   /** Inserts content provided by iterators to the buffers at an index.
     * Shifts existing buffer content right, starting from an index, at length.
     * @return buffer length change */
-  final def insert[T](
+  final def insertTree[T](
     index: Int,
     length: Int,
     structure: Iterator[Int],
@@ -679,21 +700,33 @@ object ArrayTreeFunctions {
     structureBuffer: IntBuffer,
     valuesBuffer: Buffer[T]
   ): Int = {
-    structureBuffer.insertFromIterator(index, length, structure)
-    valuesBuffer.insertFromIterator(index, length, values)
+    structureBuffer.insertFromIterator(Math.max(index, 0), length, structure)
+    valuesBuffer.insertFromIterator(Math.max(index, 0), length, values)
     length
   }
 
   /** Removes value at index and joins subtrees to the parent node.
     * Does not check for duplicate children values in parent. */
-  final def remove[T](index: Int, parentIndex: Int, structureBuffer: IntBuffer, valuesBuffer: Buffer[T]): Int =
-    if (index >= 0) {
+  final def removeValue[T](index: Int, parentIndex: Int, structureBuffer: IntBuffer, valuesBuffer: Buffer[T]): Int =
+    if (index >= 0 && index < structureBuffer.length) {
       if (parentIndex >= 0) {
         structureBuffer.modify(parentIndex, _ + structureBuffer(index) - 1)
       }
       structureBuffer.shiftLeft(index + 1, 1)
       valuesBuffer.shiftLeft(index + 1, 1)
       -1
+    } else 0
+
+  /** Removes a whole tree at the index. */
+  final def removeTree[T](index: Int, parentIndex: Int, structureBuffer: IntBuffer, valuesBuffer: Buffer[T]): Int =
+    if (index >= 0 && index < structureBuffer.length) {
+      val size = treeSize(index, structureBuffer)
+      if (parentIndex >= 0) {
+        structureBuffer.decrement(parentIndex)
+      }
+      structureBuffer.removeRange(index - size + 1, index + 1)
+      valuesBuffer.removeRange(index - size + 1, index + 1)
+      -size
     } else 0
 
   /** Inserts branch into the buffers with checking for duplicates.
@@ -722,9 +755,16 @@ object ArrayTreeFunctions {
           }
           if (parentIndex >= 0) {
             structureBuffer.increment(parentIndex)
-            insert(parentIndex, structure.length, structure.iterator, values.iterator, structureBuffer, valuesBuffer)
+            insertTree(
+              parentIndex,
+              structure.length,
+              structure.iterator,
+              values.iterator,
+              structureBuffer,
+              valuesBuffer
+            )
           } else {
-            insert(0, structure.length, structure.iterator, values.iterator, structureBuffer, valuesBuffer)
+            insertTree(0, structure.length, structure.iterator, values.iterator, structureBuffer, valuesBuffer)
           }
 
       }
@@ -764,7 +804,7 @@ object ArrayTreeFunctions {
             if (structureBuffer(insertIndex) == 0) { // skip checking duplicates and insert remaining tree at once
               val s = treeSize(insertIndex, structureBuffer)
               structureBuffer.modify(insertIndex, _ + structure.last)
-              val d = insert(insertIndex - s + 1, structure.init, values.init, structureBuffer, valuesBuffer)
+              val d = insertTree(insertIndex - s + 1, structure.init, values.init, structureBuffer, valuesBuffer)
               (d, updatedTail.map(shiftFrom(insertIndex - d + 1, d)))
             } else {
               val nextTail = childrenOf(structure, values).map {
@@ -815,7 +855,7 @@ object ArrayTreeFunctions {
             if (structureBuffer(insertIndex) == 0) { // skip checking duplicates and insert remaining tree at once
               val s = treeSize(insertIndex, structureBuffer)
               structureBuffer.modify(insertIndex, _ + structure.last)
-              val d = insert(insertIndex - s + 1, structure.init, values.init, structureBuffer, valuesBuffer)
+              val d = insertTree(insertIndex - s + 1, structure.init, values.init, structureBuffer, valuesBuffer)
               (d, updatedTail.map(shiftFrom(insertIndex - d + 1, d)))
             } else {
               val nextTail = reversedChildrenOf(structure, values).map {
@@ -839,22 +879,20 @@ object ArrayTreeFunctions {
     case (p, s, c) => (shiftIfGreaterOrEqualTo(p, i, d), s, c)
   }
 
-  /** Inserts tree to the buffers at the given index, allows duplicated children.
-    * If the tree is empty then removes the value at index, merges subtrees,
-    * and updates subtree count at parent index.
+  /** Replaces value with the subtree in the buffers at the given index, allows duplicated children.
+    * If the subtree, represented by a tuple of structure and values, is empty then does nothing.
     * @return buffer length change */
-  final def insertTree[T](
-    structure: IntSlice,
-    values: Slice[T],
+  final def expandValueIntoTree[T](
+    treeStructure: IntSlice,
+    treeValues: Slice[T],
     index: Int,
-    parentIndex: => Int,
     structureBuffer: IntBuffer,
     valuesBuffer: Buffer[T]
   ): Int =
-    if (structure.length == 0) {
-      remove(index, parentIndex, structureBuffer, valuesBuffer)
-      -1
-    } else {
+    if (index >= 0 &&
+        treeStructure.length > 0 &&
+        structureBuffer.length > index &&
+        structureBuffer.length == valuesBuffer.length) {
 
       val offset1 = if (index < 0) {
         structureBuffer.shiftRight(0, -index)
@@ -863,22 +901,22 @@ object ArrayTreeFunctions {
         -index
       } else 0
 
-      val offset2 = if (structure.length == 1) {
-        valuesBuffer(index + offset1) = values.last
+      val offset2 = if (treeStructure.length == 1) {
+        valuesBuffer(index + offset1) = treeValues.last
         0
       } else {
         val s = treeSize(index + offset1, structureBuffer) - 1
-        structureBuffer.modify(index + offset1, _ + structure.last)
-        valuesBuffer.update(index + offset1, values.last)
-        insert(index + offset1 - s, structure.init, values.init, structureBuffer, valuesBuffer)
+        structureBuffer.modify(index + offset1, _ + treeStructure.last)
+        valuesBuffer.update(index + offset1, treeValues.last)
+        insertTree(index + offset1 - s, treeStructure.init, treeValues.init, structureBuffer, valuesBuffer)
       }
       offset1 + offset2
-    }
+    } else 0
 
   /** Inserts tree to the buffers at the given index, and keeps children distinct.
     * Does nothing when an empty tree.
     * @return buffer length change */
-  final def insertTreeDistinct[T](
+  final def expandValueIntoTreeDistinct[T](
     treeStructure: IntSlice,
     treeValues: Slice[T],
     index: Int,
@@ -886,19 +924,20 @@ object ArrayTreeFunctions {
     structureBuffer: IntBuffer,
     valuesBuffer: Buffer[T]
   ): Int =
-    if (treeStructure.length == 0) {
-      remove(index, parentIndex, structureBuffer, valuesBuffer)
-      -1
-    } else {
+    if (index >= 0 &&
+        treeStructure.length > 0 &&
+        structureBuffer.length > index &&
+        structureBuffer.length > parentIndex &&
+        structureBuffer.length == valuesBuffer.length) {
 
-      val (insertIndex, sibling) =
+      val (insertIndex, hasDuplicate) =
         rightmostIndexOfChildValue(treeValues.last, parentIndex, structureBuffer, valuesBuffer)
-          .map((_, true))
+          .map(i => (i, i != index))
           .getOrElse((index, false))
 
       valuesBuffer(insertIndex) = treeValues.last
 
-      val delta =
+      val delta1 =
         if (treeStructure.length == 1) 0
         else {
           val queue = childrenOf(treeStructure, treeValues)
@@ -908,11 +947,14 @@ object ArrayTreeFunctions {
           insertRightSubtreeListDistinct(queue, structureBuffer, valuesBuffer, 0)
         }
 
-      if (sibling && delta == 0 && parentIndex >= 0) {
-        remove(index, parentIndex, structureBuffer, valuesBuffer)
-        delta - 1
-      } else delta
-    }
+      val delta2 = if (hasDuplicate) {
+        val index2 = if (insertIndex < index) index + delta1 else index
+        removeValue(index2, parentIndex + delta1, structureBuffer, valuesBuffer)
+      } else 0
+
+      delta1 + delta2
+
+    } else 0
 
   /** Inserts tree to the buffers at the given index, and keeps children distinct.
     * Does nothing when an empty tree. Uses unsafe recursion.
@@ -934,7 +976,7 @@ object ArrayTreeFunctions {
             case None =>
               val s = treeSize(bufferIndex, structureBuffer) - 1
               structureBuffer.increment(bufferIndex)
-              insert(bufferIndex - s, treeStructure, treeValues, structureBuffer, valuesBuffer)
+              insertTree(bufferIndex - s, treeStructure, treeValues, structureBuffer, valuesBuffer)
 
             case Some(i) => insertTreeDistinctUnsafe(structure, values, i, structureBuffer, valuesBuffer)
           })

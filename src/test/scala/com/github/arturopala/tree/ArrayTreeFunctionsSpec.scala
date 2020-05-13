@@ -94,11 +94,14 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat {
 
     "find parent index" in {
       parentIndex(0, 2, Array(0, 1)) shouldBe 1
+      parentIndex(1, 2, Array(0, 1)) shouldBe -1
       parentIndex(0, 3, Array(0, 0, 2)) shouldBe 2
       parentIndex(1, 3, Array(0, 0, 2)) shouldBe 2
+      parentIndex(2, 3, Array(0, 0, 2)) shouldBe -1
       parentIndex(0, 4, Array(0, 0, 0, 3)) shouldBe 3
       parentIndex(1, 4, Array(0, 0, 0, 3)) shouldBe 3
       parentIndex(2, 4, Array(0, 0, 0, 3)) shouldBe 3
+      parentIndex(3, 4, Array(0, 0, 0, 3)) shouldBe -1
       parentIndex(0, 7, Array(0, 0, 0, 0, 2, 2, 2)) shouldBe 6
       parentIndex(1, 7, Array(0, 0, 0, 0, 2, 2, 2)) shouldBe 5
       parentIndex(2, 7, Array(0, 0, 0, 0, 2, 2, 2)) shouldBe 4
@@ -433,6 +436,374 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat {
     ): Unit = {
       val result = test(structure, values)
       assert(structure.toArray, values.toArray, result)
+    }
+
+    "expand value into a tree at index" in {
+      testWithBuffers[String, Int](
+        expandValueIntoTree(IntSlice(0), Slice("a"), -1, _, _),
+        IntBuffer.empty,
+        Buffer.empty[String]
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array.empty[Int]
+          values shouldBe Array.empty[String]
+          delta shouldBe 0
+      }
+      testWithBuffers[String, Int](expandValueIntoTree(IntSlice(0), Slice("b"), -1, _, _), IntBuffer(0), Buffer("a")) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0)
+          values shouldBe Array("a")
+          delta shouldBe 0
+      }
+      testWithBuffers[String, Int](
+        expandValueIntoTree(IntSlice.empty, Slice.empty[String], 0, _, _),
+        IntBuffer(0),
+        Buffer("a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0)
+          values shouldBe Array("a")
+          delta shouldBe 0
+      }
+      testWithBuffers[String, Int](
+        expandValueIntoTree(IntSlice(0, 1), Slice("b", "a"), 0, _, _),
+        IntBuffer(0, 1),
+        Buffer("b", "a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 1, 1)
+          values shouldBe Array("b", "a", "a")
+          delta shouldBe 1
+      }
+      testWithBuffers[String, Int](
+        expandValueIntoTree(IntSlice(0, 0, 2), Slice("c", "b", "a"), 0, _, _),
+        IntBuffer(0, 1),
+        Buffer("b", "a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 0, 2, 1)
+          values shouldBe Array("c", "b", "a", "a")
+          delta shouldBe 2
+      }
+      testWithBuffers[String, Int](
+        expandValueIntoTree(IntSlice(0, 0, 2), Slice("c", "e", "a"), 1, _, _),
+        IntBuffer(0, 1),
+        Buffer("b", "a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 0, 0, 3)
+          values shouldBe Array("c", "e", "b", "a")
+          delta shouldBe 2
+      }
+      testWithBuffers[String, Int](
+        expandValueIntoTree(IntSlice(0, 0, 2), Slice("f", "e", "d"), 1, _, _),
+        IntBuffer(0, 0, 2),
+        Buffer("c", "b", "a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 0, 0, 2, 2)
+          values shouldBe Array("c", "f", "e", "d", "a")
+          delta shouldBe 2
+      }
+      testWithBuffers[String, Int](
+        expandValueIntoTree(IntSlice(0, 0, 2), Slice("f", "e", "d"), 2, _, _),
+        IntBuffer(0, 0, 2),
+        Buffer("c", "b", "a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 0, 0, 0, 4)
+          values shouldBe Array("f", "e", "c", "b", "d")
+          delta shouldBe 2
+      }
+    }
+
+    "expand distinct value into a tree at index" in {
+      testWithBuffers[String, Int](
+        expandValueIntoTreeDistinct(IntSlice(0), Slice("a"), -1, -1, _, _),
+        IntBuffer.empty,
+        Buffer.empty[String]
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array.empty[Int]
+          values shouldBe Array.empty[String]
+          delta shouldBe 0
+      }
+      testWithBuffers[String, Int](
+        expandValueIntoTreeDistinct(IntSlice(0), Slice("b"), -1, 0, _, _),
+        IntBuffer(0),
+        Buffer("a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0)
+          values shouldBe Array("a")
+          delta shouldBe 0
+      }
+      testWithBuffers[String, Int](
+        expandValueIntoTreeDistinct(IntSlice.empty, Slice.empty[String], 0, -1, _, _),
+        IntBuffer(0),
+        Buffer("a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0)
+          values shouldBe Array("a")
+          delta shouldBe 0
+      }
+      testWithBuffers[String, Int](
+        expandValueIntoTreeDistinct(IntSlice(0, 1), Slice("b", "a"), 0, 1, _, _),
+        IntBuffer(0, 1),
+        Buffer("b", "a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 1, 1)
+          values shouldBe Array("b", "a", "a")
+          delta shouldBe 1
+      }
+      testWithBuffers[String, Int](
+        expandValueIntoTreeDistinct(IntSlice(0, 0, 2), Slice("c", "b", "a"), 0, 1, _, _),
+        IntBuffer(0, 1),
+        Buffer("b", "a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 0, 2, 1)
+          values shouldBe Array("c", "b", "a", "a")
+          delta shouldBe 2
+      }
+      testWithBuffers[String, Int](
+        expandValueIntoTreeDistinct(IntSlice(0, 0, 2), Slice("c", "e", "a"), 1, -1, _, _),
+        IntBuffer(0, 1),
+        Buffer("b", "a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 0, 0, 3)
+          values shouldBe Array("c", "e", "b", "a")
+          delta shouldBe 2
+      }
+      testWithBuffers[String, Int](
+        expandValueIntoTreeDistinct(IntSlice(0, 0, 2), Slice("f", "e", "d"), 1, 2, _, _),
+        IntBuffer(0, 0, 2),
+        Buffer("c", "b", "a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 0, 0, 2, 2)
+          values shouldBe Array("c", "f", "e", "d", "a")
+          delta shouldBe 2
+      }
+      testWithBuffers[String, Int](
+        expandValueIntoTreeDistinct(IntSlice(0, 0, 2), Slice("f", "e", "d"), 2, -1, _, _),
+        IntBuffer(0, 0, 2),
+        Buffer("c", "b", "a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 0, 0, 0, 4)
+          values shouldBe Array("f", "e", "c", "b", "d")
+          delta shouldBe 2
+      }
+      testWithBuffers[String, Int](
+        expandValueIntoTreeDistinct(IntSlice(0), Slice("b"), 0, 2, _, _),
+        IntBuffer(0, 0, 2),
+        Buffer("c", "b", "a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 1)
+          values shouldBe Array("b", "a")
+          delta shouldBe -1
+      }
+      testWithBuffers[String, Int](
+        expandValueIntoTreeDistinct(IntSlice(0, 1), Slice("d", "b"), 0, 2, _, _),
+        IntBuffer(0, 0, 2),
+        Buffer("c", "b", "a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 1, 1)
+          values shouldBe Array("d", "b", "a")
+          delta shouldBe 0
+      }
+      testWithBuffers[String, Int](
+        expandValueIntoTreeDistinct(IntSlice(0, 1, 1, 1), Slice("f", "e", "d", "b"), 0, 2, _, _),
+        IntBuffer(0, 0, 2),
+        Buffer("c", "b", "a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 1, 1, 1, 1)
+          values shouldBe Array("f", "e", "d", "b", "a")
+          delta shouldBe 2
+      }
+      testWithBuffers[String, Int](
+        expandValueIntoTreeDistinct(IntSlice(0, 1, 1, 1), Slice("f", "e", "d", "c"), 1, 2, _, _),
+        IntBuffer(0, 0, 2),
+        Buffer("c", "b", "a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 1, 1, 1, 1)
+          values shouldBe Array("f", "e", "d", "c", "a")
+          delta shouldBe 2
+      }
+    }
+
+    "remove value at index" in {
+      testWithBuffers[String, Int](removeValue(0, -1, _, _), IntBuffer.empty, Buffer.empty[String]) {
+        case (structure, values, delta) =>
+          structure shouldBe Array.empty[Int]
+          values shouldBe Array.empty[String]
+          delta shouldBe 0
+      }
+      testWithBuffers[String, Int](removeValue(0, -1, _, _), IntBuffer(0), Buffer("a")) {
+        case (structure, values, delta) =>
+          structure shouldBe Array.empty[Int]
+          values shouldBe Array.empty[String]
+          delta shouldBe -1
+      }
+      testWithBuffers[String, Int](removeValue(1, -1, _, _), IntBuffer(0, 1), Buffer("b", "a")) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0)
+          values shouldBe Array("b")
+          delta shouldBe -1
+      }
+      testWithBuffers[String, Int](removeValue(0, 1, _, _), IntBuffer(0, 1), Buffer("b", "a")) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0)
+          values shouldBe Array("a")
+          delta shouldBe -1
+      }
+      testWithBuffers[String, Int](removeValue(0, 2, _, _), IntBuffer(0, 0, 2), Buffer("c", "b", "a")) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 1)
+          values shouldBe Array("b", "a")
+          delta shouldBe -1
+      }
+      testWithBuffers[String, Int](removeValue(1, 2, _, _), IntBuffer(0, 0, 2), Buffer("c", "b", "a")) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 1)
+          values shouldBe Array("c", "a")
+          delta shouldBe -1
+      }
+      testWithBuffers[String, Int](removeValue(2, -1, _, _), IntBuffer(0, 0, 2), Buffer("c", "b", "a")) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 0)
+          values shouldBe Array("c", "b")
+          delta shouldBe -1
+      }
+      testWithBuffers[String, Int](
+        removeValue(4, 5, _, _),
+        IntBuffer(0, 0, 2, 0, 1, 2),
+        Buffer("f", "e", "d", "c", "b", "a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 0, 2, 0, 2)
+          values shouldBe Array("f", "e", "d", "c", "a")
+          delta shouldBe -1
+      }
+      testWithBuffers[String, Int](
+        removeValue(3, 4, _, _),
+        IntBuffer(0, 0, 2, 0, 1, 2),
+        Buffer("f", "e", "d", "c", "b", "a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 0, 2, 0, 2)
+          values shouldBe Array("f", "e", "d", "b", "a")
+          delta shouldBe -1
+      }
+      testWithBuffers[String, Int](
+        removeValue(2, 5, _, _),
+        IntBuffer(0, 0, 2, 0, 1, 2),
+        Buffer("f", "e", "d", "c", "b", "a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 0, 0, 1, 3)
+          values shouldBe Array("f", "e", "c", "b", "a")
+          delta shouldBe -1
+      }
+    }
+
+    "remove tree at index" in {
+      testWithBuffers[String, Int](removeTree(0, -1, _, _), IntBuffer.empty, Buffer.empty[String]) {
+        case (structure, values, delta) =>
+          structure shouldBe Array.empty[Int]
+          values shouldBe Array.empty[String]
+          delta shouldBe 0
+      }
+      testWithBuffers[String, Int](removeTree(0, -1, _, _), IntBuffer(0), Buffer("a")) {
+        case (structure, values, delta) =>
+          structure shouldBe Array.empty[Int]
+          values shouldBe Array.empty[String]
+          delta shouldBe -1
+      }
+      testWithBuffers[String, Int](removeTree(0, 1, _, _), IntBuffer(0, 1), Buffer("b", "a")) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0)
+          values shouldBe Array("a")
+          delta shouldBe -1
+      }
+      testWithBuffers[String, Int](removeTree(1, -1, _, _), IntBuffer(0, 1), Buffer("b", "a")) {
+        case (structure, values, delta) =>
+          structure shouldBe Array.empty[Int]
+          values shouldBe Array.empty[String]
+          delta shouldBe -2
+      }
+      testWithBuffers[String, Int](removeTree(1, 2, _, _), IntBuffer(0, 1, 1), Buffer("c", "b", "a")) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0)
+          values shouldBe Array("a")
+          delta shouldBe -2
+      }
+      testWithBuffers[String, Int](removeTree(2, -1, _, _), IntBuffer(0, 1, 1), Buffer("c", "b", "a")) {
+        case (structure, values, delta) =>
+          structure shouldBe Array.empty[Int]
+          values shouldBe Array.empty[String]
+          delta shouldBe -3
+      }
+      testWithBuffers[String, Int](removeTree(1, 2, _, _), IntBuffer(0, 0, 2), Buffer("c", "b", "a")) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 1)
+          values shouldBe Array("c", "a")
+          delta shouldBe -1
+      }
+      testWithBuffers[String, Int](removeTree(0, 2, _, _), IntBuffer(0, 0, 2), Buffer("c", "b", "a")) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 1)
+          values shouldBe Array("b", "a")
+          delta shouldBe -1
+      }
+      testWithBuffers[String, Int](
+        removeTree(4, 5, _, _),
+        IntBuffer(0, 0, 2, 0, 1, 2),
+        Buffer("f", "e", "d", "c", "b", "a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 0, 2, 1)
+          values shouldBe Array("f", "e", "d", "a")
+          delta shouldBe -2
+      }
+      testWithBuffers[String, Int](
+        removeTree(2, 5, _, _),
+        IntBuffer(0, 0, 2, 0, 1, 2),
+        Buffer("f", "e", "d", "c", "b", "a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 1, 1)
+          values shouldBe Array("c", "b", "a")
+          delta shouldBe -3
+      }
+      testWithBuffers[String, Int](
+        removeTree(1, 2, _, _),
+        IntBuffer(0, 0, 2, 0, 1, 2),
+        Buffer("f", "e", "d", "c", "b", "a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 1, 0, 1, 2)
+          values shouldBe Array("f", "d", "c", "b", "a")
+          delta shouldBe -1
+      }
+      testWithBuffers[String, Int](
+        removeTree(5, -1, _, _),
+        IntBuffer(0, 0, 2, 0, 1, 2),
+        Buffer("f", "e", "d", "c", "b", "a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array.empty[Int]
+          values shouldBe Array.empty[String]
+          delta shouldBe -6
+      }
     }
 
     "merge two trees - do nothing if indexes outside a range or equal" in {

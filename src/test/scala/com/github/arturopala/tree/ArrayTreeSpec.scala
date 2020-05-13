@@ -210,21 +210,21 @@ class ArrayTreeSpec extends AnyWordSpecCompat {
 
     "flatMap a tree" in {
       val f0: String => Tree[Int] = s => Tree(s.length)
-      flatMapDistinct(IntSlice(), Slice.empty[String], f0) shouldBe Tree.empty
-      flatMapDistinct(IntSlice(0), Slice("a"), f0) shouldBe Tree(1)
-      flatMapDistinct(IntSlice(0, 1), aa_a, f0) shouldBe Tree(1, Tree(2))
-      flatMapDistinct(IntSlice(0, 1, 1), aaa_aa_a, f0) shouldBe Tree(1, Tree(2, Tree(3)))
-      flatMapDistinct(IntSlice(0, 0, 2), aaa_aa_a, f0) shouldBe Tree(1, Tree(2), Tree(3))
-      flatMapDistinct(IntSlice(0, 1, 1, 1), a_aaa_aa_a, f0) shouldBe Tree(
+      flatMap(IntSlice(), Slice.empty[String], f0) shouldBe Tree.empty
+      flatMap(IntSlice(0), Slice("a"), f0) shouldBe Tree(1)
+      flatMap(IntSlice(0, 1), aa_a, f0) shouldBe Tree(1, Tree(2))
+      flatMap(IntSlice(0, 1, 1), aaa_aa_a, f0) shouldBe Tree(1, Tree(2, Tree(3)))
+      flatMap(IntSlice(0, 0, 2), aaa_aa_a, f0) shouldBe Tree(1, Tree(2), Tree(3))
+      flatMap(IntSlice(0, 1, 1, 1), a_aaa_aa_a, f0) shouldBe Tree(
         1,
         Tree(2, Tree(3, Tree(1)))
       )
-      flatMapDistinct(IntSlice(0, 0, 0, 3), a_aaa_aa_a, f0) shouldBe Tree(1, Tree(2), Tree(3), Tree(1))
-      flatMapDistinct(IntSlice(0, 0, 2, 1), a_aaa_aa_a, f0) shouldBe Tree(1, Tree(2, Tree(3), Tree(1)))
-      flatMapDistinct(IntSlice(0, 0, 1, 2), a_aaa_aa_a, f0) shouldBe Tree(1, Tree(2, Tree(3)), Tree(1))
-      flatMapDistinct(IntSlice(0, 1, 0, 2), a_aaa_aa_a, f0) shouldBe Tree(1, Tree(2), Tree(3, Tree(1)))
-      flatMapDistinct(IntSlice(0, 1, 0, 2, 1), aa_a_aaa_aa_a, f0) shouldBe Tree(1, Tree(2, Tree(3), Tree(1, Tree(2))))
-      flatMapDistinct(IntSlice(0, 1, 0, 1, 2), aa_a_aaa_aa_a, f0) shouldBe
+      flatMap(IntSlice(0, 0, 0, 3), a_aaa_aa_a, f0) shouldBe Tree(1, Tree(2), Tree(3), Tree(1))
+      flatMap(IntSlice(0, 0, 2, 1), a_aaa_aa_a, f0) shouldBe Tree(1, Tree(2, Tree(3), Tree(1)))
+      flatMap(IntSlice(0, 0, 1, 2), a_aaa_aa_a, f0) shouldBe Tree(1, Tree(2, Tree(3)), Tree(1))
+      flatMap(IntSlice(0, 1, 0, 2), a_aaa_aa_a, f0) shouldBe Tree(1, Tree(2), Tree(3, Tree(1)))
+      flatMap(IntSlice(0, 1, 0, 2, 1), aa_a_aaa_aa_a, f0) shouldBe Tree(1, Tree(2, Tree(3), Tree(1, Tree(2))))
+      flatMap(IntSlice(0, 1, 0, 1, 2), aa_a_aaa_aa_a, f0) shouldBe
         Tree(1, Tree(2, Tree(3)), Tree(1, Tree(2)))
 
       val f1: String => Tree[Int] = s => Tree(s.length, Tree(s.length * 2))
@@ -415,14 +415,14 @@ class ArrayTreeSpec extends AnyWordSpecCompat {
 
     "insert a subtree" in {
       //insertSubtree(0, Tree.empty, Tree.empty) shouldBe Tree.empty
-      insertSubtree(0, Tree("a"), Tree.empty) shouldBe Tree("a")
-      insertSubtree(0, Tree.empty, Tree("a")) shouldBe Tree("a")
-      insertSubtree(0, Tree("a"), Tree("a")) shouldBe Tree("a", Tree("a"))
-      insertSubtree(1, Tree("a"), Tree("a", Tree("b"))) shouldBe Tree("a", Tree("a"), Tree("b"))
-      insertSubtree(0, Tree("a"), Tree("a", Tree("b"))) shouldBe Tree("a", Tree("b", Tree("a")))
-      insertSubtree(1, Tree("b", Tree("a")), Tree("a", Tree("b"))) shouldBe Tree("a", Tree("b", Tree("a")), Tree("b"))
-      insertSubtree(0, Tree("b", Tree("a")), Tree("a", Tree("b"))) shouldBe Tree("a", Tree("b", Tree("b", Tree("a"))))
-      insertSubtree(2, Tree("a", Tree("b")), Tree("b", Tree("a", Tree("b")))) shouldBe Tree(
+      insertTree(0, Tree("a"), Tree.empty) shouldBe Tree("a")
+      insertTree(0, Tree.empty, Tree("a")) shouldBe Tree("a")
+      insertTree(0, Tree("a"), Tree("a")) shouldBe Tree("a", Tree("a"))
+      insertTree(1, Tree("a"), Tree("a", Tree("b"))) shouldBe Tree("a", Tree("a"), Tree("b"))
+      insertTree(0, Tree("a"), Tree("a", Tree("b"))) shouldBe Tree("a", Tree("b", Tree("a")))
+      insertTree(1, Tree("b", Tree("a")), Tree("a", Tree("b"))) shouldBe Tree("a", Tree("b", Tree("a")), Tree("b"))
+      insertTree(0, Tree("b", Tree("a")), Tree("a", Tree("b"))) shouldBe Tree("a", Tree("b", Tree("b", Tree("a"))))
+      insertTree(2, Tree("a", Tree("b")), Tree("b", Tree("a", Tree("b")))) shouldBe Tree(
         "b",
         Tree("a", Tree("b")),
         Tree("a", Tree("b"))
@@ -431,21 +431,21 @@ class ArrayTreeSpec extends AnyWordSpecCompat {
 
     "insert a subtree distinct" in {
       //insertSubtreeDistinct(0, Tree.empty, Tree.empty) shouldBe Tree.empty
-      insertSubtreeDistinct(0, Tree("a"), Tree.empty) shouldBe Tree("a")
-      insertSubtreeDistinct(0, Tree.empty, Tree("a")) shouldBe Tree("a")
-      insertSubtreeDistinct(0, Tree("a"), Tree("a")) shouldBe Tree("a", Tree("a"))
-      insertSubtreeDistinct(1, Tree("a"), Tree("a", Tree("b"))) shouldBe Tree("a", Tree("a"), Tree("b"))
-      insertSubtreeDistinct(0, Tree("a"), Tree("a", Tree("b"))) shouldBe Tree("a", Tree("b", Tree("a")))
-      insertSubtreeDistinct(1, Tree("b", Tree("a")), Tree("a", Tree("b"))) shouldBe Tree("a", Tree("b", Tree("a")))
-      insertSubtreeDistinct(0, Tree("b", Tree("a")), Tree("a", Tree("b"))) shouldBe Tree(
+      insertTreeDistinct(0, Tree("a"), Tree.empty) shouldBe Tree("a")
+      insertTreeDistinct(0, Tree.empty, Tree("a")) shouldBe Tree("a")
+      insertTreeDistinct(0, Tree("a"), Tree("a")) shouldBe Tree("a", Tree("a"))
+      insertTreeDistinct(1, Tree("a"), Tree("a", Tree("b"))) shouldBe Tree("a", Tree("a"), Tree("b"))
+      insertTreeDistinct(0, Tree("a"), Tree("a", Tree("b"))) shouldBe Tree("a", Tree("b", Tree("a")))
+      insertTreeDistinct(1, Tree("b", Tree("a")), Tree("a", Tree("b"))) shouldBe Tree("a", Tree("b", Tree("a")))
+      insertTreeDistinct(0, Tree("b", Tree("a")), Tree("a", Tree("b"))) shouldBe Tree(
         "a",
         Tree("b", Tree("b", Tree("a")))
       )
-      insertSubtreeDistinct(2, Tree("a", Tree("b")), Tree("b", Tree("a", Tree("b")))) shouldBe Tree(
+      insertTreeDistinct(2, Tree("a", Tree("b")), Tree("b", Tree("a", Tree("b")))) shouldBe Tree(
         "b",
         Tree("a", Tree("b"))
       )
-      insertSubtreeDistinct(2, Tree("b", Tree("d"), Tree("e")), Tree("a", Tree("b"), Tree("c"))) shouldBe Tree(
+      insertTreeDistinct(2, Tree("b", Tree("d"), Tree("e")), Tree("a", Tree("b"), Tree("c"))) shouldBe Tree(
         "a",
         Tree("b", Tree("d"), Tree("e")),
         Tree("c")
@@ -494,6 +494,445 @@ class ArrayTreeSpec extends AnyWordSpecCompat {
         Tree("c"),
         Tree("d")
       )
+    }
+
+    "update value at the index" in {
+      updateValue(0, None, "c", Tree("a").deflated, false) shouldBe Tree("c")
+      updateValue(0, None, "c", Tree("a", Tree("b")).deflated, false) shouldBe Tree("a", Tree("c"))
+      updateValue(1, None, "c", Tree("a", Tree("b")).deflated, false) shouldBe Tree("c", Tree("b"))
+      updateValue(0, None, "c", Tree("a", Tree("b"), Tree("d")).deflated, false) shouldBe Tree(
+        "a",
+        Tree("b"),
+        Tree("c")
+      )
+      updateValue(1, None, "c", Tree("a", Tree("b"), Tree("c")).deflated, false) shouldBe Tree(
+        "a",
+        Tree("c"),
+        Tree("c")
+      )
+      updateValue(2, None, "c", Tree("a", Tree("b"), Tree("c")).deflated, false) shouldBe Tree(
+        "c",
+        Tree("b"),
+        Tree("c")
+      )
+
+    }
+
+    "update distinct value at the index" in {
+      updateValue(0, None, "c", Tree("a").deflated, true) shouldBe Tree("c")
+      updateValue(0, None, "c", Tree("a", Tree("b")).deflated, true) shouldBe Tree("a", Tree("c"))
+      updateValue(1, None, "c", Tree("a", Tree("b")).deflated, true) shouldBe Tree("c", Tree("b"))
+      updateValue(0, None, "c", Tree("a", Tree("b"), Tree("d")).deflated, true) shouldBe Tree("a", Tree("b"), Tree("c"))
+      updateValue(1, None, "c", Tree("a", Tree("b"), Tree("c")).deflated, true) shouldBe Tree("a", Tree("c"))
+      updateValue(2, None, "c", Tree("a", Tree("b"), Tree("c")).deflated, true) shouldBe Tree("c", Tree("b"), Tree("c"))
+    }
+
+    "modify value at the index" in {
+      val f: String => String = (_: String) => "c"
+      modifyValue(0, None, f, Tree("a").deflated, false) shouldBe Tree("c")
+      modifyValue(0, None, f, Tree("a", Tree("b")).deflated, false) shouldBe Tree("a", Tree("c"))
+      modifyValue(1, None, f, Tree("a", Tree("b")).deflated, false) shouldBe Tree("c", Tree("b"))
+      modifyValue(0, None, f, Tree("a", Tree("b"), Tree("d")).deflated, false) shouldBe Tree("a", Tree("b"), Tree("c"))
+      modifyValue(1, None, f, Tree("a", Tree("b"), Tree("c")).deflated, false) shouldBe Tree("a", Tree("c"), Tree("c"))
+      modifyValue(2, None, f, Tree("a", Tree("b"), Tree("c")).deflated, false) shouldBe Tree("c", Tree("b"), Tree("c"))
+    }
+
+    "modify distinct value at the index" in {
+      val f: String => String = (_: String) => "c"
+      modifyValue(0, None, f, Tree("a").deflated, true) shouldBe Tree("c")
+      modifyValue(0, None, f, Tree("a", Tree("b")).deflated, true) shouldBe Tree("a", Tree("c"))
+      modifyValue(1, None, f, Tree("a", Tree("b")).deflated, true) shouldBe Tree("c", Tree("b"))
+      modifyValue(0, None, f, Tree("a", Tree("b"), Tree("d")).deflated, true) shouldBe Tree("a", Tree("b"), Tree("c"))
+      modifyValue(1, None, f, Tree("a", Tree("b"), Tree("c")).deflated, true) shouldBe Tree("a", Tree("c"))
+      modifyValue(2, None, f, Tree("a", Tree("b"), Tree("c")).deflated, true) shouldBe Tree("c", Tree("b"), Tree("c"))
+    }
+
+    "remove value at index" in {
+      removeValue(0, None, Tree("a").deflated, false) shouldBe Tree.empty
+      removeValue(-1, None, Tree("a").deflated, false) shouldBe Tree("a")
+      removeValue(1, None, Tree("a").deflated, false) shouldBe Tree("a")
+      removeValue(1, None, Tree("a", Tree("b")).deflated, false) shouldBe Tree("b")
+      removeValue(0, None, Tree("a", Tree("b")).deflated, false) shouldBe Tree("a")
+      removeValue(0, None, Tree("a", Tree("b"), Tree("c")).deflated, false) shouldBe Tree("a", Tree("b"))
+      removeValue(1, None, Tree("a", Tree("b"), Tree("c")).deflated, false) shouldBe Tree("a", Tree("c"))
+      a[RuntimeException] shouldBe thrownBy {
+        removeValue(2, None, Tree("a", Tree("b"), Tree("c")).deflated, false) shouldBe Tree("b")
+      }
+      removeValue(4, None, Tree("a", Tree("b", Tree("c")), Tree("c", Tree("e", Tree("f")))).deflated, false) shouldBe Tree(
+        "a",
+        Tree("c"),
+        Tree("c", Tree("e", Tree("f")))
+      )
+      removeValue(
+        6,
+        None,
+        Tree("a", Tree("b", Tree("c", Tree("e", Tree("g")))), Tree("c", Tree("e", Tree("f")))).deflated,
+        false
+      ) shouldBe Tree("a", Tree("c", Tree("e", Tree("g"))), Tree("c", Tree("e", Tree("f"))))
+    }
+
+    "remove distinct value at index" in {
+      removeValue(0, None, Tree("a").deflated, true) shouldBe Tree.empty
+      removeValue(-1, None, Tree("a").deflated, true) shouldBe Tree("a")
+      removeValue(1, None, Tree("a").deflated, true) shouldBe Tree("a")
+      removeValue(1, None, Tree("a", Tree("b")).deflated, true) shouldBe Tree("b")
+      removeValue(0, None, Tree("a", Tree("b")).deflated, true) shouldBe Tree("a")
+      removeValue(0, None, Tree("a", Tree("b"), Tree("c")).deflated, true) shouldBe Tree("a", Tree("b"))
+      removeValue(1, None, Tree("a", Tree("b"), Tree("c")).deflated, true) shouldBe Tree("a", Tree("c"))
+      a[RuntimeException] shouldBe thrownBy {
+        removeValue(2, None, Tree("a", Tree("b"), Tree("c")).deflated, true) shouldBe Tree("b")
+      }
+      removeValue(4, None, Tree("a", Tree("b", Tree("c")), Tree("c", Tree("e", Tree("f")))).deflated, true) shouldBe Tree(
+        "a",
+        Tree("c", Tree("e", Tree("f")))
+      )
+      removeValue(
+        6,
+        None,
+        Tree("a", Tree("b", Tree("c", Tree("e", Tree("g")))), Tree("c", Tree("e", Tree("f")))).deflated,
+        true
+      ) shouldBe Tree("a", Tree("c", Tree("e", Tree("g"), Tree("f"))))
+      removeValue(
+        6,
+        None,
+        Tree("a", Tree("b", Tree("c", Tree("e", Tree("g")))), Tree("c", Tree("e"), Tree("f"))).deflated,
+        true
+      ) shouldBe Tree("a", Tree("c", Tree("e", Tree("g")), Tree("f")))
+    }
+
+    "update the tree at the index" in {
+      updateTree(0, None, Tree("b"), Tree("a"), false) shouldBe Tree("b")
+      updateTree(0, None, Tree.empty, Tree("c"), false) shouldBe Tree.empty
+      updateTree(0, None, Tree.empty, Tree("a", Tree("b")), false) shouldBe Tree("a")
+      updateTree(1, None, Tree.empty, Tree("a", Tree("b")), false) shouldBe Tree.empty
+      updateTree(0, None, Tree("c"), Tree("a", Tree("b")), false) shouldBe Tree("a", Tree("c"))
+      updateTree(1, None, Tree("c"), Tree("a", Tree("b")), false) shouldBe Tree("c")
+      updateTree(0, None, Tree("b", Tree("a")), Tree("c"), false) shouldBe Tree("b", Tree("a"))
+      updateTree(0, None, Tree("a", Tree("b")), Tree("a", Tree("b")), false) shouldBe Tree("a", Tree("a", Tree("b")))
+      updateTree(1, None, Tree("a", Tree("b")), Tree("a", Tree("b")), false) shouldBe Tree("a", Tree("b"))
+      updateTree(1, None, Tree("a", Tree("b")), Tree("a", Tree("b"), Tree("c")), false) shouldBe Tree(
+        "a",
+        Tree("a", Tree("b")),
+        Tree("c")
+      )
+      updateTree(0, None, Tree("a", Tree("b")), Tree("a", Tree("b"), Tree("c")), false) shouldBe Tree(
+        "a",
+        Tree("b"),
+        Tree("a", Tree("b"))
+      )
+      updateTree(2, None, Tree("a", Tree("b")), Tree("a", Tree("b"), Tree("c")), false) shouldBe Tree("a", Tree("b"))
+      updateTree(0, None, Tree("b", Tree("d")), Tree("a", Tree("b"), Tree("c")), false) shouldBe Tree(
+        "a",
+        Tree("b"),
+        Tree("b", Tree("d"))
+      )
+      updateTree(0, None, Tree("b", Tree("d")), Tree("a", Tree("b"), Tree("c"), Tree("b")), false) shouldBe Tree(
+        "a",
+        Tree("b"),
+        Tree("c"),
+        Tree("b", Tree("d"))
+      )
+      updateTree(
+        1,
+        None,
+        Tree("b", Tree("d"), Tree("e")),
+        Tree("a", Tree("b", Tree("d"), Tree("f")), Tree("c"), Tree("b")),
+        false
+      ) shouldBe Tree("a", Tree("b", Tree("d"), Tree("f")), Tree("b", Tree("d"), Tree("e")), Tree("b"))
+      updateTree(
+        4,
+        None,
+        Tree("c", Tree("d"), Tree("e")),
+        Tree("a", Tree("b", Tree("d"), Tree("f")), Tree("c"), Tree("b")),
+        false
+      ) shouldBe Tree("a", Tree("c", Tree("d"), Tree("e")), Tree("c"), Tree("b"))
+      updateTree(
+        5,
+        None,
+        Tree("c", Tree("d"), Tree("e")),
+        Tree("a", Tree("b", Tree("d"), Tree("f")), Tree("c"), Tree("b")),
+        false
+      ) shouldBe Tree("c", Tree("d"), Tree("e"))
+    }
+
+    "update distinct the tree at the index" in {
+      updateTree(0, None, Tree("b"), Tree("a"), true) shouldBe Tree("b")
+      updateTree(0, None, Tree.empty, Tree("c"), true) shouldBe Tree.empty
+      updateTree(0, None, Tree.empty, Tree("a", Tree("b")), true) shouldBe Tree("a")
+      updateTree(1, None, Tree.empty, Tree("a", Tree("b")), true) shouldBe Tree.empty
+      updateTree(0, None, Tree("c"), Tree("a", Tree("b")), true) shouldBe Tree("a", Tree("c"))
+      updateTree(1, None, Tree("c"), Tree("a", Tree("b")), true) shouldBe Tree("c")
+      updateTree(0, None, Tree("b", Tree("a")), Tree("c"), true) shouldBe Tree("b", Tree("a"))
+      updateTree(0, None, Tree("a", Tree("b")), Tree("a", Tree("b")), true) shouldBe Tree("a", Tree("a", Tree("b")))
+      updateTree(1, None, Tree("a", Tree("b")), Tree("a", Tree("b")), true) shouldBe Tree("a", Tree("b"))
+      updateTree(1, None, Tree("a", Tree("b")), Tree("a", Tree("b"), Tree("c")), true) shouldBe Tree(
+        "a",
+        Tree("a", Tree("b")),
+        Tree("c")
+      )
+      updateTree(0, None, Tree("a", Tree("b")), Tree("a", Tree("b"), Tree("c")), true) shouldBe Tree(
+        "a",
+        Tree("b"),
+        Tree("a", Tree("b"))
+      )
+      updateTree(2, None, Tree("a", Tree("b")), Tree("a", Tree("b"), Tree("c")), true) shouldBe Tree("a", Tree("b"))
+      updateTree(0, None, Tree("b", Tree("d")), Tree("a", Tree("b"), Tree("c")), true) shouldBe Tree(
+        "a",
+        Tree("b", Tree("d"))
+      )
+      updateTree(0, None, Tree("b", Tree("d")), Tree("a", Tree("b"), Tree("c"), Tree("b")), true) shouldBe Tree(
+        "a",
+        Tree("b", Tree("d")),
+        Tree("c")
+      )
+      updateTree(1, None, Tree("b", Tree("d")), Tree("a", Tree("b"), Tree("c"), Tree("b")), true) shouldBe Tree(
+        "a",
+        Tree("b", Tree("d")),
+        Tree("b")
+      )
+      updateTree(1, None, Tree("b", Tree("d")), Tree("a", Tree("b", Tree("d")), Tree("c"), Tree("b")), true) shouldBe Tree(
+        "a",
+        Tree("b", Tree("d")),
+        Tree("b")
+      )
+      updateTree(
+        1,
+        None,
+        Tree("b", Tree("d"), Tree("e")),
+        Tree("a", Tree("b", Tree("d"), Tree("f")), Tree("c"), Tree("b")),
+        true
+      ) shouldBe Tree("a", Tree("b", Tree("e"), Tree("d"), Tree("f")), Tree("b"))
+      updateTree(
+        4,
+        None,
+        Tree("c", Tree("d"), Tree("e")),
+        Tree("a", Tree("b", Tree("d"), Tree("f")), Tree("c"), Tree("b")),
+        true
+      ) shouldBe Tree("a", Tree("c", Tree("d"), Tree("e")), Tree("b"))
+      updateTree(
+        5,
+        None,
+        Tree("c", Tree("d"), Tree("e")),
+        Tree("a", Tree("b", Tree("d"), Tree("f")), Tree("c"), Tree("b")),
+        true
+      ) shouldBe Tree("c", Tree("d"), Tree("e"))
+      updateTree(
+        5,
+        None,
+        Tree("c", Tree("d"), Tree("d")),
+        Tree("a", Tree("b", Tree("d"), Tree("f")), Tree("c"), Tree("b")),
+        true
+      ) shouldBe Tree("c", Tree("d"), Tree("d"))
+    }
+
+    "modify the tree at the index" in {
+      val t2 = Tree("v", Tree("x"), Tree("y", Tree("z")))
+      val f1: Tree[String] => Tree[String] = _.insertValue("z")
+      val f2: Tree[String] => Tree[String] = _.insertTree(t2)
+      val f3: Tree[String] => Tree[String] = t => t.children.headOption.getOrElse(Tree("z")).insertValue(t.value)
+      val f4: Tree[String] => Tree[String] = t => Tree.empty
+
+      modifyTree(0, None, f1, Tree("a").deflated, false) shouldBe Tree("a", Tree("z"))
+      modifyTree(0, None, f1, Tree("a", Tree("b")).deflated, false) shouldBe Tree("a", Tree("b", Tree("z")))
+      modifyTree(1, None, f1, Tree("a", Tree("b")).deflated, false) shouldBe Tree("a", Tree("z"), Tree("b"))
+      modifyTree(2, None, f1, Tree("a", Tree("b"), Tree("c")).deflated, false) shouldBe Tree(
+        "a",
+        Tree("z"),
+        Tree("b"),
+        Tree("c")
+      )
+      modifyTree(1, None, f1, Tree("a", Tree("b"), Tree("c")).deflated, false) shouldBe Tree(
+        "a",
+        Tree("b", Tree("z")),
+        Tree("c")
+      )
+      modifyTree(0, None, f1, Tree("a", Tree("b"), Tree("c")).deflated, false) shouldBe Tree(
+        "a",
+        Tree("b"),
+        Tree("c", Tree("z"))
+      )
+
+      modifyTree(0, None, f2, Tree("a").deflated, false) shouldBe Tree("a", t2)
+      modifyTree(0, None, f2, Tree("a", Tree("b")).deflated, false) shouldBe Tree("a", Tree("b", t2))
+      modifyTree(1, None, f2, Tree("a", Tree("b")).deflated, false) shouldBe Tree("a", t2, Tree("b"))
+      modifyTree(2, None, f2, Tree("a", Tree("b"), Tree("c")).deflated, false) shouldBe Tree(
+        "a",
+        t2,
+        Tree("b"),
+        Tree("c")
+      )
+      modifyTree(1, None, f2, Tree("a", Tree("b"), Tree("c")).deflated, false) shouldBe Tree(
+        "a",
+        Tree("b", t2),
+        Tree("c")
+      )
+      modifyTree(0, None, f2, Tree("a", Tree("b"), Tree("c")).deflated, false) shouldBe Tree(
+        "a",
+        Tree("b"),
+        Tree("c", t2)
+      )
+
+      modifyTree(0, None, f3, Tree("a").deflated, false) shouldBe Tree("z", Tree("a"))
+      modifyTree(0, None, f3, Tree("a", Tree("b")).deflated, false) shouldBe Tree("a", Tree("z", Tree("b")))
+      modifyTree(1, None, f3, Tree("a", Tree("b")).deflated, false) shouldBe Tree("b", Tree("a"))
+      modifyTree(2, None, f3, Tree("a", Tree("b"), Tree("c")).deflated, false) shouldBe Tree("b", Tree("a"))
+      modifyTree(1, None, f3, Tree("a", Tree("b"), Tree("c")).deflated, false) shouldBe Tree(
+        "a",
+        Tree("z", Tree("b")),
+        Tree("c")
+      )
+      modifyTree(0, None, f3, Tree("a", Tree("b"), Tree("c")).deflated, false) shouldBe Tree(
+        "a",
+        Tree("b"),
+        Tree("z", Tree("c"))
+      )
+
+      modifyTree(0, None, f4, Tree("a").deflated, false) shouldBe Tree.empty
+      modifyTree(0, None, f4, Tree("a", Tree("b")).deflated, false) shouldBe Tree("a")
+      modifyTree(1, None, f4, Tree("a", Tree("b")).deflated, false) shouldBe Tree.empty
+      modifyTree(2, None, f4, Tree("a", Tree("b"), Tree("c")).deflated, false) shouldBe Tree.empty
+      modifyTree(1, None, f4, Tree("a", Tree("b"), Tree("c")).deflated, false) shouldBe Tree("a", Tree("c"))
+      modifyTree(0, None, f4, Tree("a", Tree("b"), Tree("c")).deflated, false) shouldBe Tree("a", Tree("b"))
+
+      def previous(s: String): String = s match {
+        case "b" => "a"
+        case "c" => "b"
+        case "d" => "c"
+        case _   => "z"
+      }
+      val f5: Tree[String] => Tree[String] = t => Tree(previous(t.value), Tree("x"), Tree("y"))
+
+      modifyTree(0, None, f5, Tree("a").deflated, false) shouldBe Tree("z", Tree("x"), Tree("y"))
+      modifyTree(0, None, f5, Tree("a", Tree("b")).deflated, false) shouldBe Tree("a", Tree("a", Tree("x"), Tree("y")))
+      modifyTree(0, None, f5, Tree("a", Tree("b"), Tree("c")).deflated, false) shouldBe Tree(
+        "a",
+        Tree("b"),
+        Tree("b", Tree("x"), Tree("y"))
+      )
+      modifyTree(0, None, f5, Tree("a", Tree("b", Tree("x"), Tree("z")), Tree("c")).deflated, false) shouldBe Tree(
+        "a",
+        Tree("b", Tree("x"), Tree("z")),
+        Tree("b", Tree("x"), Tree("y"))
+      )
+    }
+
+    "modify distinct the tree at the index" in {
+      val t2 = Tree("v", Tree("x"), Tree("y", Tree("z")))
+      val f1: Tree[String] => Tree[String] = _.insertValue("z")
+      val f2: Tree[String] => Tree[String] = _.insertTree(t2)
+      val f3: Tree[String] => Tree[String] = t => t.children.headOption.getOrElse(Tree("z")).insertValue(t.value)
+      val f4: Tree[String] => Tree[String] = t => Tree.empty
+
+      modifyTree(0, None, f1, Tree("a").deflated, true) shouldBe Tree("a", Tree("z"))
+      modifyTree(0, None, f1, Tree("a", Tree("b")).deflated, true) shouldBe Tree("a", Tree("b", Tree("z")))
+      modifyTree(1, None, f1, Tree("a", Tree("b")).deflated, true) shouldBe Tree("a", Tree("z"), Tree("b"))
+      modifyTree(2, None, f1, Tree("a", Tree("b"), Tree("c")).deflated, true) shouldBe Tree(
+        "a",
+        Tree("z"),
+        Tree("b"),
+        Tree("c")
+      )
+      modifyTree(1, None, f1, Tree("a", Tree("b"), Tree("c")).deflated, true) shouldBe Tree(
+        "a",
+        Tree("b", Tree("z")),
+        Tree("c")
+      )
+      modifyTree(0, None, f1, Tree("a", Tree("b"), Tree("c")).deflated, true) shouldBe Tree(
+        "a",
+        Tree("b"),
+        Tree("c", Tree("z"))
+      )
+
+      modifyTree(0, None, f2, Tree("a").deflated, true) shouldBe Tree("a", t2)
+      modifyTree(0, None, f2, Tree("a", Tree("b")).deflated, true) shouldBe Tree("a", Tree("b", t2))
+      modifyTree(1, None, f2, Tree("a", Tree("b")).deflated, true) shouldBe Tree("a", t2, Tree("b"))
+      modifyTree(2, None, f2, Tree("a", Tree("b"), Tree("c")).deflated, true) shouldBe Tree(
+        "a",
+        t2,
+        Tree("b"),
+        Tree("c")
+      )
+      modifyTree(1, None, f2, Tree("a", Tree("b"), Tree("c")).deflated, true) shouldBe Tree(
+        "a",
+        Tree("b", t2),
+        Tree("c")
+      )
+      modifyTree(0, None, f2, Tree("a", Tree("b"), Tree("c")).deflated, true) shouldBe Tree(
+        "a",
+        Tree("b"),
+        Tree("c", t2)
+      )
+
+      modifyTree(0, None, f3, Tree("a").deflated, true) shouldBe Tree("z", Tree("a"))
+      modifyTree(0, None, f3, Tree("a", Tree("b")).deflated, true) shouldBe Tree("a", Tree("z", Tree("b")))
+      modifyTree(1, None, f3, Tree("a", Tree("b")).deflated, true) shouldBe Tree("b", Tree("a"))
+      modifyTree(2, None, f3, Tree("a", Tree("b"), Tree("c")).deflated, true) shouldBe Tree("b", Tree("a"))
+      modifyTree(1, None, f3, Tree("a", Tree("b"), Tree("c")).deflated, true) shouldBe Tree(
+        "a",
+        Tree("z", Tree("b")),
+        Tree("c")
+      )
+      modifyTree(0, None, f3, Tree("a", Tree("b"), Tree("c")).deflated, true) shouldBe Tree(
+        "a",
+        Tree("b"),
+        Tree("z", Tree("c"))
+      )
+
+      modifyTree(0, None, f4, Tree("a").deflated, true) shouldBe Tree.empty
+      modifyTree(0, None, f4, Tree("a", Tree("b")).deflated, true) shouldBe Tree("a")
+      modifyTree(1, None, f4, Tree("a", Tree("b")).deflated, true) shouldBe Tree.empty
+      modifyTree(2, None, f4, Tree("a", Tree("b"), Tree("c")).deflated, true) shouldBe Tree.empty
+      modifyTree(1, None, f4, Tree("a", Tree("b"), Tree("c")).deflated, true) shouldBe Tree("a", Tree("c"))
+      modifyTree(0, None, f4, Tree("a", Tree("b"), Tree("c")).deflated, true) shouldBe Tree("a", Tree("b"))
+
+      def previous(s: String): String = s match {
+        case "b" => "a"
+        case "c" => "b"
+        case "d" => "c"
+        case _   => "z"
+      }
+      val f5: Tree[String] => Tree[String] = t => Tree(previous(t.value), Tree("x"), Tree("y"))
+
+      modifyTree(0, None, f5, Tree("a").deflated, true) shouldBe Tree("z", Tree("x"), Tree("y"))
+      modifyTree(0, None, f5, Tree("a", Tree("b")).deflated, true) shouldBe Tree("a", Tree("a", Tree("x"), Tree("y")))
+      modifyTree(0, None, f5, Tree("a", Tree("b"), Tree("c")).deflated, true) shouldBe Tree(
+        "a",
+        Tree("b", Tree("x"), Tree("y"))
+      )
+      modifyTree(0, None, f5, Tree("a", Tree("b", Tree("x"), Tree("z")), Tree("c")).deflated, true) shouldBe Tree(
+        "a",
+        Tree("b", Tree("y"), Tree("x"), Tree("z"))
+      )
+    }
+
+    "remove tree at the index" in {
+      removeTree(0, None, Tree("a")) shouldBe Tree.empty
+      removeTree(-1, None, Tree("a")) shouldBe Tree("a")
+      removeTree(1, None, Tree("a")) shouldBe Tree("a")
+      removeTree(1, None, Tree("a", Tree("b"))) shouldBe Tree.empty
+      removeTree(0, None, Tree("a", Tree("b"))) shouldBe Tree("a")
+      removeTree(0, None, Tree("a", Tree("b"), Tree("c"))) shouldBe Tree("a", Tree("b"))
+      removeTree(1, None, Tree("a", Tree("b"), Tree("c"))) shouldBe Tree("a", Tree("c"))
+      removeTree(2, None, Tree("a", Tree("b"), Tree("c"))) shouldBe Tree.empty
+      removeTree(0, None, Tree("a", Tree("b", Tree("c")))) shouldBe Tree("a", Tree("b"))
+      removeTree(1, None, Tree("a", Tree("b", Tree("c")))) shouldBe Tree("a")
+      removeTree(2, None, Tree("a", Tree("b", Tree("c")))) shouldBe Tree.empty
+      removeTree(0, None, Tree("a", Tree("b", Tree("c"), Tree("d")), Tree("e"))) shouldBe Tree(
+        "a",
+        Tree("b", Tree("c"), Tree("d"))
+      )
+      removeTree(1, None, Tree("a", Tree("b", Tree("c"), Tree("d")), Tree("e"))) shouldBe Tree(
+        "a",
+        Tree("b", Tree("c")),
+        Tree("e")
+      )
+      removeTree(2, None, Tree("a", Tree("b", Tree("c"), Tree("d")), Tree("e"))) shouldBe Tree(
+        "a",
+        Tree("b", Tree("d")),
+        Tree("e")
+      )
+      removeTree(3, None, Tree("a", Tree("b", Tree("c"), Tree("d")), Tree("e"))) shouldBe Tree("a", Tree("e"))
+      removeTree(4, None, Tree("a", Tree("b", Tree("c"), Tree("d")), Tree("e"))) shouldBe Tree.empty
     }
   }
 

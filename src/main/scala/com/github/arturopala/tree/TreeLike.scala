@@ -100,7 +100,12 @@ trait TreeLike[+T] {
 
   // VALUES
 
-  /** Returns value of the tree's node, if any.
+  /** Returns value of the tree's node
+    * @throws NoSuchElementException if an empty tree
+    * @group values */
+  def value: T
+
+  /** Returns option of a value of the node, if any.
     * @group values */
   def valueOption: Option[T]
 
@@ -331,6 +336,11 @@ trait TreeLike[+T] {
 
   // INSERTION
 
+  /** Creates an new tree with a value on top and this tree as a single child.
+    * @param value new top node value
+    * @group insertion */
+  def prependValue[T1 >: T: ClassTag](value: T1): Tree[T1]
+
   /** Inserts a new child node holding the value and returns updated tree.
     * @group insertion */
   def insertValue[T1 >: T: ClassTag](value: T1): Tree[T1]
@@ -448,7 +458,7 @@ trait TreeLike[+T] {
     * @param modify function transforming the tree
     * @return either right of modified tree or left with the tree intact
     * @group modification */
-  def modifyTreeAt[T1 >: T: ClassTag](path: Iterable[T1], modify: Tree[T] => Tree[T1]): Either[Tree[T], Tree[T1]] = ???
+  def modifyTreeAt[T1 >: T: ClassTag](path: Iterable[T1], modify: Tree[T] => Tree[T1]): Either[Tree[T], Tree[T1]]
 
   /** Modifies the tree selected by the given path, and returns a whole tree updated.
     * @param path list K items forming a path from the root to the parent node.
@@ -460,8 +470,7 @@ trait TreeLike[+T] {
     path: Iterable[K],
     modify: Tree[T] => Tree[T1],
     toPathItem: T => K
-  ): Either[Tree[T], Tree[T1]] =
-    ???
+  ): Either[Tree[T], Tree[T1]]
 
   // DISTINCT MODIFICATION
 
@@ -495,7 +504,7 @@ trait TreeLike[+T] {
   def modifyTreeDistinctAt[T1 >: T: ClassTag](
     path: Iterable[T1],
     modify: Tree[T] => Tree[T1]
-  ): Either[Tree[T], Tree[T1]] = ???
+  ): Either[Tree[T], Tree[T1]]
 
   /** Modifies the tree selected by the given path, and returns a whole tree updated.
     * Keeps all the node's children distinct.
@@ -508,8 +517,7 @@ trait TreeLike[+T] {
     path: Iterable[K],
     modify: Tree[T] => Tree[T1],
     toPathItem: T => K
-  ): Either[Tree[T], Tree[T1]] =
-    ???
+  ): Either[Tree[T], Tree[T1]]
 
   // REMOVALS
 

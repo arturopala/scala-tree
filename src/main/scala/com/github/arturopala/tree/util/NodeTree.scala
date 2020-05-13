@@ -577,7 +577,7 @@ object NodeTree {
               case t: NodeTree[T1] =>
                 insertTreeDistinct(join(treeSplit.head), t, prepend = onRight)
               case t =>
-                join(treeSplit.head).insertTreeDistinct(t) // TODO: add support for prepend flag
+                join(treeSplit.head).insertTreeDistinct(t) // TODO: add support for a prepend flag
             }
             TreeBuilder.fromTreeSplitAndChild(newHeadTree, treeSplit.tail)
           } else {
