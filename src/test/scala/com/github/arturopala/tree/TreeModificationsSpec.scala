@@ -23,7 +23,7 @@ class TreeModificationsSpec extends FunSuite {
 
   sealed trait Spec extends AnyWordSpecCompat with TestTrees {
 
-    "modify lax a value of a node located at the path in the tree" in {
+    "modify lax a value of a node selected by the path in the tree" in {
       val f: String => String = s => s + s
       def fi(s: String): String => String = _ => s
       tree0.modifyValueLaxAt(List(), f) shouldBe Left(tree0)
@@ -109,7 +109,7 @@ class TreeModificationsSpec extends FunSuite {
       tree7.modifyValueLaxAt(List("a", "b", "e"), f) shouldBe Left(tree7)
     }
 
-    "modify lax a value of a node located at the path in the tree using an extractor function" in {
+    "modify lax a value of a node selected by the path in the tree using an extractor function" in {
       val f: String => String = s => s + s
       def fi(s: String): String => String = _ => s
       val e: String => Int = _.head.toInt
@@ -186,7 +186,7 @@ class TreeModificationsSpec extends FunSuite {
       tree7.modifyValueLaxAt(List(97, 98, 101), f, e) shouldBe Left(tree7)
     }
 
-    "modify distinct a value of a node located at the path in the tree" in {
+    "modify distinct a value of a node selected by the path in the tree" in {
       val f: String => String = s => s + s
       def fi(s: String): String => String = _ => s
       tree0.modifyValueAt(List(), f) shouldBe Left(tree0)
@@ -273,7 +273,7 @@ class TreeModificationsSpec extends FunSuite {
         .modifyValueAt(List("a", "c"), _ => "b") shouldBe Right(Tree("a", Tree("b"), Tree("b")))
     }
 
-    "modify distinct a value of a node located at the path in the tree using an extractor function" in {
+    "modify distinct a value of a node selected by the path in the tree using an extractor function" in {
       val f: String => String = s => s + s
       def fi(s: String): String => String = _ => s
       val e: String => Int = _.head.toInt
@@ -350,7 +350,7 @@ class TreeModificationsSpec extends FunSuite {
       tree7.modifyValueAt(List(97, 98, 101), f, e) shouldBe Left(tree7)
     }
 
-    "modify lax a subtree located at the path" in {
+    "modify lax a subtree selected by the path" in {
       tree0.modifyTreeLaxAt(List("a", "b"), _ => tree2) shouldBe Left(tree0)
       tree1.modifyTreeLaxAt(List("a"), _ => tree2) shouldBe Right(Tree("a", Tree("b")))
       tree1.modifyTreeLaxAt(List("b"), _ => tree2) shouldBe Left(tree1)
@@ -389,7 +389,53 @@ class TreeModificationsSpec extends FunSuite {
       tree4_2.modifyTreeLaxAt(List("b", "c"), _ => Tree("b", Tree("c", Tree("e")))) shouldBe Left(tree4_2)
     }
 
-    "modify distinct a subtree located at the path" in {
+    "modify lax a subtree selected by the path using an extractor function" in {
+      val codeF: String => Int = s => s.head.toInt
+      tree0.modifyTreeLaxAt(List(97, 98), _ => tree2, codeF) shouldBe Left(tree0)
+      tree1.modifyTreeLaxAt(List(97), _ => tree2, codeF) shouldBe Right(Tree("a", Tree("b")))
+      tree1.modifyTreeLaxAt(List(98), _ => tree2, codeF) shouldBe Left(tree1)
+      tree2.modifyTreeLaxAt(List(97), _ => tree3_2, codeF) shouldBe Right(Tree("a", Tree("b"), Tree("c")))
+      tree2.modifyTreeLaxAt(List(97, 98), _ => tree3_2, codeF) shouldBe Right(
+        Tree("a", Tree("a", Tree("b"), Tree("c")))
+      )
+      tree2.modifyTreeLaxAt(List(97, 99), _ => tree3_2, codeF) shouldBe Left(tree2)
+      tree3_2.modifyTreeLaxAt(List(97, 98), _ => tree2, codeF) shouldBe Right(
+        Tree("a", Tree("a", Tree("b")), Tree("c"))
+      )
+      tree3_2.modifyTreeLaxAt(List(97, 98), _ => tree3_2, codeF) shouldBe Right(
+        Tree("a", Tree("a", Tree("b"), Tree("c")), Tree("c"))
+      )
+      tree3_2.modifyTreeLaxAt(List(97, 99), _ => tree2, codeF) shouldBe Right(
+        Tree("a", Tree("b"), Tree("a", Tree("b")))
+      )
+      tree3_2.modifyTreeLaxAt(List(97, 99), _ => tree3_2, codeF) shouldBe Right(
+        Tree("a", Tree("b"), Tree("a", Tree("b"), Tree("c")))
+      )
+      tree3_2.modifyTreeLaxAt(List(97), _ => tree2, codeF) shouldBe Right(tree2)
+      tree3_2.modifyTreeLaxAt(List(97), _ => tree9, codeF) shouldBe Right(tree9)
+      tree3_2.modifyTreeLaxAt(List(97, 97), _ => tree2, codeF) shouldBe Left(tree3_2)
+      tree3_2.modifyTreeLaxAt(List(98, 97), _ => tree2, codeF) shouldBe Left(tree3_2)
+      tree3_2.modifyTreeLaxAt(List(98), _ => tree2, codeF) shouldBe Left(tree3_2)
+      tree3_2.modifyTreeLaxAt(List(98, 98), _ => tree2, codeF) shouldBe Left(tree3_2)
+      tree3_2.modifyTreeLaxAt(List(97, 99), _ => Tree("b", Tree("d")), codeF) shouldBe Right(
+        Tree("a", Tree("b"), Tree("b", Tree("d")))
+      )
+      tree4_2.modifyTreeLaxAt(List(97, 100), _ => Tree("b", Tree("c", Tree("e"))), codeF) shouldBe Right(
+        Tree("a", Tree("b", Tree("c")), Tree("b", Tree("c", Tree("e"))))
+      )
+      tree4_2.modifyTreeLaxAt(List(97, 98, 99), _ => Tree("b", Tree("c", Tree("e"))), codeF) shouldBe Right(
+        Tree("a", Tree("b", Tree("b", Tree("c", Tree("e")))), Tree("d"))
+      )
+      tree4_2.modifyTreeLaxAt(List(97, 98, 100), _ => Tree("b", Tree("c", Tree("e"))), codeF) shouldBe Left(tree4_2)
+      tree4_2.modifyTreeLaxAt(List(97, 100, 99), _ => Tree("b", Tree("c", Tree("e"))), codeF) shouldBe Left(tree4_2)
+      tree4_2.modifyTreeLaxAt(List(97, 101), _ => Tree("b", Tree("c", Tree("e"))), codeF) shouldBe Left(tree4_2)
+      tree4_2.modifyTreeLaxAt(List(97, 99), _ => Tree("b", Tree("c", Tree("e"))), codeF) shouldBe Left(tree4_2)
+      tree4_2.modifyTreeLaxAt(List(98), _ => Tree("b", Tree("c", Tree("e"))), codeF) shouldBe Left(tree4_2)
+      tree4_2.modifyTreeLaxAt(List(100), _ => Tree("b", Tree("c", Tree("e"))), codeF) shouldBe Left(tree4_2)
+      tree4_2.modifyTreeLaxAt(List(98, 99), _ => Tree("b", Tree("c", Tree("e"))), codeF) shouldBe Left(tree4_2)
+    }
+
+    "modify distinct a subtree selected by the path" in {
       tree0.modifyTreeAt(List("a", "b"), _ => tree2) shouldBe Left(tree0)
       tree1.modifyTreeAt(List("a"), _ => tree2) shouldBe Right(Tree("a", Tree("b")))
       tree1.modifyTreeAt(List("b"), _ => tree2) shouldBe Left(tree1)
@@ -432,6 +478,52 @@ class TreeModificationsSpec extends FunSuite {
       tree4_2.modifyTreeAt(List("b"), _ => Tree("b", Tree("c", Tree("e")))) shouldBe Left(tree4_2)
       tree4_2.modifyTreeAt(List("d"), _ => Tree("b", Tree("c", Tree("e")))) shouldBe Left(tree4_2)
       tree4_2.modifyTreeAt(List("b", "c"), _ => Tree("b", Tree("c", Tree("e")))) shouldBe Left(tree4_2)
+    }
+
+    "modify distinct a subtree selected by the path using an extractor function" in {
+      val codeF: String => Int = s => s.head.toInt
+      tree0.modifyTreeAt(List(97, 98), _ => tree2, codeF) shouldBe Left(tree0)
+      tree1.modifyTreeAt(List(97), _ => tree2, codeF) shouldBe Right(Tree("a", Tree("b")))
+      tree1.modifyTreeAt(List(98), _ => tree2, codeF) shouldBe Left(tree1)
+      tree2.modifyTreeAt(List(97), _ => tree3_2, codeF) shouldBe Right(Tree("a", Tree("b"), Tree("c")))
+      tree2.modifyTreeAt(List(97, 98), _ => tree3_2, codeF) shouldBe Right(
+        Tree("a", Tree("a", Tree("b"), Tree("c")))
+      )
+      tree2.modifyTreeAt(List(97, 99), _ => tree3_2, codeF) shouldBe Left(tree2)
+      tree3_2.modifyTreeAt(List(97, 98), _ => tree2, codeF) shouldBe Right(
+        Tree("a", Tree("a", Tree("b")), Tree("c"))
+      )
+      tree3_2.modifyTreeAt(List(97, 98), _ => tree3_2, codeF) shouldBe Right(
+        Tree("a", Tree("a", Tree("b"), Tree("c")), Tree("c"))
+      )
+      tree3_2.modifyTreeAt(List(97, 99), _ => tree2, codeF) shouldBe Right(
+        Tree("a", Tree("b"), Tree("a", Tree("b")))
+      )
+      tree3_2.modifyTreeAt(List(97, 99), _ => tree3_2, codeF) shouldBe Right(
+        Tree("a", Tree("b"), Tree("a", Tree("b"), Tree("c")))
+      )
+      tree3_2.modifyTreeAt(List(97), _ => tree2, codeF) shouldBe Right(tree2)
+      tree3_2.modifyTreeAt(List(97), _ => tree9, codeF) shouldBe Right(tree9)
+      tree3_2.modifyTreeAt(List(97, 97), _ => tree2, codeF) shouldBe Left(tree3_2)
+      tree3_2.modifyTreeAt(List(98, 97), _ => tree2, codeF) shouldBe Left(tree3_2)
+      tree3_2.modifyTreeAt(List(98), _ => tree2, codeF) shouldBe Left(tree3_2)
+      tree3_2.modifyTreeAt(List(98, 98), _ => tree2, codeF) shouldBe Left(tree3_2)
+      tree3_2.modifyTreeAt(List(97, 99), _ => Tree("b", Tree("d")), codeF) shouldBe Right(
+        Tree("a", Tree("b", Tree("d")))
+      )
+      tree4_2.modifyTreeAt(List(97, 100), _ => Tree("b", Tree("c", Tree("e"))), codeF) shouldBe Right(
+        Tree("a", Tree("b", Tree("c", Tree("e"))))
+      )
+      tree4_2.modifyTreeAt(List(97, 98, 99), _ => Tree("b", Tree("c", Tree("e"))), codeF) shouldBe Right(
+        Tree("a", Tree("b", Tree("b", Tree("c", Tree("e")))), Tree("d"))
+      )
+      tree4_2.modifyTreeAt(List(97, 98, 100), _ => Tree("b", Tree("c", Tree("e"))), codeF) shouldBe Left(tree4_2)
+      tree4_2.modifyTreeAt(List(97, 100, 99), _ => Tree("b", Tree("c", Tree("e"))), codeF) shouldBe Left(tree4_2)
+      tree4_2.modifyTreeAt(List(97, 101), _ => Tree("b", Tree("c", Tree("e"))), codeF) shouldBe Left(tree4_2)
+      tree4_2.modifyTreeAt(List(97, 99), _ => Tree("b", Tree("c", Tree("e"))), codeF) shouldBe Left(tree4_2)
+      tree4_2.modifyTreeAt(List(98), _ => Tree("b", Tree("c", Tree("e"))), codeF) shouldBe Left(tree4_2)
+      tree4_2.modifyTreeAt(List(100), _ => Tree("b", Tree("c", Tree("e"))), codeF) shouldBe Left(tree4_2)
+      tree4_2.modifyTreeAt(List(98, 99), _ => Tree("b", Tree("c", Tree("e"))), codeF) shouldBe Left(tree4_2)
     }
 
   }
