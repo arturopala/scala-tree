@@ -68,53 +68,53 @@ abstract class ArrayTreeLike[T: ClassTag] extends TreeLike[T] {
 
   // MODIFICATIONS
 
-  final override def prependValue[T1 >: T: ClassTag](value: T1): Tree[T1] =
+  final override def prependWith[T1 >: T: ClassTag](value: T1): Tree[T1] =
     ArrayTree.prependValue(value, tree)
 
-  final override def insertValue[T1 >: T: ClassTag](value: T1): Tree[T1] =
+  final override def insertValueLax[T1 >: T: ClassTag](value: T1): Tree[T1] =
     ArrayTree.insertValue(tree.structure.length - 1, value, tree, keepDistinct = false)
 
-  final override def insertValueDistinct[T1 >: T: ClassTag](value: T1): Tree[T1] =
+  final override def insertValue[T1 >: T: ClassTag](value: T1): Tree[T1] =
     ArrayTree.insertValue(tree.structure.length - 1, value, tree, keepDistinct = true)
 
-  final override def insertValueAt[T1 >: T: ClassTag](path: Iterable[T1], value: T1): Tree[T1] =
+  final override def insertValueLaxAt[T1 >: T: ClassTag](path: Iterable[T1], value: T1): Tree[T1] =
     ArrayTree.insertValueAt(path, value, tree, keepDistinct = false)
 
-  final override def insertValueDistinctAt[T1 >: T: ClassTag](path: Iterable[T1], value: T1): Tree[T1] =
+  final override def insertValueAt[T1 >: T: ClassTag](path: Iterable[T1], value: T1): Tree[T1] =
     ArrayTree.insertValueAt(path, value, tree, keepDistinct = true)
 
-  final override def insertValueAt[K, T1 >: T: ClassTag](
+  final override def insertValueLaxAt[K, T1 >: T: ClassTag](
     path: Iterable[K],
     value: T1,
     f: T => K
   ): Either[Tree[T], Tree[T1]] = ArrayTree.insertValueAt(path, value, tree, f, keepDistinct = false)
 
-  final override def insertValueDistinctAt[K, T1 >: T: ClassTag](
+  final override def insertValueAt[K, T1 >: T: ClassTag](
     path: Iterable[K],
     value: T1,
     f: T => K
   ): Either[Tree[T], Tree[T1]] = ArrayTree.insertValueAt(path, value, tree, f, keepDistinct = true)
 
-  final override def insertTree[T1 >: T: ClassTag](subtree: Tree[T1]): Tree[T1] =
+  final override def insertTreeLax[T1 >: T: ClassTag](subtree: Tree[T1]): Tree[T1] =
     ArrayTree.insertTree(tree.structure.length - 1, subtree, tree)
 
-  final override def insertTreeDistinct[T1 >: T: ClassTag](subtree: Tree[T1]): Tree[T1] =
+  final override def insertTree[T1 >: T: ClassTag](subtree: Tree[T1]): Tree[T1] =
     ArrayTree.insertTreeDistinct(tree.structure.length - 1, subtree, tree)
 
-  final override def insertTreeAt[T1 >: T: ClassTag](path: Iterable[T1], subtree: Tree[T1]): Tree[T1] =
+  final override def insertTreeLaxAt[T1 >: T: ClassTag](path: Iterable[T1], subtree: Tree[T1]): Tree[T1] =
     ArrayTree.insertTreeAt(path, subtree, tree, keepDistinct = false)
 
-  final override def insertTreeDistinctAt[T1 >: T: ClassTag](path: Iterable[T1], subtree: Tree[T1]): Tree[T1] =
+  final override def insertTreeAt[T1 >: T: ClassTag](path: Iterable[T1], subtree: Tree[T1]): Tree[T1] =
     ArrayTree.insertTreeAt(path, subtree, tree, keepDistinct = true)
 
-  final override def insertTreeAt[K, T1 >: T: ClassTag](
+  final override def insertTreeLaxAt[K, T1 >: T: ClassTag](
     path: Iterable[K],
     subtree: Tree[T1],
     f: T => K
   ): Either[Tree[T], Tree[T1]] =
     ArrayTree.insertTreeAt(path, subtree, tree, f, keepDistinct = false)
 
-  final override def insertTreeDistinctAt[K, T1 >: T: ClassTag](
+  final override def insertTreeAt[K, T1 >: T: ClassTag](
     path: Iterable[K],
     subtree: Tree[T1],
     f: T => K
@@ -126,49 +126,52 @@ abstract class ArrayTreeLike[T: ClassTag] extends TreeLike[T] {
 
   // MODIFICATIONS
 
-  final override def modifyValueAt[T1 >: T: ClassTag](path: Iterable[T1], modify: T => T1): Either[Tree[T], Tree[T1]] =
+  final override def modifyValueLaxAt[T1 >: T: ClassTag](
+    path: Iterable[T1],
+    modify: T => T1
+  ): Either[Tree[T], Tree[T1]] =
     ArrayTree.modifyValueAt(path, modify, tree, keepDistinct = false)
 
-  final override def modifyValueDistinctAt[T1 >: T: ClassTag](
+  final override def modifyValueAt[T1 >: T: ClassTag](
     path: Iterable[T1],
     modify: T => T1
   ): Either[Tree[T], Tree[T1]] =
     ArrayTree.modifyValueAt(path, modify, tree, keepDistinct = true)
 
-  final override def modifyValueAt[K, T1 >: T: ClassTag](
+  final override def modifyValueLaxAt[K, T1 >: T: ClassTag](
     path: Iterable[K],
     modify: T => T1,
     toPathItem: T => K
   ): Either[Tree[T], Tree[T1]] =
     ArrayTree.modifyValueAt(path, modify, tree, toPathItem, keepDistinct = false)
 
-  final override def modifyValueDistinctAt[K, T1 >: T: ClassTag](
+  final override def modifyValueAt[K, T1 >: T: ClassTag](
     path: Iterable[K],
     modify: T => T1,
     toPathItem: T => K
   ): Either[Tree[T], Tree[T1]] =
     ArrayTree.modifyValueAt(path, modify, tree, toPathItem, keepDistinct = true)
 
-  final override def modifyTreeAt[T1 >: T: ClassTag](
+  final override def modifyTreeLaxAt[T1 >: T: ClassTag](
     path: Iterable[T1],
     modify: Tree[T] => Tree[T1]
   ): Either[Tree[T], Tree[T1]] =
     ArrayTree.modifyTreeAt(path, modify, tree, keepDistinct = false)
 
-  final override def modifyTreeDistinctAt[T1 >: T: ClassTag](
+  final override def modifyTreeAt[T1 >: T: ClassTag](
     path: Iterable[T1],
     modify: Tree[T] => Tree[T1]
   ): Either[Tree[T], Tree[T1]] =
     ArrayTree.modifyTreeAt(path, modify, tree, keepDistinct = true)
 
-  final override def modifyTreeAt[K, T1 >: T: ClassTag](
+  final override def modifyTreeLaxAt[K, T1 >: T: ClassTag](
     path: Iterable[K],
     modify: Tree[T] => Tree[T1],
     toPathItem: T => K
   ): Either[Tree[T], Tree[T1]] =
     ArrayTree.modifyTreeAt(path, modify, tree, toPathItem, keepDistinct = false)
 
-  final override def modifyTreeDistinctAt[K, T1 >: T: ClassTag](
+  final override def modifyTreeAt[K, T1 >: T: ClassTag](
     path: Iterable[K],
     modify: Tree[T] => Tree[T1],
     toPathItem: T => K
@@ -180,7 +183,7 @@ abstract class ArrayTreeLike[T: ClassTag] extends TreeLike[T] {
   final override def map[K: ClassTag](f: T => K): Tree[K] =
     new ArrayTree[K](tree.structure, tree.content.map(f), tree.width, tree.height)
 
-  final override def flatMap[K: ClassTag](f: T => Tree[K]): Tree[K] =
+  final override def flatMapLax[K: ClassTag](f: T => Tree[K]): Tree[K] =
     ArrayTree.flatMap(tree.structure, tree.content, f)
 
   // PATH-BASED OPERATIONS

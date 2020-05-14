@@ -23,25 +23,25 @@ import scala.reflect.ClassTag
 
 /**
   * A general-purpose, covariant, immutable, low overhead,
-  * efficient tree-like data structure with comprehensive API.
+  * efficient, monadic tree-like data structure with comprehensive API.
   *
   * Conceptually, apart from an empty, each node of the tree has:
   *   - a value, and
   *   - a collection of subtrees.
   *
-  * Child is a value of a subtree of a node. The tree can have duplicated
-  * children values, although most modifications methods comes in two
-  * flavours: relaxed and distinct.
+  * By the design choice, every node can possibly have duplicated children values,
+  * although most modifications methods comes in two versions:
+  * the default distinct (strict) and a lax variant.
   *
   * Internally, there are three main implementations of the Tree:
   *   - [[Tree.empty]], an empty tree singleton,
-  *   - [[Tree.NodeTree]], nested hierarchy of immutable nodes (inflated tree),
-  *   - [[Tree.ArrayTree]], the structure with twin linear arrays (deflated tree).
+  *   - [[Tree.NodeTree]], a deeply-nested hierarchy of immutable nodes (inflated tree),
+  *   - [[Tree.ArrayTree]], encoded as a twin linear arrays of structure and values (deflated tree).
   *
-  * The reason of having an inflated and deflated variant of the tree
-  * is such that each exhibits different performance and memory
-  * consumption characteristics, making it possible to optimize for specific
-  * targets while facing the same API.
+  * The reason for having an inflated and deflated variants of the tree
+  * is such that each one exhibits different performance and memory
+  * consumption characteristics, making it possible to experiment and optimize
+  * for individual targets while facing the same API.
   */
 sealed trait Tree[+T] extends TreeLike[T] {
 
@@ -205,7 +205,7 @@ object Tree {
   final class ArrayTree[T: ClassTag] private[tree] (
     val structure: IntSlice,
     val content: Slice[T],
-    delayedWidth: => Int,
+    delayedWidth:  => Int,
     delayedHeight: => Int
   ) extends ArrayTreeLike[T] with Tree[T] {
 

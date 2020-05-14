@@ -5,18 +5,18 @@ Tree\[+T]
 
 This is a micro-library for Scala providing 
 a general-purpose, covariant, immutable, low overhead, 
-efficient tree-like data structure with comprehensive API.
+efficient, monadic tree-like data structure with comprehensive API.
 
 Motivation
 ---
 
-A Tree is one of the most useful data structure concepts with numerous flavours and implementations.
+A Tree is one of the most versatile data structure concepts with numerous flavours, applications and implementations.
 
-While the concept is simple, practical implementation details of immutable tree pose significant challenges, e.g.
+While the concept is dead simple, practical implementation details of immutable tree pose significant challenges, e.g.
 
 - traversing and transforming the tree using stack-safe algorithms
 - using reasonable amount of memory resources to represent large trees
-- keeping children distinct when inserting or merging trees
+- keeping children distinct when transforming or merging trees
 - supporting numerous use cases in the balanced API
 
 Design

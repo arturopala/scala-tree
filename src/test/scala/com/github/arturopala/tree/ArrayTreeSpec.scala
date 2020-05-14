@@ -727,9 +727,9 @@ class ArrayTreeSpec extends AnyWordSpecCompat {
 
     "modify the tree at the index" in {
       val t2 = Tree("v", Tree("x"), Tree("y", Tree("z")))
-      val f1: Tree[String] => Tree[String] = _.insertValue("z")
-      val f2: Tree[String] => Tree[String] = _.insertTree(t2)
-      val f3: Tree[String] => Tree[String] = t => t.children.headOption.getOrElse(Tree("z")).insertValue(t.value)
+      val f1: Tree[String] => Tree[String] = _.insertValueLax("z")
+      val f2: Tree[String] => Tree[String] = _.insertTreeLax(t2)
+      val f3: Tree[String] => Tree[String] = t => t.children.headOption.getOrElse(Tree("z")).insertValueLax(t.value)
       val f4: Tree[String] => Tree[String] = t => Tree.empty
 
       modifyTree(0, None, f1, Tree("a").deflated, false) shouldBe Tree("a", Tree("z"))
@@ -818,9 +818,9 @@ class ArrayTreeSpec extends AnyWordSpecCompat {
 
     "modify distinct the tree at the index" in {
       val t2 = Tree("v", Tree("x"), Tree("y", Tree("z")))
-      val f1: Tree[String] => Tree[String] = _.insertValue("z")
-      val f2: Tree[String] => Tree[String] = _.insertTree(t2)
-      val f3: Tree[String] => Tree[String] = t => t.children.headOption.getOrElse(Tree("z")).insertValue(t.value)
+      val f1: Tree[String] => Tree[String] = _.insertValueLax("z")
+      val f2: Tree[String] => Tree[String] = _.insertTreeLax(t2)
+      val f3: Tree[String] => Tree[String] = t => t.children.headOption.getOrElse(Tree("z")).insertValueLax(t.value)
       val f4: Tree[String] => Tree[String] = t => Tree.empty
 
       modifyTree(0, None, f1, Tree("a").deflated, true) shouldBe Tree("a", Tree("z"))

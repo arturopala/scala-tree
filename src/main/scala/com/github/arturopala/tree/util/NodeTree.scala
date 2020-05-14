@@ -381,7 +381,7 @@ object NodeTree {
       case (treeSplit, None, _, remainingTree) =>
         val newNode =
           if (keepDistinct && !remainingTree.isLeaf)
-            remainingTree.insertTreeDistinct(nodeToInsert).asInstanceOf[NodeTree[T1]]
+            remainingTree.insertTree(nodeToInsert).asInstanceOf[NodeTree[T1]]
           else Tree(remainingTree.value, nodeToInsert :: remainingTree.subtrees)
         Some(TreeBuilder.fromTreeSplitAndChild(newNode, treeSplit))
     }
@@ -398,7 +398,7 @@ object NodeTree {
         case (treeSplit, recipientTree) =>
           val newNode =
             if (keepDistinct && !recipientTree.isLeaf)
-              recipientTree.insertTreeDistinct(nodeToInsert).asInstanceOf[NodeTree[T1]]
+              recipientTree.insertTree(nodeToInsert).asInstanceOf[NodeTree[T1]]
             else Tree(recipientTree.value, nodeToInsert :: recipientTree.subtrees)
           Right(TreeBuilder.fromTreeSplitAndChild(newNode, treeSplit))
       }
@@ -577,7 +577,7 @@ object NodeTree {
               case t: NodeTree[T1] =>
                 insertTreeDistinct(join(treeSplit.head), t, prepend = onRight)
               case t =>
-                join(treeSplit.head).insertTreeDistinct(t) // TODO: add support for a prepend flag
+                join(treeSplit.head).insertTree(t) // TODO: add support for a prepend flag
             }
             TreeBuilder.fromTreeSplitAndChild(newHeadTree, treeSplit.tail)
           } else {

@@ -38,22 +38,22 @@ class TreeTransformationsSpec extends FunSuite {
           |a0 > g0""".stripMargin
     }
 
-    "flatMap all nodes" in {
+    "flatMap lax all nodes" in {
       val f: String => Tree[String] = x => Tree(x, Tree(x + "0"))
-      tree0.flatMap(f).showAsGraph() shouldBe ""
-      tree1.flatMap(f).showAsGraph() shouldBe "a > a0"
-      tree2.flatMap(f).showAsGraph() shouldBe
+      tree0.flatMapLax(f).showAsGraph() shouldBe ""
+      tree1.flatMapLax(f).showAsGraph() shouldBe "a > a0"
+      tree2.flatMapLax(f).showAsGraph() shouldBe
         """a > b > b0
           |a > a0""".stripMargin
-      tree3_1.flatMap(f).showAsGraph() shouldBe
+      tree3_1.flatMapLax(f).showAsGraph() shouldBe
         """a > b > c > c0
           |a > b > b0
           |a > a0""".stripMargin
-      tree3_2.flatMap(f).showAsGraph() shouldBe
+      tree3_2.flatMapLax(f).showAsGraph() shouldBe
         """a > b > b0
           |a > c > c0
           |a > a0""".stripMargin
-      tree7.flatMap(f).showAsGraph() shouldBe
+      tree7.flatMapLax(f).showAsGraph() shouldBe
         """a > b > c > c0
           |a > b > b0
           |a > d > e > f > f0
@@ -63,7 +63,7 @@ class TreeTransformationsSpec extends FunSuite {
           |a > a0""".stripMargin
     }
 
-    "transform a tree using for-comprehension" in {
+    /*"transform a tree using a for-comprehension" in {
       (for {
         n       <- tree9
         subtree <- Tree(n, Tree(n + n), Tree(n + n + n))
@@ -86,7 +86,7 @@ class TreeTransformationsSpec extends FunSuite {
           |a > e > eee
           |a > aa
           |a > aaa""".stripMargin
-    }
+    }*/
 
   }
 

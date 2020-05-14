@@ -26,8 +26,8 @@ class TreeDebugSpec extends FunSuite {
 
     "debug single cases" in {
       tree3_2
-        .insertValue("b")
-        .modifyValueDistinctAt(List("a", "c"), _ => "b") shouldBe Right(Tree("a", Tree("b"), Tree("b")))
+        .insertValueLax("b")
+        .modifyValueAt(List("a", "c"), _ => "b") shouldBe Right(Tree("a", Tree("b"), Tree("b")))
     }
 
   }
