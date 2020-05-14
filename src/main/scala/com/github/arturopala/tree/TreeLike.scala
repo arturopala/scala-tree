@@ -535,30 +535,30 @@ trait TreeLike[+T] {
   /** Removes the value selected by the given path, merges node's children with remaining siblings,
     * and returns a whole tree updated.
     * @param path list of node's values forming a path from the root to the parent node.
-    * @return either right of modified tree or left with the tree intact
+    * @return modified tree
     * @group removal */
-  def removeValueAt[T1 >: T: ClassTag](path: Iterable[T1]): Either[Tree[T], Tree[T1]] = ???
+  def removeValueAt[T1 >: T: ClassTag](path: Iterable[T1]): Tree[T] = ???
 
   /** Removes the value selected by the given path, merges node's children with remaining siblings,
     * and returns a whole tree updated.
     * @param path list of K items forming a path from the root to the parent node.
     * @param toPathItem extractor of the K path item from the tree's node value
-    * @return either right of modified tree or left with the tree intact
+    * @return modified tree
     * @group removal */
-  def removeValueAt[K, T1 >: T: ClassTag](path: Iterable[K], toPathItem: T => K): Either[Tree[T], Tree[T1]] = ???
+  def removeValueAt[K, T1 >: T: ClassTag](path: Iterable[K], toPathItem: T => K): Tree[T] = ???
 
   /** Removes the tree selected by the given path.
     * @param path list of node's values forming a path from the root to the parent node.
-    * @return either right of modified tree or left with the tree intact
+    * @return modified tree
     * @group removal */
-  def removeTreeAt[T1 >: T: ClassTag](path: Iterable[T1]): Either[Tree[T], Tree[T1]] = ???
+  def removeTreeAt[T1 >: T: ClassTag](path: Iterable[T1]): Tree[T] = ???
 
   /** Removes the tree selected by the given path.
     * @param path list K items forming a path from the root to the parent node.
     * @param toPathItem extractor of the K path item from the tree's node value
-    * @return either right of modified tree or left with the tree intact
+    * @return modified tree
     * @group removal */
-  def removeTreeAt[K, T1 >: T: ClassTag](path: Iterable[K], toPathItem: T => K): Either[Tree[T], Tree[T1]] = ???
+  def removeTreeAt[K, T1 >: T: ClassTag](path: Iterable[K], toPathItem: T => K): Tree[T] = ???
 
   // LAX REMOVALS
 
@@ -566,18 +566,18 @@ trait TreeLike[+T] {
     * and returns a whole tree updated.
     * @note BEWARE: this method is lax, it will not keep node's children distinct.
     * @param path list of node's values forming a path from the root to the parent node.
-    * @return either right of modified tree or left with the tree intact
+    * @return modified tree
     * @group removal */
-  def removeValueLaxAt[T1 >: T: ClassTag](path: Iterable[T1]): Either[Tree[T], Tree[T1]] = ???
+  def removeValueLaxAt[T1 >: T: ClassTag](path: Iterable[T1]): Tree[T] = ???
 
   /** Removes the value selected by the given path, merges node's children with remaining siblings,
     * and returns a whole tree updated.
     * @note BEWARE: this method is lax, it will not keep node's children distinct.
     * @param path list of K items forming a path from the root to the parent node.
     * @param toPathItem extractor of the K path item from the tree's node value
-    * @return either right of modified tree or left with the tree intact
+    * @return modified tree
     * @group removal */
-  def removeValueLaxAt[K, T1 >: T: ClassTag](path: Iterable[K], toPathItem: T => K): Either[Tree[T], Tree[T1]] = ???
+  def removeValueLaxAt[K, T1 >: T: ClassTag](path: Iterable[K], toPathItem: T => K): Tree[T] = ???
 
   // SERIALIZATION
 
