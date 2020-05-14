@@ -204,9 +204,9 @@ object TreeBuilder {
       tail.foldLeft(value)((t, v) => v.insertTreeLax(t))
   }
 
-  /** Builds a tree from the list of tree splits (treesLeftOfValue, value, treesRightOfValue).
+  /** Builds a tree from the list of tree splits (leftChildren, value, rightChildren).
     * @param child the tree node who becomes a child of a last value. */
-  final def fromTreeSplitAndChild[T](
+  final def fromChildAndTreeSplit[T](
     child: Tree[T],
     list: List[(List[NodeTree[T]], T, List[NodeTree[T]])]
   ): Tree[T] = list match {
@@ -223,6 +223,15 @@ object TreeBuilder {
         case tree: ArrayTree[T] => //TODO build ArrayTree instead
           list.foldLeft(tree.inflated.asInstanceOf[NodeTree[T]]) { case (n, (l, v, r)) => Tree(v, l ::: (n :: r)) }
       }
+  }
+
+  /** Builds a tree from the list of tree splits (leftChildren, value, rightChildren). */
+  final def fromTreeSplit[T](
+    list: List[(List[NodeTree[T]], T, List[NodeTree[T]])]
+  ): Tree[T] = list match {
+    case Nil => Tree.empty
+    case (hl, hv, hr) :: xs =>
+      xs.foldLeft(Tree(hv, hl ::: hr)) { case (n, (l, v, r)) => Tree(v, l ::: (n :: r)) }
   }
 
   /** There are multiple ways to merge the tree after expanding a node.

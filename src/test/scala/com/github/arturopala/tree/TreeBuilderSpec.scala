@@ -132,18 +132,18 @@ class TreeBuilderSpec extends AnyWordSpecCompat {
     }
 
     "create a tree from tree split lists and a tree" in {
-      fromTreeSplitAndChild(Tree.empty, List()) shouldBe Tree.empty
-      fromTreeSplitAndChild(Tree("a"), List()) shouldBe Tree("a")
-      fromTreeSplitAndChild(Tree.empty, List((Nil, "a", Nil))) shouldBe Tree("a")
-      fromTreeSplitAndChild(Tree("a"), List((Nil, "b", Nil), (Nil, "c", Nil), (Nil, "d", Nil))) shouldBe Tree(
+      fromChildAndTreeSplit(Tree.empty, List()) shouldBe Tree.empty
+      fromChildAndTreeSplit(Tree("a"), List()) shouldBe Tree("a")
+      fromChildAndTreeSplit(Tree.empty, List((Nil, "a", Nil))) shouldBe Tree("a")
+      fromChildAndTreeSplit(Tree("a"), List((Nil, "b", Nil), (Nil, "c", Nil), (Nil, "d", Nil))) shouldBe Tree(
         "d",
         Tree("c", Tree("b", Tree("a")))
       )
-      fromTreeSplitAndChild(
+      fromChildAndTreeSplit(
         Tree("a"),
         List((List(Tree("e")), "b", Nil), (List(Tree("f")), "c", Nil), (List(Tree("g")), "d", Nil))
       ) shouldBe Tree("d", Tree("g"), Tree("c", Tree("f"), Tree("b", Tree("e"), Tree("a"))))
-      fromTreeSplitAndChild(
+      fromChildAndTreeSplit(
         Tree("a"),
         List(
           (List(Tree("e")), "b", List(Tree("h"))),

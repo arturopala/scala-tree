@@ -532,12 +532,16 @@ trait TreeLike[+T] {
 
   // DISTINCT REMOVALS
 
-  /** Removes the value selected by the given path, merges node's children with remaining siblings,
+  /** Removes the value selected by the given path, inserts children into the parent,
     * and returns a whole tree updated.
+    * @note when removing the top node, the following special rules apply:
+    *       - if the tree has a single value, returns empty tree,
+    *       - otherwise if the tree has a single child, returns that child,
+    *       - otherwise if the tree has more children, returns the tree unmodified.
     * @param path list of node's values forming a path from the root to the parent node.
     * @return modified tree
     * @group removal */
-  def removeValueAt[T1 >: T: ClassTag](path: Iterable[T1]): Tree[T] = ???
+  def removeValueAt[T1 >: T: ClassTag](path: Iterable[T1]): Tree[T]
 
   /** Removes the value selected by the given path, merges node's children with remaining siblings,
     * and returns a whole tree updated.

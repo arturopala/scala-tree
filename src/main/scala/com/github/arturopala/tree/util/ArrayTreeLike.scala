@@ -178,6 +178,11 @@ abstract class ArrayTreeLike[T: ClassTag] extends TreeLike[T] {
   ): Either[Tree[T], Tree[T1]] =
     ArrayTree.modifyTreeAt(path, modify, tree, toPathItem, keepDistinct = true)
 
+  // REMOVALS
+
+  final override def removeValueAt[T1 >: T: ClassTag](path: Iterable[T1]): Tree[T] =
+    ArrayTree.removeValueAt(path, tree, keepDistinct = true)
+
   // TRANSFORMATIONS
 
   final override def map[K: ClassTag](f: T => K): Tree[K] =

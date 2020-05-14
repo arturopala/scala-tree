@@ -542,7 +542,7 @@ object ArrayTree {
   ): Tree[T] =
     if (index < 0) tree
     else if (index == tree.size - 1 && tree.childrenCount > 1)
-      throw new RuntimeException("Cannot remove top tree node if having more than a single child")
+      throw new RuntimeException("Cannot remove top tree node having more than a single child")
     else
       modifyTreeUsingBuffers(tree) { (structureBuffer, valuesBuffer) =>
         val parentIndex = parentIndexOpt
@@ -695,5 +695,28 @@ object ArrayTree {
         else Right(modifyTree(indexes.last, indexes.get(indexes.length - 2), modify, target, keepDistinct))
       )
       .getOrElse(Left(target))
+
+  /** Removes the node addressed by the path, inserts children into the parent.
+    * @note when removing the top node, the following special rules apply:
+    *       - if the tree has a single value, returns empty tree,
+    *       - otherwise if the tree has a single child, returns that child,
+    *       - otherwise if the tree has more children, returns the tree unmodified.
+    * @return modified tree */
+  final def removeValueAt[T: ClassTag, T1 >: T: ClassTag](
+    path: Iterable[T1],
+    target: ArrayTree[T],
+    keepDistinct: Boolean
+  ): Tree[T] =
+    ArrayTreeFunctions
+      .followEntirePath(path, target.size - 1, target.structure, target.content)
+      .map(indexes =>
+        if (indexes.isEmpty) target
+        else if (indexes.last == target.size - 1) {
+          if (target.isLeaf) Tree.empty
+          else if (target.childrenCount == 1) treeAt(target.size - 2, target.structure, target.content)
+          else target
+        } else removeValue(indexes.last, indexes.get(indexes.length - 2), target, keepDistinct)
+      )
+      .getOrElse(target)
 
 }

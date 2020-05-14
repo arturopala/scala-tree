@@ -222,6 +222,11 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
   ): Either[Tree[T], Tree[T1]] =
     NodeTree.modifyTreeAt(node, path.iterator, toPathItem, modify, keepDistinct = true)
 
+  // REMOVALS
+
+  final override def removeValueAt[T1 >: T: ClassTag](path: Iterable[T1]): Tree[T] =
+    NodeTree.removeValueAt(node, path.iterator, keepDistinct = true)
+
   // TRANSFORMATIONS
 
   final override def map[K: ClassTag](f: T => K): Tree[K] = {
