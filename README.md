@@ -22,8 +22,27 @@ While the concept is dead simple, practical implementation details of immutable 
 Design
 ---
 
-This library implements the tree which can be either empty 
-or a node having a value, and linking to zero or more subtrees.
+Conceptually, apart from an empty, each node of the tree has:
+- a value, and
+- a collection of subtrees (children).
+
+By the design choice, every node can possibly have duplicated children values,
+although most modifications methods comes in two versions:
+- the default distinct (strict) 
+- and a lax variant.
+
+Why to allow lax methods at all? Well, if the data is distinct by itself,
+one doesn't have to pay a price of additional checks.
+
+Internally, there are three main implementations of the `Tree`:
+- `Tree.empty`, an empty tree singleton,
+- `Tree.NodeTree`, a deeply-nested hierarchy of immutable nodes (inflated tree),
+- `Tree.ArrayTree`, encoded as a twin linear arrays of structure and values (deflated tree).
+
+The reason for having an inflated and deflated variants of the tree
+is such that each one exhibits different performance and memory
+consumption characteristics, making it possible to experiment and optimize
+for individual targets while facing the same API.
 
 Dependencies
 ---

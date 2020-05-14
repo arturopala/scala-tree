@@ -23,7 +23,7 @@ class TreeModificationsSpec extends FunSuite {
 
   sealed trait Spec extends AnyWordSpecCompat with TestTrees {
 
-    "modify a value of a node located at the path in the tree" in {
+    "modify lax a value of a node located at the path in the tree" in {
       val f: String => String = s => s + s
       def fi(s: String): String => String = _ => s
       tree0.modifyValueLaxAt(List(), f) shouldBe Left(tree0)
@@ -109,7 +109,7 @@ class TreeModificationsSpec extends FunSuite {
       tree7.modifyValueLaxAt(List("a", "b", "e"), f) shouldBe Left(tree7)
     }
 
-    "modify a value of a node located at the path in the tree using an extractor function" in {
+    "modify lax a value of a node located at the path in the tree using an extractor function" in {
       val f: String => String = s => s + s
       def fi(s: String): String => String = _ => s
       val e: String => Int = _.head.toInt
@@ -350,7 +350,7 @@ class TreeModificationsSpec extends FunSuite {
       tree7.modifyValueAt(List(97, 98, 101), f, e) shouldBe Left(tree7)
     }
 
-    "modify a subtree located at the path" in {
+    "modify lax a subtree located at the path" in {
       tree0.modifyTreeLaxAt(List("a", "b"), _ => tree2) shouldBe Left(tree0)
       tree1.modifyTreeLaxAt(List("a"), _ => tree2) shouldBe Right(Tree("a", Tree("b")))
       tree1.modifyTreeLaxAt(List("b"), _ => tree2) shouldBe Left(tree1)

@@ -32,6 +32,8 @@ import scala.reflect.ClassTag
   * By the design choice, every node can possibly have duplicated children values,
   * although most modifications methods comes in two versions:
   * the default distinct (strict) and a lax variant.
+  * Why to allow lax methods at all? Well, if the data is distinct by itself,
+  * one doesn't have to pay a price of additional checks.
   *
   * Internally, there are three main implementations of the Tree:
   *   - [[Tree.empty]], an empty tree singleton,

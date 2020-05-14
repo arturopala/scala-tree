@@ -23,7 +23,7 @@ class TreeInsertionsSpec extends FunSuite {
 
   sealed trait Spec extends AnyWordSpecCompat with TestTrees {
 
-    "insert new value to a tree" in {
+    "insert lax new value to a tree" in {
       tree0.insertValueLax("a") shouldBe Tree("a")
       tree1.insertValueLax("b") shouldBe Tree("a", Tree("b"))
       tree2.insertValueLax("c") shouldBe Tree("a", Tree("c"), Tree("b"))
@@ -71,7 +71,7 @@ class TreeInsertionsSpec extends FunSuite {
       tree9.insertValue("e") shouldBe tree9
     }
 
-    "insert new value to a tree at the specified path" in {
+    "insert lax new value to a tree at the specified path" in {
       tree0.insertValueLaxAt(List("a", "b"), "a") shouldBe Tree("a", Tree("b", Tree("a")))
       tree1.insertValueLaxAt(List("a", "b"), "a") shouldBe Tree("a", Tree("b", Tree("a")))
       tree1.insertValueLaxAt(List("a", "c", "c"), "a") shouldBe Tree("a", Tree("c", Tree("c", Tree("a"))))
@@ -138,7 +138,7 @@ class TreeInsertionsSpec extends FunSuite {
       )
     }
 
-    "insert new value to a tree at the specified path with path item extractor" in {
+    "insert lax new value to a tree at the specified path with path item extractor" in {
       val codeF: String => Int = s => s.head.toInt
       tree0.insertValueLaxAt(List(97), "a", codeF) shouldBe Left(tree0)
       tree1.insertValueLaxAt(List(97), "b", codeF) shouldBe Right(Tree("a", Tree("b")))
@@ -203,7 +203,7 @@ class TreeInsertionsSpec extends FunSuite {
       tree7.insertValueAt(List(97, 103, 101), "d", codeF) shouldBe Left(tree7)
     }
 
-    "insert new subtree to a tree" in {
+    "insert lax new subtree to a tree" in {
       tree0.insertTreeLax(Tree("a")) shouldBe Tree("a")
       tree1.insertTreeLax(Tree("b")) shouldBe Tree("a", Tree("b"))
       tree2.insertTreeLax(Tree("c")) shouldBe Tree("a", Tree("c"), Tree("b"))
@@ -354,7 +354,7 @@ class TreeInsertionsSpec extends FunSuite {
 
     }
 
-    "insert new subtree to a tree at the specified path" in {
+    "insert lax new subtree to a tree at the specified path" in {
       tree0.insertTreeLaxAt(List(), Tree.empty) shouldBe Tree.empty
       tree0.insertTreeLaxAt(List("a"), Tree.empty) shouldBe Tree.empty
       tree0.insertTreeLaxAt(List(), Tree("b")) shouldBe Tree("b")
@@ -487,7 +487,7 @@ class TreeInsertionsSpec extends FunSuite {
       )
     }
 
-    "insert new subtree to a tree at the specified path using an extractor function" in {
+    "insert lax new subtree to a tree at the specified path using an extractor function" in {
       val codeF: String => Int = s => s.head.toInt
       tree0.insertTreeLaxAt(List(), Tree.empty, codeF) shouldBe Right(Tree.empty)
       tree0.insertTreeLaxAt(List(97), Tree.empty, codeF) shouldBe Left(Tree.empty)
