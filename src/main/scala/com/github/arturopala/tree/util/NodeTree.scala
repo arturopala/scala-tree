@@ -1050,7 +1050,8 @@ object NodeTree {
     tree: NodeTree[T],
     treeSplit: List[TreeSplit[T]],
     child: NodeTree[T],
-    keepDistinct: Boolean): Tree[T] =
+    keepDistinct: Boolean
+  ): Tree[T] =
     if (treeSplit.isEmpty) {
       if (child.isLeaf) Tree.empty
       else if (child.childrenCount == 1) child.children.head
