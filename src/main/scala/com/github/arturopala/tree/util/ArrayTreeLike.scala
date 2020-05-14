@@ -24,8 +24,8 @@ import scala.collection.Iterator
 import scala.reflect.ClassTag
 
 /**
-  * [[Tree.ArrayTree]] final functions implementations.
-  * Extracted from [[Tree]] to de-clutter its codebase.
+  * The [[Tree.ArrayTree]] final functions set.
+  * Extracted from the [[Tree]] to de-clutter its codebase.
   */
 abstract class ArrayTreeLike[T: ClassTag] extends TreeLike[T] {
 
@@ -182,6 +182,9 @@ abstract class ArrayTreeLike[T: ClassTag] extends TreeLike[T] {
 
   final override def removeValueAt[T1 >: T: ClassTag](path: Iterable[T1]): Tree[T] =
     ArrayTree.removeValueAt(path, tree, keepDistinct = true)
+
+  final override def removeValueAt[K, T1 >: T: ClassTag](path: Iterable[K], toPathItem: T => K): Tree[T] =
+    ArrayTree.removeValueAt(path, tree, toPathItem, keepDistinct = true)
 
   // TRANSFORMATIONS
 

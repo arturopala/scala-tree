@@ -24,8 +24,8 @@ import scala.collection.Iterator
 import scala.reflect.ClassTag
 
 /**
-  * [[Tree.NodeTree]] functions final implementations.
-  * Extracted from [[Tree]] to de-clutter its codebase.
+  * The [[Tree.NodeTree]] final functions set.
+  * Extracted from the [[Tree]] to de-clutter its codebase.
   */
 trait NodeTreeLike[+T] extends TreeLike[T] {
 
@@ -226,6 +226,9 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
 
   final override def removeValueAt[T1 >: T: ClassTag](path: Iterable[T1]): Tree[T] =
     NodeTree.removeValueAt(node, path.iterator, keepDistinct = true)
+
+  final override def removeValueAt[K, T1 >: T: ClassTag](path: Iterable[K], toPathItem: T => K): Tree[T] =
+    NodeTree.removeValueAt(node, path.iterator, toPathItem, keepDistinct = true)
 
   // TRANSFORMATIONS
 

@@ -24,8 +24,8 @@ import scala.collection.Iterator
 import scala.reflect.ClassTag
 
 /**
-  * The [[Tree.empty]] final override functions implementations.
-  * Extracted from [[Tree]] to de-clutter its codebase.
+  * The [[Tree.empty]] final functions set.
+  * Extracted from the [[Tree]] to de-clutter its codebase.
   */
 trait EmptyTreeLike extends TreeLike[Nothing] {
 
@@ -165,6 +165,11 @@ trait EmptyTreeLike extends TreeLike[Nothing] {
     Left(empty)
 
   final override def removeValueAt[T1 >: Nothing: ClassTag](path: Iterable[T1]): Tree[Nothing] =
+    Tree.empty
+
+  final override def removeValueAt[K, T1 >: Nothing: ClassTag](
+    path: Iterable[K],
+    toPathItem: Nothing => K): Tree[Nothing] =
     Tree.empty
 
   final override def selectValue[K](path: Iterable[K], f: Nothing => K): Option[Nothing] = None

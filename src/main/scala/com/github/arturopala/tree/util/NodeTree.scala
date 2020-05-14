@@ -810,7 +810,7 @@ object NodeTree {
     *         1) the path doesn't exist in full,
     *         2) the path root doesn't match the tree root.
     */
-  final def splitTreeFollowingEntirePath[T, T1 >: T: ClassTag](
+  final def splitTreeFollowingEntirePath[T, T1 >: T](
     tree: NodeTree[T],
     pathIterator: Iterator[T1]
   ): Option[(List[TreeSplit[T]], NodeTree[T])] =
@@ -828,7 +828,7 @@ object NodeTree {
     *         - a remaining tree holding the last matched path value
     *         ) or none if the path root doesn't match tree root at all.
     */
-  final def splitTreeFollowingPath[T, T1 >: T: ClassTag](
+  final def splitTreeFollowingPath[T, T1 >: T](
     tree: NodeTree[T],
     pathIterator: Iterator[T1]
   ): Option[(List[TreeSplit[T]], Option[T1], Iterator[T1], NodeTree[T])] =
@@ -839,7 +839,7 @@ object NodeTree {
     }
 
   @tailrec
-  private def splitTreeFollowingPath[T, T1 >: T: ClassTag](
+  private def splitTreeFollowingPath[T, T1 >: T](
     tree: NodeTree[T],
     pathIterator: Iterator[T1],
     queue: List[TreeSplit[T]]
@@ -1045,13 +1045,35 @@ object NodeTree {
       }
       .getOrElse(Left(tree))
 
+  /** Removes the child node and inserts its children into the treeSplit. */
+  final def removeChildValueFromSplit[T, T1 >: T](
+    tree: NodeTree[T],
+    treeSplit: List[TreeSplit[T]],
+    child: NodeTree[T],
+    keepDistinct: Boolean): Tree[T] =
+    if (treeSplit.isEmpty) {
+      if (child.isLeaf) Tree.empty
+      else if (child.childrenCount == 1) child.children.head
+      else tree
+    } else if (child.size <= 1) TreeBuilder.fromTreeSplit(treeSplit)
+    else {
+      val (left, value, right) = treeSplit.head
+      val newChild =
+        if (keepDistinct)
+          mergeDistinct(Vector((Tree(value, right), left ::: child.subtrees)), Nil, prepend = true)
+        else
+          Tree(value, left ::: child.subtrees ::: right)
+
+      TreeBuilder.fromChildAndTreeSplit(newChild, treeSplit.tail)
+    }
+
   /** Removes the node selected by the path and inserts children into the parent.
     * @note when removing the top node, the following special rules apply:
     *       - if the tree has a single value, returns empty tree,
     *       - otherwise if the tree has a single child, returns that child,
     *       - otherwise if the tree has more children, returns the tree unmodified.
     * */
-  final def removeValueAt[T, T1 >: T: ClassTag](
+  final def removeValueAt[T, T1 >: T](
     tree: NodeTree[T],
     pathIterator: Iterator[T1],
     keepDistinct: Boolean
@@ -1059,21 +1081,26 @@ object NodeTree {
     splitTreeFollowingEntirePath[T, T1](tree, pathIterator)
       .map {
         case (treeSplit, recipientTree) =>
-          if (treeSplit.isEmpty) {
-            if (recipientTree.isLeaf) Tree.empty
-            else if (recipientTree.childrenCount == 1) recipientTree.children.head
-            else tree
-          } else if (recipientTree.size <= 1) TreeBuilder.fromTreeSplit(treeSplit)
-          else {
-            val (left, value, right) = treeSplit.head
-            val newChild =
-              if (keepDistinct)
-                mergeDistinct(Vector((Tree(value, right), left ::: recipientTree.subtrees)), Nil, true)
-              else
-                Tree(value, left ::: recipientTree.subtrees ::: right)
+          removeChildValueFromSplit(tree, treeSplit, recipientTree, keepDistinct)
+      }
+      .getOrElse(tree)
 
-            TreeBuilder.fromChildAndTreeSplit(newChild, treeSplit.tail)
-          }
+  /** Removes the node selected by the path and inserts children into the parent.
+    * @note when removing the top node, the following special rules apply:
+    *       - if the tree has a single value, returns empty tree,
+    *       - otherwise if the tree has a single child, returns that child,
+    *       - otherwise if the tree has more children, returns the tree unmodified.
+    * */
+  final def removeValueAt[K, T](
+    tree: NodeTree[T],
+    pathIterator: Iterator[K],
+    toPathItem: T => K,
+    keepDistinct: Boolean
+  ): Tree[T] =
+    splitTreeFollowingEntirePath(tree, pathIterator, toPathItem)
+      .map {
+        case (treeSplit, recipientTree) =>
+          removeChildValueFromSplit(tree, treeSplit, recipientTree, keepDistinct)
       }
       .getOrElse(tree)
 

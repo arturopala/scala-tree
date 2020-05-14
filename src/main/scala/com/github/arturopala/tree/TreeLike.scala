@@ -549,7 +549,7 @@ trait TreeLike[+T] {
     * @param toPathItem extractor of the K path item from the tree's node value
     * @return modified tree
     * @group removal */
-  def removeValueAt[K, T1 >: T: ClassTag](path: Iterable[K], toPathItem: T => K): Tree[T] = ???
+  def removeValueAt[K, T1 >: T: ClassTag](path: Iterable[K], toPathItem: T => K): Tree[T]
 
   /** Removes the tree selected by the given path.
     * @param path list of node's values forming a path from the root to the parent node.

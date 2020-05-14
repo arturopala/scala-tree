@@ -566,8 +566,7 @@ object ArrayTree {
       .followEntirePath(path, target.size - 1, target.structure, target.content)
       .map(indexes =>
         if (indexes.isEmpty) Left(target)
-        else Right(modifyValue(indexes.last, indexes.get(indexes.length - 2), modify, target, keepDistinct))
-      )
+        else Right(modifyValue(indexes.last, indexes.get(indexes.length - 2), modify, target, keepDistinct)))
       .getOrElse(Left(target))
 
   /** Modifies value of the node addressed by the path.
@@ -583,8 +582,7 @@ object ArrayTree {
       .followEntirePath(path, target.size - 1, target.structure, target.content, toPathItem)
       .map(indexes =>
         if (indexes.isEmpty) Left(target)
-        else Right(modifyValue(indexes.last, indexes.get(indexes.length - 2), modify, target, keepDistinct))
-      )
+        else Right(modifyValue(indexes.last, indexes.get(indexes.length - 2), modify, target, keepDistinct)))
       .getOrElse(Left(target))
 
   /** Updates tree at the index.
@@ -675,8 +673,7 @@ object ArrayTree {
       .followEntirePath(path, target.size - 1, target.structure, target.content)
       .map(indexes =>
         if (indexes.isEmpty) Left(target)
-        else Right(modifyTree(indexes.last, indexes.get(indexes.length - 2), modify, target, keepDistinct))
-      )
+        else Right(modifyTree(indexes.last, indexes.get(indexes.length - 2), modify, target, keepDistinct)))
       .getOrElse(Left(target))
 
   /** Modifies a subtree addressed by the path.
@@ -692,11 +689,19 @@ object ArrayTree {
       .followEntirePath(path, target.size - 1, target.structure, target.content, toPathItem)
       .map(indexes =>
         if (indexes.isEmpty) Left(target)
-        else Right(modifyTree(indexes.last, indexes.get(indexes.length - 2), modify, target, keepDistinct))
-      )
+        else Right(modifyTree(indexes.last, indexes.get(indexes.length - 2), modify, target, keepDistinct)))
       .getOrElse(Left(target))
 
-  /** Removes the node addressed by the path, inserts children into the parent.
+  /** Removes the node addressed by the last index, inserts children into the parent. private*/
+  private def removeValueAt[T: ClassTag](indexes: IntSlice, target: ArrayTree[T], keepDistinct: Boolean): Tree[T] =
+    if (indexes.isEmpty) target
+    else if (indexes.last == target.size - 1) {
+      if (target.isLeaf) Tree.empty
+      else if (target.childrenCount == 1) treeAt(target.size - 2, target.structure, target.content)
+      else target
+    } else removeValue(indexes.last, indexes.get(indexes.length - 2), target, keepDistinct)
+
+  /** Removes the node addressed by the path, and inserts children into the parent.
     * @note when removing the top node, the following special rules apply:
     *       - if the tree has a single value, returns empty tree,
     *       - otherwise if the tree has a single child, returns that child,
@@ -709,14 +714,24 @@ object ArrayTree {
   ): Tree[T] =
     ArrayTreeFunctions
       .followEntirePath(path, target.size - 1, target.structure, target.content)
-      .map(indexes =>
-        if (indexes.isEmpty) target
-        else if (indexes.last == target.size - 1) {
-          if (target.isLeaf) Tree.empty
-          else if (target.childrenCount == 1) treeAt(target.size - 2, target.structure, target.content)
-          else target
-        } else removeValue(indexes.last, indexes.get(indexes.length - 2), target, keepDistinct)
-      )
+      .map(removeValueAt(_, target, keepDistinct))
+      .getOrElse(target)
+
+  /** Removes the node addressed by the path using an extractor function, and inserts children into the parent.
+    * @note when removing the top node, the following special rules apply:
+    *       - if the tree has a single value, returns empty tree,
+    *       - otherwise if the tree has a single child, returns that child,
+    *       - otherwise if the tree has more children, returns the tree unmodified.
+    * @return modified tree */
+  final def removeValueAt[K, T: ClassTag, T1 >: T: ClassTag](
+    path: Iterable[K],
+    target: ArrayTree[T],
+    toPathItem: T => K,
+    keepDistinct: Boolean
+  ): Tree[T] =
+    ArrayTreeFunctions
+      .followEntirePath(path, target.size - 1, target.structure, target.content, toPathItem)
+      .map(removeValueAt(_, target, keepDistinct))
       .getOrElse(target)
 
 }

@@ -23,7 +23,7 @@ class TreeRemovalsSpec extends FunSuite {
 
   sealed trait Spec extends AnyWordSpecCompat with TestTrees {
 
-    "remove a node while merging distinct children with parent" in {
+    "remove a node selected by the path and insert children into the parent" in {
       tree0.removeValueAt(List()) shouldBe Tree.empty
       tree1.removeValueAt(List("a")) shouldBe Tree.empty
       tree1.removeValueAt(List("b")) shouldBe tree1
@@ -64,6 +64,54 @@ class TreeRemovalsSpec extends FunSuite {
         Tree("e", Tree("f", Tree("g")), Tree("h", Tree("i")))
       )
       tree9.removeValueAt(List("a", "e", "f")) shouldBe Tree(
+        "a",
+        Tree("b", Tree("c", Tree("d"))),
+        Tree("e", Tree("g"), Tree("h", Tree("i")))
+      )
+    }
+
+    "remove a node selected by the path using extractor function, and insert children into the parent" in {
+      val codeF: String => Int = s => s.head.toInt
+      tree0.removeValueAt(List(), codeF) shouldBe Tree.empty
+      tree1.removeValueAt(List(97), codeF) shouldBe Tree.empty
+      tree1.removeValueAt(List(98), codeF) shouldBe tree1
+      tree2.removeValueAt(List(97), codeF) shouldBe Tree("b")
+      tree2.removeValueAt(List(97, 98), codeF) shouldBe Tree("a")
+      tree3_1.removeValueAt(List(97, 98, 99), codeF) shouldBe Tree("a", Tree("b"))
+      tree3_1.removeValueAt(List(97, 98), codeF) shouldBe Tree("a", Tree("c"))
+      tree3_1.removeValueAt(List(97), codeF) shouldBe Tree("b", Tree("c"))
+      tree3_1.removeValueAt(List(98), codeF) shouldBe tree3_1
+      tree3_1.removeValueAt(List(98, 99), codeF) shouldBe tree3_1
+      tree3_1.removeValueAt(List(97, 99), codeF) shouldBe tree3_1
+      tree3_1.removeValueAt(List(98), codeF) shouldBe tree3_1
+      tree3_2.removeValueAt(List(97, 98, 99), codeF) shouldBe tree3_2
+      tree3_2.removeValueAt(List(97, 98), codeF) shouldBe Tree("a", Tree("c"))
+      tree3_2.removeValueAt(List(97, 99), codeF) shouldBe Tree("a", Tree("b"))
+      tree3_2.removeValueAt(List(97, 100), codeF) shouldBe tree3_2
+      tree3_2.removeValueAt(List(97), codeF) shouldBe tree3_2
+      tree4_1.removeValueAt(List(97, 98, 99, 100, 101), codeF) shouldBe tree4_1
+      tree4_1.removeValueAt(List(97, 98, 101, 100), codeF) shouldBe tree4_1
+      tree4_1.removeValueAt(List(97, 98, 99, 100), codeF) shouldBe Tree("a", Tree("b", Tree("c")))
+      tree4_1.removeValueAt(List(97, 98, 99), codeF) shouldBe Tree("a", Tree("b", Tree("d")))
+      tree4_1.removeValueAt(List(97, 98), codeF) shouldBe Tree("a", Tree("c", Tree("d")))
+      tree4_1.removeValueAt(List(97), codeF) shouldBe Tree("b", Tree("c", Tree("d")))
+      tree9.removeValueAt(List(97, 101), codeF) shouldBe Tree(
+        "a",
+        Tree("b", Tree("c", Tree("d"))),
+        Tree("f", Tree("g")),
+        Tree("h", Tree("i"))
+      )
+      tree9.removeValueAt(List(97, 98), codeF) shouldBe Tree(
+        "a",
+        Tree("c", Tree("d")),
+        Tree("e", Tree("f", Tree("g")), Tree("h", Tree("i")))
+      )
+      tree9.removeValueAt(List(97, 98, 99), codeF) shouldBe Tree(
+        "a",
+        Tree("b", Tree("d")),
+        Tree("e", Tree("f", Tree("g")), Tree("h", Tree("i")))
+      )
+      tree9.removeValueAt(List(97, 101, 102), codeF) shouldBe Tree(
         "a",
         Tree("b", Tree("c", Tree("d"))),
         Tree("e", Tree("g"), Tree("h", Tree("i")))
