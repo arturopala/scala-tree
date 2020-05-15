@@ -17,7 +17,7 @@
 package com.github.arturopala.tree
 
 import com.github.arturopala.bufferandslice.{IntSlice, Slice}
-import com.github.arturopala.tree.util._
+import com.github.arturopala.tree.internal._
 
 import scala.reflect.ClassTag
 
@@ -207,7 +207,7 @@ object Tree {
   final class ArrayTree[T: ClassTag] private[tree] (
     val structure: IntSlice,
     val content: Slice[T],
-    delayedWidth: => Int,
+    delayedWidth:  => Int,
     delayedHeight: => Int
   ) extends ArrayTreeLike[T] with Tree[T] {
 

@@ -16,7 +16,7 @@
 
 package com.github.arturopala.tree
 
-import com.github.arturopala.tree.util.NodeTree._
+import com.github.arturopala.tree.internal.NodeTree._
 
 class NodeTreeSpec extends AnyWordSpecCompat {
 

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.github.arturopala.tree.util
+package com.github.arturopala.tree.internal
 
 object IntOps {
 

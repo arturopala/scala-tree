@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.github.arturopala.tree.util
+package com.github.arturopala.tree.internal
 
 import com.github.arturopala.tree.{Tree, TreeBuilder, TreeLike}
 import com.github.arturopala.tree.Tree.{ArrayTree, NodeTree, empty}

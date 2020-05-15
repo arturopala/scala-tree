@@ -18,7 +18,7 @@ package com.github.arturopala.tree
 
 import com.github.arturopala.bufferandslice.{Buffer, IntBuffer, IntSlice, Slice}
 import com.github.arturopala.tree.Tree.{ArrayTree, NodeTree}
-import com.github.arturopala.tree.util.{ArrayTree, ArrayTreeFunctions}
+import com.github.arturopala.tree.internal.{ArrayTree, ArrayTreeFunctions}
 
 import scala.annotation.tailrec
 import scala.collection.Iterator

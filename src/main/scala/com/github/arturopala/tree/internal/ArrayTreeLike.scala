@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package com.github.arturopala.tree.util
+package com.github.arturopala.tree.internal
 
-import com.github.arturopala.tree.{Tree, TreeBuilder, TreeLike}
-import com.github.arturopala.tree.Tree.{ArrayTree, NodeTree}
 import com.github.arturopala.bufferandslice.{Buffer, IntBuffer, IntSlice, Slice}
+import com.github.arturopala.tree.Tree.ArrayTree
+import com.github.arturopala.tree.{Tree, TreeBuilder, TreeLike}
 
 import scala.collection.Iterator
 import scala.reflect.ClassTag
