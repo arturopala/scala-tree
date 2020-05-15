@@ -64,72 +64,40 @@ trait EmptyTreeLike extends TreeLike[Nothing] {
 
   final override def prependWith[T1 >: Nothing: ClassTag](value: T1): Tree[T1] = Tree(value)
 
-  final override def insertValueLax[T1: ClassTag](value: T1): Tree[T1] = Tree(value)
-
   final override def insertValue[T1: ClassTag](value: T1): Tree[T1] = Tree(value)
 
-  final override def insertValueLaxAt[T1: ClassTag](path: Iterable[T1], value: T1): Tree[T1] =
-    Tree.empty.insertBranch(path.toList :+ value)
-
   final override def insertValueAt[T1: ClassTag](path: Iterable[T1], value: T1): Tree[T1] =
-    insertValueLaxAt(path, value)
-
-  final override def insertValueLaxAt[K, T1: ClassTag](
-    path: Iterable[K],
-    value: T1,
-    f: Nothing => K
-  ): Either[Tree[Nothing], Tree[T1]] = Left(Tree.empty)
+    Tree.empty.insertBranch(path.toList :+ value)
 
   final override def insertValueAt[K, T1 >: Nothing: ClassTag](
     path: Iterable[K],
     value: T1,
     f: Nothing => K
-  ): Either[Tree[Nothing], Tree[T1]] = insertValueLaxAt(path, value, f)
-
-  final override def insertTreeLax[T1: ClassTag](subtree: Tree[T1]): Tree[T1] = subtree
+  ): Either[Tree[Nothing], Tree[T1]] = Left(Tree.empty)
 
   final override def insertTree[T1: ClassTag](subtree: Tree[T1]): Tree[T1] = subtree
 
-  final override def insertTreeLaxAt[T1: ClassTag](path: Iterable[T1], subtree: Tree[T1]): Tree[T1] =
+  final override def insertTreeAt[T1 >: Nothing: ClassTag](path: Iterable[T1], subtree: Tree[T1]): Tree[T1] =
     if (path.isEmpty) subtree
     else if (subtree.isEmpty) empty
-    else TreeBuilder.linearTreeFromList(path.toList).insertTreeLaxAt(path, subtree)
-
-  final override def insertTreeAt[T1 >: Nothing: ClassTag](path: Iterable[T1], subtree: Tree[T1]): Tree[T1] =
-    insertTreeLaxAt(path, subtree)
-
-  final override def insertTreeLaxAt[K, T1: ClassTag](
-    path: Iterable[K],
-    subtree: Tree[T1],
-    f: Nothing => K
-  ): Either[Tree[Nothing], Tree[T1]] = if (path.isEmpty) Right(subtree) else Left(empty)
+    else TreeBuilder.linearTreeFromList(path.toList).insertTreeAt(path, subtree)
 
   final override def insertTreeAt[K, T1 >: Nothing: ClassTag](
     path: Iterable[K],
     subtree: Tree[T1],
     f: Nothing => K
-  ): Either[Tree[Nothing], Tree[T1]] = insertTreeLaxAt(path, subtree, f)
+  ): Either[Tree[Nothing], Tree[T1]] =
+    if (path.isEmpty) Right(subtree) else Left(empty)
 
   final override def insertBranch[T1: ClassTag](branch: Iterable[T1]): Tree[T1] =
     if (branch.isEmpty) Tree.empty
     else TreeBuilder.linearTreeFromList(branch.toList)
-
-  final override def modifyValueLaxAt[T1 >: Nothing: ClassTag](
-    path: Iterable[T1],
-    modify: Nothing => T1
-  ): Either[Tree[Nothing], Tree[T1]] = Left(empty)
 
   final override def modifyValueAt[T1 >: Nothing: ClassTag](
     path: Iterable[T1],
     modify: Nothing => T1
   ): Either[Tree[Nothing], Tree[T1]] =
     Left(empty)
-
-  final override def modifyValueLaxAt[K, T1 >: Nothing: ClassTag](
-    path: Iterable[K],
-    modify: Nothing => T1,
-    toPathItem: Nothing => K
-  ): Either[Tree[Nothing], Tree[T1]] = Left(empty)
 
   final override def modifyValueAt[K, T1 >: Nothing: ClassTag](
     path: Iterable[K],
@@ -138,22 +106,9 @@ trait EmptyTreeLike extends TreeLike[Nothing] {
   ): Either[Tree[Nothing], Tree[T1]] =
     Left(empty)
 
-  final override def modifyTreeLaxAt[T1 >: Nothing: ClassTag](
-    path: Iterable[T1],
-    modify: Tree[Nothing] => Tree[T1]
-  ): Either[Tree[Nothing], Tree[T1]] =
-    Left(empty)
-
   final override def modifyTreeAt[T1: ClassTag](
     path: Iterable[T1],
     modify: Tree[Nothing] => Tree[T1]
-  ): Either[Tree[Nothing], Tree[T1]] =
-    Left(empty)
-
-  final override def modifyTreeLaxAt[K, T1 >: Nothing: ClassTag](
-    path: Iterable[K],
-    modify: Tree[Nothing] => Tree[T1],
-    toPathItem: Nothing => K
   ): Either[Tree[Nothing], Tree[T1]] =
     Left(empty)
 
@@ -182,7 +137,6 @@ trait EmptyTreeLike extends TreeLike[Nothing] {
   final override def containsPath[K](path: Iterable[K], f: Nothing => K): Boolean = false
 
   final override def map[K: ClassTag](f: Nothing => K): Tree[K] = empty
-  final override def flatMapLax[K: ClassTag](f: Nothing => Tree[K]): Tree[K] = empty
 
   final override def toPairsIterator: Iterator[(Int, Nothing)] = Iterator.empty
   final override def toArrays[T1: ClassTag]: (Array[Int], Array[T1]) = (Array.empty[Int], Array.empty[T1])

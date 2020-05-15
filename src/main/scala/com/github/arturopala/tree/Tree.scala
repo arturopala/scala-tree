@@ -88,6 +88,8 @@ sealed trait Tree[+T] extends TreeLike[T] {
   */
 object Tree {
 
+  @`inline` final val DEFLATE_SIZE_THRESHOLD: Int = 1000
+
   /** Creates an empty Tree, same as [[Tree.empty]].
     * @group Creation */
   final def apply[T](): Tree[T] = empty
@@ -207,7 +209,7 @@ object Tree {
   final class ArrayTree[T: ClassTag] private[tree] (
     val structure: IntSlice,
     val content: Slice[T],
-    delayedWidth:  => Int,
+    delayedWidth: => Int,
     delayedHeight: => Int
   ) extends ArrayTreeLike[T] with Tree[T] {
 
@@ -254,5 +256,8 @@ object Tree {
     hash = hash * 19 + tree.height.hashCode()
     hash
   }
+
+  @`inline` final def preferInflated[T, T1 >: T](node: Tree.NodeTree[T], tree: Tree.ArrayTree[T1]): Boolean =
+    tree.size < Tree.DEFLATE_SIZE_THRESHOLD || tree.size <= node.size
 
 }

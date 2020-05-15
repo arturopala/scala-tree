@@ -16,6 +16,8 @@
 
 package com.github.arturopala.tree
 
+import com.github.arturopala.tree.LaxTreeOps._
+
 class TreeTransformationsSpec extends FunSuite {
 
   test(Inflated, new Spec with InflatedTestTrees)

@@ -50,12 +50,8 @@ import scala.reflect.ClassTag
   * @groupname composition Compose
   * @groupprio insertion 70
   * @groupname insertion Insert
-  * @groupprio laxInsertion 71
-  * @groupname laxInsertion Lax insert
   * @groupprio modification 72
   * @groupname modification Modify (map)
-  * @groupprio laxModification 73
-  * @groupname laxModification Lax modify
   * @groupprio removal 74
   * @groupname removal Remove
   * @groupprio optimization 80
@@ -239,11 +235,6 @@ trait TreeLike[+T] {
     * @group transformation */
   def flatMap[K: ClassTag](f: T => Tree[K]): Tree[K] = ???
 
-  /** Flat-maps all nodes of the tree using provided function and returns a new tree.
-    * @note BEWARE: this method is lax, it will not keep node's children distinct.
-    * @group transformation */
-  def flatMapLax[K: ClassTag](f: T => Tree[K]): Tree[K]
-
   /** Maps all branches of the tree using provided function and returns a new tree.
     * Keeps all the node's children distinct.
     * @group transformation */
@@ -395,50 +386,6 @@ trait TreeLike[+T] {
     * @group insertion */
   def insertBranch[T1 >: T: ClassTag](branch: Iterable[T1]): Tree[T1]
 
-  // LAX INSERTIONS
-
-  /** Inserts a new child node holding the value and returns updated tree.
-    * @note BEWARE: this method is lax, it will not keep node's children distinct.
-    * @group laxInsertion */
-  def insertValueLax[T1 >: T: ClassTag](value: T1): Tree[T1]
-
-  /** Inserts, at the given path, a new child node holding the value and returns a whole tree updated.
-    * If path doesn't fully exist in the tree then remaining suffix will be created.
-    * @note BEWARE: this method is lax, it will not keep node's children distinct.
-    * @param path list of node's values forming a path from the root to the parent node.
-    * @param value a value to insert as a new child
-    * @group laxInsertion */
-  def insertValueLaxAt[T1 >: T: ClassTag](path: Iterable[T1], value: T1): Tree[T1]
-
-  /** Attempts to insert, at the given path, a new child node holding the value and returns a whole tree updated.
-    * If path doesn't fully exist in the tree then tree will remain NOT updated.
-    * @note BEWARE: this method is lax, it will not keep node's children distinct.
-    * @param path list of K items forming a path from the root to the parent node.
-    * @param f extractor of the K path item from the tree's node value
-    * @return either right of modified tree or left with existing unmodified tree
-    * @group laxInsertion */
-  def insertValueLaxAt[K, T1 >: T: ClassTag](path: Iterable[K], value: T1, f: T => K): Either[Tree[T], Tree[T1]]
-
-  /** Inserts a new sub-tree and returns updated tree.
-    * @note BEWARE: this method is lax, it will not keep node's children distinct.
-    * @group laxInsertion */
-  def insertTreeLax[T1 >: T: ClassTag](subtree: Tree[T1]): Tree[T1]
-
-  /** Inserts, at the given path, a new sub-tree and returns a whole tree updated.
-    * If path doesn't fully exist in the tree then remaining suffix will be created.
-    * @note BEWARE: this method is lax, it will not keep node's children distinct.
-    * @param path list of node's values forming a path from the root to the parent node.
-    * @group laxInsertion */
-  def insertTreeLaxAt[T1 >: T: ClassTag](path: Iterable[T1], subtree: Tree[T1]): Tree[T1]
-
-  /** Attempts to insert, at the given path, a new sub-tree and return a whole tree updated.
-    * If path doesn't fully exist in the tree then tree will remain NOT updated.
-    * @note BEWARE: this method is lax, it will not keep node's children distinct.
-    * @param path list K items forming a path from the root to the parent node.
-    * @return either right of modified tree or left with existing unmodified tree
-    * @group laxInsertion */
-  def insertTreeLaxAt[K, T1 >: T: ClassTag](path: Iterable[K], subtree: Tree[T1], f: T => K): Either[Tree[T], Tree[T1]]
-
   // DISTINCT MODIFICATIONS
 
   /** Modifies the value selected by the given path, and returns a whole tree updated.
@@ -486,50 +433,6 @@ trait TreeLike[+T] {
     toPathItem: T => K
   ): Either[Tree[T], Tree[T1]]
 
-  // LAX MODIFICATIONS
-
-  /** Modifies the value selected by the given path, and returns a whole tree updated.
-    * @note BEWARE: this method is lax, it will not keep node's children distinct.
-    * @param path list of node's values forming a path from the root to the parent node.
-    * @param modify function to modify the value
-    * @return either right of modified tree or left with the tree intact
-    * @group laxModification */
-  def modifyValueLaxAt[T1 >: T: ClassTag](path: Iterable[T1], modify: T => T1): Either[Tree[T], Tree[T1]]
-
-  /** Modifies the value selected by the given path, and returns a whole tree updated.
-    * @note BEWARE: this method is lax, it will not keep node's children distinct.
-    * @param path list of K items forming a path from the root to the parent node.
-    * @param modify function to modify the value
-    * @param toPathItem extractor of the K path item from the tree's node value
-    * @return either right of modified tree or left with the tree intact
-    * @group laxModification */
-  def modifyValueLaxAt[K, T1 >: T: ClassTag](
-    path: Iterable[K],
-    modify: T => T1,
-    toPathItem: T => K
-  ): Either[Tree[T], Tree[T1]]
-
-  /** Modifies the tree selected by the given path, and returns a whole tree updated.
-    * @note BEWARE: this method is lax, it will not keep node's children distinct.
-    * @param path list of node's values forming a path from the root to the parent node.
-    * @param modify function transforming the tree
-    * @return either right of modified tree or left with the tree intact
-    * @group laxModification */
-  def modifyTreeLaxAt[T1 >: T: ClassTag](path: Iterable[T1], modify: Tree[T] => Tree[T1]): Either[Tree[T], Tree[T1]]
-
-  /** Modifies the tree selected by the given path, and returns a whole tree updated.
-    * @note BEWARE: this method is lax, it will not keep node's children distinct.
-    * @param path list K items forming a path from the root to the parent node.
-    * @param modify function transforming the tree
-    * @param toPathItem extractor of the K path item from the tree's node value
-    * @return either right of modified tree or left with the tree intact
-    * @group laxModification */
-  def modifyTreeLaxAt[K, T1 >: T: ClassTag](
-    path: Iterable[K],
-    modify: Tree[T] => Tree[T1],
-    toPathItem: T => K
-  ): Either[Tree[T], Tree[T1]]
-
   // DISTINCT REMOVALS
 
   /** Removes the value selected by the given path, inserts children into the parent,
@@ -563,25 +466,6 @@ trait TreeLike[+T] {
     * @return modified tree
     * @group removal */
   def removeTreeAt[K, T1 >: T: ClassTag](path: Iterable[K], toPathItem: T => K): Tree[T] = ???
-
-  // LAX REMOVALS
-
-  /** Removes the value selected by the given path, merges node's children with remaining siblings,
-    * and returns a whole tree updated.
-    * @note BEWARE: this method is lax, it will not keep node's children distinct.
-    * @param path list of node's values forming a path from the root to the parent node.
-    * @return modified tree
-    * @group removal */
-  def removeValueLaxAt[T1 >: T: ClassTag](path: Iterable[T1]): Tree[T] = ???
-
-  /** Removes the value selected by the given path, merges node's children with remaining siblings,
-    * and returns a whole tree updated.
-    * @note BEWARE: this method is lax, it will not keep node's children distinct.
-    * @param path list of K items forming a path from the root to the parent node.
-    * @param toPathItem extractor of the K path item from the tree's node value
-    * @return modified tree
-    * @group removal */
-  def removeValueLaxAt[K, T1 >: T: ClassTag](path: Iterable[K], toPathItem: T => K): Tree[T] = ???
 
   // SERIALIZATION
 

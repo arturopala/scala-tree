@@ -16,6 +16,8 @@
 
 package com.github.arturopala.tree
 
+import com.github.arturopala.tree.LaxTreeOps._
+
 // Special test suite to ease single assertions debugging in an IDE
 class TreeDebugSpec extends FunSuite {
 

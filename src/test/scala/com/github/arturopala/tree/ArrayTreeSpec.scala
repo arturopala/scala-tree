@@ -19,6 +19,8 @@ package com.github.arturopala.tree
 import com.github.arturopala.tree.internal.ArrayTree._
 import com.github.arturopala.bufferandslice.{IntSlice, Slice}
 
+import com.github.arturopala.tree.LaxTreeOps._
+
 class ArrayTreeSpec extends AnyWordSpecCompat {
 
   val aa_a = Slice("aa", "a")

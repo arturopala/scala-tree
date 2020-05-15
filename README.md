@@ -23,18 +23,17 @@ Design
 ---
 
 Conceptually, apart from an empty, each node of the tree has:
-- a value, and
+- a value
 - a collection of subtrees (children).
 
-By the design choice, every node can possibly have duplicated children values,
-although most modifications methods comes in two versions:
-- the default distinct (strict) 
-- and a lax variant.
+By the design choice, every node possibly have duplicated children values,
+although default set of modifications methods assumes and preserve uniqueness.
 
-Why to allow lax methods at all? Well, if the data is distinct by itself,
-one doesn't have to pay a price of additional checks.
+If the data is distinct by itself, or you don't care about uniqueness, there is 
+a matching set of lax operations supplied as extensions methods in `LaxTreeOps`.
 
 Internally, there are three main implementations of the `Tree`:
+
 - `Tree.empty`, an empty tree singleton,
 - `Tree.NodeTree`, a deeply-nested hierarchy of immutable nodes (inflated tree),
 - `Tree.ArrayTree`, encoded as a twin linear arrays of structure and values (deflated tree).

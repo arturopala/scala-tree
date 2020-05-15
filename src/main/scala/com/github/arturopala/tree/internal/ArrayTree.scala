@@ -566,7 +566,8 @@ object ArrayTree {
       .followEntirePath(path, target.size - 1, target.structure, target.content)
       .map(indexes =>
         if (indexes.isEmpty) Left(target)
-        else Right(modifyValue(indexes.last, indexes.get(indexes.length - 2), modify, target, keepDistinct)))
+        else Right(modifyValue(indexes.last, indexes.get(indexes.length - 2), modify, target, keepDistinct))
+      )
       .getOrElse(Left(target))
 
   /** Modifies value of the node addressed by the path.
@@ -582,7 +583,8 @@ object ArrayTree {
       .followEntirePath(path, target.size - 1, target.structure, target.content, toPathItem)
       .map(indexes =>
         if (indexes.isEmpty) Left(target)
-        else Right(modifyValue(indexes.last, indexes.get(indexes.length - 2), modify, target, keepDistinct)))
+        else Right(modifyValue(indexes.last, indexes.get(indexes.length - 2), modify, target, keepDistinct))
+      )
       .getOrElse(Left(target))
 
   /** Updates tree at the index.
@@ -673,7 +675,8 @@ object ArrayTree {
       .followEntirePath(path, target.size - 1, target.structure, target.content)
       .map(indexes =>
         if (indexes.isEmpty) Left(target)
-        else Right(modifyTree(indexes.last, indexes.get(indexes.length - 2), modify, target, keepDistinct)))
+        else Right(modifyTree(indexes.last, indexes.get(indexes.length - 2), modify, target, keepDistinct))
+      )
       .getOrElse(Left(target))
 
   /** Modifies a subtree addressed by the path.
@@ -689,7 +692,8 @@ object ArrayTree {
       .followEntirePath(path, target.size - 1, target.structure, target.content, toPathItem)
       .map(indexes =>
         if (indexes.isEmpty) Left(target)
-        else Right(modifyTree(indexes.last, indexes.get(indexes.length - 2), modify, target, keepDistinct)))
+        else Right(modifyTree(indexes.last, indexes.get(indexes.length - 2), modify, target, keepDistinct))
+      )
       .getOrElse(Left(target))
 
   /** Removes the node addressed by the last index, inserts children into the parent. private*/

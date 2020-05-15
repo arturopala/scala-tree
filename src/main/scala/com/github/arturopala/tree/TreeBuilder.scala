@@ -201,7 +201,7 @@ object TreeBuilder {
   final def fromTreeList[T: ClassTag](list: List[Tree[T]]): Tree[T] = list.reverse match {
     case Nil => Tree.empty
     case value :: tail =>
-      tail.foldLeft(value)((t, v) => v.insertTreeLax(t))
+      tail.foldLeft(value)((t, v) => v.insertTree(t))
   }
 
   /** Builds a tree from the list of tree splits (leftChildren, value, rightChildren).
