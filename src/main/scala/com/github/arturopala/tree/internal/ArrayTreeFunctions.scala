@@ -97,18 +97,19 @@ object ArrayTreeFunctions {
   }
 
   /** Returns a list of children of a tree represented by the structure and content slices. */
-  @`inline` final def childrenOf[T](treeStructure: IntSlice, treeValues: Slice[T]): List[(IntSlice, Slice[T])] =
+  @`inline` final def childrenOf[T](treeStructure: IntSlice, treeValues: Slice[T]): Iterator[(IntSlice, Slice[T])] =
     childrenIndexes(treeStructure.length - 1, treeStructure)
       .map(subtreeAt(_, treeStructure, treeValues))
       .iterator(_._1.length > 0)
-      .toList
 
   /** Returns a reversed list of children of a tree represented by the structure and content slices. */
-  @`inline` final def reversedChildrenOf[T](treeStructure: IntSlice, treeValues: Slice[T]): List[(IntSlice, Slice[T])] =
+  @`inline` final def reversedChildrenOf[T](
+    treeStructure: IntSlice,
+    treeValues: Slice[T]
+  ): Iterator[(IntSlice, Slice[T])] =
     childrenIndexes(treeStructure.length - 1, treeStructure)
       .map(subtreeAt(_, treeStructure, treeValues))
       .reverseIterator(_._1.length > 0)
-      .toList
 
   /** Returns a structure and content slices representing a subtree rooted at the given index. */
   final def subtreeAt[T](index: Int, treeStructure: IntSlice, treeValues: Slice[T]): (IntSlice, Slice[T]) = {
@@ -156,11 +157,12 @@ object ArrayTreeFunctions {
   final def leftmostIndexOfChildValue[T](
     value: T,
     parentIndex: Int,
+    size: Int,
     treeStructure: Int => Int,
     treeValues: Int => T
   ): Option[Int] = {
     var result: Option[Int] = None
-    if (parentIndex > 0) {
+    if (parentIndex >= 0 && parentIndex < size) {
       val numberOfChildren = treeStructure(parentIndex)
       if (numberOfChildren > 0) {
         if (treeValues(parentIndex - 1) == value) {
@@ -183,6 +185,8 @@ object ArrayTreeFunctions {
           }
         }
       }
+    } else if (size > 0 && treeValues(size - 1) == value) {
+      result = Some(size - 1)
     }
     result
   }
@@ -192,11 +196,12 @@ object ArrayTreeFunctions {
   final def rightmostIndexOfChildValue[T](
     value: T,
     parentIndex: Int,
+    size: Int,
     treeStructure: Int => Int,
     treeValues: Int => T
   ): Option[Int] = {
     var result: Option[Int] = None
-    if (parentIndex > 0) {
+    if (parentIndex >= 0 && parentIndex < size) {
       val numberOfChildren = treeStructure(parentIndex)
       if (numberOfChildren > 0) {
         if (treeValues(parentIndex - 1) == value) {
@@ -218,6 +223,8 @@ object ArrayTreeFunctions {
         }
 
       }
+    } else if (size > 0 && treeValues(size - 1) == value) {
+      result = Some(size - 1)
     }
     result
   }
@@ -742,7 +749,7 @@ object ArrayTreeFunctions {
   ): Int =
     if (branchIterator.hasNext) {
       val value = branchIterator.next()
-      rightmostIndexOfChildValue(value, parentIndex, structureBuffer, valuesBuffer) match {
+      rightmostIndexOfChildValue(value, parentIndex, structureBuffer.length, structureBuffer, valuesBuffer) match {
         case Some(index) =>
           insertBranch(branchIterator, index, structureBuffer, valuesBuffer, offset)
 
@@ -767,49 +774,50 @@ object ArrayTreeFunctions {
     * @return buffer length change */
   @tailrec
   final def insertRightSubtreeListDistinct[T](
-    queue: List[(Int, IntSlice, Slice[T])],
+    queue: Vector[(Int, IntSlice, Slice[T])],
     structureBuffer: IntBuffer,
     valuesBuffer: Buffer[T],
     offset: Int
   ): Int =
-    queue match {
-      case Nil => offset
-      case (parentIndex, structure, values) :: tail =>
-        if (structure.length == 0) insertRightSubtreeListDistinct(tail, structureBuffer, valuesBuffer, offset)
-        else {
-          val (insertIndex, isDistinct) =
-            rightmostIndexOfChildValue(values.last, parentIndex, structureBuffer, valuesBuffer)
-              .map((_, false))
-              .getOrElse((parentIndex - treeSize(parentIndex, structureBuffer) + 1, true))
+    if (queue.isEmpty) offset
+    else {
+      val (parentIndex, structure, values) = queue.head
+      val tail = queue.tail
 
-          val (delta1, updatedTail) = if (isDistinct) {
-            structureBuffer.shiftRight(insertIndex, 1)
-            structureBuffer.update(insertIndex, 0)
+      if (structure.length == 0) insertRightSubtreeListDistinct(queue.tail, structureBuffer, valuesBuffer, offset)
+      else {
+        val (insertIndex, isDistinct) =
+          rightmostIndexOfChildValue(values.last, parentIndex, structureBuffer.length, structureBuffer, valuesBuffer)
+            .map((_, false))
+            .getOrElse((Math.max(0, parentIndex - treeSize(parentIndex, structureBuffer) + 1), true))
+
+        val (delta1, updatedTail) = if (isDistinct) {
+          structureBuffer.shiftRight(insertIndex, 1)
+          structureBuffer.update(insertIndex, 0)
+          if (parentIndex + 1 > insertIndex) {
             structureBuffer.increment(parentIndex + 1)
-            valuesBuffer.shiftRight(insertIndex, 1)
-            valuesBuffer.update(insertIndex, values.last)
-            (1, tail.map(shiftFrom(insertIndex, 1)))
-          } else (0, tail)
+          }
+          valuesBuffer.shiftRight(insertIndex, 1)
+          valuesBuffer.update(insertIndex, values.last)
+          (1, tail.map(shiftFrom(insertIndex, 1)))
+        } else (0, tail)
 
-          val (delta2, updatedQueue) = if (structure.length > 1) {
-            if (structureBuffer(insertIndex) == 0) { // skip checking duplicates and insert remaining tree at once
-              val s = treeSize(insertIndex, structureBuffer)
-              structureBuffer.modify(insertIndex, _ + structure.last)
-              val d = insertTree(insertIndex - s + 1, structure.init, values.init, structureBuffer, valuesBuffer)
-              (d, updatedTail.map(shiftFrom(insertIndex - d + 1, d)))
-            } else {
-              val nextTail = childrenOf(structure, values).map {
-                case (s, v) => (insertIndex, s, v)
-              } ::: updatedTail
+        val (delta2, updatedQueue) = if (structure.length > 1) {
+          if (structureBuffer(insertIndex) == 0) { // skip checking duplicates and insert remaining tree at once
+            val s = treeSize(insertIndex, structureBuffer)
+            structureBuffer.modify(insertIndex, _ + structure.last)
+            val d = insertTree(insertIndex - s + 1, structure.init, values.init, structureBuffer, valuesBuffer)
+            (d, updatedTail.map(shiftFrom(insertIndex - d + 1, d)))
+          } else {
+            val nextTail = childrenOf(structure, values).map { case (s, v) => (insertIndex, s, v) }
+            (0, nextTail ++: updatedTail)
+          }
 
-              (0, nextTail)
-            }
+        } else
+          (0, updatedTail)
 
-          } else
-            (0, updatedTail)
-
-          insertRightSubtreeListDistinct(updatedQueue, structureBuffer, valuesBuffer, offset + delta1 + delta2)
-        }
+        insertRightSubtreeListDistinct(updatedQueue, structureBuffer, valuesBuffer, offset + delta1 + delta2)
+      }
     }
 
   /** Inserts subtrees as the leftmost child to the buffers with checking for duplicates.
@@ -818,48 +826,49 @@ object ArrayTreeFunctions {
     * @return buffer length change */
   @tailrec
   final def insertLeftSubtreeListDistinct[T](
-    queue: List[(Int, IntSlice, Slice[T])],
+    queue: Vector[(Int, IntSlice, Slice[T])],
     structureBuffer: IntBuffer,
     valuesBuffer: Buffer[T],
     offset: Int
   ): Int =
-    queue match {
-      case Nil => offset
-      case (parentIndex, structure, values) :: tail =>
-        if (structure.length == 0) insertLeftSubtreeListDistinct(tail, structureBuffer, valuesBuffer, offset)
-        else {
-          val (insertIndex, isDistinct) =
-            leftmostIndexOfChildValue(values.last, parentIndex, structureBuffer, valuesBuffer)
-              .map((_, false))
-              .getOrElse((parentIndex, true))
+    if (queue.isEmpty) offset
+    else {
+      val (parentIndex, structure, values) = queue.head
+      val tail = queue.tail
 
-          val (delta1, updatedTail) = if (isDistinct) {
-            structureBuffer.shiftRight(insertIndex, 1)
-            structureBuffer.update(insertIndex, 0)
+      if (structure.length == 0) insertLeftSubtreeListDistinct(tail, structureBuffer, valuesBuffer, offset)
+      else {
+        val (insertIndex, isDistinct) =
+          leftmostIndexOfChildValue(values.last, parentIndex, structureBuffer.length, structureBuffer, valuesBuffer)
+            .map((_, false))
+            .getOrElse((Math.max(0, parentIndex), true))
+
+        val (delta1, updatedTail) = if (isDistinct) {
+          structureBuffer.shiftRight(insertIndex, 1)
+          structureBuffer.update(insertIndex, 0)
+          if (parentIndex + 1 > insertIndex) {
             structureBuffer.increment(parentIndex + 1)
-            valuesBuffer.shiftRight(insertIndex, 1)
-            valuesBuffer.update(insertIndex, values.last)
-            (1, tail.map(shiftFrom(insertIndex, 1)))
-          } else (0, tail)
+          }
+          valuesBuffer.shiftRight(insertIndex, 1)
+          valuesBuffer.update(insertIndex, values.last)
+          (1, tail.map(shiftFrom(insertIndex, 1)))
+        } else (0, tail)
 
-          val (delta2, updatedQueue) = if (structure.length > 1) {
-            if (structureBuffer(insertIndex) == 0) { // skip checking duplicates and insert remaining tree at once
-              val s = treeSize(insertIndex, structureBuffer)
-              structureBuffer.modify(insertIndex, _ + structure.last)
-              val d = insertTree(insertIndex - s + 1, structure.init, values.init, structureBuffer, valuesBuffer)
-              (d, updatedTail.map(shiftFrom(insertIndex - d + 1, d)))
-            } else {
-              val nextTail = reversedChildrenOf(structure, values).map {
-                case (s, v) => (insertIndex, s, v)
-              } ::: updatedTail
+        val (delta2, updatedQueue) = if (structure.length > 1) {
+          if (structureBuffer(insertIndex) == 0) { // skip checking duplicates and insert remaining tree at once
+            val s = treeSize(insertIndex, structureBuffer)
+            structureBuffer.modify(insertIndex, _ + structure.last)
+            val d = insertTree(insertIndex - s + 1, structure.init, values.init, structureBuffer, valuesBuffer)
+            (d, updatedTail.map(shiftFrom(insertIndex - d + 1, d)))
+          } else {
+            val nextTail = reversedChildrenOf(structure, values).map { case (s, v) => (insertIndex, s, v) }
+            (0, nextTail ++: updatedTail)
+          }
+        } else
+          (0, updatedTail)
 
-              (0, nextTail)
-            }
-          } else
-            (0, updatedTail)
-
-          insertLeftSubtreeListDistinct(updatedQueue, structureBuffer, valuesBuffer, offset + delta1 + delta2)
-        }
+        insertLeftSubtreeListDistinct(updatedQueue, structureBuffer, valuesBuffer, offset + delta1 + delta2)
+      }
     }
 
   /** Adds d to i if i >= b, returns i otherwise. */
@@ -922,7 +931,7 @@ object ArrayTreeFunctions {
         structureBuffer.length == valuesBuffer.length) {
 
       val (insertIndex, hasDuplicate) =
-        rightmostIndexOfChildValue(treeValues.last, parentIndex, structureBuffer, valuesBuffer)
+        rightmostIndexOfChildValue(treeValues.last, parentIndex, structureBuffer.length, structureBuffer, valuesBuffer)
           .map(i => (i, i != index))
           .getOrElse((index, false))
 
@@ -935,7 +944,7 @@ object ArrayTreeFunctions {
             .map {
               case (structure, values) => (insertIndex, structure, values)
             }
-          insertRightSubtreeListDistinct(queue, structureBuffer, valuesBuffer, 0)
+          insertRightSubtreeListDistinct(queue.toVector, structureBuffer, valuesBuffer, 0)
         }
 
       val delta2 = if (hasDuplicate) {
@@ -963,7 +972,13 @@ object ArrayTreeFunctions {
       childrenOf(treeStructure, treeValues).foldLeft(0) {
         case (offset, (structure, values)) =>
           val bufferIndex = index + offset
-          offset + (leftmostIndexOfChildValue(treeValues.last, bufferIndex, structureBuffer, valuesBuffer) match {
+          offset + (leftmostIndexOfChildValue(
+            treeValues.last,
+            bufferIndex,
+            structureBuffer.length,
+            structureBuffer,
+            valuesBuffer
+          ) match {
             case None =>
               val s = treeSize(bufferIndex, structureBuffer) - 1
               structureBuffer.increment(bufferIndex)

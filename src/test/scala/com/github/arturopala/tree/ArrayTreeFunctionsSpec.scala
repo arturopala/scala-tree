@@ -60,29 +60,29 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat {
     }
 
     "find leftmost index of child's node holding a value" in {
-      leftmostIndexOfChildValue(2, -1, Array.empty[Int], Array.empty[Int]) shouldBe None
-      leftmostIndexOfChildValue(2, 0, Array(0), Array(2)) shouldBe None
-      leftmostIndexOfChildValue(2, 1, Array(0, 1), Array(2, 1)) shouldBe Some(0)
-      leftmostIndexOfChildValue(2, 3, Array(0, 0, 2, 1), Array(4, 3, 2, 1)) shouldBe Some(2)
-      leftmostIndexOfChildValue(3, 3, Array(0, 0, 2, 1), Array(4, 3, 2, 1)) shouldBe None
-      leftmostIndexOfChildValue(3, 2, Array(0, 0, 2, 1), Array(4, 3, 2, 1)) shouldBe Some(1)
-      leftmostIndexOfChildValue(4, 2, Array(0, 0, 2, 1), Array(4, 3, 2, 1)) shouldBe Some(0)
-      leftmostIndexOfChildValue(3, 1, Array(0, 0, 2, 1), Array(4, 3, 2, 1)) shouldBe None
-      leftmostIndexOfChildValue(1, 2, Array(0, 0, 2, 1), Array(4, 3, 2, 1)) shouldBe None
-      leftmostIndexOfChildValue(1, 2, Array(0, 0, 2, 1), Array(1, 1, 1, 1)) shouldBe Some(1)
+      leftmostIndexOfChildValue(2, -1, 0, Array.empty[Int], Array.empty[Int]) shouldBe None
+      leftmostIndexOfChildValue(2, 0, 1, Array(0), Array(2)) shouldBe None
+      leftmostIndexOfChildValue(2, 1, 2, Array(0, 1), Array(2, 1)) shouldBe Some(0)
+      leftmostIndexOfChildValue(2, 3, 4, Array(0, 0, 2, 1), Array(4, 3, 2, 1)) shouldBe Some(2)
+      leftmostIndexOfChildValue(3, 3, 4, Array(0, 0, 2, 1), Array(4, 3, 2, 1)) shouldBe None
+      leftmostIndexOfChildValue(3, 2, 4, Array(0, 0, 2, 1), Array(4, 3, 2, 1)) shouldBe Some(1)
+      leftmostIndexOfChildValue(4, 2, 4, Array(0, 0, 2, 1), Array(4, 3, 2, 1)) shouldBe Some(0)
+      leftmostIndexOfChildValue(3, 1, 4, Array(0, 0, 2, 1), Array(4, 3, 2, 1)) shouldBe None
+      leftmostIndexOfChildValue(1, 2, 4, Array(0, 0, 2, 1), Array(4, 3, 2, 1)) shouldBe None
+      leftmostIndexOfChildValue(1, 2, 4, Array(0, 0, 2, 1), Array(1, 1, 1, 1)) shouldBe Some(1)
     }
 
     "find rightmost index of child's node holding a value" in {
-      rightmostIndexOfChildValue(2, -1, Array.empty[Int], Array.empty[Int]) shouldBe None
-      rightmostIndexOfChildValue(2, 0, Array(0), Array(2)) shouldBe None
-      rightmostIndexOfChildValue(2, 1, Array(0, 1), Array(2, 1)) shouldBe Some(0)
-      rightmostIndexOfChildValue(2, 3, Array(0, 0, 2, 1), Array(4, 3, 2, 1)) shouldBe Some(2)
-      rightmostIndexOfChildValue(3, 3, Array(0, 0, 2, 1), Array(4, 3, 2, 1)) shouldBe None
-      rightmostIndexOfChildValue(3, 2, Array(0, 0, 2, 1), Array(4, 3, 2, 1)) shouldBe Some(1)
-      rightmostIndexOfChildValue(4, 2, Array(0, 0, 2, 1), Array(4, 3, 2, 1)) shouldBe Some(0)
-      rightmostIndexOfChildValue(3, 1, Array(0, 0, 2, 1), Array(4, 3, 2, 1)) shouldBe None
-      rightmostIndexOfChildValue(1, 2, Array(0, 0, 2, 1), Array(4, 3, 2, 1)) shouldBe None
-      rightmostIndexOfChildValue(1, 2, Array(0, 0, 2, 1), Array(1, 1, 1, 1)) shouldBe Some(0)
+      rightmostIndexOfChildValue(2, -1, 0, Array.empty[Int], Array.empty[Int]) shouldBe None
+      rightmostIndexOfChildValue(2, 0, 1, Array(0), Array(2)) shouldBe None
+      rightmostIndexOfChildValue(2, 1, 2, Array(0, 1), Array(2, 1)) shouldBe Some(0)
+      rightmostIndexOfChildValue(2, 3, 4, Array(0, 0, 2, 1), Array(4, 3, 2, 1)) shouldBe Some(2)
+      rightmostIndexOfChildValue(3, 3, 4, Array(0, 0, 2, 1), Array(4, 3, 2, 1)) shouldBe None
+      rightmostIndexOfChildValue(3, 2, 4, Array(0, 0, 2, 1), Array(4, 3, 2, 1)) shouldBe Some(1)
+      rightmostIndexOfChildValue(4, 2, 4, Array(0, 0, 2, 1), Array(4, 3, 2, 1)) shouldBe Some(0)
+      rightmostIndexOfChildValue(3, 1, 4, Array(0, 0, 2, 1), Array(4, 3, 2, 1)) shouldBe None
+      rightmostIndexOfChildValue(1, 2, 4, Array(0, 0, 2, 1), Array(4, 3, 2, 1)) shouldBe None
+      rightmostIndexOfChildValue(1, 2, 4, Array(0, 0, 2, 1), Array(1, 1, 1, 1)) shouldBe Some(0)
     }
 
     "list indexes of children's nodes holding a value" in {
@@ -1224,6 +1224,312 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat {
           structure shouldBe Array(0, 0, 2, 1, 1)
           values shouldBe Array("e", "d", "c", "b", "a")
           delta shouldBe -5
+      }
+    }
+
+    "insert trees distinct left side" in {
+      testWithBuffers[String, Int](
+        insertLeftSubtreeListDistinct(Vector.empty, _, _, 0),
+        IntBuffer.empty,
+        Buffer.empty[String]
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array.empty[Int]
+          values shouldBe Array.empty[String]
+          delta shouldBe 0
+      }
+      testWithBuffers[String, Int](
+        insertLeftSubtreeListDistinct(Vector((-1, IntSlice(), Slice.empty[String])), _, _, 0),
+        IntBuffer.empty,
+        Buffer.empty[String]
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array.empty[Int]
+          values shouldBe Array.empty[String]
+          delta shouldBe 0
+      }
+      testWithBuffers[String, Int](
+        insertLeftSubtreeListDistinct(Vector((-1, IntSlice(0), Slice("a"))), _, _, 0),
+        IntBuffer.empty,
+        Buffer.empty[String]
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0)
+          values shouldBe Array("a")
+          delta shouldBe 1
+      }
+      testWithBuffers[String, Int](
+        insertLeftSubtreeListDistinct(Vector((0, IntSlice(0), Slice("b"))), _, _, 0),
+        IntBuffer(0),
+        Buffer("a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 1)
+          values shouldBe Array("b", "a")
+          delta shouldBe 1
+      }
+      testWithBuffers[String, Int](
+        insertLeftSubtreeListDistinct(Vector((-1, IntSlice(0), Slice("b"))), _, _, 0),
+        IntBuffer(0),
+        Buffer("a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 0)
+          values shouldBe Array("b", "a")
+          delta shouldBe 1
+      }
+      testWithBuffers[String, Int](
+        insertLeftSubtreeListDistinct(Vector((-1, IntSlice(0), Slice("a"))), _, _, 0),
+        IntBuffer(0),
+        Buffer("a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0)
+          values shouldBe Array("a")
+          delta shouldBe 0
+      }
+      testWithBuffers[String, Int](
+        insertLeftSubtreeListDistinct(Vector((0, IntSlice(0), Slice("c"))), _, _, 0),
+        IntBuffer(0, 1),
+        Buffer("b", "a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 1, 1)
+          values shouldBe Array("c", "b", "a")
+          delta shouldBe 1
+      }
+      testWithBuffers[String, Int](
+        insertLeftSubtreeListDistinct(Vector((1, IntSlice(0), Slice("c"))), _, _, 0),
+        IntBuffer(0, 1),
+        Buffer("b", "a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 0, 2)
+          values shouldBe Array("b", "c", "a")
+          delta shouldBe 1
+      }
+      testWithBuffers[String, Int](
+        insertLeftSubtreeListDistinct(Vector((1, IntSlice(0), Slice("b"))), _, _, 0),
+        IntBuffer(0, 1),
+        Buffer("b", "a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 1)
+          values shouldBe Array("b", "a")
+          delta shouldBe 0
+      }
+      testWithBuffers[String, Int](
+        insertLeftSubtreeListDistinct(Vector((2, IntSlice(0, 1), Slice("c", "b"))), _, _, 0),
+        IntBuffer(0, 1, 1),
+        Buffer("c", "b", "a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 1, 1)
+          values shouldBe Array("c", "b", "a")
+          delta shouldBe 0
+      }
+      testWithBuffers[String, Int](
+        insertLeftSubtreeListDistinct(Vector((2, IntSlice(0, 1), Slice("d", "b"))), _, _, 0),
+        IntBuffer(0, 1, 1),
+        Buffer("c", "b", "a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 0, 2, 1)
+          values shouldBe Array("c", "d", "b", "a")
+          delta shouldBe 1
+      }
+      testWithBuffers[String, Int](
+        insertLeftSubtreeListDistinct(Vector((3, IntSlice(0, 0, 2), Slice("e", "c", "b"))), _, _, 0),
+        IntBuffer(0, 0, 2, 1),
+        Buffer("d", "c", "b", "a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 0, 0, 3, 1)
+          values shouldBe Array("d", "c", "e", "b", "a")
+          delta shouldBe 1
+      }
+      testWithBuffers[String, Int](
+        insertLeftSubtreeListDistinct(Vector((3, IntSlice(0, 0, 2), Slice("c", "d", "b"))), _, _, 0),
+        IntBuffer(0, 0, 2, 1),
+        Buffer("d", "c", "b", "a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 0, 2, 1)
+          values shouldBe Array("d", "c", "b", "a")
+          delta shouldBe 0
+      }
+      testWithBuffers[String, Int](
+        insertLeftSubtreeListDistinct(Vector((4, IntSlice(0, 1, 0, 2), Slice("e", "c", "d", "b"))), _, _, 0),
+        IntBuffer(0, 0, 1, 2, 1),
+        Buffer("d", "f", "c", "b", "a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 0, 0, 2, 2, 1)
+          values shouldBe Array("d", "f", "e", "c", "b", "a")
+          delta shouldBe 1
+      }
+      testWithBuffers[String, Int](
+        insertLeftSubtreeListDistinct(Vector((2, IntSlice(0, 1, 0, 2), Slice("e", "c", "d", "b"))), _, _, 0),
+        IntBuffer(0, 0, 2),
+        Buffer("c", "b", "a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 0, 1, 0, 2, 2)
+          values shouldBe Array("c", "e", "c", "d", "b", "a")
+          delta shouldBe 3
+      }
+    }
+
+    "insert trees distinct right side" in {
+      testWithBuffers[String, Int](
+        insertRightSubtreeListDistinct(Vector.empty, _, _, 0),
+        IntBuffer.empty,
+        Buffer.empty[String]
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array.empty[Int]
+          values shouldBe Array.empty[String]
+          delta shouldBe 0
+      }
+      testWithBuffers[String, Int](
+        insertRightSubtreeListDistinct(Vector((-1, IntSlice(), Slice.empty[String])), _, _, 0),
+        IntBuffer.empty,
+        Buffer.empty[String]
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array.empty[Int]
+          values shouldBe Array.empty[String]
+          delta shouldBe 0
+      }
+      testWithBuffers[String, Int](
+        insertRightSubtreeListDistinct(Vector((-1, IntSlice(0), Slice("a"))), _, _, 0),
+        IntBuffer.empty,
+        Buffer.empty[String]
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0)
+          values shouldBe Array("a")
+          delta shouldBe 1
+      }
+      testWithBuffers[String, Int](
+        insertRightSubtreeListDistinct(Vector((0, IntSlice(0), Slice("b"))), _, _, 0),
+        IntBuffer(0),
+        Buffer("a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 1)
+          values shouldBe Array("b", "a")
+          delta shouldBe 1
+      }
+      testWithBuffers[String, Int](
+        insertRightSubtreeListDistinct(Vector((-1, IntSlice(0), Slice("b"))), _, _, 0),
+        IntBuffer(0),
+        Buffer("a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 0)
+          values shouldBe Array("b", "a")
+          delta shouldBe 1
+      }
+      testWithBuffers[String, Int](
+        insertRightSubtreeListDistinct(Vector((-1, IntSlice(0), Slice("a"))), _, _, 0),
+        IntBuffer(0),
+        Buffer("a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0)
+          values shouldBe Array("a")
+          delta shouldBe 0
+      }
+      testWithBuffers[String, Int](
+        insertRightSubtreeListDistinct(Vector((0, IntSlice(0), Slice("c"))), _, _, 0),
+        IntBuffer(0, 1),
+        Buffer("b", "a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 1, 1)
+          values shouldBe Array("c", "b", "a")
+          delta shouldBe 1
+      }
+      testWithBuffers[String, Int](
+        insertRightSubtreeListDistinct(Vector((1, IntSlice(0), Slice("c"))), _, _, 0),
+        IntBuffer(0, 1),
+        Buffer("b", "a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 0, 2)
+          values shouldBe Array("c", "b", "a")
+          delta shouldBe 1
+      }
+      testWithBuffers[String, Int](
+        insertRightSubtreeListDistinct(Vector((1, IntSlice(0), Slice("b"))), _, _, 0),
+        IntBuffer(0, 1),
+        Buffer("b", "a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 1)
+          values shouldBe Array("b", "a")
+          delta shouldBe 0
+      }
+      testWithBuffers[String, Int](
+        insertRightSubtreeListDistinct(Vector((2, IntSlice(0, 1), Slice("c", "b"))), _, _, 0),
+        IntBuffer(0, 1, 1),
+        Buffer("c", "b", "a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 1, 1)
+          values shouldBe Array("c", "b", "a")
+          delta shouldBe 0
+      }
+      testWithBuffers[String, Int](
+        insertRightSubtreeListDistinct(Vector((2, IntSlice(0, 1), Slice("d", "b"))), _, _, 0),
+        IntBuffer(0, 1, 1),
+        Buffer("c", "b", "a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 0, 2, 1)
+          values shouldBe Array("d", "c", "b", "a")
+          delta shouldBe 1
+      }
+      testWithBuffers[String, Int](
+        insertRightSubtreeListDistinct(Vector((3, IntSlice(0, 0, 2), Slice("e", "c", "b"))), _, _, 0),
+        IntBuffer(0, 0, 2, 1),
+        Buffer("d", "c", "b", "a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 0, 0, 3, 1)
+          values shouldBe Array("e", "d", "c", "b", "a")
+          delta shouldBe 1
+      }
+      testWithBuffers[String, Int](
+        insertRightSubtreeListDistinct(Vector((3, IntSlice(0, 0, 2), Slice("c", "d", "b"))), _, _, 0),
+        IntBuffer(0, 0, 2, 1),
+        Buffer("d", "c", "b", "a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 0, 2, 1)
+          values shouldBe Array("d", "c", "b", "a")
+          delta shouldBe 0
+      }
+      testWithBuffers[String, Int](
+        insertRightSubtreeListDistinct(Vector((4, IntSlice(0, 1, 0, 2), Slice("e", "c", "d", "b"))), _, _, 0),
+        IntBuffer(0, 0, 1, 2, 1),
+        Buffer("d", "f", "c", "b", "a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 0, 0, 2, 2, 1)
+          values shouldBe Array("d", "e", "f", "c", "b", "a")
+          delta shouldBe 1
+      }
+      testWithBuffers[String, Int](
+        insertRightSubtreeListDistinct(Vector((2, IntSlice(0, 1, 0, 2), Slice("e", "c", "d", "b"))), _, _, 0),
+        IntBuffer(0, 0, 2),
+        Buffer("c", "b", "a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 0, 1, 0, 2, 2)
+          values shouldBe Array("c", "e", "c", "d", "b", "a")
+          delta shouldBe 3
       }
     }
   }

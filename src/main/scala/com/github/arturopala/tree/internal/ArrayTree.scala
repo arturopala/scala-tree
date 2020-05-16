@@ -349,7 +349,8 @@ object ArrayTree {
   final def hasChildValue[T](index: Int, value: T, tree: Tree[T]): Boolean = tree match {
     case Tree.empty          => false
     case t: Tree.NodeTree[T] => t.subtrees.exists(_.value == value)
-    case t: ArrayTree[T]     => ArrayTreeFunctions.leftmostIndexOfChildValue(value, index, t.structure, t.content).isDefined
+    case t: ArrayTree[T] =>
+      ArrayTreeFunctions.leftmostIndexOfChildValue(value, index, t.size, t.structure, t.content).isDefined
   }
 
   final def prependValue[T: ClassTag, T1 >: T: ClassTag](value: T1, tree: ArrayTree[T]): Tree[T1] =
@@ -459,7 +460,7 @@ object ArrayTree {
       modifyTreeUsingBuffers(target) { (structureBuffer, valuesBuffer) =>
         val (structure, values) = source.toSlices
         ArrayTreeFunctions
-          .insertLeftSubtreeListDistinct(List((index, structure, values)), structureBuffer, valuesBuffer, 0)
+          .insertLeftSubtreeListDistinct(Vector((index, structure, values)), structureBuffer, valuesBuffer, 0)
           .asNonZeroOption
       }
     }
@@ -609,7 +610,13 @@ object ArrayTree {
           val (structure, values) = subtree.toSlices[T1]
           val delta2 = if (keepDistinct && parentIndex + delta1 > 0) {
             ArrayTreeFunctions
-              .leftmostIndexOfChildValue(values.last, parentIndex + delta1, structureBuffer, valuesBuffer) match {
+              .leftmostIndexOfChildValue(
+                values.last,
+                parentIndex + delta1,
+                structureBuffer.length,
+                structureBuffer,
+                valuesBuffer
+              ) match {
               case None =>
                 structureBuffer.increment(parentIndex + delta1)
                 ArrayTreeFunctions.insertTree(index + delta1 + 1, structure, values, structureBuffer, valuesBuffer)
@@ -619,7 +626,7 @@ object ArrayTree {
                   case (s, v) => (insertIndex, s, v)
                 }
                 ArrayTreeFunctions
-                  .insertLeftSubtreeListDistinct(queue, structureBuffer, valuesBuffer, 0)
+                  .insertLeftSubtreeListDistinct(queue.toVector, structureBuffer, valuesBuffer, 0)
             }
           } else {
             if (parentIndex + delta1 >= 0) {
