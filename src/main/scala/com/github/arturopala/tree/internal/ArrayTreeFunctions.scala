@@ -747,26 +747,17 @@ object ArrayTreeFunctions {
           insertBranch(branchIterator, index, structureBuffer, valuesBuffer, offset)
 
         case None =>
-          val values = branchIterator.toList.reverse :+ value
-          val structure = {
-            val array = Array.fill(values.length)(1)
-            array(0) = 0
-            array
-          }
-          if (parentIndex >= 0) {
+          val insertIndex = if (parentIndex >= 0) {
             structureBuffer.increment(parentIndex)
-            insertTree(
-              parentIndex,
-              structure.length,
-              structure.iterator,
-              values.iterator,
-              structureBuffer,
-              valuesBuffer
-            )
-          } else {
-            insertTree(0, structure.length, structure.iterator, values.iterator, structureBuffer, valuesBuffer)
-          }
-
+            parentIndex
+          } else 0
+          val l0 = valuesBuffer.length
+          valuesBuffer.insert(insertIndex, value)
+          valuesBuffer.insertFromIteratorReverse(insertIndex, branchIterator)
+          val delta = valuesBuffer.length - l0
+          structureBuffer.insert(insertIndex, 0)
+          structureBuffer.insertFromIterator(insertIndex + 1, delta - 1, Iterator.continually(1))
+          delta
       }
     } else offset
 
