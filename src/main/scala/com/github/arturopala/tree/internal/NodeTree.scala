@@ -441,7 +441,7 @@ object NodeTree {
     subtreesRight match {
       case Nil =>
         val branchTree: NodeTree[T1] =
-          TreeBuilder.linearTreeFromList(branchHead :: branchTailIterator.toList).asInstanceOf[NodeTree[T1]]
+          TreeBuilder.linearTreeFromSequence(branchHead :: branchTailIterator.toList).asInstanceOf[NodeTree[T1]]
         branchTree :: subtreesLeft
 
       case head :: tail if head.value == branchHead =>
@@ -456,7 +456,7 @@ object NodeTree {
     splitTreeFollowingPath(tree, branchIterator).flatMap {
       case (treeSplit, Some(value), remainingBranchIterator, remainingTree) =>
         val branchTree: NodeTree[T1] =
-          TreeBuilder.linearTreeFromList(value :: remainingBranchIterator.toList).asInstanceOf[NodeTree[T1]]
+          TreeBuilder.linearTreeFromSequence(value :: remainingBranchIterator.toList).asInstanceOf[NodeTree[T1]]
 
         val newNode = Tree(remainingTree.value, branchTree :: remainingTree.subtrees)
         Some(TreeBuilder.fromChildAndTreeSplit(newNode, treeSplit))
@@ -772,7 +772,7 @@ object NodeTree {
       case (treeSplit, Some(value), remainingBranchIterator, remainingTree) =>
         val branchTree: NodeTree[T1] =
           TreeBuilder
-            .fromTreeList((Tree(value) :: remainingBranchIterator.map(Tree.apply[T1]).toList) :+ nodeToInsert)
+            .fromTreeSequence((Tree(value) :: remainingBranchIterator.map(Tree.apply[T1]).toList) :+ nodeToInsert)
             .asInstanceOf[NodeTree[T1]]
         val newNode = Tree(remainingTree.value, branchTree :: remainingTree.subtrees)
         Some(TreeBuilder.fromChildAndTreeSplit(newNode, treeSplit))

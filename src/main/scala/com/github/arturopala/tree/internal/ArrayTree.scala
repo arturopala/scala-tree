@@ -125,13 +125,13 @@ object ArrayTree {
     startIndex: Int,
     treeStructure: Int => Int,
     treeValues: Int => T,
-    pred: List[T] => Boolean
+    pred: Iterable[T] => Boolean
   ): Int =
     ArrayTreeFunctions.foldLeftBranchesIndexLists(
       startIndex,
       treeStructure,
       0,
-      (a: Int, branch: IntSlice, _: Int) => a + (if (pred(branch.reverseIterator.map(treeValues).toList)) 1 else 0)
+      (a: Int, branch: IntSlice, _: Int) => a + (if (pred(branch.reverseIterator.map(treeValues).toIterable)) 1 else 0)
     )
 
   /** Checks if the tree contains given path (as a branch prefix). */
@@ -313,8 +313,8 @@ object ArrayTree {
       case Some(index) =>
         unmatched match {
           case Some(item) =>
-            val valueList = (item :: remaining.toList) :+ value
-            val newNode: Tree[T1] = TreeBuilder.linearTreeFromList(valueList)
+            val valueSequence = remaining.toVector.+:(item).:+(value)
+            val newNode: Tree[T1] = TreeBuilder.linearTreeFromSequence(valueSequence)
             insertTree(index, newNode, target)
           case None =>
             insertValue(index, value, target, keepDistinct)
@@ -398,8 +398,8 @@ object ArrayTree {
       case Some(index) =>
         unmatched match {
           case Some(item) =>
-            val treeList = (Tree(item) :: remaining.toList.map(Tree.apply[T1])) :+ subtree
-            val newNode: Tree[T1] = TreeBuilder.fromTreeList(treeList)
+            val treeSequence = remaining.map(Tree.apply[T1]).toVector.+:(Tree(item)).:+(subtree)
+            val newNode: Tree[T1] = TreeBuilder.fromTreeSequence(treeSequence)
             insertTree(index, newNode, target)
           case None =>
             if (keepDistinct) insertTreeDistinct(index, subtree, target)
@@ -473,7 +473,7 @@ object ArrayTree {
     target: Tree[T]
   ): Tree[T] =
     if (branch.isEmpty) target
-    else if (target.isEmpty) TreeBuilder.linearTreeFromList(branch.toList)
+    else if (target.isEmpty) TreeBuilder.linearTreeFromSequence(branch.toSeq)
     else {
       assert(index >= 0 && index < target.size, "Insertion index must be within target's tree range [0,length).")
       val iterator: Iterator[T] = branch.iterator

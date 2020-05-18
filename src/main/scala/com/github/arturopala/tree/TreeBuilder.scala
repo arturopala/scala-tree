@@ -190,19 +190,37 @@ object TreeBuilder {
   @`inline` final def fromBuffers[T: ClassTag](structureBuffer: IntBuffer, valuesBuffer: Buffer[T]): List[Tree[T]] =
     fromSlices(structureBuffer.asSlice, valuesBuffer.asSlice)
 
-  /** Builds a single-branch tree from a list of values. */
-  final def linearTreeFromList[T: ClassTag](list: List[T]): Tree[T] = list.reverse match {
-    case Nil => Tree.empty
-    case value :: tail =>
-      tail.foldLeft(Tree(value))((t, v) => Tree(v, t))
+  /** Builds a single-branch tree from a sequence of values. */
+  final def linearTreeFromSequence[T: ClassTag](seq: Seq[T]): Tree[T] = {
+    val iterator = seq.reverseIterator
+    if (iterator.hasNext) {
+      val leaf = Tree(iterator.next())
+      linearTreeFromReverseValueIterator(iterator, leaf)
+    } else Tree.empty
   }
 
+  /** Builds a single-branch tree from a reverse iterator over node's values. */
+  @tailrec
+  final def linearTreeFromReverseValueIterator[T: ClassTag](iterator: Iterator[T], child: NodeTree[T]): Tree[T] =
+    if (iterator.hasNext) {
+      linearTreeFromReverseValueIterator(iterator, Tree(iterator.next(), child))
+    } else {
+      child
+    }
+
   /** Builds a main-branch tree from a list of trees. */
-  final def fromTreeList[T: ClassTag](list: List[Tree[T]]): Tree[T] = list.reverse match {
-    case Nil => Tree.empty
-    case value :: tail =>
-      tail.foldLeft(value)((t, v) => v.insertTree(t))
-  }
+  final def fromTreeSequence[T: ClassTag](seq: Seq[Tree[T]]): Tree[T] =
+    buildTreeFromReverseTreeIterator(seq.reverseIterator, Tree.empty)
+
+  /** Builds a single-branch tree from a reverse iterator over child trees */
+  @tailrec
+  final def buildTreeFromReverseTreeIterator[T: ClassTag](iterator: Iterator[Tree[T]], child: Tree[T]): Tree[T] =
+    if (iterator.hasNext) {
+      val tree = iterator.next().insertTree(child)
+      buildTreeFromReverseTreeIterator(iterator, tree)
+    } else {
+      child
+    }
 
   /** Builds a tree from the list of tree splits (leftChildren, value, rightChildren).
     * @param child the tree node who becomes a child of a last value. */

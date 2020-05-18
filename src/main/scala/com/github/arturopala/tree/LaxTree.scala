@@ -182,7 +182,7 @@ object LaxTreeOps {
 
     final override def insertValueLaxAt[T1 >: T: ClassTag](path: Iterable[T1], value: T1): Tree[T1] = t match {
       case Tree.empty =>
-        Tree.empty.insertBranch(path.toList :+ value)
+        Tree.empty.insertBranch(path.toSeq :+ value)
 
       case node: NodeTree[T] =>
         NodeTree.insertTreeAt(node, path.iterator, Tree(value), keepDistinct = false).getOrElse(node)
@@ -226,7 +226,7 @@ object LaxTreeOps {
       case Tree.empty =>
         if (path.isEmpty) subtree
         else if (subtree.isEmpty) empty
-        else TreeBuilder.linearTreeFromList(path.toList).insertTreeLaxAt(path, subtree)
+        else TreeBuilder.linearTreeFromSequence(path.toSeq).insertTreeLaxAt(path, subtree)
 
       case node: NodeTree[T] =>
         subtree match {

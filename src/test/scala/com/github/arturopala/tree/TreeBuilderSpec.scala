@@ -113,18 +113,18 @@ class TreeBuilderSpec extends AnyWordSpecCompat {
 
     "create a new single-branch tree from a list of values" in {
       //fromValueList(List()) shouldBe Tree.empty
-      linearTreeFromList(List("a")) shouldBe Tree("a")
-      linearTreeFromList(List("a", "b", "c")) shouldBe Tree("a", Tree("b", Tree("c")))
-      linearTreeFromList(List("a", "a", "a")) shouldBe Tree("a", Tree("a", Tree("a")))
+      linearTreeFromSequence(List("a")) shouldBe Tree("a")
+      linearTreeFromSequence(List("a", "b", "c")) shouldBe Tree("a", Tree("b", Tree("c")))
+      linearTreeFromSequence(List("a", "a", "a")) shouldBe Tree("a", Tree("a", Tree("a")))
     }
 
     "create a new main-branch tree from a list of trees" in {
       //fromTreeList(List()) shouldBe Tree.empty
-      fromTreeList(List(Tree("a"))) shouldBe Tree("a")
-      fromTreeList(List(Tree("a"), Tree("b"), Tree("c"))) shouldBe Tree("a", Tree("b", Tree("c")))
-      fromTreeList(List(Tree("c"), Tree("b"), Tree("a"))) shouldBe Tree("c", Tree("b", Tree("a")))
-      fromTreeList(List(Tree("a"), Tree("a"), Tree("a"))) shouldBe Tree("a", Tree("a", Tree("a")))
-      fromTreeList(List(Tree("a", Tree("b")), Tree("a", Tree("c")), Tree("a", Tree("d"), Tree("e")))) shouldBe Tree(
+      fromTreeSequence(List(Tree("a"))) shouldBe Tree("a")
+      fromTreeSequence(List(Tree("a"), Tree("b"), Tree("c"))) shouldBe Tree("a", Tree("b", Tree("c")))
+      fromTreeSequence(List(Tree("c"), Tree("b"), Tree("a"))) shouldBe Tree("c", Tree("b", Tree("a")))
+      fromTreeSequence(List(Tree("a"), Tree("a"), Tree("a"))) shouldBe Tree("a", Tree("a", Tree("a")))
+      fromTreeSequence(List(Tree("a", Tree("b")), Tree("a", Tree("c")), Tree("a", Tree("d"), Tree("e")))) shouldBe Tree(
         "a",
         Tree("a", Tree("a", Tree("d"), Tree("e")), Tree("c")),
         Tree("b")
