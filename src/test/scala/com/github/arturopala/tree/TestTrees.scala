@@ -18,6 +18,8 @@ package com.github.arturopala.tree
 
 import com.github.arturopala.tree.Tree.NodeTree
 
+import scala.reflect.ClassTag
+
 trait TestTrees {
 
   val tree0: Tree[String]
@@ -111,6 +113,8 @@ trait InflatedTestTrees extends TestTrees {
   override val tree9: Tree[String] = TestTrees.tree9
   override val allTrees: Seq[Tree[String]] = TestTrees.allTrees
 
+  def tree[T: ClassTag](t: Tree[T]): Tree[T] = t.inflated
+
 }
 
 trait DeflatedTestTrees extends TestTrees {
@@ -127,4 +131,5 @@ trait DeflatedTestTrees extends TestTrees {
   override val tree9: Tree[String] = TestTrees.tree9.deflated
   override val allTrees: Seq[Tree[String]] = TestTrees.allTrees.map(_.deflated)
 
+  def tree[T: ClassTag](t: Tree[T]): Tree[T] = t.deflated
 }

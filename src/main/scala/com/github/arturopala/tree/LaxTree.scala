@@ -140,7 +140,7 @@ trait LaxTree[T] {
     * @param path list of node's values forming a path from the root to the parent node.
     * @return modified tree
     * @group laxRemoval */
-  def removeValueLaxAt[T1 >: T: ClassTag](path: Iterable[T1]): Tree[T] = ???
+  def removeValueLaxAt[T1 >: T: ClassTag](path: Iterable[T1]): Tree[T]
 
   /** Removes the value selected by the given path, merges node's children with remaining siblings,
     * and returns a whole tree updated.
@@ -149,10 +149,11 @@ trait LaxTree[T] {
     * @param toPathItem extractor of the K path item from the tree's node value
     * @return modified tree
     * @group laxRemoval */
-  def removeValueLaxAt[K, T1 >: T: ClassTag](path: Iterable[K], toPathItem: T => K): Tree[T] = ???
+  def removeValueLaxAt[K, T1 >: T: ClassTag](path: Iterable[K], toPathItem: T => K): Tree[T]
 
 }
 
+/** Lax extensions of the [[Tree]] API. */
 object LaxTreeOps {
 
   /** [[LaxTree]] extensions for a [[Tree]]. */
@@ -321,6 +322,27 @@ object LaxTreeOps {
         ArrayTree.modifyTreeAt(path, modify, tree, toPathItem, keepDistinct = false)
 
     }
+
+    final override def removeValueLaxAt[T1 >: T: ClassTag](path: Iterable[T1]): Tree[T] = t match {
+      case Tree.empty => empty
+
+      case node: NodeTree[T] =>
+        NodeTree.removeValueAt(node, path.iterator, keepDistinct = false)
+
+      case tree: ArrayTree[T] =>
+        ArrayTree.removeValueAt(path, tree, keepDistinct = false)
+    }
+
+    final override def removeValueLaxAt[K, T1 >: T: ClassTag](path: Iterable[K], toPathItem: T => K): Tree[T] =
+      t match {
+        case Tree.empty => empty
+
+        case node: NodeTree[T] =>
+          NodeTree.removeValueAt(node, path.iterator, toPathItem, keepDistinct = false)
+
+        case tree: ArrayTree[T] =>
+          ArrayTree.removeValueAt(path, tree, toPathItem, keepDistinct = false)
+      }
 
   }
 
