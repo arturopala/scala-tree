@@ -1105,4 +1105,23 @@ object NodeTree {
       }
       .getOrElse(tree)
 
+  /** Removes the tree selected by the path. */
+  final def removeTreeAt[T, T1 >: T](
+    tree: NodeTree[T],
+    pathIterator: Iterator[T1]
+  ): Tree[T] =
+    splitTreeFollowingEntirePath[T, T1](tree, pathIterator)
+      .map { case (treeSplit, _) => TreeBuilder.fromTreeSplit(treeSplit) }
+      .getOrElse(tree)
+
+  /** Removes the tree selected by the path using an extractor function. */
+  final def removeTreeAt[K, T](
+    tree: NodeTree[T],
+    pathIterator: Iterator[K],
+    toPathItem: T => K
+  ): Tree[T] =
+    splitTreeFollowingEntirePath(tree, pathIterator, toPathItem)
+      .map { case (treeSplit, _) => TreeBuilder.fromTreeSplit(treeSplit) }
+      .getOrElse(tree)
+
 }

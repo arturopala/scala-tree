@@ -388,6 +388,14 @@ trait TreeLike[+T] {
 
   // DISTINCT MODIFICATIONS
 
+  /** Modifies the value of a child node holding a given value.
+    * Keeps all the node's children distinct.
+    * @param value value of the child node
+    * @param modify function to modify the value
+    * @return either right of modified tree or left with the tree intact
+    * @group modification */
+  def modifyValue[T1 >: T: ClassTag](value: T1, modify: T1 => T1): Either[Tree[T], Tree[T1]] = ???
+
   /** Modifies the value selected by the given path, and returns a whole tree updated.
     * Keeps all the node's children distinct.
     * @param path list of node's values forming a path from the root to the parent node.
@@ -408,6 +416,14 @@ trait TreeLike[+T] {
     modify: T => T1,
     toPathItem: T => K
   ): Either[Tree[T], Tree[T1]]
+
+  /** Modifies the child holding a given value.
+    * Keeps all the node's children distinct.
+    * @param value value of the child node
+    * @param modify function to modify the value
+    * @return either right of modified tree or left with the tree intact
+    * @group modification */
+  def modifyTree[T1 >: T: ClassTag](value: T1, modify: T1 => T1): Either[Tree[T], Tree[T1]] = ???
 
   /** Modifies the tree selected by the given path, and returns a whole tree updated.
     * Keeps all the node's children distinct.
@@ -435,7 +451,12 @@ trait TreeLike[+T] {
 
   // DISTINCT REMOVALS
 
-  /** Removes the value selected by the given path, inserts children into the parent,
+  /** Removes child node holding a value, inserts nested children into this tree.
+    * @return modified tree
+    * @group removal */
+  def removeValue[T1 >: T: ClassTag](value: T1): Tree[T] = ???
+
+  /** Removes the value selected by the given path, inserts nested children into the parent,
     * and returns a whole tree updated.
     * @note when removing the top node, the following special rules apply:
     *       - if the tree has a single value, returns empty tree,
@@ -454,18 +475,23 @@ trait TreeLike[+T] {
     * @group removal */
   def removeValueAt[K, T1 >: T: ClassTag](path: Iterable[K], toPathItem: T => K): Tree[T]
 
+  /** Removes completely child node holding a value.
+    * @return modified tree
+    * @group removal */
+  def removeTree[T1 >: T: ClassTag](value: T1): Tree[T] = ???
+
   /** Removes the tree selected by the given path.
     * @param path list of node's values forming a path from the root to the parent node.
     * @return modified tree
     * @group removal */
-  def removeTreeAt[T1 >: T: ClassTag](path: Iterable[T1]): Tree[T] = ???
+  def removeTreeAt[T1 >: T: ClassTag](path: Iterable[T1]): Tree[T]
 
   /** Removes the tree selected by the given path.
     * @param path list K items forming a path from the root to the parent node.
     * @param toPathItem extractor of the K path item from the tree's node value
     * @return modified tree
     * @group removal */
-  def removeTreeAt[K, T1 >: T: ClassTag](path: Iterable[K], toPathItem: T => K): Tree[T] = ???
+  def removeTreeAt[K, T1 >: T: ClassTag](path: Iterable[K], toPathItem: T => K): Tree[T]
 
   // SERIALIZATION
 

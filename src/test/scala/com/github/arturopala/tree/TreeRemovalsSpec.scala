@@ -247,6 +247,89 @@ class TreeRemovalsSpec extends FunSuite {
       )
     }
 
+    "remove subtree selected by the path" in {
+      tree0.removeTreeAt(List()) shouldBe tree0
+      tree0.removeTreeAt(List("a")) shouldBe tree0
+      tree0.removeTreeAt(List("a", "b")) shouldBe tree0
+      tree1.removeTreeAt(List()) shouldBe tree1
+      tree1.removeTreeAt(List("a")) shouldBe Tree.empty
+      tree1.removeTreeAt(List("b")) shouldBe tree1
+      tree2.removeTreeAt(List()) shouldBe tree2
+      tree2.removeTreeAt(List("a")) shouldBe Tree.empty
+      tree2.removeTreeAt(List("a", "b")) shouldBe Tree("a")
+      tree3_1.removeTreeAt(List()) shouldBe tree3_1
+      tree3_1.removeTreeAt(List("a")) shouldBe Tree.empty
+      tree3_1.removeTreeAt(List("a", "b")) shouldBe Tree("a")
+      tree3_1.removeTreeAt(List("a", "c")) shouldBe tree3_1
+      tree3_1.removeTreeAt(List("a", "a")) shouldBe tree3_1
+      tree3_2.removeTreeAt(List()) shouldBe tree3_2
+      tree3_2.removeTreeAt(List("a")) shouldBe Tree.empty
+      tree3_2.removeTreeAt(List("a", "b")) shouldBe Tree("a", Tree("c"))
+      tree3_2.removeTreeAt(List("a", "c")) shouldBe Tree("a", Tree("b"))
+      tree3_2.removeTreeAt(List("a", "a")) shouldBe tree3_2
+      tree4_2.removeTreeAt(List()) shouldBe tree4_2
+      tree4_2.removeTreeAt(List("a")) shouldBe Tree.empty
+      tree4_2.removeTreeAt(List("a", "b")) shouldBe Tree("a", Tree("d"))
+      tree4_2.removeTreeAt(List("a", "c")) shouldBe tree4_2
+      tree4_2.removeTreeAt(List("a", "a")) shouldBe tree4_2
+      tree7.removeTreeAt(List()) shouldBe tree7
+      tree7.removeTreeAt(List("a")) shouldBe Tree.empty
+      tree7.removeTreeAt(List("a", "b")) shouldBe Tree("a", Tree("d", Tree("e", Tree("f"))), Tree("g"))
+      tree7.removeTreeAt(List("a", "b", "c")) shouldBe Tree("a", Tree("b"), Tree("d", Tree("e", Tree("f"))), Tree("g"))
+      tree7.removeTreeAt(List("a", "d")) shouldBe Tree("a", Tree("b", Tree("c")), Tree("g"))
+      tree7.removeTreeAt(List("a", "g")) shouldBe Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e", Tree("f"))))
+      tree7.removeTreeAt(List("a", "d", "e")) shouldBe Tree("a", Tree("b", Tree("c")), Tree("d"), Tree("g"))
+      tree7.removeTreeAt(List("a", "d", "e", "f")) shouldBe Tree(
+        "a",
+        Tree("b", Tree("c")),
+        Tree("d", Tree("e")),
+        Tree("g")
+      )
+    }
+
+    "remove subtree selected by the path using an extractor function" in {
+      val codeF: String => Int = s => s.head.toInt
+      tree0.removeTreeAt(List(), codeF) shouldBe tree0
+      tree0.removeTreeAt(List(97), codeF) shouldBe tree0
+      tree0.removeTreeAt(List(97, 98), codeF) shouldBe tree0
+      tree1.removeTreeAt(List(), codeF) shouldBe tree1
+      tree1.removeTreeAt(List(97), codeF) shouldBe Tree.empty
+      tree1.removeTreeAt(List(98), codeF) shouldBe tree1
+      tree2.removeTreeAt(List(), codeF) shouldBe tree2
+      tree2.removeTreeAt(List(97), codeF) shouldBe Tree.empty
+      tree2.removeTreeAt(List(97, 98), codeF) shouldBe Tree("a")
+      tree3_1.removeTreeAt(List(), codeF) shouldBe tree3_1
+      tree3_1.removeTreeAt(List(97), codeF) shouldBe Tree.empty
+      tree3_1.removeTreeAt(List(97, 98), codeF) shouldBe Tree("a")
+      tree3_1.removeTreeAt(List(97, 99), codeF) shouldBe tree3_1
+      tree3_1.removeTreeAt(List(97, 97), codeF) shouldBe tree3_1
+      tree3_2.removeTreeAt(List(), codeF) shouldBe tree3_2
+      tree3_2.removeTreeAt(List(97), codeF) shouldBe Tree.empty
+      tree3_2.removeTreeAt(List(97, 98), codeF) shouldBe Tree("a", Tree("c"))
+      tree3_2.removeTreeAt(List(97, 99), codeF) shouldBe Tree("a", Tree("b"))
+      tree3_2.removeTreeAt(List(97, 97), codeF) shouldBe tree3_2
+      tree4_2.removeTreeAt(List(), codeF) shouldBe tree4_2
+      tree4_2.removeTreeAt(List(97), codeF) shouldBe Tree.empty
+      tree4_2.removeTreeAt(List(97, 98), codeF) shouldBe Tree("a", Tree("d"))
+      tree4_2.removeTreeAt(List(97, 99), codeF) shouldBe tree4_2
+      tree4_2.removeTreeAt(List(97, 97), codeF) shouldBe tree4_2
+      tree7.removeTreeAt(List(), codeF) shouldBe tree7
+      tree7.removeTreeAt(List(97), codeF) shouldBe Tree.empty
+      tree7.removeTreeAt(List(97, 98), codeF) shouldBe Tree("a", Tree("d", Tree("e", Tree("f"))), Tree("g"))
+      tree7
+        .removeTreeAt(List(97, 98, 99), codeF) shouldBe Tree("a", Tree("b"), Tree("d", Tree("e", Tree("f"))), Tree("g"))
+      tree7.removeTreeAt(List(97, 100), codeF) shouldBe Tree("a", Tree("b", Tree("c")), Tree("g"))
+      tree7
+        .removeTreeAt(List(97, 103), codeF) shouldBe Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e", Tree("f"))))
+      tree7.removeTreeAt(List(97, 100, 101), codeF) shouldBe Tree("a", Tree("b", Tree("c")), Tree("d"), Tree("g"))
+      tree7.removeTreeAt(List(97, 100, 101, 102), codeF) shouldBe Tree(
+        "a",
+        Tree("b", Tree("c")),
+        Tree("d", Tree("e")),
+        Tree("g")
+      )
+    }
+
   }
 
 }
