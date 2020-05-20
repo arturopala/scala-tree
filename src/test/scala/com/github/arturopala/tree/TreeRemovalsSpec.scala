@@ -330,6 +330,46 @@ class TreeRemovalsSpec extends FunSuite {
       )
     }
 
+    "remove a child node holding a value" in {
+      tree0.removeValue("a") shouldBe tree0
+      tree0.removeValue("b") shouldBe tree0
+      tree1.removeValue("a") shouldBe tree1
+      tree1.removeValue("b") shouldBe tree1
+      tree2.removeValue("a") shouldBe tree2
+      tree2.removeValue("b") shouldBe tree1
+      tree3_1.removeValue("a") shouldBe tree3_1
+      tree3_1.removeValue("b") shouldBe Tree("a", Tree("c"))
+      tree3_1.removeValue("c") shouldBe tree3_1
+      tree3_2.removeValue("a") shouldBe tree3_2
+      tree3_2.removeValue("b") shouldBe Tree("a", Tree("c"))
+      tree3_2.removeValue("c") shouldBe Tree("a", Tree("b"))
+      tree4_2.removeValue("a") shouldBe tree4_2
+      tree4_2.removeValue("a") shouldBe tree4_2
+      tree4_2.removeValue("b") shouldBe Tree("a", Tree("c"), Tree("d"))
+      tree4_2.removeValue("d") shouldBe tree3_1
+      tree7.removeValue("a") shouldBe tree7
+      tree7.removeValue("b") shouldBe Tree("a", Tree("c"), Tree("d", Tree("e", Tree("f"))), Tree("g"))
+      tree7.removeValue("d") shouldBe Tree("a", Tree("b", Tree("c")), Tree("e", Tree("f")), Tree("g"))
+      tree7.removeValue("g") shouldBe Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e", Tree("f"))))
+      tree7.removeValue("e") shouldBe tree7
+      tree7.removeValue("c") shouldBe tree7
+      tree9.removeValue("e") shouldBe Tree(
+        "a",
+        Tree("b", Tree("c", Tree("d"))),
+        Tree("f", Tree("g")),
+        Tree("h", Tree("i"))
+      )
+      tree9.removeValue("b") shouldBe Tree(
+        "a",
+        Tree("c", Tree("d")),
+        Tree("e", Tree("f", Tree("g")), Tree("h", Tree("i")))
+      )
+      tree9.removeValue("a") shouldBe tree9
+      tree(Tree("a", Tree("b", Tree("c")), Tree("c"))).removeValue("b") shouldBe Tree("a", Tree("c"))
+      tree(Tree("a", Tree("b", Tree("c"), Tree("d")), Tree("c"), Tree("e")))
+        .removeValue("b") shouldBe Tree("a", Tree("c"), Tree("d"), Tree("e"))
+    }
+
   }
 
 }

@@ -454,7 +454,7 @@ trait TreeLike[+T] {
   /** Removes child node holding a value, inserts nested children into this tree.
     * @return modified tree
     * @group removal */
-  def removeValue[T1 >: T: ClassTag](value: T1): Tree[T] = ???
+  def removeValue[T1 >: T: ClassTag](value: T1): Tree[T]
 
   /** Removes the value selected by the given path, inserts nested children into the parent,
     * and returns a whole tree updated.
@@ -497,7 +497,7 @@ trait TreeLike[+T] {
 
   /** Iterates over tree linearisation as pairs of (numberOfChildren, value).
     *
-    * @note It is possible to build a tree back using [[TreeBuilder.fromPairsIterator]] method.
+    * @note It is possible to build a tree back using [[TreeBuilder.fromSizeAndValuePairsIterator]] method.
     *
     *       Properties of the generated output:
     *       - every children's node value comes before parent's node value

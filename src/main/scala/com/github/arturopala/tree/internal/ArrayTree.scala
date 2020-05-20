@@ -535,41 +535,44 @@ object ArrayTree {
       modifyTreeUsingBuffers[T1](tree) { (structureBuffer, valuesBuffer) =>
         val parentIndex = parentIndexOpt
           .getOrElse(ArrayTreeFunctions.parentIndex(index, structureBuffer.length, structureBuffer))
-        val delta1 = ArrayTreeFunctions.removeTree(index, parentIndex, structureBuffer, valuesBuffer)
 
-        if (subtree.isEmpty) {
-          Some(delta1)
-        } else {
-          val (structure, values) = subtree.toSlices[T1]
-          val delta2 = if (keepDistinct && parentIndex + delta1 > 0) {
-            ArrayTreeFunctions
-              .leftmostIndexOfChildValue(
-                values.last,
-                parentIndex + delta1,
-                structureBuffer.length,
-                structureBuffer,
-                valuesBuffer
-              ) match {
-              case None =>
-                structureBuffer.increment(parentIndex + delta1)
-                ArrayTreeFunctions.insertTree(index + delta1 + 1, structure, values, structureBuffer, valuesBuffer)
+        val (delta, insertedAbove) =
+          if (subtree.isEmpty) (0, true)
+          else {
+            val (structure, values) = subtree.toSlices[T1]
+            if (keepDistinct && parentIndex > 0) {
+              ArrayTreeFunctions
+                .siblingOfValue(
+                  values.last,
+                  index,
+                  structureBuffer.length,
+                  structureBuffer,
+                  valuesBuffer
+                ) match {
+                case None =>
+                  structureBuffer.increment(parentIndex)
+                  (ArrayTreeFunctions.insertTree(index + 1, structure, values, structureBuffer, valuesBuffer), true)
 
-              case Some(insertIndex) =>
-                val queue = reversedChildrenOf(structure, values).map {
-                  case (s, v) => (insertIndex, s, v)
-                }
-                ArrayTreeFunctions
-                  .insertLeftSubtreeListDistinct(queue.toVector, structureBuffer, valuesBuffer, 0)
+                case Some(insertIndex) =>
+                  val queue = reversedChildrenOf(structure, values).map {
+                    case (s, v) => (insertIndex, s, v)
+                  }
+                  (
+                    ArrayTreeFunctions
+                      .insertLeftSubtreeListDistinct(queue.toVector, structureBuffer, valuesBuffer, 0),
+                    insertIndex > index
+                  )
+              }
+            } else {
+              if (parentIndex >= 0) {
+                structureBuffer.increment(parentIndex)
+              }
+              (ArrayTreeFunctions.insertTree(index + 1, structure, values, structureBuffer, valuesBuffer), true)
             }
-          } else {
-            if (parentIndex + delta1 >= 0) {
-              structureBuffer.increment(parentIndex + delta1)
-            }
-            ArrayTreeFunctions.insertTree(index + delta1 + 1, structure, values, structureBuffer, valuesBuffer)
           }
-
-          Some(delta1 + delta2)
-        }
+        val p = if (parentIndex < 0) parentIndex else parentIndex + delta
+        val i = if (insertedAbove) index else index + delta
+        Some(delta + ArrayTreeFunctions.removeTree(i, p, structureBuffer, valuesBuffer))
       }
     }
 
@@ -696,6 +699,29 @@ object ArrayTree {
       else if (target.childrenCount == 1) treeAt(target.size - 2, target.structure, target.content)
       else target
     } else removeValue(indexes.last, indexes.get(indexes.length - 2), target, keepDistinct)
+
+  /** Removes the node holding the value, and inserts children into the parent.
+    * @note when removing the top node, the following special rules apply:
+    *       - if the tree has a single value, returns empty tree,
+    *       - otherwise if the tree has a single child, returns that child,
+    *       - otherwise if the tree has more children, returns the tree unmodified.
+    * @return modified tree */
+  final def removeValue[T: ClassTag, T1 >: T: ClassTag](
+    value: T1,
+    target: ArrayTree[T],
+    keepDistinct: Boolean
+  ): Tree[T] =
+    modifyTreeUsingBuffers(target) { (structureBuffer, valuesBuffer) =>
+      ArrayTreeFunctions
+        .rightmostIndexOfChildValue(value, structureBuffer.top, structureBuffer.length, structureBuffer, valuesBuffer)
+        .map { index =>
+          val delta1 = ArrayTreeFunctions.removeValue(index, structureBuffer.top, structureBuffer, valuesBuffer)
+          val delta2 = if (keepDistinct) {
+            ArrayTreeFunctions.makeChildrenDistinct(structureBuffer.top, structureBuffer, valuesBuffer)
+          } else 0
+          delta1 + delta2
+        }
+    }
 
   /** Removes the node selected by the path, and inserts children into the parent.
     * @note when removing the top node, the following special rules apply:

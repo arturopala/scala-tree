@@ -67,7 +67,7 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
   final override def countBranches(pred: Iterable[T] => Boolean): Int =
     NodeTree.countBranches(pred, node)
 
-  // INSERTIONS
+  // DISTINCT INSERTIONS
 
   final override def prependWith[T1 >: T: ClassTag](value: T1): Tree[T1] = Tree(value, node)
 
@@ -87,10 +87,10 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
 
   final override def insertTree[T1 >: T: ClassTag](subtree: Tree[T1]): Tree[T1] = subtree match {
     case Tree.empty         => node
-    case tree: NodeTree[T1] => NodeTree.insertTreeDistinct(node, tree, prepend = true)
+    case tree: NodeTree[T1] => NodeTree.insertTreeDistinct(node, tree)
     case tree: ArrayTree[T1] =>
       if (Tree.preferInflated(node, tree))
-        NodeTree.insertTreeDistinct(node, tree.inflated.asInstanceOf[NodeTree[T1]], prepend = true)
+        NodeTree.insertTreeDistinct(node, tree.inflated.asInstanceOf[NodeTree[T1]])
       else node.deflated[T1].insertTree(tree)
   }
 
@@ -120,7 +120,7 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
   final override def insertBranch[T1 >: T: ClassTag](branch: Iterable[T1]): Tree[T1] =
     NodeTree.insertBranch(node, branch.iterator).getOrElse(node)
 
-  // MODIFICATIONS
+  // DISTINCT MODIFICATIONS
 
   final override def modifyValueAt[T1 >: T: ClassTag](
     path: Iterable[T1],
@@ -148,7 +148,10 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
   ): Either[Tree[T], Tree[T1]] =
     NodeTree.modifyTreeAt(node, path.iterator, toPathItem, modify, keepDistinct = true)
 
-  // REMOVALS
+  // DISTINCT REMOVALS
+
+  final override def removeValue[T1 >: T: ClassTag](value: T1): Tree[T] =
+    NodeTree.removeValue(node, value, keepDistinct = true)
 
   final override def removeValueAt[T1 >: T: ClassTag](path: Iterable[T1]): Tree[T] =
     NodeTree.removeValueAt(node, path.iterator, keepDistinct = true)

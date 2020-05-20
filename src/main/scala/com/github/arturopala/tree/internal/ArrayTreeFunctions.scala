@@ -152,6 +152,42 @@ object ArrayTreeFunctions {
       }
     }
 
+  /** Finds an index of a sibling of childIndex having some value. */
+  final def siblingOfValue[T](
+    value: T,
+    childIndex: Int,
+    size: Int,
+    treeStructure: Int => Int,
+    treeValues: Int => T
+  ): Option[Int] = {
+    val parent = parentIndex(childIndex, size, treeStructure)
+    if (parent < 0) None
+    else {
+      val children = childrenIndexesFor(value, parent, treeStructure, treeValues)
+      if (children.isEmpty) None
+      else {
+        var result: Option[Int] = None
+        var i = 0
+        while (i >= 0 && i < children.length) {
+          if (children(i) == childIndex) {
+            result =
+              if (i > 0) Some(children(i - 1))
+              else if (i < children.length - 1) Some(children(i + 1))
+              else None
+            i = -1
+          } else if (children(i) < childIndex) {
+            result = Some(if (i > 0) children(i - 1) else children(i))
+            i = -1
+          } else {
+            i = i + 1
+          }
+        }
+        if (i == children.length && children.nonEmpty) Some(children.last)
+        else result
+      }
+    }
+  }
+
   /** Looks for Some index of the child node holding the given value, or None.
     * @return the rightmost index if many */
   final def leftmostIndexOfChildValue[T](

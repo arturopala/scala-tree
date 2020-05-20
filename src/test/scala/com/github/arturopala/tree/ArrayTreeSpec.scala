@@ -725,6 +725,21 @@ class ArrayTreeSpec extends AnyWordSpecCompat {
         Tree("a", Tree("b", Tree("d"), Tree("f")), Tree("c"), Tree("b")),
         true
       ) shouldBe Tree("c", Tree("d"), Tree("d"))
+      updateTree(0, Some(3), Tree("b", Tree("d")), Tree("a", Tree("b"), Tree("b"), Tree("c")), true) shouldBe Tree(
+        "a",
+        Tree("b"),
+        Tree("b", Tree("d"))
+      )
+      updateTree(1, Some(3), Tree("b", Tree("d")), Tree("a", Tree("b"), Tree("c"), Tree("b")), true) shouldBe Tree(
+        "a",
+        Tree("b", Tree("d")),
+        Tree("b")
+      )
+      updateTree(2, Some(3), Tree("b", Tree("d")), Tree("a", Tree("c"), Tree("b"), Tree("b")), true) shouldBe Tree(
+        "a",
+        Tree("b", Tree("d")),
+        Tree("b")
+      )
     }
 
     "modify the tree at the index" in {

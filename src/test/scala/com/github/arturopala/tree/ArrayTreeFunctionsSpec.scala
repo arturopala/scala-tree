@@ -23,6 +23,23 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat {
 
   "ArrayTreeFunctions" should {
 
+    "find a nearest sibling of an index having given value" in {
+      siblingOfValue("a", 0, 1, Array(0), Array("a")) shouldBe None
+      siblingOfValue("a", 0, 2, Array(0, 1), Array("a", "a")) shouldBe None
+      siblingOfValue("a", 1, 3, Array(0, 0, 2), Array("a", "a", "a")) shouldBe Some(0)
+      siblingOfValue("a", 0, 3, Array(0, 0, 2), Array("a", "a", "a")) shouldBe Some(1)
+      siblingOfValue("a", 1, 3, Array(0, 0, 2), Array("a", "b", "a")) shouldBe Some(0)
+      siblingOfValue("a", 0, 3, Array(0, 0, 2), Array("a", "b", "a")) shouldBe None
+      siblingOfValue("a", 3, 6, Array(0, 0, 2, 0, 0, 3), Array("a", "a", "a", "a", "a", "a")) shouldBe Some(4)
+      siblingOfValue("a", 4, 6, Array(0, 0, 2, 0, 0, 3), Array("a", "a", "a", "a", "a", "a")) shouldBe Some(3)
+      siblingOfValue("a", 2, 6, Array(0, 0, 2, 0, 0, 3), Array("a", "a", "a", "a", "a", "a")) shouldBe Some(3)
+      siblingOfValue("b", 2, 6, Array(0, 0, 2, 0, 0, 3), Array("a", "b", "a", "a", "a", "a")) shouldBe None
+      siblingOfValue("b", 1, 6, Array(0, 0, 2, 0, 0, 3), Array("a", "a", "b", "a", "a", "a")) shouldBe None
+      siblingOfValue("b", 2, 6, Array(0, 0, 2, 0, 0, 3), Array("a", "a", "a", "b", "a", "a")) shouldBe Some(3)
+      siblingOfValue("b", 4, 6, Array(0, 0, 2, 0, 0, 3), Array("a", "a", "a", "b", "a", "a")) shouldBe Some(3)
+      siblingOfValue("b", 2, 6, Array(0, 0, 2, 0, 0, 3), Array("a", "a", "a", "b", "b", "a")) shouldBe Some(3)
+    }
+
     "list children indexes" in {
       childrenIndexes(0, Array(0)) shouldBe IntSlice.empty
       childrenIndexes(1, Array(0, 1)) shouldBe IntSlice(0)

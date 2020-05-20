@@ -269,7 +269,7 @@ class TreeModificationsSpec extends FunSuite {
       tree7.modifyValueAt(List("a", "d", "g"), f) shouldBe Left(tree7)
       tree7.modifyValueAt(List("a", "b", "c", "d"), f) shouldBe Left(tree7)
       tree7.modifyValueAt(List("a", "b", "e"), f) shouldBe Left(tree7)
-      // check if it de-duplicates only the modified node
+      // check if de-duplicates only the modified node
       tree3_2
         .insertValueLax("b")
         .modifyValueAt(List("a", "c"), _ => "b") shouldBe Right(Tree("a", Tree("b"), Tree("b")))
@@ -480,6 +480,12 @@ class TreeModificationsSpec extends FunSuite {
       tree4_2.modifyTreeAt(List("b"), _ => Tree("b", Tree("c", Tree("e")))) shouldBe Left(tree4_2)
       tree4_2.modifyTreeAt(List("d"), _ => Tree("b", Tree("c", Tree("e")))) shouldBe Left(tree4_2)
       tree4_2.modifyTreeAt(List("b", "c"), _ => Tree("b", Tree("c", Tree("e")))) shouldBe Left(tree4_2)
+      // check if de-duplicates only the modified node
+      tree3_2
+        .insertValueLax("b")
+        .modifyTreeAt(List("a", "c"), _ => Tree("b", Tree("c"))) shouldBe Right(
+        Tree("a", Tree("b"), Tree("b", Tree("c")))
+      )
     }
 
     "modify distinct a subtree selected by the path using an extractor function" in {

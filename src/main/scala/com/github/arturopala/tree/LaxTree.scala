@@ -165,7 +165,10 @@ object LaxTreeOps {
       case node: NodeTree[T] =>
         val list: List[(Int, Tree[K])] =
           NodeTree.listFlatMap(f, List((node.subtrees.size, f(node.value))), node.subtrees)
-        TreeBuilder.fromTreePairsList(list, Nil, 0, TreeBuilder.TreeMergeStrategy.Join).headOption.getOrElse(empty)
+        TreeBuilder
+          .fromSizeAndTreePairsList(list, Nil, TreeBuilder.TreeMergeStrategy.Join)
+          .headOption
+          .getOrElse(empty)
 
       case tree: ArrayTree[T] =>
         ArrayTree.flatMap(tree.structure, tree.content, f)

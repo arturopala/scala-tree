@@ -25,7 +25,7 @@ class TreeSerializationSpec extends FunSuite {
 
     "serialize a tree to a list of (numberOfChildren, value) pairs" in {
       tree0.toPairsIterator shouldBe Iterator.empty
-      TreeBuilder.fromPairsIterator(Iterator.empty) shouldBe List(Tree.empty)
+      TreeBuilder.fromSizeAndValuePairsIterator(Iterator.empty) shouldBe List(Tree.empty)
       tree1.toPairsIterator.toList shouldBe List((0, "a"))
       tree2.toPairsIterator.toList shouldBe List((0, "b"), (1, "a"))
       tree3_1.toPairsIterator.toList shouldBe List((0, "c"), (1, "b"), (1, "a"))

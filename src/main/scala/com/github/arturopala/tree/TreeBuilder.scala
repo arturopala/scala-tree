@@ -38,17 +38,21 @@ object TreeBuilder {
     * @note - Values of subtrees must always precede the value of a parent node, and appear in the reverse order.
     *       - The sum of all numberOfChildren values must be the size of the list minus one.
     */
-  final def fromPairsIterator[T](iterator: Iterator[(Int, T)]): List[Tree[T]] = fromPairsIterator(iterator, Nil)
+  final def fromSizeAndValuePairsIterator[T](iterator: Iterator[(Int, T)]): List[Tree[T]] =
+    fromSizeAndValuePairs(iterator, Nil)
 
   /** Builds a tree from an iterable of pairs (numberOfChildren, value). */
-  final def fromPairsIterable[T](iterable: Iterable[(Int, T)]): List[Tree[T]] =
-    fromPairsIterator(iterable.iterator, Nil)
+  final def fromSizeAndValuePairsIterable[T](iterable: Iterable[(Int, T)]): List[Tree[T]] =
+    fromSizeAndValuePairs(iterable.iterator, Nil)
 
   @tailrec
-  private final def fromPairsIterator[T](iterator: Iterator[(Int, T)], result: List[NodeTree[T]] = Nil): List[Tree[T]] =
+  private final def fromSizeAndValuePairs[T](
+    iterator: Iterator[(Int, T)],
+    result: List[NodeTree[T]] = Nil
+  ): List[Tree[T]] =
     if (iterator.hasNext) {
       val (size, value) = iterator.next()
-      fromPairsIterator(iterator, Tree(value, result.take(size)) :: result.drop(size))
+      fromSizeAndValuePairs(iterator, Tree(value, result.take(size)) :: result.drop(size))
     } else if (result.isEmpty) List(Tree.empty)
     else result
 
@@ -151,26 +155,47 @@ object TreeBuilder {
     * @note - Nodes of subtrees must always precede the parent node, and appear in the reverse order.
     *       - The sum of all numberOfChildren values must be the size of the list minus one.
     */
-  @tailrec
-  final def fromTreePairsList[T](
+  final def fromSizeAndTreePairsList[T](
     list: List[(Int, Tree[T])],
     result: List[NodeTree[T]] = Nil,
-    offset: Int = 0,
     strategy: TreeMergeStrategy = TreeMergeStrategy.Join
   ): List[Tree[T]] =
-    list match {
-      case Nil => if (result.isEmpty) List(Tree.empty) else result
-      case (size, tree) :: xs =>
-        tree match {
-          case Tree.empty =>
-            val offset = if (strategy.keepOrphanedSubtrees) size else -1
-            fromTreePairsList(xs, result.drop(size - offset), offset, strategy)
+    fromSizeAndTreePairs(list.iterator, result, strategy)
 
-          case tree =>
-            val merged = strategy.merge(tree.inflated.asInstanceOf[NodeTree[T]], result.take(size))
-            fromTreePairsList(xs, merged :: result.drop(size), 0, strategy)
-        }
-    }
+  /** Builds a tree from an iterator of pairs (numberOfChildren, node). */
+  final def fromSizeAndTreePairsIterator[T](
+    iterator: Iterator[(Int, Tree[T])],
+    strategy: TreeMergeStrategy = TreeMergeStrategy.Join
+  ): List[Tree[T]] =
+    fromSizeAndTreePairs(iterator, Nil, strategy)
+
+  /** Builds a tree from an iterable of pairs (numberOfChildren, node). */
+  final def fromSizeAndTreePairsIterable[T](
+    iterable: Iterable[(Int, Tree[T])],
+    strategy: TreeMergeStrategy = TreeMergeStrategy.Join
+  ): List[Tree[T]] =
+    fromSizeAndTreePairs(iterable.iterator, Nil, strategy)
+
+  @tailrec
+  private final def fromSizeAndTreePairs[T](
+    iterator: Iterator[(Int, Tree[T])],
+    result: List[NodeTree[T]] = Nil,
+    strategy: TreeMergeStrategy = TreeMergeStrategy.Join
+  ): List[Tree[T]] =
+    if (iterator.hasNext) {
+      val (size, tree) = iterator.next()
+      tree match {
+        case Tree.empty =>
+          val offset = if (strategy.keepOrphanedSubtrees) size else -1
+          fromSizeAndTreePairs(iterator, result.drop(-offset), strategy)
+
+        case tree =>
+          val subtrees = result.take(size)
+          val merged = strategy.merge(tree.inflated.asInstanceOf[NodeTree[T]], subtrees)
+          fromSizeAndTreePairs(iterator, merged :: result.drop(size), strategy)
+      }
+    } else if (result.isEmpty) List(Tree.empty)
+    else result
 
   /** Builds a tree from a pair of buffers.
     *  - `structureBuffer` is a buffer holding linearized tree structure,
@@ -210,14 +235,14 @@ object TreeBuilder {
 
   /** Builds a main-branch tree from a list of trees. */
   final def fromTreeSequence[T: ClassTag](seq: Seq[Tree[T]]): Tree[T] =
-    buildTreeFromReverseTreeIterator(seq.reverseIterator, Tree.empty)
+    fromReverseTreeIterator(seq.reverseIterator, Tree.empty)
 
   /** Builds a single-branch tree from a reverse iterator over child trees */
   @tailrec
-  final def buildTreeFromReverseTreeIterator[T: ClassTag](iterator: Iterator[Tree[T]], child: Tree[T]): Tree[T] =
+  final def fromReverseTreeIterator[T: ClassTag](iterator: Iterator[Tree[T]], child: Tree[T]): Tree[T] =
     if (iterator.hasNext) {
       val tree = iterator.next().insertTree(child)
-      buildTreeFromReverseTreeIterator(iterator, tree)
+      fromReverseTreeIterator(iterator, tree)
     } else {
       child
     }
