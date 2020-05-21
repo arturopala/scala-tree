@@ -16,20 +16,29 @@
 
 package com.github.arturopala.tree
 
+import com.github.arturopala.bufferandslice.{Buffer, IntBuffer, IntSlice, Slice}
 import com.github.arturopala.tree.LaxTreeOps._
+import com.github.arturopala.tree.internal.ArrayTreeFunctions.insertRightChildren
 
 // Special test suite to ease single assertions debugging in an IDE
-class TreeDebugSpec extends FunSuite {
+class TreeDebugSpec extends FunSuite with TestWithBuffers {
 
   test(Inflated, new Spec with InflatedTestTrees)
   test(Deflated, new Spec with DeflatedTestTrees)
 
   sealed trait Spec extends AnyWordSpecCompat with TestTrees {
 
-    "debug single cases" in {
-      tree3_2
-        .insertValueLax("b")
-        .modifyValueAt(List("a", "c"), _ => "b") shouldBe Right(Tree("a", Tree("b"), Tree("b")))
+    "debug" in {
+      testWithBuffers[String, Int](
+        insertRightChildren(1, List((IntSlice(0, 0, 2), Slice("f", "e", "d"))), _, _, keepDistinct = false),
+        IntBuffer(0, 0, 2),
+        Buffer("c", "b", "a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 0, 0, 2, 1, 2)
+          values shouldBe Array("c", "f", "e", "d", "b", "a")
+          delta shouldBe 3
+      }
     }
 
   }

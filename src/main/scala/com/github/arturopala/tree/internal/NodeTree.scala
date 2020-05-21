@@ -19,7 +19,6 @@ package com.github.arturopala.tree.internal
 import com.github.arturopala.tree.{Tree, TreeBuilder}
 import com.github.arturopala.tree.Tree.{ArrayTree, Binary, Leaf, NodeTree, Unary}
 import com.github.arturopala.bufferandslice.{Buffer, IntBuffer, IntSlice, Slice}
-import com.github.arturopala.tree.internal.NodeTree.{makeTreeDistinct, splitListWhen}
 
 import scala.annotation.tailrec
 import scala.collection.mutable
@@ -1030,21 +1029,19 @@ object NodeTree {
   ): Tree[T1] =
     modify(child) match {
       case Tree.empty =>
-        TreeBuilder.fromChildAndTreeSplit(Tree.empty, treeSplit)
-      case modifiedChild =>
+        TreeBuilder.fromTreeSplit[T1](treeSplit)
+
+      case tree: NodeTree[T1] =>
         if (keepDistinct && treeSplit.nonEmpty) {
           val (left, value, right) = treeSplit.head
-          val newHead = modifiedChild match {
-            case Tree.empty => Tree(value, left ::: right)
-            case t: NodeTree[T] =>
-              insertChildDistinct(value, left, t, right)
-            case t: ArrayTree[T] =>
-              ??? //TODO
-          }
+          val newHead = insertChildDistinct(value, left, tree, right)
           TreeBuilder.fromChildAndTreeSplit(newHead, treeSplit.tail)
         } else {
-          TreeBuilder.fromChildAndTreeSplit(modifiedChild, treeSplit)
+          TreeBuilder.fromChildAndTreeSplit(tree, treeSplit)
         }
+
+      case tree: ArrayTree[T1] =>
+        ArrayTree.buildFromChildAndTreeSplit(tree, treeSplit.tail)
     }
 
   /** Modifies value of the node selected by the path. */
@@ -1106,7 +1103,7 @@ object NodeTree {
       .getOrElse(Left(tree))
 
   /** Removes the child node and inserts its children into the treeSplit. */
-  final def removeChildValueFromSplit[T, T1 >: T](
+  final def removeChildValueFromSplit[T](
     tree: NodeTree[T],
     treeSplit: List[TreeSplit[T]],
     child: NodeTree[T],

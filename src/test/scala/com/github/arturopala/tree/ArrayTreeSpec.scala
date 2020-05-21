@@ -33,6 +33,35 @@ class ArrayTreeSpec extends AnyWordSpecCompat {
 
   "ArrayTree" should {
 
+    "build from child and tree split" in {
+      buildFromChildAndTreeSplit(Tree("a"), Nil) shouldBe Tree("a")
+      buildFromChildAndTreeSplit(Tree("b"), List((Nil, "a", Nil))) shouldBe Tree("a", Tree("b"))
+      buildFromChildAndTreeSplit(Tree("c"), List((List(Tree("b")), "a", List(Tree("d"))))) shouldBe
+        Tree("a", Tree("b"), Tree("c"), Tree("d"))
+    }
+
+    "insert multiple children at once" in {
+      insertChildren(Tree("a"), List(Tree("b")), List(Tree("c")), keepDistinct = true) shouldBe
+        Tree("a", Tree("b"), Tree("c"))
+      insertChildren(Tree("a"), List(Tree("b")), List(Tree("c")), keepDistinct = false) shouldBe
+        Tree("a", Tree("b"), Tree("c"))
+      insertChildren(Tree("a"), List(Tree("b"), Tree("c")), List(Tree("d"), Tree("e")), keepDistinct = true) shouldBe
+        Tree("a", Tree("b"), Tree("c"), Tree("d"), Tree("e"))
+      insertChildren(Tree("a"), List(Tree("b"), Tree("c")), List(Tree("d"), Tree("e")), keepDistinct = false) shouldBe
+        Tree("a", Tree("b"), Tree("c"), Tree("d"), Tree("e"))
+      insertChildren(Tree("a"), List(Tree("b"), Tree("c")), List(Tree("b"), Tree("d")), keepDistinct = true) shouldBe
+        Tree("a", Tree("b"), Tree("c"), Tree("d"))
+      insertChildren(Tree("a"), List(Tree("b"), Tree("c")), List(Tree("b"), Tree("d")), keepDistinct = false) shouldBe
+        Tree("a", Tree("b"), Tree("c"), Tree("b"), Tree("d"))
+      insertChildren(Tree("a"), Nil, List(Tree("b"), Tree("d")), keepDistinct = true) shouldBe
+        Tree("a", Tree("b"), Tree("d"))
+      insertChildren(Tree("a"), List(Tree("b"), Tree("c")), Nil, keepDistinct = true) shouldBe
+        Tree("a", Tree("b"), Tree("c"))
+      insertChildren(Tree("a"), Nil, Nil, keepDistinct = true) shouldBe Tree("a")
+      insertChildren[String](Tree.empty, Nil, Nil, keepDistinct = true) shouldBe Tree.empty
+      insertChildren(Tree.empty, List(Tree("b")), List(Tree("c")), keepDistinct = true) shouldBe Tree.empty
+    }
+
     "iterate over tree's values with depth limit" in {
       val all: String => Boolean = _ => true
       val none: String => Boolean = _ => false

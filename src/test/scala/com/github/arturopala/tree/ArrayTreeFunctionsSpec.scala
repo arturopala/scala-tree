@@ -19,7 +19,7 @@ package com.github.arturopala.tree
 import com.github.arturopala.tree.internal.ArrayTreeFunctions._
 import com.github.arturopala.bufferandslice.{Buffer, IntBuffer, IntSlice, Slice}
 
-class ArrayTreeFunctionsSpec extends AnyWordSpecCompat {
+class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
 
   "ArrayTreeFunctions" should {
 
@@ -446,13 +446,6 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat {
       insertBranch(List("b", "c", "d", "e", "f").iterator, 1, IntBuffer(0, 1), Buffer("b", "a"), 0) shouldBe 4
       insertBranch(List("b", "c", "d", "e", "f").iterator, 2, IntBuffer(0, 1, 1), Buffer("c", "b", "a"), 0) shouldBe 3
       insertBranch(List("b", "c", "d", "e", "f").iterator, 2, IntBuffer(0, 0, 2), Buffer("c", "b", "a"), 0) shouldBe 4
-    }
-
-    def testWithBuffers[T, R](test: (IntBuffer, Buffer[T]) => R, structure: IntBuffer, values: Buffer[T])(
-      assert: (Array[Int], Array[T], R) => Unit
-    ): Unit = {
-      val result = test(structure, values)
-      assert(structure.toArray, values.toArray, result)
     }
 
     "expand value into a tree at index" in {
@@ -1547,6 +1540,191 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat {
           structure shouldBe Array(0, 0, 1, 0, 2, 2)
           values shouldBe Array("c", "e", "c", "d", "b", "a")
           delta shouldBe 3
+      }
+    }
+
+    "insert children on the left side" in {
+      testWithBuffers[String, Int](
+        insertLeftChildren(0, List((IntSlice(0), Slice("b"))), _, _, keepDistinct = false),
+        IntBuffer(0),
+        Buffer("a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 1)
+          values shouldBe Array("b", "a")
+          delta shouldBe 1
+      }
+      testWithBuffers[String, Int](
+        insertLeftChildren(0, List((IntSlice(0, 0, 2), Slice("d", "c", "b"))), _, _, keepDistinct = false),
+        IntBuffer(0),
+        Buffer("a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 0, 2, 1)
+          values shouldBe Array("d", "c", "b", "a")
+          delta shouldBe 3
+      }
+      testWithBuffers[String, Int](
+        insertLeftChildren(2, List((IntSlice(0, 0, 2), Slice("f", "e", "d"))), _, _, keepDistinct = false),
+        IntBuffer(0, 0, 2),
+        Buffer("c", "b", "a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 0, 0, 0, 2, 3)
+          values shouldBe Array("c", "b", "f", "e", "d", "a")
+          delta shouldBe 3
+      }
+      testWithBuffers[String, Int](
+        insertLeftChildren(1, List((IntSlice(0, 0, 2), Slice("f", "e", "d"))), _, _, keepDistinct = false),
+        IntBuffer(0, 0, 2),
+        Buffer("c", "b", "a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 0, 0, 2, 1, 2)
+          values shouldBe Array("c", "f", "e", "d", "b", "a")
+          delta shouldBe 3
+      }
+      testWithBuffers[String, Int](
+        insertLeftChildren(0, List((IntSlice(0, 0, 2), Slice("f", "e", "d"))), _, _, keepDistinct = false),
+        IntBuffer(0, 0, 2),
+        Buffer("c", "b", "a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 0, 2, 1, 0, 2)
+          values shouldBe Array("f", "e", "d", "c", "b", "a")
+          delta shouldBe 3
+      }
+      testWithBuffers[String, Int](
+        insertLeftChildren(2, List((IntSlice(0, 0, 2), Slice("e", "d", "c"))), _, _, keepDistinct = true),
+        IntBuffer(0, 0, 2),
+        Buffer("c", "b", "a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 0, 2, 0, 2)
+          values shouldBe Array("e", "d", "c", "b", "a")
+          delta shouldBe 2
+      }
+      testWithBuffers[String, Int](
+        insertLeftChildren(2, List((IntSlice(0, 0, 2), Slice("e", "d", "c"))), _, _, keepDistinct = true),
+        IntBuffer(0, 0, 2),
+        Buffer("c", "c", "a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 0, 0, 2, 2)
+          values shouldBe Array("c", "e", "d", "c", "a")
+          delta shouldBe 2
+      }
+    }
+
+    "insert children on the right side" in {
+      testWithBuffers[String, Int](
+        insertRightChildren(0, List((IntSlice(0), Slice("b"))), _, _, keepDistinct = false),
+        IntBuffer(0),
+        Buffer("a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 1)
+          values shouldBe Array("b", "a")
+          delta shouldBe 1
+      }
+      testWithBuffers[String, Int](
+        insertRightChildren(0, List((IntSlice(0, 0, 2), Slice("d", "c", "b"))), _, _, keepDistinct = false),
+        IntBuffer(0),
+        Buffer("a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 0, 2, 1)
+          values shouldBe Array("d", "c", "b", "a")
+          delta shouldBe 3
+      }
+      testWithBuffers[String, Int](
+        insertRightChildren(2, List((IntSlice(0, 0, 2), Slice("f", "e", "d"))), _, _, keepDistinct = false),
+        IntBuffer(0, 0, 2),
+        Buffer("c", "b", "a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 0, 2, 0, 0, 3)
+          values shouldBe Array("f", "e", "d", "c", "b", "a")
+          delta shouldBe 3
+      }
+      testWithBuffers[String, Int](
+        insertRightChildren(1, List((IntSlice(0, 0, 2), Slice("f", "e", "d"))), _, _, keepDistinct = false),
+        IntBuffer(0, 0, 2),
+        Buffer("c", "b", "a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 0, 0, 2, 1, 2)
+          values shouldBe Array("c", "f", "e", "d", "b", "a")
+          delta shouldBe 3
+      }
+      testWithBuffers[String, Int](
+        insertRightChildren(0, List((IntSlice(0, 0, 2), Slice("f", "e", "d"))), _, _, keepDistinct = false),
+        IntBuffer(0, 0, 2),
+        Buffer("c", "b", "a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 0, 2, 1, 0, 2)
+          values shouldBe Array("f", "e", "d", "c", "b", "a")
+          delta shouldBe 3
+      }
+      testWithBuffers[String, Int](
+        insertRightChildren(2, List((IntSlice(0, 0, 2), Slice("e", "d", "c"))), _, _, keepDistinct = true),
+        IntBuffer(0, 0, 2),
+        Buffer("c", "b", "a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 0, 2, 0, 2)
+          values shouldBe Array("e", "d", "c", "b", "a")
+          delta shouldBe 2
+      }
+      testWithBuffers[String, Int](
+        insertRightChildren(2, List((IntSlice(0, 0, 2), Slice("e", "d", "c"))), _, _, keepDistinct = true),
+        IntBuffer(0, 0, 2),
+        Buffer("c", "c", "a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 0, 2, 0, 2)
+          values shouldBe Array("e", "d", "c", "c", "a")
+          delta shouldBe 2
+      }
+    }
+
+    "wrap with value and siblings" in {
+      testWithBuffers[String, Int](
+        wrapWithValueAndSiblings(
+          0,
+          "a",
+          List((IntSlice(0, 0, 2), Slice("d", "c", "b"))),
+          List((IntSlice(0, 1, 1), Slice("g", "f", "e"))),
+          _,
+          _,
+          keepDistinct = true
+        ),
+        IntBuffer(0),
+        Buffer("z")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 1, 1, 0, 0, 0, 2, 3)
+          values shouldBe Array("g", "f", "e", "z", "d", "c", "b", "a")
+          delta shouldBe 7
+      }
+      testWithBuffers[String, Int](
+        wrapWithValueAndSiblings(
+          1,
+          "a",
+          List((IntSlice(0, 0, 2), Slice("d", "c", "b"))),
+          List((IntSlice(0, 1, 1), Slice("g", "f", "e"))),
+          _,
+          _,
+          keepDistinct = true
+        ),
+        IntBuffer(0, 1, 1),
+        Buffer("z", "y", "x")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 1, 1, 0, 1, 0, 0, 2, 3, 1)
+          values shouldBe Array("g", "f", "e", "z", "y", "d", "c", "b", "a", "x")
+          delta shouldBe 7
       }
     }
   }

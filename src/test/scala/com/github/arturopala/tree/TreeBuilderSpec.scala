@@ -132,13 +132,13 @@ class TreeBuilderSpec extends AnyWordSpecCompat {
     }
 
     "create a tree from tree split lists and a tree" in {
-      fromChildAndTreeSplit(Tree.empty, List()) shouldBe Tree.empty
+      fromTreeSplit(List()) shouldBe Tree.empty
       fromChildAndTreeSplit(Tree("a"), List()) shouldBe Tree("a")
-      fromChildAndTreeSplit(Tree.empty, List((Nil, "a", Nil))) shouldBe Tree("a")
-      fromChildAndTreeSplit(Tree("a"), List((Nil, "b", Nil), (Nil, "c", Nil), (Nil, "d", Nil))) shouldBe Tree(
-        "d",
-        Tree("c", Tree("b", Tree("a")))
-      )
+      fromTreeSplit(List((Nil, "a", Nil))) shouldBe Tree("a")
+      fromChildAndTreeSplit(Tree("a"), List((Nil, "b", Nil), (Nil, "c", Nil), (Nil, "d", Nil))) shouldBe
+        Tree("d", Tree("c", Tree("b", Tree("a"))))
+      fromChildAndTreeSplit(Tree("c"), List((List(Tree("b")), "a", List(Tree("d"))))) shouldBe
+        Tree("a", Tree("b"), Tree("c"), Tree("d"))
       fromChildAndTreeSplit(
         Tree("a"),
         List((List(Tree("e")), "b", Nil), (List(Tree("f")), "c", Nil), (List(Tree("g")), "d", Nil))
@@ -150,12 +150,8 @@ class TreeBuilderSpec extends AnyWordSpecCompat {
           (List(Tree("f")), "c", List(Tree("i"))),
           (List(Tree("g")), "d", List(Tree("j")))
         )
-      ) shouldBe Tree(
-        "d",
-        Tree("g"),
-        Tree("c", Tree("f"), Tree("b", Tree("e"), Tree("a"), Tree("h")), Tree("i")),
-        Tree("j")
-      )
+      ) shouldBe
+        Tree("d", Tree("g"), Tree("c", Tree("f"), Tree("b", Tree("e"), Tree("a"), Tree("h")), Tree("i")), Tree("j"))
     }
   }
 
