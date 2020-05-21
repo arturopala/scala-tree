@@ -123,23 +123,6 @@ object NodeTree {
         else values(pred, result, subtrees ::: xs)
     }
 
-  /** Returns lazy node stream, goes depth-first */
-  final def valueStream[T](pred: T => Boolean, node: NodeTree[T]): Stream[T] = valueStream(pred, node, Nil)
-
-  private def valueStream[T](pred: T => Boolean, node: NodeTree[T], queue: List[NodeTree[T]]): Stream[T] = {
-    def continue: Stream[T] = node match {
-      case NonEmptySubtree(_, x, xs) =>
-        valueStream(pred, x, xs ::: queue)
-
-      case _ =>
-        queue match {
-          case y :: ys => valueStream(pred, y, ys)
-          case Nil     => Stream.empty
-        }
-    }
-    if (pred(node.value)) Stream.cons(node.value, continue) else continue
-  }
-
   @tailrec
   final def select[T, T1 >: T, R](
     node: NodeTree[T],
@@ -285,23 +268,6 @@ object NodeTree {
         else trees(pred, result, subtrees ::: xs)
     }
 
-  /** Returns lazy subtree stream, goes depth-first. */
-  final def treeStream[T](pred: Tree[T] => Boolean, node: NodeTree[T]): Stream[Tree[T]] = treeStream(pred, node, Nil)
-
-  private def treeStream[T](pred: Tree[T] => Boolean, node: NodeTree[T], queue: List[NodeTree[T]]): Stream[Tree[T]] = {
-    def continue: Stream[Tree[T]] = node match {
-      case NonEmptySubtree(_, x, xs) =>
-        treeStream(pred, x, xs ::: queue)
-
-      case _ =>
-        queue match {
-          case y :: ys => treeStream(pred, y, ys)
-          case Nil     => Stream.empty
-        }
-    }
-    if (pred(node)) Stream.cons(node, continue) else continue
-  }
-
   /** Returns an iterator over filtered branches of the tree. */
   final def branchIterator[T](pred: Iterable[T] => Boolean, node: NodeTree[T]): Iterator[Iterable[T]] =
     new Iterator[Iterable[T]] {
@@ -387,29 +353,6 @@ object NodeTree {
           case Nil if pred(branch) => branches(pred, branch.reverse :: result, xs)
           case _                   => branches(pred, result, subtrees.map((branch, _)) ::: xs)
         }
-    }
-
-  final def branchStream[T](pred: Iterable[T] => Boolean, node: NodeTree[T]): Stream[Iterable[T]] =
-    branchStream(pred, node, Vector.empty, Nil)
-
-  private def branchStream[T](
-    pred: Iterable[T] => Boolean,
-    node: NodeTree[T],
-    acc: Vector[T],
-    queue: List[(Vector[T], NodeTree[T])]
-  ): Stream[Vector[T]] =
-    node match {
-      case NonEmptySubtree(value, x, Nil) => branchStream(pred, x, acc :+ value, queue)
-      case NonEmptySubtree(value, x, xs)  => branchStream(pred, x, acc :+ value, (acc, Tree(value, xs)) :: queue)
-      case Node(value, Nil) =>
-        val branch = acc :+ value
-        def continue: Stream[Vector[T]] = queue match {
-          case (acc2, y) :: ys => branchStream(pred, y, acc2, ys)
-          case Nil             => Stream.empty
-        }
-        if (pred(branch)) Stream.cons(branch, continue)
-        else continue
-
     }
 
   final def countBranches[T](pred: List[T] => Boolean, node: NodeTree[T]): Int =
