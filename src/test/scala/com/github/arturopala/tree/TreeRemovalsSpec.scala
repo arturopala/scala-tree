@@ -247,6 +247,28 @@ class TreeRemovalsSpec extends FunSuite {
       )
     }
 
+    "remove a child tree holding a value" in {
+      tree0.removeTree("a") shouldBe tree0
+      tree0.removeTree("b") shouldBe tree0
+      tree1.removeTree("a") shouldBe tree1
+      tree1.removeTree("b") shouldBe tree1
+      tree2.removeTree("a") shouldBe tree2
+      tree2.removeTree("b") shouldBe tree1
+      tree3_1.removeTree("b") shouldBe tree1
+      tree3_2.removeTree("b") shouldBe Tree("a", Tree("c"))
+      tree3_2.removeTree("c") shouldBe Tree("a", Tree("b"))
+      tree4_1.removeTree("b") shouldBe tree1
+      tree4_1.removeTree("c") shouldBe tree4_1
+      tree4_2.removeTree("b") shouldBe Tree("a", Tree("d"))
+      tree4_2.removeTree("d") shouldBe tree3_1
+      tree7.removeTree("b") shouldBe
+        Tree("a", Tree("d", Tree("e", Tree("f"))), Tree("g"))
+      tree7.removeTree("d") shouldBe
+        Tree("a", Tree("b", Tree("c")), Tree("g"))
+      tree7.removeTree("g") shouldBe
+        Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e", Tree("f"))))
+    }
+
     "remove subtree selected by the path" in {
       tree0.removeTreeAt(List()) shouldBe tree0
       tree0.removeTreeAt(List("a")) shouldBe tree0

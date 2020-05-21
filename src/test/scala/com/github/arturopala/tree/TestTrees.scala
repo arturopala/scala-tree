@@ -84,7 +84,8 @@ object TestTrees {
     * [a,d,e,f]
     * [a,g]
     */
-  val tree7: NodeTree[String] = Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e", Tree("f"))), Tree("g"))
+  val tree7: NodeTree[String] =
+    Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e", Tree("f"))), Tree("g"))
 
   /**
     * [a,b,c,d]

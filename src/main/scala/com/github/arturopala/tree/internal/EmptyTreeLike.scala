@@ -131,6 +131,9 @@ trait EmptyTreeLike extends TreeLike[Nothing] {
   ): Tree[Nothing] =
     Tree.empty
 
+  final override def removeTree[T1 >: Nothing: ClassTag](value: T1): Tree[Nothing] =
+    Tree.empty
+
   final override def removeTreeAt[T1 >: Nothing: ClassTag](path: Iterable[T1]): Tree[Nothing] =
     Tree.empty
 

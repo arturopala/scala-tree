@@ -1126,6 +1126,16 @@ object NodeTree {
       }
       .getOrElse(tree)
 
+  /** Removes the direct child holding the value. */
+  final def removeTree[T, T1 >: T](
+    tree: NodeTree[T],
+    value: T1
+  ): Tree[T] =
+    splitListWhen[NodeTree[T]](_.value == value, tree.subtrees) match {
+      case None                   => tree
+      case Some((left, _, right)) => Tree(tree.value, left ::: right)
+    }
+
   /** Removes the tree selected by the path. */
   final def removeTreeAt[T, T1 >: T](
     tree: NodeTree[T],

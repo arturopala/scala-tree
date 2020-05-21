@@ -451,7 +451,7 @@ trait TreeLike[+T] {
 
   // DISTINCT REMOVALS
 
-  /** Removes child node holding a value, re-inserts nested children into this tree.
+  /** Removes direct child node holding a value, re-inserts nested children into this tree.
     * Keeps children distinct, merges down if necessary.
     * @return modified tree
     * @group removal */
@@ -476,10 +476,10 @@ trait TreeLike[+T] {
     * @group removal */
   def removeValueAt[K, T1 >: T: ClassTag](path: Iterable[K], toPathItem: T => K): Tree[T]
 
-  /** Removes completely child node holding a value.
+  /** Removes completely direct child node holding a value.
     * @return modified tree
     * @group removal */
-  def removeTree[T1 >: T: ClassTag](value: T1): Tree[T] = ???
+  def removeTree[T1 >: T: ClassTag](value: T1): Tree[T]
 
   /** Removes the tree selected by the given path.
     * @param path list of node's values forming a path from the root to the parent node.

@@ -743,7 +743,7 @@ object ArrayTree {
       else target
     } else removeValue(indexes.last, indexes.get(indexes.length - 2), target, keepDistinct)
 
-  /** Removes the node holding the value, and inserts children into the parent.
+  /** Removes the direct child node holding the value, and inserts children into the parent.
     * @note when removing the top node, the following special rules apply:
     *       - if the tree has a single value, returns empty tree,
     *       - otherwise if the tree has a single child, returns that child,
@@ -813,6 +813,18 @@ object ArrayTree {
           .getOrElse(ArrayTreeFunctions.parentIndex(index, structureBuffer.length, structureBuffer))
         ArrayTreeFunctions.removeTree(index, parentIndex, structureBuffer, valuesBuffer).asOption
       }
+
+  /** Removes the direct child of the node, holding the value.
+    * @return modified tree */
+  final def removeTree[T: ClassTag, T1 >: T: ClassTag](
+    node: ArrayTree[T],
+    value: T1
+  ): Tree[T] =
+    transform(node) { (structureBuffer, valuesBuffer) =>
+      ArrayTreeFunctions
+        .rightmostIndexOfChildValue(value, structureBuffer.top, structureBuffer.length, structureBuffer, valuesBuffer)
+        .map(index => ArrayTreeFunctions.removeTree(index, structureBuffer.top, structureBuffer, valuesBuffer))
+    }
 
   /** Removes the tree selected by the path.
     * @return modified tree */
