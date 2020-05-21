@@ -174,27 +174,64 @@ trait TreeLike[+T] {
     * @group checks */
   def containsValue[T1 >: T](value: T1): Boolean = ???
 
-  /** Checks if the tree contains provided branch (full match).
+  /** Checks if value fulfilling the predicate exists in the whole tree.
+    * @param pred function returning true for the searched value
+    * @group checks */
+  def existsValue(pred: T => Boolean): Boolean = ???
+
+  /** Checks for the existence of the direct child holding the value.
+    * @param value value to look for
+    * @group checks */
+  def containsChild[T1 >: T](value: T1): Boolean = ???
+
+  /** Checks for the existence of the direct child fulfilling the predicate.
+    * @param pred function returning true for the searched value
+    * @group checks */
+  def existsChild(pred: T => Boolean): Boolean = ???
+
+  /** Checks if the tree contains provided branch (full path).
     * @param branch list of values forming a branch from the root to the leaf.
     * @group checks */
   def containsBranch[T1 >: T](branch: Iterable[T1]): Boolean
 
-  /** Checks if the tree contains provided branch (full match).
+  /** Checks if the tree contains provided branch (full path).
     * @param branch list of K path items forming a path from the root to the leaf
     * @param f extractor of the K path item from the tree's node value
     * @group checks */
   def containsBranch[K](branch: Iterable[K], f: T => K): Boolean
 
-  /** Checks if the tree contains provided path (prefix match).
+  /** Checks if the tree contains branch (full path) fulfilling the predicate.
+    * @param branch list of values forming a branch from the root to the leaf.
+    * @group checks */
+  def existsBranch(branch: Iterable[T] => Boolean): Boolean = ???
+
+  /** Checks if the tree contains branch (full path) fulfilling the predicate.
+    * @param branch list of K path items forming a path from the root to the leaf
+    * @param f extractor of the K path item from the tree's node value
+    * @group checks */
+  def existsBranch[K](branch: Iterable[K] => Boolean, f: T => K): Boolean = ???
+
+  /** Checks if the tree contains provided path (prefix).
     * @param path list of values forming a path from the root to the node.
     * @group checks */
   def containsPath[T1 >: T](path: Iterable[T1]): Boolean
 
-  /** Checks if the tree contains provided path (prefix match).
+  /** Checks if the tree contains provided path (prefix).
     * @param path list of K path items forming a path from the root to the node
     * @param f extractor of the K path item from the tree's node value
     * @group checks */
   def containsPath[K](path: Iterable[K], f: T => K): Boolean
+
+  /** Checks if the tree contains path (prefix) fulfilling the predicate.
+    * @param path list of values forming a branch from the root to the node.
+    * @group checks */
+  def existsPath(path: Iterable[T] => Boolean): Boolean = ???
+
+  /** Checks if the tree contains path (prefix) fulfilling the predicate.
+    * @param path list of K path items forming a path from the root to the node
+    * @param f extractor of the K path item from the tree's node value
+    * @group checks */
+  def existsPath[K](path: Iterable[K] => Boolean, f: T => K): Boolean = ???
 
   // SELECTION
 

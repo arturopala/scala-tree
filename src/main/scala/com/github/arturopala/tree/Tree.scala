@@ -65,13 +65,13 @@ sealed trait Tree[+T] extends TreeLike[T] {
   // EQUALITY, HASH CODE, AND TO_STRING
 
   final override def equals(obj: Any): Boolean = obj match {
-    case otherTree: Tree[T] => Tree.equals(this, otherTree)
+    case otherTree: Tree[_] => Tree.equals(this, otherTree)
     case _                  => false
   }
 
   final override def hashCode(): Int = hashcode
 
-  // Tree is immutable so should calculate hashcode once
+  // Tree is immutable so we shall calculate hashcode once
   protected lazy val hashcode: Int = Tree.hashCodeOf(this)
 
   override def toString: String = {
