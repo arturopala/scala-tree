@@ -134,6 +134,12 @@ trait LaxTree[T] {
 
   // LAX REMOVALS
 
+  /** Removes child node holding a value, re-inserts nested children into this tree.
+    * @note BEWARE: this method is lax, it will not keep node's children distinct.
+    * @return modified tree
+    * @group laxRemoval */
+  def removeValueLax[T1 >: T: ClassTag](value: T1): Tree[T]
+
   /** Removes the value selected by the given path, merges node's children with remaining siblings,
     * and returns a whole tree updated.
     * @note BEWARE: this method is lax, it will not keep node's children distinct.
@@ -324,6 +330,16 @@ object LaxTreeOps {
       case tree: ArrayTree[T] =>
         ArrayTree.modifyTreeAt(path, modify, tree, toPathItem, keepDistinct = false)
 
+    }
+
+    final override def removeValueLax[T1 >: T: ClassTag](value: T1): Tree[T] = t match {
+      case Tree.empty => empty
+
+      case node: NodeTree[T] =>
+        NodeTree.removeValue(node, value, keepDistinct = false)
+
+      case tree: ArrayTree[T] =>
+        ArrayTree.removeValue(value, tree, keepDistinct = false)
     }
 
     final override def removeValueLaxAt[T1 >: T: ClassTag](path: Iterable[T1]): Tree[T] = t match {

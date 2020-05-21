@@ -1085,7 +1085,7 @@ object NodeTree {
         if (keepDistinct && !node.isLeaf) {
           makeTreeDistinct(Tree(tree.value, left ::: node.subtrees ::: right), maxLookupLevel = 1)
         } else {
-          Tree(tree.value, left ::: right)
+          Tree(tree.value, left ::: node.subtrees ::: right)
         }
     }
 

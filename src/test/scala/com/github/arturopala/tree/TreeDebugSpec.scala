@@ -29,16 +29,8 @@ class TreeDebugSpec extends FunSuite with TestWithBuffers {
   sealed trait Spec extends AnyWordSpecCompat with TestTrees {
 
     "debug" in {
-      testWithBuffers[String, Int](
-        insertRightChildren(1, List((IntSlice(0, 0, 2), Slice("f", "e", "d"))), _, _, keepDistinct = false),
-        IntBuffer(0, 0, 2),
-        Buffer("c", "b", "a")
-      ) {
-        case (structure, values, delta) =>
-          structure shouldBe Array(0, 0, 0, 2, 1, 2)
-          values shouldBe Array("c", "f", "e", "d", "b", "a")
-          delta shouldBe 3
-      }
+
+      tree3_1.removeValueLax("b") shouldBe Tree("a", Tree("c"))
     }
 
   }

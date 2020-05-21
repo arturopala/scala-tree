@@ -451,7 +451,8 @@ trait TreeLike[+T] {
 
   // DISTINCT REMOVALS
 
-  /** Removes child node holding a value, inserts nested children into this tree.
+  /** Removes child node holding a value, re-inserts nested children into this tree.
+    * Keeps children distinct, merges down if necessary.
     * @return modified tree
     * @group removal */
   def removeValue[T1 >: T: ClassTag](value: T1): Tree[T]
