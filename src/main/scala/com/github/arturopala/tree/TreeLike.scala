@@ -365,10 +365,10 @@ trait TreeLike[+T] {
 
   // DISTINCT INSERTIONS
 
-  /** Creates an new tree with a value on top and this tree as a single child.
+  /** Creates a new node holding the value with this tree as its single child.
     * @param value new top node value
     * @group insertion */
-  def prependWith[T1 >: T: ClassTag](value: T1): Tree[T1]
+  def prepend[T1 >: T: ClassTag](value: T1): Tree[T1]
 
   /** Inserts a new node holding the value and returns updated tree.
     * Keeps all the node's children distinct.
@@ -429,9 +429,9 @@ trait TreeLike[+T] {
     * Keeps all the node's children distinct.
     * @param value value of the child node
     * @param modify function to modify the value
-    * @return either right of modified tree or left with the tree intact
+    * @return modified tree if contains the value
     * @group modification */
-  def modifyValue[T1 >: T: ClassTag](value: T1, modify: T1 => T1): Either[Tree[T], Tree[T1]] = ???
+  def modifyValue[T1 >: T: ClassTag](value: T1, modify: T => T1): Tree[T1]
 
   /** Modifies the value selected by the given path, and returns a whole tree updated.
     * Keeps all the node's children distinct.
@@ -458,9 +458,9 @@ trait TreeLike[+T] {
     * Keeps all the node's children distinct.
     * @param value value of the child node
     * @param modify function to modify the value
-    * @return either right of modified tree or left with the tree intact
+    * @return modified tree if contains the value
     * @group modification */
-  def modifyTree[T1 >: T: ClassTag](value: T1, modify: T1 => T1): Either[Tree[T], Tree[T1]] = ???
+  def modifyTree[T1 >: T: ClassTag](value: T1, modify: T1 => T1): Tree[T1] = ???
 
   /** Modifies the tree selected by the given path, and returns a whole tree updated.
     * Keeps all the node's children distinct.

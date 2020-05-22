@@ -62,7 +62,7 @@ trait EmptyTreeLike extends TreeLike[Nothing] {
 
   // MODIFICATIONS
 
-  final override def prependWith[T1 >: Nothing: ClassTag](value: T1): Tree[T1] = Tree(value)
+  final override def prepend[T1 >: Nothing: ClassTag](value: T1): Tree[T1] = Tree(value)
 
   final override def insertValue[T1: ClassTag](value: T1): Tree[T1] = Tree(value)
 
@@ -92,6 +92,9 @@ trait EmptyTreeLike extends TreeLike[Nothing] {
   final override def insertBranch[T1: ClassTag](branch: Iterable[T1]): Tree[T1] =
     if (branch.isEmpty) Tree.empty
     else TreeBuilder.linearTreeFromSequence(branch.toList)
+
+  def modifyValue[T1 >: Nothing: ClassTag](value: T1, modify: Nothing => T1): Tree[T1] =
+    Tree.empty
 
   final override def modifyValueAt[T1 >: Nothing: ClassTag](
     path: Iterable[T1],

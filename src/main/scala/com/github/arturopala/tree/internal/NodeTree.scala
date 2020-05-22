@@ -689,20 +689,22 @@ object NodeTree {
     newChild: NodeTree[T],
     rightSiblings: List[NodeTree[T]]
   ): NodeTree[T] =
-    splitListWhen[NodeTree[T]](_.value == newChild.value, rightSiblings) match {
+    splitListWhen[NodeTree[T]](_.value == newChild.value, leftSiblings.reverse) match {
       case None =>
-        splitListWhen[NodeTree[T]](_.value == newChild.value, leftSiblings.reverse) match {
-          case None => Tree(value, leftSiblings ::: (newChild :: rightSiblings))
-          case Some((right, duplicate, left)) =>
+        splitListWhen[NodeTree[T]](_.value == newChild.value, rightSiblings) match {
+          case None =>
+            Tree(value, leftSiblings ::: (newChild :: rightSiblings))
+
+          case Some((left, duplicate, right)) =>
             val newNode =
-              makeTreeDistinct(Tree(newChild.value, duplicate.subtrees ::: newChild.subtrees), maxLookupLevel = 1)
-            Tree(value, left.reverse ::: newNode :: right.reverse ::: rightSiblings)
+              makeTreeDistinct(Tree(newChild.value, newChild.subtrees ::: duplicate.subtrees), maxLookupLevel = 1)
+            Tree(value, leftSiblings ::: newNode :: left ::: right)
         }
 
-      case Some((left, duplicate, right)) =>
+      case Some((right, duplicate, left)) =>
         val newNode =
-          makeTreeDistinct(Tree(newChild.value, newChild.subtrees ::: duplicate.subtrees), maxLookupLevel = 1)
-        Tree(value, leftSiblings ::: left ::: newNode :: right)
+          makeTreeDistinct(Tree(newChild.value, duplicate.subtrees ::: newChild.subtrees), maxLookupLevel = 1)
+        Tree(value, left.reverse ::: newNode :: right.reverse ::: rightSiblings)
     }
 
   /** Makes tree's children deeply distinct.
@@ -943,8 +945,26 @@ object NodeTree {
     split(Nil, list)
   }
 
+  /** Modifies value of the node holding the value. */
+  final def modifyValue[T, T1 >: T: ClassTag](
+    tree: NodeTree[T],
+    value: T1,
+    modify: T => T1,
+    keepDistinct: Boolean
+  ): Tree[T1] =
+    splitListWhen[NodeTree[T]](_.value == value, tree.subtrees) match {
+      case None => tree
+      case Some((left, node, right)) =>
+        val modifiedNode = Tree(modify(node.value), node.subtrees)
+        if (keepDistinct) {
+          insertChildDistinct(tree.value, left, modifiedNode, right)
+        } else {
+          Tree(tree.value, left ::: modifiedNode :: right)
+        }
+    }
+
   /** Joins single treeSplit back into a tree node. */
-  final def join[T](split: TreeSplit[T]): NodeTree[T] = Tree(split._2, split._1 ++ split._3)
+  @`inline` final def join[T](split: TreeSplit[T]): NodeTree[T] = Tree(split._2, split._1 ++ split._3)
 
   /** Modifies a value of a child, and builds a tree back from the treeSplit. */
   final def modifyChildValueInSplit[T, T1 >: T: ClassTag](

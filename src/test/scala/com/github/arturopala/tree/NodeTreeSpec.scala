@@ -27,6 +27,38 @@ class NodeTreeSpec extends AnyWordSpecCompat {
 
   s"NodeTree" should {
 
+    "insert child distinct" in {
+      insertChildDistinct("a", List(Tree("b")), Tree("c"), List(Tree("d"))) shouldBe
+        Tree("a", Tree("b"), Tree("c"), Tree("d"))
+      insertChildDistinct("a", List(Tree("b")), Tree("c"), List(Tree("c"))) shouldBe
+        Tree("a", Tree("b"), Tree("c"))
+      insertChildDistinct("a", List(Tree("c")), Tree("c"), List(Tree("d"))) shouldBe
+        Tree("a", Tree("c"), Tree("d"))
+      insertChildDistinct("a", List(Tree("b")), Tree("c", Tree("e")), List(Tree("d"), Tree("c", Tree("f")))) shouldBe
+        Tree("a", Tree("b"), Tree("c", Tree("e"), Tree("f")), Tree("d"))
+      insertChildDistinct(
+        "a",
+        List(Tree("b")),
+        Tree("c", Tree("e")),
+        List(Tree("d"), Tree("c", Tree("f")), Tree("c", Tree("g")))
+      ) shouldBe
+        Tree("a", Tree("b"), Tree("c", Tree("e"), Tree("f")), Tree("d"), Tree("c", Tree("g")))
+      insertChildDistinct(
+        "a",
+        List(Tree("c", Tree("e")), Tree("b")),
+        Tree("c", Tree("f")),
+        List(Tree("d"), Tree("c", Tree("g")))
+      ) shouldBe
+        Tree("a", Tree("c", Tree("e"), Tree("f")), Tree("b"), Tree("d"), Tree("c", Tree("g")))
+      insertChildDistinct(
+        "a",
+        List(Tree("c", Tree("e")), Tree("c", Tree("f")), Tree("b")),
+        Tree("c", Tree("g")),
+        List(Tree("d"), Tree("c", Tree("h")))
+      ) shouldBe
+        Tree("a", Tree("c", Tree("e")), Tree("c", Tree("f"), Tree("g")), Tree("b"), Tree("d"), Tree("c", Tree("h")))
+    }
+
     "ensure child is distinct" in {
       ensureChildDistinct(Tree("a"), 0) shouldBe Tree("a")
       ensureChildDistinct(Tree("a"), 1) shouldBe Tree("a")
@@ -45,8 +77,8 @@ class NodeTreeSpec extends AnyWordSpecCompat {
       )
       ensureChildDistinct(Tree("a", Tree("b", Tree("c")), Tree("b", Tree("d")), Tree("b", Tree("e"))), 1) shouldBe Tree(
         "a",
-        Tree("b", Tree("c")),
-        Tree("b", Tree("d"), Tree("e"))
+        Tree("b", Tree("c"), Tree("d")),
+        Tree("b", Tree("e"))
       )
       ensureChildDistinct(Tree("a", Tree("b", Tree("c")), Tree("b", Tree("d")), Tree("b", Tree("e"))), 0) shouldBe Tree(
         "a",

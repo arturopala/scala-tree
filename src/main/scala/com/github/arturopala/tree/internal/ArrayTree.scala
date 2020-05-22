@@ -350,7 +350,7 @@ object ArrayTree {
     case Tree.empty          => false
     case t: Tree.NodeTree[T] => t.subtrees.exists(_.value == value)
     case t: ArrayTree[T] =>
-      ArrayTreeFunctions.leftmostIndexOfChildValue(value, index, t.size, t.structure, t.content).isDefined
+      ArrayTreeFunctions.leftmostChildHavingValue(value, index, t.size, t.structure, t.content).isDefined
   }
 
   final def prependValue[T: ClassTag, T1 >: T: ClassTag](value: T1, tree: ArrayTree[T]): ArrayTree[T1] =
@@ -545,8 +545,7 @@ object ArrayTree {
           .getOrElse(ArrayTreeFunctions.parentIndex(index, structureBuffer.length, structureBuffer))
         if (parentIndex >= 0) {
           ArrayTreeFunctions
-            .childrenIndexesFor(value, parentIndex, structureBuffer, valuesBuffer)
-            .find(_ != index) match {
+            .nearestSiblingHavingValue(value, index, structureBuffer.length, structureBuffer, valuesBuffer) match {
             case Some(duplicateIndex) =>
               ArrayTreeFunctions.mergeTwoTrees(
                 Math.max(index, duplicateIndex),
@@ -585,7 +584,7 @@ object ArrayTree {
             val (structure, values) = subtree.toSlices[T1]
             if (keepDistinct && parentIndex > 0) {
               ArrayTreeFunctions
-                .siblingOfValue(
+                .nearestSiblingHavingValue(
                   values.last,
                   index,
                   structureBuffer.length,
@@ -630,6 +629,18 @@ object ArrayTree {
   ): Tree[T1] =
     if (index < 0) tree
     else updateValue(index, parentIndexOpt, modify(tree.content(index)), tree, keepDistinct)
+
+  /** Modifies value of the child node holding the given value. */
+  final def modifyValue[T: ClassTag, T1 >: T: ClassTag](
+    value: T1,
+    modify: T => T1,
+    target: ArrayTree[T],
+    keepDistinct: Boolean
+  ): Tree[T1] =
+    ArrayTreeFunctions
+      .rightmostChildHavingValue(value, target.size - 1, target.size, target.structure, target.content)
+      .map(modifyValue(_, Some(target.size - 1), modify, target, keepDistinct))
+      .getOrElse(target)
 
   /** Modifies value of the node selected by the path.
     * @return either modified tree or existing */
@@ -756,7 +767,7 @@ object ArrayTree {
   ): Tree[T] =
     transform(target) { (structureBuffer, valuesBuffer) =>
       ArrayTreeFunctions
-        .rightmostIndexOfChildValue(value, structureBuffer.top, structureBuffer.length, structureBuffer, valuesBuffer)
+        .rightmostChildHavingValue(value, structureBuffer.top, structureBuffer.length, structureBuffer, valuesBuffer)
         .map { index =>
           val delta1 = ArrayTreeFunctions.removeValue(index, structureBuffer.top, structureBuffer, valuesBuffer)
           val delta2 = if (keepDistinct) {
@@ -822,7 +833,7 @@ object ArrayTree {
   ): Tree[T] =
     transform(node) { (structureBuffer, valuesBuffer) =>
       ArrayTreeFunctions
-        .rightmostIndexOfChildValue(value, structureBuffer.top, structureBuffer.length, structureBuffer, valuesBuffer)
+        .rightmostChildHavingValue(value, structureBuffer.top, structureBuffer.length, structureBuffer, valuesBuffer)
         .map(index => ArrayTreeFunctions.removeTree(index, structureBuffer.top, structureBuffer, valuesBuffer))
     }
 

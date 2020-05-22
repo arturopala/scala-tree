@@ -18,12 +18,69 @@ package com.github.arturopala.tree
 
 import com.github.arturopala.tree.LaxTreeOps._
 
+import scala.reflect.ClassTag
+
 class TreeModificationsSpec extends FunSuite {
 
   test(Inflated, new Spec with InflatedTestTrees)
   test(Deflated, new Spec with DeflatedTestTrees)
 
   sealed trait Spec extends AnyWordSpecCompat with TestTrees {
+
+    def tree[T: ClassTag](t: Tree[T]): Tree[T]
+
+    "modify distinct a child" in {
+      val f: String => String = s => s + s
+      tree0.modifyValue("a", f) shouldBe tree0
+      tree0.modifyValue("b", f) shouldBe tree0
+      tree1.modifyValue("a", f) shouldBe tree1
+      tree1.modifyValue("b", f) shouldBe tree1
+      tree2.modifyValue("a", f) shouldBe tree2
+      tree2.modifyValue("b", f) shouldBe Tree("a", Tree("bb"))
+      tree3_1.modifyValue("a", f) shouldBe tree3_1
+      tree3_1.modifyValue("b", f) shouldBe Tree("a", Tree("bb", Tree("c")))
+      tree3_2.modifyValue("a", f) shouldBe tree3_2
+      tree3_2.modifyValue("b", f) shouldBe Tree("a", Tree("bb"), Tree("c"))
+      tree3_2.modifyValue("c", f) shouldBe Tree("a", Tree("b"), Tree("cc"))
+      tree4_2.modifyValue("a", f) shouldBe tree4_2
+      tree4_2.modifyValue("b", f) shouldBe Tree("a", Tree("bb", Tree("c")), Tree("d"))
+      tree4_2.modifyValue("c", f) shouldBe tree4_2
+      tree4_2.modifyValue("d", f) shouldBe Tree("a", Tree("b", Tree("c")), Tree("dd"))
+      tree7.modifyValue("d", f) shouldBe
+        Tree("a", Tree("b", Tree("c")), Tree("dd", Tree("e", Tree("f"))), Tree("g"))
+      tree7.modifyValue("b", f) shouldBe
+        Tree("a", Tree("bb", Tree("c")), Tree("d", Tree("e", Tree("f"))), Tree("g"))
+      tree7.modifyValue("g", f) shouldBe
+        Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e", Tree("f"))), Tree("gg"))
+      // test merging down
+      tree3_2.modifyValue("c", _ => "b") shouldBe Tree("a", Tree("b"))
+      tree4_2.modifyValue("b", _ => "d") shouldBe Tree("a", Tree("d", Tree("c")))
+      tree4_2.modifyValue("d", _ => "b") shouldBe Tree("a", Tree("b", Tree("c")))
+      tree7.modifyValue("d", _ => "b") shouldBe
+        Tree("a", Tree("b", Tree("c"), Tree("e", Tree("f"))), Tree("g"))
+      tree7.modifyValue("b", _ => "d") shouldBe
+        Tree("a", Tree("d", Tree("c"), Tree("e", Tree("f"))), Tree("g"))
+      tree7.modifyValue("g", _ => "b") shouldBe
+        Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e", Tree("f"))))
+      tree7.modifyValue("b", _ => "g") shouldBe
+        Tree("a", Tree("g", Tree("c")), Tree("d", Tree("e", Tree("f"))))
+      tree7.modifyValue("d", _ => "g") shouldBe
+        Tree("a", Tree("b", Tree("c")), Tree("g", Tree("e", Tree("f"))))
+      tree7.modifyValue("g", _ => "d") shouldBe
+        Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e", Tree("f"))))
+      tree(
+        Tree(
+          "a",
+          Tree("c", Tree("e")),
+          Tree("c", Tree("f")),
+          Tree("b"),
+          Tree("x", Tree("g")),
+          Tree("d"),
+          Tree("c", Tree("h"))
+        )
+      ).modifyValue("x", _ => "c") shouldBe
+        Tree("a", Tree("c", Tree("e")), Tree("c", Tree("f"), Tree("g")), Tree("b"), Tree("d"), Tree("c", Tree("h")))
+    }
 
     "modify lax a value of a node selected by the path in the tree" in {
       val f: String => String = s => s + s

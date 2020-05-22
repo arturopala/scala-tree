@@ -24,20 +24,32 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
   "ArrayTreeFunctions" should {
 
     "find a nearest sibling of an index having given value" in {
-      siblingOfValue("a", 0, 1, Array(0), Array("a")) shouldBe None
-      siblingOfValue("a", 0, 2, Array(0, 1), Array("a", "a")) shouldBe None
-      siblingOfValue("a", 1, 3, Array(0, 0, 2), Array("a", "a", "a")) shouldBe Some(0)
-      siblingOfValue("a", 0, 3, Array(0, 0, 2), Array("a", "a", "a")) shouldBe Some(1)
-      siblingOfValue("a", 1, 3, Array(0, 0, 2), Array("a", "b", "a")) shouldBe Some(0)
-      siblingOfValue("a", 0, 3, Array(0, 0, 2), Array("a", "b", "a")) shouldBe None
-      siblingOfValue("a", 3, 6, Array(0, 0, 2, 0, 0, 3), Array("a", "a", "a", "a", "a", "a")) shouldBe Some(4)
-      siblingOfValue("a", 4, 6, Array(0, 0, 2, 0, 0, 3), Array("a", "a", "a", "a", "a", "a")) shouldBe Some(3)
-      siblingOfValue("a", 2, 6, Array(0, 0, 2, 0, 0, 3), Array("a", "a", "a", "a", "a", "a")) shouldBe Some(3)
-      siblingOfValue("b", 2, 6, Array(0, 0, 2, 0, 0, 3), Array("a", "b", "a", "a", "a", "a")) shouldBe None
-      siblingOfValue("b", 1, 6, Array(0, 0, 2, 0, 0, 3), Array("a", "a", "b", "a", "a", "a")) shouldBe None
-      siblingOfValue("b", 2, 6, Array(0, 0, 2, 0, 0, 3), Array("a", "a", "a", "b", "a", "a")) shouldBe Some(3)
-      siblingOfValue("b", 4, 6, Array(0, 0, 2, 0, 0, 3), Array("a", "a", "a", "b", "a", "a")) shouldBe Some(3)
-      siblingOfValue("b", 2, 6, Array(0, 0, 2, 0, 0, 3), Array("a", "a", "a", "b", "b", "a")) shouldBe Some(3)
+      nearestSiblingHavingValue("a", 0, 1, Array(0), Array("a")) shouldBe None
+      nearestSiblingHavingValue("a", 0, 2, Array(0, 1), Array("a", "a")) shouldBe None
+      nearestSiblingHavingValue("a", 1, 3, Array(0, 0, 2), Array("a", "a", "a")) shouldBe Some(0)
+      nearestSiblingHavingValue("a", 0, 3, Array(0, 0, 2), Array("a", "a", "a")) shouldBe Some(1)
+      nearestSiblingHavingValue("a", 1, 3, Array(0, 0, 2), Array("a", "b", "a")) shouldBe Some(0)
+      nearestSiblingHavingValue("a", 0, 3, Array(0, 0, 2), Array("a", "b", "a")) shouldBe None
+      nearestSiblingHavingValue("a", 3, 6, Array(0, 0, 2, 0, 0, 3), Array("a", "a", "a", "a", "a", "a")) shouldBe Some(
+        4
+      )
+      nearestSiblingHavingValue("a", 4, 6, Array(0, 0, 2, 0, 0, 3), Array("a", "a", "a", "a", "a", "a")) shouldBe Some(
+        3
+      )
+      nearestSiblingHavingValue("a", 2, 6, Array(0, 0, 2, 0, 0, 3), Array("a", "a", "a", "a", "a", "a")) shouldBe Some(
+        3
+      )
+      nearestSiblingHavingValue("b", 2, 6, Array(0, 0, 2, 0, 0, 3), Array("a", "b", "a", "a", "a", "a")) shouldBe None
+      nearestSiblingHavingValue("b", 1, 6, Array(0, 0, 2, 0, 0, 3), Array("a", "a", "b", "a", "a", "a")) shouldBe None
+      nearestSiblingHavingValue("b", 2, 6, Array(0, 0, 2, 0, 0, 3), Array("a", "a", "a", "b", "a", "a")) shouldBe Some(
+        3
+      )
+      nearestSiblingHavingValue("b", 4, 6, Array(0, 0, 2, 0, 0, 3), Array("a", "a", "a", "b", "a", "a")) shouldBe Some(
+        3
+      )
+      nearestSiblingHavingValue("b", 2, 6, Array(0, 0, 2, 0, 0, 3), Array("a", "a", "a", "b", "b", "a")) shouldBe Some(
+        3
+      )
     }
 
     "list children indexes" in {
@@ -77,36 +89,36 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
     }
 
     "find leftmost index of child's node holding a value" in {
-      leftmostIndexOfChildValue(2, -1, 0, Array.empty[Int], Array.empty[Int]) shouldBe None
-      leftmostIndexOfChildValue(2, 0, 1, Array(0), Array(2)) shouldBe None
-      leftmostIndexOfChildValue(2, 1, 2, Array(0, 1), Array(2, 1)) shouldBe Some(0)
-      leftmostIndexOfChildValue(2, 3, 4, Array(0, 0, 2, 1), Array(4, 3, 2, 1)) shouldBe Some(2)
-      leftmostIndexOfChildValue(3, 3, 4, Array(0, 0, 2, 1), Array(4, 3, 2, 1)) shouldBe None
-      leftmostIndexOfChildValue(3, 2, 4, Array(0, 0, 2, 1), Array(4, 3, 2, 1)) shouldBe Some(1)
-      leftmostIndexOfChildValue(4, 2, 4, Array(0, 0, 2, 1), Array(4, 3, 2, 1)) shouldBe Some(0)
-      leftmostIndexOfChildValue(3, 1, 4, Array(0, 0, 2, 1), Array(4, 3, 2, 1)) shouldBe None
-      leftmostIndexOfChildValue(1, 2, 4, Array(0, 0, 2, 1), Array(4, 3, 2, 1)) shouldBe None
-      leftmostIndexOfChildValue(1, 2, 4, Array(0, 0, 2, 1), Array(1, 1, 1, 1)) shouldBe Some(1)
+      leftmostChildHavingValue(2, -1, 0, Array.empty[Int], Array.empty[Int]) shouldBe None
+      leftmostChildHavingValue(2, 0, 1, Array(0), Array(2)) shouldBe None
+      leftmostChildHavingValue(2, 1, 2, Array(0, 1), Array(2, 1)) shouldBe Some(0)
+      leftmostChildHavingValue(2, 3, 4, Array(0, 0, 2, 1), Array(4, 3, 2, 1)) shouldBe Some(2)
+      leftmostChildHavingValue(3, 3, 4, Array(0, 0, 2, 1), Array(4, 3, 2, 1)) shouldBe None
+      leftmostChildHavingValue(3, 2, 4, Array(0, 0, 2, 1), Array(4, 3, 2, 1)) shouldBe Some(1)
+      leftmostChildHavingValue(4, 2, 4, Array(0, 0, 2, 1), Array(4, 3, 2, 1)) shouldBe Some(0)
+      leftmostChildHavingValue(3, 1, 4, Array(0, 0, 2, 1), Array(4, 3, 2, 1)) shouldBe None
+      leftmostChildHavingValue(1, 2, 4, Array(0, 0, 2, 1), Array(4, 3, 2, 1)) shouldBe None
+      leftmostChildHavingValue(1, 2, 4, Array(0, 0, 2, 1), Array(1, 1, 1, 1)) shouldBe Some(1)
     }
 
     "find rightmost index of child's node holding a value" in {
-      rightmostIndexOfChildValue(2, -1, 0, Array.empty[Int], Array.empty[Int]) shouldBe None
-      rightmostIndexOfChildValue(2, 0, 1, Array(0), Array(2)) shouldBe None
-      rightmostIndexOfChildValue(2, 1, 2, Array(0, 1), Array(2, 1)) shouldBe Some(0)
-      rightmostIndexOfChildValue(2, 3, 4, Array(0, 0, 2, 1), Array(4, 3, 2, 1)) shouldBe Some(2)
-      rightmostIndexOfChildValue(3, 3, 4, Array(0, 0, 2, 1), Array(4, 3, 2, 1)) shouldBe None
-      rightmostIndexOfChildValue(3, 2, 4, Array(0, 0, 2, 1), Array(4, 3, 2, 1)) shouldBe Some(1)
-      rightmostIndexOfChildValue(4, 2, 4, Array(0, 0, 2, 1), Array(4, 3, 2, 1)) shouldBe Some(0)
-      rightmostIndexOfChildValue(3, 1, 4, Array(0, 0, 2, 1), Array(4, 3, 2, 1)) shouldBe None
-      rightmostIndexOfChildValue(1, 2, 4, Array(0, 0, 2, 1), Array(4, 3, 2, 1)) shouldBe None
-      rightmostIndexOfChildValue(1, 2, 4, Array(0, 0, 2, 1), Array(1, 1, 1, 1)) shouldBe Some(0)
+      rightmostChildHavingValue(2, -1, 0, Array.empty[Int], Array.empty[Int]) shouldBe None
+      rightmostChildHavingValue(2, 0, 1, Array(0), Array(2)) shouldBe None
+      rightmostChildHavingValue(2, 1, 2, Array(0, 1), Array(2, 1)) shouldBe Some(0)
+      rightmostChildHavingValue(2, 3, 4, Array(0, 0, 2, 1), Array(4, 3, 2, 1)) shouldBe Some(2)
+      rightmostChildHavingValue(3, 3, 4, Array(0, 0, 2, 1), Array(4, 3, 2, 1)) shouldBe None
+      rightmostChildHavingValue(3, 2, 4, Array(0, 0, 2, 1), Array(4, 3, 2, 1)) shouldBe Some(1)
+      rightmostChildHavingValue(4, 2, 4, Array(0, 0, 2, 1), Array(4, 3, 2, 1)) shouldBe Some(0)
+      rightmostChildHavingValue(3, 1, 4, Array(0, 0, 2, 1), Array(4, 3, 2, 1)) shouldBe None
+      rightmostChildHavingValue(1, 2, 4, Array(0, 0, 2, 1), Array(4, 3, 2, 1)) shouldBe None
+      rightmostChildHavingValue(1, 2, 4, Array(0, 0, 2, 1), Array(1, 1, 1, 1)) shouldBe Some(0)
     }
 
     "list indexes of children's nodes holding a value" in {
-      childrenIndexesFor(1, 2, Array(0, 0, 2, 1), Array(1, 1, 1, 1)) shouldBe IntSlice(1, 0)
-      childrenIndexesFor(1, 2, Array(0, 0, 2, 1), Array(1, 1, 1, 1)) shouldBe IntSlice(1, 0)
-      childrenIndexesFor(2, 3, Array(0, 0, 0, 3), Array(1, 1, 1, 1)) shouldBe IntSlice()
-      childrenIndexesFor(2, -1, Array(0, 0, 0, 3), Array(1, 1, 1, 1)) shouldBe IntSlice()
+      childrenHavingValue(1, 2, Array(0, 0, 2, 1), Array(1, 1, 1, 1)) shouldBe IntSlice(1, 0)
+      childrenHavingValue(1, 2, Array(0, 0, 2, 1), Array(1, 1, 1, 1)) shouldBe IntSlice(1, 0)
+      childrenHavingValue(2, 3, Array(0, 0, 0, 3), Array(1, 1, 1, 1)) shouldBe IntSlice()
+      childrenHavingValue(2, -1, Array(0, 0, 0, 3), Array(1, 1, 1, 1)) shouldBe IntSlice()
     }
 
     "find parent index" in {

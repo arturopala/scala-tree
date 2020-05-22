@@ -69,7 +69,7 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
 
   // DISTINCT INSERTIONS
 
-  final override def prependWith[T1 >: T: ClassTag](value: T1): Tree[T1] = Tree(value, node)
+  final override def prepend[T1 >: T: ClassTag](value: T1): Tree[T1] = Tree(value, node)
 
   final override def insertValue[T1 >: T: ClassTag](value: T1): Tree[T1] =
     if (node.subtrees.exists(_.value == value)) node
@@ -121,6 +121,9 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
     NodeTree.insertBranch(node, branch.iterator).getOrElse(node)
 
   // DISTINCT MODIFICATIONS
+
+  final override def modifyValue[T1 >: T: ClassTag](value: T1, modify: T => T1): Tree[T1] =
+    NodeTree.modifyValue(node, value, modify, keepDistinct = true)
 
   final override def modifyValueAt[T1 >: T: ClassTag](
     path: Iterable[T1],

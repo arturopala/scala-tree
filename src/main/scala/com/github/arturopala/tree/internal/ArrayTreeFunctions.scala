@@ -152,8 +152,9 @@ object ArrayTreeFunctions {
       }
     }
 
-  /** Finds an index of a sibling of childIndex having some value. */
-  final def siblingOfValue[T](
+  /** Finds an index of a sibling of childIndex having some value.
+    * @return some nearest index if exists or none*/
+  final def nearestSiblingHavingValue[T](
     value: T,
     childIndex: Int,
     size: Int,
@@ -163,7 +164,7 @@ object ArrayTreeFunctions {
     val parent = parentIndex(childIndex, size, treeStructure)
     if (parent < 0) None
     else {
-      val children = childrenIndexesFor(value, parent, treeStructure, treeValues)
+      val children = childrenHavingValue(value, parent, treeStructure, treeValues)
       if (children.isEmpty) None
       else {
         var result: Option[Int] = None
@@ -189,8 +190,8 @@ object ArrayTreeFunctions {
   }
 
   /** Looks for Some index of the child node holding the given value, or None.
-    * @return the rightmost index if many */
-  final def leftmostIndexOfChildValue[T](
+    * @return some leftmost index if exists or none */
+  final def leftmostChildHavingValue[T](
     value: T,
     parentIndex: Int,
     size: Int,
@@ -228,8 +229,8 @@ object ArrayTreeFunctions {
   }
 
   /** Looks for Some index of the child node holding the given value, or None.
-    * @return the leftmost index if many */
-  final def rightmostIndexOfChildValue[T](
+    * @return some rightmost index if exists or none */
+  final def rightmostChildHavingValue[T](
     value: T,
     parentIndex: Int,
     size: Int,
@@ -266,8 +267,9 @@ object ArrayTreeFunctions {
   }
 
   /** List indexes of the children values of the parent node holding the given value, if any.
-    * @note tree structure as returned by [[com.github.arturopala.tree.Tree.toArrays]] */
-  final def childrenIndexesFor[T](
+    * @return a slice of array of indexes ordered right to left (descending)
+    */
+  final def childrenHavingValue[T](
     value: T,
     parentIndex: Int,
     treeStructure: Int => Int,
@@ -785,7 +787,7 @@ object ArrayTreeFunctions {
   ): Int =
     if (branchIterator.hasNext) {
       val value = branchIterator.next()
-      rightmostIndexOfChildValue(value, parentIndex, structureBuffer.length, structureBuffer, valuesBuffer) match {
+      rightmostChildHavingValue(value, parentIndex, structureBuffer.length, structureBuffer, valuesBuffer) match {
         case Some(index) =>
           insertBranch(branchIterator, index, structureBuffer, valuesBuffer, offset)
 
@@ -824,7 +826,7 @@ object ArrayTreeFunctions {
       if (structure.length == 0) insertRightSubtreeListDistinct(queue.tail, structureBuffer, valuesBuffer, offset)
       else {
         val (insertIndex, isDistinct) =
-          rightmostIndexOfChildValue(values.last, parentIndex, structureBuffer.length, structureBuffer, valuesBuffer)
+          rightmostChildHavingValue(values.last, parentIndex, structureBuffer.length, structureBuffer, valuesBuffer)
             .map((_, false))
             .getOrElse((Math.max(0, parentIndex - treeSize(parentIndex, structureBuffer) + 1), true))
 
@@ -877,7 +879,7 @@ object ArrayTreeFunctions {
       if (structure.length == 0) insertLeftSubtreeListDistinct(tail, structureBuffer, valuesBuffer, offset)
       else {
         val (insertIndex, isDistinct) =
-          leftmostIndexOfChildValue(values.last, parentIndex, structureBuffer.length, structureBuffer, valuesBuffer)
+          leftmostChildHavingValue(values.last, parentIndex, structureBuffer.length, structureBuffer, valuesBuffer)
             .map((_, false))
             .getOrElse((Math.max(0, parentIndex), true))
 
@@ -969,7 +971,7 @@ object ArrayTreeFunctions {
         structureBuffer.length == valuesBuffer.length) {
 
       val (insertIndex, hasDuplicate) =
-        rightmostIndexOfChildValue(treeValues.last, parentIndex, structureBuffer.length, structureBuffer, valuesBuffer)
+        rightmostChildHavingValue(treeValues.last, parentIndex, structureBuffer.length, structureBuffer, valuesBuffer)
           .map(i => (i, i != index))
           .getOrElse((index, false))
 
@@ -1010,7 +1012,7 @@ object ArrayTreeFunctions {
       childrenOf(treeStructure, treeValues).foldLeft(0) {
         case (offset, (structure, values)) =>
           val bufferIndex = index + offset
-          offset + (leftmostIndexOfChildValue(
+          offset + (leftmostChildHavingValue(
             treeValues.last,
             bufferIndex,
             structureBuffer.length,
