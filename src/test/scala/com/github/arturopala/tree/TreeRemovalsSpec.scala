@@ -29,6 +29,91 @@ class TreeRemovalsSpec extends FunSuite {
 
     def tree[T: ClassTag](t: Tree[T]): Tree[T]
 
+    "remove distinct a child node holding a value" in {
+      tree0.removeValue("a") shouldBe tree0
+      tree0.removeValue("b") shouldBe tree0
+      tree1.removeValue("a") shouldBe tree1
+      tree1.removeValue("b") shouldBe tree1
+      tree2.removeValue("a") shouldBe tree2
+      tree2.removeValue("b") shouldBe tree1
+      tree3_1.removeValue("a") shouldBe tree3_1
+      tree3_1.removeValue("b") shouldBe Tree("a", Tree("c"))
+      tree3_1.removeValue("c") shouldBe tree3_1
+      tree3_2.removeValue("a") shouldBe tree3_2
+      tree3_2.removeValue("b") shouldBe Tree("a", Tree("c"))
+      tree3_2.removeValue("c") shouldBe Tree("a", Tree("b"))
+      tree4_2.removeValue("a") shouldBe tree4_2
+      tree4_2.removeValue("a") shouldBe tree4_2
+      tree4_2.removeValue("b") shouldBe Tree("a", Tree("c"), Tree("d"))
+      tree4_2.removeValue("d") shouldBe tree3_1
+      tree7.removeValue("a") shouldBe tree7
+      tree7.removeValue("b") shouldBe Tree("a", Tree("c"), Tree("d", Tree("e", Tree("f"))), Tree("g"))
+      tree7.removeValue("d") shouldBe Tree("a", Tree("b", Tree("c")), Tree("e", Tree("f")), Tree("g"))
+      tree7.removeValue("g") shouldBe Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e", Tree("f"))))
+      tree7.removeValue("e") shouldBe tree7
+      tree7.removeValue("c") shouldBe tree7
+      tree9.removeValue("e") shouldBe Tree(
+        "a",
+        Tree("b", Tree("c", Tree("d"))),
+        Tree("f", Tree("g")),
+        Tree("h", Tree("i"))
+      )
+      tree9.removeValue("b") shouldBe Tree(
+        "a",
+        Tree("c", Tree("d")),
+        Tree("e", Tree("f", Tree("g")), Tree("h", Tree("i")))
+      )
+      tree9.removeValue("a") shouldBe tree9
+      // test merging down
+      tree(Tree("a", Tree("b", Tree("c")), Tree("c"))).removeValue("b") shouldBe Tree("a", Tree("c"))
+      tree(Tree("a", Tree("b", Tree("c"), Tree("d")), Tree("c"), Tree("e")))
+        .removeValue("b") shouldBe Tree("a", Tree("c"), Tree("d"), Tree("e"))
+      // test node selection when multiple duplicates
+      tree(Tree("a", Tree("b"), Tree("c", Tree("d")), Tree("c", Tree("e")), Tree("c", Tree("f"))))
+        .removeValue("c") shouldBe
+        Tree("a", Tree("b"), Tree("d"), Tree("c", Tree("e")), Tree("c", Tree("f")))
+    }
+
+    "remove lax a child node holding a value" in {
+      tree0.removeValueLax("a") shouldBe tree0
+      tree0.removeValueLax("b") shouldBe tree0
+      tree1.removeValueLax("a") shouldBe tree1
+      tree1.removeValueLax("b") shouldBe tree1
+      tree2.removeValueLax("a") shouldBe tree2
+      tree2.removeValueLax("b") shouldBe tree1
+      tree3_1.removeValueLax("a") shouldBe tree3_1
+      tree3_1.removeValueLax("b") shouldBe Tree("a", Tree("c"))
+      tree3_1.removeValueLax("c") shouldBe tree3_1
+      tree3_2.removeValueLax("a") shouldBe tree3_2
+      tree3_2.removeValueLax("b") shouldBe Tree("a", Tree("c"))
+      tree3_2.removeValueLax("c") shouldBe Tree("a", Tree("b"))
+      tree4_2.removeValueLax("a") shouldBe tree4_2
+      tree4_2.removeValueLax("a") shouldBe tree4_2
+      tree4_2.removeValueLax("b") shouldBe Tree("a", Tree("c"), Tree("d"))
+      tree4_2.removeValueLax("d") shouldBe tree3_1
+      tree7.removeValueLax("a") shouldBe tree7
+      tree7.removeValueLax("b") shouldBe Tree("a", Tree("c"), Tree("d", Tree("e", Tree("f"))), Tree("g"))
+      tree7.removeValueLax("d") shouldBe Tree("a", Tree("b", Tree("c")), Tree("e", Tree("f")), Tree("g"))
+      tree7.removeValueLax("g") shouldBe Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e", Tree("f"))))
+      tree7.removeValueLax("e") shouldBe tree7
+      tree7.removeValueLax("c") shouldBe tree7
+      tree9.removeValueLax("e") shouldBe Tree(
+        "a",
+        Tree("b", Tree("c", Tree("d"))),
+        Tree("f", Tree("g")),
+        Tree("h", Tree("i"))
+      )
+      tree9.removeValueLax("b") shouldBe Tree(
+        "a",
+        Tree("c", Tree("d")),
+        Tree("e", Tree("f", Tree("g")), Tree("h", Tree("i")))
+      )
+      tree9.removeValueLax("a") shouldBe tree9
+      tree(Tree("a", Tree("b", Tree("c")), Tree("c"))).removeValueLax("b") shouldBe Tree("a", Tree("c"), Tree("c"))
+      tree(Tree("a", Tree("b", Tree("c"), Tree("d")), Tree("c"), Tree("e")))
+        .removeValueLax("b") shouldBe Tree("a", Tree("c"), Tree("d"), Tree("c"), Tree("e"))
+    }
+
     "remove a node selected by the path and insert children into the parent" in {
       tree0.removeValueAt(List()) shouldBe Tree.empty
       tree1.removeValueAt(List("a")) shouldBe Tree.empty
@@ -350,86 +435,6 @@ class TreeRemovalsSpec extends FunSuite {
         Tree("d", Tree("e")),
         Tree("g")
       )
-    }
-
-    "remove distinct a child node holding a value" in {
-      tree0.removeValue("a") shouldBe tree0
-      tree0.removeValue("b") shouldBe tree0
-      tree1.removeValue("a") shouldBe tree1
-      tree1.removeValue("b") shouldBe tree1
-      tree2.removeValue("a") shouldBe tree2
-      tree2.removeValue("b") shouldBe tree1
-      tree3_1.removeValue("a") shouldBe tree3_1
-      tree3_1.removeValue("b") shouldBe Tree("a", Tree("c"))
-      tree3_1.removeValue("c") shouldBe tree3_1
-      tree3_2.removeValue("a") shouldBe tree3_2
-      tree3_2.removeValue("b") shouldBe Tree("a", Tree("c"))
-      tree3_2.removeValue("c") shouldBe Tree("a", Tree("b"))
-      tree4_2.removeValue("a") shouldBe tree4_2
-      tree4_2.removeValue("a") shouldBe tree4_2
-      tree4_2.removeValue("b") shouldBe Tree("a", Tree("c"), Tree("d"))
-      tree4_2.removeValue("d") shouldBe tree3_1
-      tree7.removeValue("a") shouldBe tree7
-      tree7.removeValue("b") shouldBe Tree("a", Tree("c"), Tree("d", Tree("e", Tree("f"))), Tree("g"))
-      tree7.removeValue("d") shouldBe Tree("a", Tree("b", Tree("c")), Tree("e", Tree("f")), Tree("g"))
-      tree7.removeValue("g") shouldBe Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e", Tree("f"))))
-      tree7.removeValue("e") shouldBe tree7
-      tree7.removeValue("c") shouldBe tree7
-      tree9.removeValue("e") shouldBe Tree(
-        "a",
-        Tree("b", Tree("c", Tree("d"))),
-        Tree("f", Tree("g")),
-        Tree("h", Tree("i"))
-      )
-      tree9.removeValue("b") shouldBe Tree(
-        "a",
-        Tree("c", Tree("d")),
-        Tree("e", Tree("f", Tree("g")), Tree("h", Tree("i")))
-      )
-      tree9.removeValue("a") shouldBe tree9
-      tree(Tree("a", Tree("b", Tree("c")), Tree("c"))).removeValue("b") shouldBe Tree("a", Tree("c"))
-      tree(Tree("a", Tree("b", Tree("c"), Tree("d")), Tree("c"), Tree("e")))
-        .removeValue("b") shouldBe Tree("a", Tree("c"), Tree("d"), Tree("e"))
-    }
-
-    "remove lax a child node holding a value" in {
-      tree0.removeValueLax("a") shouldBe tree0
-      tree0.removeValueLax("b") shouldBe tree0
-      tree1.removeValueLax("a") shouldBe tree1
-      tree1.removeValueLax("b") shouldBe tree1
-      tree2.removeValueLax("a") shouldBe tree2
-      tree2.removeValueLax("b") shouldBe tree1
-      tree3_1.removeValueLax("a") shouldBe tree3_1
-      tree3_1.removeValueLax("b") shouldBe Tree("a", Tree("c"))
-      tree3_1.removeValueLax("c") shouldBe tree3_1
-      tree3_2.removeValueLax("a") shouldBe tree3_2
-      tree3_2.removeValueLax("b") shouldBe Tree("a", Tree("c"))
-      tree3_2.removeValueLax("c") shouldBe Tree("a", Tree("b"))
-      tree4_2.removeValueLax("a") shouldBe tree4_2
-      tree4_2.removeValueLax("a") shouldBe tree4_2
-      tree4_2.removeValueLax("b") shouldBe Tree("a", Tree("c"), Tree("d"))
-      tree4_2.removeValueLax("d") shouldBe tree3_1
-      tree7.removeValueLax("a") shouldBe tree7
-      tree7.removeValueLax("b") shouldBe Tree("a", Tree("c"), Tree("d", Tree("e", Tree("f"))), Tree("g"))
-      tree7.removeValueLax("d") shouldBe Tree("a", Tree("b", Tree("c")), Tree("e", Tree("f")), Tree("g"))
-      tree7.removeValueLax("g") shouldBe Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e", Tree("f"))))
-      tree7.removeValueLax("e") shouldBe tree7
-      tree7.removeValueLax("c") shouldBe tree7
-      tree9.removeValueLax("e") shouldBe Tree(
-        "a",
-        Tree("b", Tree("c", Tree("d"))),
-        Tree("f", Tree("g")),
-        Tree("h", Tree("i"))
-      )
-      tree9.removeValueLax("b") shouldBe Tree(
-        "a",
-        Tree("c", Tree("d")),
-        Tree("e", Tree("f", Tree("g")), Tree("h", Tree("i")))
-      )
-      tree9.removeValueLax("a") shouldBe tree9
-      tree(Tree("a", Tree("b", Tree("c")), Tree("c"))).removeValueLax("b") shouldBe Tree("a", Tree("c"), Tree("c"))
-      tree(Tree("a", Tree("b", Tree("c"), Tree("d")), Tree("c"), Tree("e")))
-        .removeValueLax("b") shouldBe Tree("a", Tree("c"), Tree("d"), Tree("c"), Tree("e"))
     }
 
   }

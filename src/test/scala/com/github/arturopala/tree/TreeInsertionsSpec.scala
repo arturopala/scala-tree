@@ -25,24 +25,6 @@ class TreeInsertionsSpec extends FunSuite {
 
   sealed trait Spec extends AnyWordSpecCompat with TestTrees {
 
-    "insert lax new value to a tree" in {
-      tree0.insertValueLax("a") shouldBe Tree("a")
-      tree1.insertValueLax("b") shouldBe Tree("a", Tree("b"))
-      tree2.insertValueLax("c") shouldBe Tree("a", Tree("c"), Tree("b"))
-      tree3_1.insertValueLax("d") shouldBe Tree("a", Tree("d"), Tree("b", Tree("c")))
-      tree3_1.insertValueLax("b") shouldBe Tree("a", Tree("b"), Tree("b", Tree("c")))
-      tree3_1.insertValueLax("c") shouldBe Tree("a", Tree("c"), Tree("b", Tree("c")))
-      tree3_2.insertValueLax("c") shouldBe Tree("a", Tree("c"), Tree("b"), Tree("c"))
-      tree4_1.insertValueLax("c") shouldBe Tree("a", Tree("c"), Tree("b", Tree("c", Tree("d"))))
-      tree7.insertValueLax("b") shouldBe Tree(
-        "a",
-        Tree("b"),
-        Tree("b", Tree("c")),
-        Tree("d", Tree("e", Tree("f"))),
-        Tree("g")
-      )
-    }
-
     "insert distinct new value to a tree" in {
       tree0.insertValue("a") shouldBe Tree("a")
       tree1.insertValue("b") shouldBe Tree("a", Tree("b"))
@@ -71,6 +53,31 @@ class TreeInsertionsSpec extends FunSuite {
       tree7.insertValue("g") shouldBe tree7
       tree9.insertValue("b") shouldBe tree9
       tree9.insertValue("e") shouldBe tree9
+    }
+
+    "insert lax new value to a tree" in {
+      tree0.insertValueLax("a") shouldBe Tree("a")
+      tree1.insertValueLax("b") shouldBe Tree("a", Tree("b"))
+      tree2.insertValueLax("c") shouldBe Tree("a", Tree("c"), Tree("b"))
+      tree3_1.insertValueLax("d") shouldBe Tree("a", Tree("d"), Tree("b", Tree("c")))
+      tree3_1.insertValueLax("b") shouldBe Tree("a", Tree("b"), Tree("b", Tree("c")))
+      tree3_1.insertValueLax("c") shouldBe Tree("a", Tree("c"), Tree("b", Tree("c")))
+      tree3_2.insertValueLax("c") shouldBe Tree("a", Tree("c"), Tree("b"), Tree("c"))
+      tree4_1.insertValueLax("c") shouldBe Tree("a", Tree("c"), Tree("b", Tree("c", Tree("d"))))
+      tree7.insertValueLax("b") shouldBe Tree(
+        "a",
+        Tree("b"),
+        Tree("b", Tree("c")),
+        Tree("d", Tree("e", Tree("f"))),
+        Tree("g")
+      )
+      tree7.insertValueLax("d") shouldBe Tree(
+        "a",
+        Tree("d"),
+        Tree("b", Tree("c")),
+        Tree("d", Tree("e", Tree("f"))),
+        Tree("g")
+      )
     }
 
     "insert lax new value to a tree at the specified path" in {

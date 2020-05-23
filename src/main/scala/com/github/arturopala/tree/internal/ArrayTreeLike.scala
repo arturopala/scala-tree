@@ -44,12 +44,14 @@ abstract class ArrayTreeLike[T: ClassTag] extends TreeLike[T] {
   final override def childrenValues: Seq[T] =
     ArrayTreeFunctions
       .childrenIndexes(tree.structure.length - 1, tree.structure)
+      .asSlice
       .map(tree.content)
       .toSeq
 
   final override def children: Seq[Tree[T]] =
     ArrayTreeFunctions
       .childrenIndexes(tree.structure.length - 1, tree.structure)
+      .asSlice
       .map(ArrayTree.treeAt(_, tree.structure, tree.content))
       .toSeq
 

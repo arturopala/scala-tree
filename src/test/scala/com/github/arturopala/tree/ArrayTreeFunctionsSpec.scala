@@ -23,6 +23,116 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
 
   "ArrayTreeFunctions" should {
 
+    "remove value and ensure children distinct" in {
+      testWithBuffers[String, Int](
+        removeValue(3, 7, _, _, true),
+        IntBuffer(0, 1, 1, 1, 0, 1, 1, 2),
+        Buffer("f", "c", "b", "d", "e", "c", "b", "a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 0, 2, 1, 1)
+          values shouldBe Array("f", "e", "c", "b", "a")
+          delta shouldBe -3
+      }
+      testWithBuffers[String, Int](
+        removeValue(2, 5, _, _, true),
+        IntBuffer(0, 0, 2, 0, 0, 3),
+        Buffer("b", "c", "d", "c", "b", "a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 0, 2)
+          values shouldBe Array("c", "b", "a")
+          delta shouldBe -3
+      }
+      testWithBuffers[String, Int](
+        removeValue(4, 5, _, _, true),
+        IntBuffer(0, 0, 0, 0, 2, 3),
+        Buffer("c", "b", "b", "c", "d", "a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 0, 2)
+          values shouldBe Array("b", "c", "a")
+          delta shouldBe -3
+      }
+      testWithBuffers[String, Int](removeValue(1, 2, _, _, true), IntBuffer(0, 0, 2), Buffer("b", "b", "a")) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 1)
+          values shouldBe Array("b", "a")
+          delta shouldBe -1
+      }
+    }
+
+    "ensure child is distinct" in {
+      ensureChildDistinct(0, IntBuffer(0), Buffer("a")) shouldBe 0
+      ensureChildDistinct(0, IntBuffer(0, 1), Buffer("b", "a")) shouldBe 0
+      ensureChildDistinct(0, IntBuffer(0, 0, 2), Buffer("c", "b", "a")) shouldBe 0
+      ensureChildDistinct(1, IntBuffer(0, 0, 2), Buffer("c", "b", "a")) shouldBe 0
+      testWithBuffers[String, Int](ensureChildDistinct(1, _, _), IntBuffer(0, 0, 2), Buffer("b", "b", "a")) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 1)
+          values shouldBe Array("b", "a")
+          delta shouldBe -1
+      }
+      testWithBuffers[String, Int](ensureChildDistinct(1, _, _), IntBuffer(0, 0, 0, 3), Buffer("b", "b", "b", "a")) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 0, 2)
+          values shouldBe Array("b", "b", "a")
+          delta shouldBe -1
+      }
+      testWithBuffers[String, Int](ensureChildDistinct(1, _, _), IntBuffer(0, 1, 0, 2), Buffer("c", "b", "b", "a")) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 1, 1)
+          values shouldBe Array("c", "b", "a")
+          delta shouldBe -1
+      }
+      testWithBuffers[String, Int](ensureChildDistinct(1, _, _), IntBuffer(0, 1, 0, 2), Buffer("c", "b", "b", "a")) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 1, 1)
+          values shouldBe Array("c", "b", "a")
+          delta shouldBe -1
+      }
+      testWithBuffers[String, Int](
+        ensureChildDistinct(1, _, _),
+        IntBuffer(0, 1, 0, 1, 2),
+        Buffer("d", "b", "c", "b", "a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 0, 2, 1)
+          values shouldBe Array("d", "c", "b", "a")
+          delta shouldBe -1
+      }
+      testWithBuffers[String, Int](
+        ensureChildDistinct(1, _, _),
+        IntBuffer(0, 1, 0, 1, 0, 1, 3),
+        Buffer("e", "b", "d", "b", "c", "b", "a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 0, 2, 0, 1, 2)
+          values shouldBe Array("e", "d", "b", "c", "b", "a")
+          delta shouldBe -1
+      }
+      testWithBuffers[String, Int](
+        ensureChildDistinct(3, _, _),
+        IntBuffer(0, 1, 0, 1, 0, 1, 3),
+        Buffer("e", "b", "d", "b", "c", "b", "a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 1, 0, 0, 2, 2)
+          values shouldBe Array("e", "b", "d", "c", "b", "a")
+          delta shouldBe -1
+      }
+      testWithBuffers[String, Int](
+        ensureChildDistinct(5, _, _),
+        IntBuffer(0, 1, 0, 1, 0, 1, 3),
+        Buffer("e", "b", "d", "b", "c", "b", "a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 1, 0, 0, 2, 2)
+          values shouldBe Array("e", "b", "d", "c", "b", "a")
+          delta shouldBe -1
+      }
+    }
+
     "find a nearest sibling of an index having given value" in {
       nearestSiblingHavingValue("a", 0, 1, Array(0), Array("a")) shouldBe None
       nearestSiblingHavingValue("a", 0, 2, Array(0, 1), Array("a", "a")) shouldBe None
@@ -53,23 +163,23 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
     }
 
     "list children indexes" in {
-      childrenIndexes(0, Array(0)) shouldBe IntSlice.empty
-      childrenIndexes(1, Array(0, 1)) shouldBe IntSlice(0)
-      childrenIndexes(2, Array(0, 1, 1)) shouldBe IntSlice(1)
-      childrenIndexes(3, Array(0, 0, 0, 3)) shouldBe IntSlice(2, 1, 0)
-      childrenIndexes(4, Array(0, 1, 0, 1, 2)) shouldBe IntSlice(3, 1)
-      childrenIndexes(3, Array(0, 1, 0, 1, 2)) shouldBe IntSlice(2)
-      childrenIndexes(1, Array(0, 1, 0, 1, 2)) shouldBe IntSlice(0)
-      childrenIndexes(6, Array(0, 0, 2, 0, 0, 2, 2)) shouldBe IntSlice(5, 2)
-      childrenIndexes(2, Array(0, 0, 2, 0, 0, 2, 2)) shouldBe IntSlice(1, 0)
-      childrenIndexes(5, Array(0, 0, 2, 0, 0, 2, 2)) shouldBe IntSlice(4, 3)
-      childrenIndexes(0, Array(0, 0, 0, 0, 2, 2, 2)) shouldBe IntSlice.empty
-      childrenIndexes(1, Array(0, 0, 0, 0, 2, 2, 2)) shouldBe IntSlice.empty
-      childrenIndexes(2, Array(0, 0, 0, 0, 2, 2, 2)) shouldBe IntSlice.empty
-      childrenIndexes(3, Array(0, 0, 0, 0, 2, 2, 2)) shouldBe IntSlice.empty
-      childrenIndexes(4, Array(0, 0, 0, 0, 2, 2, 2)) shouldBe IntSlice(3, 2)
-      childrenIndexes(5, Array(0, 0, 0, 0, 2, 2, 2)) shouldBe IntSlice(4, 1)
-      childrenIndexes(6, Array(0, 0, 0, 0, 2, 2, 2)) shouldBe IntSlice(5, 0)
+      childrenIndexes(0, Array(0)).asSlice shouldBe IntSlice.empty
+      childrenIndexes(1, Array(0, 1)).asSlice shouldBe IntSlice(0)
+      childrenIndexes(2, Array(0, 1, 1)).asSlice shouldBe IntSlice(1)
+      childrenIndexes(3, Array(0, 0, 0, 3)).asSlice shouldBe IntSlice(2, 1, 0)
+      childrenIndexes(4, Array(0, 1, 0, 1, 2)).asSlice shouldBe IntSlice(3, 1)
+      childrenIndexes(3, Array(0, 1, 0, 1, 2)).asSlice shouldBe IntSlice(2)
+      childrenIndexes(1, Array(0, 1, 0, 1, 2)).asSlice shouldBe IntSlice(0)
+      childrenIndexes(6, Array(0, 0, 2, 0, 0, 2, 2)).asSlice shouldBe IntSlice(5, 2)
+      childrenIndexes(2, Array(0, 0, 2, 0, 0, 2, 2)).asSlice shouldBe IntSlice(1, 0)
+      childrenIndexes(5, Array(0, 0, 2, 0, 0, 2, 2)).asSlice shouldBe IntSlice(4, 3)
+      childrenIndexes(0, Array(0, 0, 0, 0, 2, 2, 2)).asSlice shouldBe IntSlice.empty
+      childrenIndexes(1, Array(0, 0, 0, 0, 2, 2, 2)).asSlice shouldBe IntSlice.empty
+      childrenIndexes(2, Array(0, 0, 0, 0, 2, 2, 2)).asSlice shouldBe IntSlice.empty
+      childrenIndexes(3, Array(0, 0, 0, 0, 2, 2, 2)).asSlice shouldBe IntSlice.empty
+      childrenIndexes(4, Array(0, 0, 0, 0, 2, 2, 2)).asSlice shouldBe IntSlice(3, 2)
+      childrenIndexes(5, Array(0, 0, 0, 0, 2, 2, 2)).asSlice shouldBe IntSlice(4, 1)
+      childrenIndexes(6, Array(0, 0, 0, 0, 2, 2, 2)).asSlice shouldBe IntSlice(5, 0)
     }
 
     "append children indexes to buffer" in {

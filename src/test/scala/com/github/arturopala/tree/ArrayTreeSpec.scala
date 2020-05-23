@@ -554,8 +554,10 @@ class ArrayTreeSpec extends AnyWordSpecCompat {
       updateValue(0, None, "c", Tree("a", Tree("b")).deflated, true) shouldBe Tree("a", Tree("c"))
       updateValue(1, None, "c", Tree("a", Tree("b")).deflated, true) shouldBe Tree("c", Tree("b"))
       updateValue(0, None, "c", Tree("a", Tree("b"), Tree("d")).deflated, true) shouldBe Tree("a", Tree("b"), Tree("c"))
-      updateValue(1, None, "c", Tree("a", Tree("b"), Tree("c")).deflated, true) shouldBe Tree("a", Tree("c"))
-      updateValue(2, None, "c", Tree("a", Tree("b"), Tree("c")).deflated, true) shouldBe Tree("c", Tree("b"), Tree("c"))
+      updateValue(1, None, "c", Tree("a", Tree("b"), Tree("c")).deflated, true) shouldBe
+        Tree("a", Tree("c"))
+      updateValue(2, None, "c", Tree("a", Tree("b"), Tree("c")).deflated, true) shouldBe
+        Tree("c", Tree("b"), Tree("c"))
     }
 
     "modify value at the index" in {

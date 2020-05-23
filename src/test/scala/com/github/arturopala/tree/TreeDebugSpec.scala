@@ -18,7 +18,10 @@ package com.github.arturopala.tree
 
 import com.github.arturopala.bufferandslice.{Buffer, IntBuffer, IntSlice, Slice}
 import com.github.arturopala.tree.LaxTreeOps._
+import com.github.arturopala.tree.internal.ArrayTree
 import com.github.arturopala.tree.internal.ArrayTreeFunctions.insertRightChildren
+
+import scala.reflect.ClassTag
 
 // Special test suite to ease single assertions debugging in an IDE
 class TreeDebugSpec extends FunSuite with TestWithBuffers {
@@ -28,9 +31,16 @@ class TreeDebugSpec extends FunSuite with TestWithBuffers {
 
   sealed trait Spec extends AnyWordSpecCompat with TestTrees {
 
+    def tree[T: ClassTag](t: Tree[T]): Tree[T]
+
     "debug" in {
 
-      tree3_1.removeValueLax("b") shouldBe Tree("a", Tree("c"))
+      ArrayTree.removeValue(
+        6,
+        None,
+        Tree("a", Tree("b", Tree("c", Tree("e", Tree("g")))), Tree("c", Tree("e", Tree("f")))).deflated,
+        true
+      ) shouldBe Tree("a", Tree("c", Tree("e", Tree("g"), Tree("f"))))
     }
 
   }
