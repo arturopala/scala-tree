@@ -80,6 +80,24 @@ class TreeModificationsSpec extends FunSuite {
         )
       ).modifyValue("x", _ => "c") shouldBe
         Tree("a", Tree("c", Tree("e")), Tree("c", Tree("f"), Tree("g")), Tree("b"), Tree("d"), Tree("c", Tree("h")))
+      tree(
+        Tree(
+          "a",
+          Tree("c", Tree("e")),
+          Tree("c", Tree("f", Tree("i"))),
+          Tree("b"),
+          Tree("x", Tree("f", Tree("j"))),
+          Tree("d"),
+          Tree("c", Tree("h"))
+        )
+      ).modifyValue("x", _ => "c") shouldBe
+        Tree(
+          "a",
+          Tree("c", Tree("e")),
+          Tree("c", Tree("f", Tree("i"), Tree("j"))),
+          Tree("b"),
+          Tree("d"),
+          Tree("c", Tree("h")))
     }
 
     "modify lax a value of a node selected by the path in the tree" in {
