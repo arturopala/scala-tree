@@ -90,6 +90,13 @@ trait LaxTree[T] {
 
   // LAX MODIFICATIONS
 
+  /** Modifies the value of a child node holding a given value.
+    * @param value value of the child node
+    * @param modify function to modify the value
+    * @return modified tree if contains the value
+    * @group laxModification */
+  def modifyValueLax[T1 >: T: ClassTag](value: T1, modify: T => T1): Tree[T1] = ???
+
   /** Modifies the value selected by the given path, and returns a whole tree updated.
     * @note BEWARE: this method is lax, it will not keep node's children distinct.
     * @param path list of node's values forming a path from the root to the parent node.
@@ -110,6 +117,13 @@ trait LaxTree[T] {
     modify: T => T1,
     toPathItem: T => K
   ): Either[Tree[T], Tree[T1]]
+
+  /** Modifies the child holding a given value.
+    * @param value value of the child node
+    * @param modify function to modify the value
+    * @return modified tree if contains the value
+    * @group laxModification */
+  def modifyTreeLax[T1 >: T: ClassTag](value: T1, modify: Tree[T] => Tree[T1]): Tree[T1] = ???
 
   /** Modifies the tree selected by the given path, and returns a whole tree updated.
     * @note BEWARE: this method is lax, it will not keep node's children distinct.
