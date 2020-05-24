@@ -72,6 +72,9 @@ class TreeRemovalsSpec extends FunSuite {
       tree(Tree("a", Tree("b"), Tree("c", Tree("d")), Tree("c", Tree("e")), Tree("c", Tree("f"))))
         .removeValue("c") shouldBe
         Tree("a", Tree("b"), Tree("d"), Tree("c", Tree("e")), Tree("c", Tree("f")))
+      tree(Tree("a", Tree("b", Tree("c")), Tree("b", Tree("d")), Tree("b", Tree("e"))))
+        .removeValue("b") shouldBe
+        Tree("a", Tree("c"), Tree("b", Tree("d")), Tree("b", Tree("e")))
     }
 
     "remove lax a child node holding a value" in {

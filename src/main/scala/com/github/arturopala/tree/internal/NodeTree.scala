@@ -1014,7 +1014,7 @@ object NodeTree {
         TreeBuilder.fromTreeSplit[T1](treeSplit)
 
       case tree: NodeTree[T1] =>
-        if (keepDistinct && treeSplit.nonEmpty) {
+        if (keepDistinct && treeSplit.nonEmpty && tree.value != child.value) {
           val (left, value, right) = treeSplit.head
           val newHead = insertChildDistinct(value, left, tree, right)
           TreeBuilder.fromChildAndTreeSplit(newHead, treeSplit.tail)
@@ -1088,14 +1088,15 @@ object NodeTree {
             Tree(tree.value, left ::: right)
 
           case t: NodeTree[T1] =>
-            if (keepDistinct) {
+            if (keepDistinct && t.value != node.value) {
               insertChildDistinct(tree.value, left, t, right)
             } else {
               Tree(tree.value, left ::: t :: right)
             }
 
           case t: ArrayTree[T1] =>
-            ArrayTree.insertChildren(ArrayTree.prepend(tree.value, t), left, right, keepDistinct)
+            ArrayTree
+              .insertChildren(ArrayTree.prepend(tree.value, t), left, right, keepDistinct && t.value != node.value)
         }
     }
 

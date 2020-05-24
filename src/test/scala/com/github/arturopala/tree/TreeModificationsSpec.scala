@@ -51,6 +51,10 @@ class TreeModificationsSpec extends FunSuite {
         Tree("a", Tree("b", Tree("c")), Tree("b", Tree("c", Tree("e")), Tree("d")), Tree("g"))
       tree7.modifyTreeLax("g", _ => Tree("b", Tree("c", Tree("e")), Tree("d"))) shouldBe
         Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e", Tree("f"))), Tree("b", Tree("c", Tree("e")), Tree("d")))
+      // test case when tree modification doesn't change head which already have duplicate siblings
+      tree(Tree("a", Tree("b", Tree("c")), Tree("b", Tree("d")), Tree("b", Tree("e"))))
+        .modifyTreeLax("b", _ => Tree("b", Tree("x"))) shouldBe
+        Tree("a", Tree("b", Tree("x")), Tree("b", Tree("d")), Tree("b", Tree("e")))
     }
 
     "modify lax a child value" in {
@@ -132,6 +136,9 @@ class TreeModificationsSpec extends FunSuite {
           Tree("d"),
           Tree("c", Tree("h"))
         )
+      tree(Tree("a", Tree("b", Tree("c")), Tree("b", Tree("d")), Tree("b", Tree("e"))))
+        .modifyValueLax("b", _ => "x") shouldBe
+        Tree("a", Tree("x", Tree("c")), Tree("b", Tree("d")), Tree("b", Tree("e")))
     }
 
     "modify distinct a child tree" in {
@@ -156,6 +163,11 @@ class TreeModificationsSpec extends FunSuite {
         Tree("a", Tree("b", Tree("c", Tree("e")), Tree("d")), Tree("g"))
       tree7.modifyTree("g", _ => Tree("b", Tree("c", Tree("e")), Tree("d"))) shouldBe
         Tree("a", Tree("b", Tree("c", Tree("e")), Tree("d")), Tree("d", Tree("e", Tree("f"))))
+      // test case when tree modification doesn't change head which already have duplicate siblings
+      // as this shall not trigger merging
+      tree(Tree("a", Tree("b", Tree("c")), Tree("b", Tree("d")), Tree("b", Tree("e"))))
+        .modifyTree("b", _ => Tree("b", Tree("x"))) shouldBe
+        Tree("a", Tree("b", Tree("x")), Tree("b", Tree("d")), Tree("b", Tree("e")))
     }
 
     "modify distinct a child value" in {
