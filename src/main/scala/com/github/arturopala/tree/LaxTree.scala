@@ -95,7 +95,7 @@ trait LaxTree[T] {
     * @param modify function to modify the value
     * @return modified tree if contains the value
     * @group laxModification */
-  def modifyValueLax[T1 >: T: ClassTag](value: T1, modify: T => T1): Tree[T1] = ???
+  def modifyValueLax[T1 >: T: ClassTag](value: T1, modify: T => T1): Tree[T1]
 
   /** Modifies the value selected by the given path, and returns a whole tree updated.
     * @note BEWARE: this method is lax, it will not keep node's children distinct.
@@ -123,7 +123,7 @@ trait LaxTree[T] {
     * @param modify function to modify the value
     * @return modified tree if contains the value
     * @group laxModification */
-  def modifyTreeLax[T1 >: T: ClassTag](value: T1, modify: Tree[T] => Tree[T1]): Tree[T1] = ???
+  def modifyTreeLax[T1 >: T: ClassTag](value: T1, modify: Tree[T] => Tree[T1]): Tree[T1]
 
   /** Modifies the tree selected by the given path, and returns a whole tree updated.
     * @note BEWARE: this method is lax, it will not keep node's children distinct.
@@ -290,6 +290,17 @@ object LaxTreeOps {
         ArrayTree.insertTreeAt(path, subtree, tree, f, keepDistinct = false)
     }
 
+    final override def modifyValueLax[T1 >: T: ClassTag](value: T1, modify: T => T1): Tree[T1] =
+      t match {
+        case Tree.empty => empty
+
+        case node: NodeTree[T] =>
+          NodeTree.modifyValue(node, value, modify, keepDistinct = false)
+
+        case tree: ArrayTree[T] =>
+          ArrayTree.modifyValue(value, modify, tree, keepDistinct = false)
+      }
+
     final override def modifyValueLaxAt[T1 >: T: ClassTag](
       path: Iterable[T1],
       modify: T => T1
@@ -316,6 +327,17 @@ object LaxTreeOps {
       case tree: ArrayTree[T] =>
         ArrayTree.modifyValueAt(path, modify, tree, toPathItem, keepDistinct = false)
     }
+
+    final override def modifyTreeLax[T1 >: T: ClassTag](value: T1, modify: Tree[T] => Tree[T1]): Tree[T1] =
+      t match {
+        case Tree.empty => empty
+
+        case node: NodeTree[T] =>
+          NodeTree.modifyTree(node, value, modify, keepDistinct = false)
+
+        case tree: ArrayTree[T] =>
+          ArrayTree.modifyTree(value, modify, tree, keepDistinct = false)
+      }
 
     final override def modifyTreeLaxAt[T1 >: T: ClassTag](
       path: Iterable[T1],
