@@ -982,24 +982,6 @@ object NodeTree {
     split(Nil, list)
   }
 
-  /** Modifies value of the node holding the value. */
-  final def modifyValue[T, T1 >: T: ClassTag](
-    tree: NodeTree[T],
-    value: T1,
-    modify: T => T1,
-    keepDistinct: Boolean
-  ): Tree[T1] =
-    splitListWhen[NodeTree[T]](_.value == value, tree.subtrees) match {
-      case None => tree
-      case Some((left, node, right)) =>
-        val modifiedNode = Tree(modify(node.value), node.subtrees)
-        if (keepDistinct) {
-          insertChildDistinct(tree.value, left, modifiedNode, right)
-        } else {
-          Tree(tree.value, left ::: modifiedNode :: right)
-        }
-    }
-
   /** Joins single treeSplit back into a tree node. */
   @`inline` final def join[T](split: TreeSplit[T]): NodeTree[T] = Tree(split._2, split._1 ++ split._3)
 
@@ -1044,6 +1026,24 @@ object NodeTree {
         ArrayTree.buildFromChildAndTreeSplit(tree, treeSplit.tail)
     }
 
+  /** Modifies value of the node holding the value. */
+  final def modifyValue[T, T1 >: T: ClassTag](
+    tree: NodeTree[T],
+    value: T1,
+    modify: T => T1,
+    keepDistinct: Boolean
+  ): Tree[T1] =
+    splitListWhen[NodeTree[T]](_.value == value, tree.subtrees) match {
+      case None => tree
+      case Some((left, node, right)) =>
+        val modifiedNode = Tree(modify(node.value), node.subtrees)
+        if (keepDistinct) {
+          insertChildDistinct(tree.value, left, modifiedNode, right)
+        } else {
+          Tree(tree.value, left ::: modifiedNode :: right)
+        }
+    }
+
   /** Modifies value of the node selected by the path. */
   final def modifyValueAt[T, T1 >: T: ClassTag](
     tree: NodeTree[T],
@@ -1055,20 +1055,6 @@ object NodeTree {
       .map {
         case (treeSplit, recipientTree) =>
           Right(modifyChildValueInSplit(treeSplit, recipientTree, modify, keepDistinct))
-      }
-      .getOrElse(Left(tree))
-
-  /** Modifies a subtree selected by the path. */
-  final def modifyTreeAt[T, T1 >: T: ClassTag](
-    tree: NodeTree[T],
-    pathIterator: Iterator[T1],
-    modify: Tree[T] => Tree[T1],
-    keepDistinct: Boolean
-  ): Either[Tree[T], Tree[T1]] =
-    splitTreeFollowingEntirePath[T, T1](tree, pathIterator)
-      .map {
-        case (treeSplit, recipientTree) =>
-          Right(modifyChildInSplit(treeSplit, recipientTree, modify, keepDistinct))
       }
       .getOrElse(Left(tree))
 
@@ -1084,6 +1070,46 @@ object NodeTree {
       .map {
         case (treeSplit, recipientTree) =>
           Right(modifyChildValueInSplit(treeSplit, recipientTree, modify, keepDistinct))
+      }
+      .getOrElse(Left(tree))
+
+  /** Modifies the child tree holding the value at head. */
+  final def modifyTree[T, T1 >: T: ClassTag](
+    tree: NodeTree[T],
+    value: T1,
+    modify: Tree[T] => Tree[T1],
+    keepDistinct: Boolean
+  ): Tree[T1] =
+    splitListWhen[NodeTree[T]](_.value == value, tree.subtrees) match {
+      case None => tree
+      case Some((left, node, right)) =>
+        modify(node) match {
+          case Tree.empty =>
+            Tree(tree.value, left ::: right)
+
+          case t: NodeTree[T1] =>
+            if (keepDistinct) {
+              insertChildDistinct(tree.value, left, t, right)
+            } else {
+              Tree(tree.value, left ::: t :: right)
+            }
+
+          case t: ArrayTree[T1] =>
+            ArrayTree.insertChildren(ArrayTree.prepend(tree.value, t), left, right, keepDistinct)
+        }
+    }
+
+  /** Modifies a subtree selected by the path. */
+  final def modifyTreeAt[T, T1 >: T: ClassTag](
+    tree: NodeTree[T],
+    pathIterator: Iterator[T1],
+    modify: Tree[T] => Tree[T1],
+    keepDistinct: Boolean
+  ): Either[Tree[T], Tree[T1]] =
+    splitTreeFollowingEntirePath[T, T1](tree, pathIterator)
+      .map {
+        case (treeSplit, recipientTree) =>
+          Right(modifyChildInSplit(treeSplit, recipientTree, modify, keepDistinct))
       }
       .getOrElse(Left(tree))
 

@@ -71,7 +71,7 @@ abstract class ArrayTreeLike[T: ClassTag] extends TreeLike[T] {
   // MODIFICATIONS
 
   final override def prepend[T1 >: T: ClassTag](value: T1): ArrayTree[T1] =
-    ArrayTree.prependValue(value, tree)
+    ArrayTree.prepend(value, tree)
 
   final override def insertValue[T1 >: T: ClassTag](value: T1): Tree[T1] =
     ArrayTree.insertValue(tree.structure.length - 1, value, tree, keepDistinct = true)
@@ -118,6 +118,9 @@ abstract class ArrayTreeLike[T: ClassTag] extends TreeLike[T] {
     toPathItem: T => K
   ): Either[Tree[T], Tree[T1]] =
     ArrayTree.modifyValueAt(path, modify, tree, toPathItem, keepDistinct = true)
+
+  final override def modifyTree[T1 >: T: ClassTag](value: T1, modify: Tree[T] => Tree[T1]): Tree[T1] =
+    ArrayTree.modifyTree(value, modify, tree, keepDistinct = true)
 
   final override def modifyTreeAt[T1 >: T: ClassTag](
     path: Iterable[T1],

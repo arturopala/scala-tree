@@ -460,7 +460,7 @@ trait TreeLike[+T] {
     * @param modify function to modify the value
     * @return modified tree if contains the value
     * @group modification */
-  def modifyTree[T1 >: T: ClassTag](value: T1, modify: T1 => T1): Tree[T1] = ???
+  def modifyTree[T1 >: T: ClassTag](value: T1, modify: Tree[T] => Tree[T1]): Tree[T1]
 
   /** Modifies the tree selected by the given path, and returns a whole tree updated.
     * Keeps all the node's children distinct.

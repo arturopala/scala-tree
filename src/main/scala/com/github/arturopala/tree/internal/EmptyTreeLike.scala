@@ -109,6 +109,9 @@ trait EmptyTreeLike extends TreeLike[Nothing] {
   ): Either[Tree[Nothing], Tree[T1]] =
     Left(empty)
 
+  final override def modifyTree[T1 >: Nothing: ClassTag](value: T1, modify: Tree[Nothing] => Tree[T1]): Tree[T1] =
+    Tree.empty
+
   final override def modifyTreeAt[T1: ClassTag](
     path: Iterable[T1],
     modify: Tree[Nothing] => Tree[T1]

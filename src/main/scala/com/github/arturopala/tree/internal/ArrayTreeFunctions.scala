@@ -816,6 +816,16 @@ object ArrayTreeFunctions {
       -size
     } else 0
 
+  /** Removes all the children of the tree at the index. */
+  final def removeChildren[T](index: Int, parentIndex: Int, structureBuffer: IntBuffer, valuesBuffer: Buffer[T]): Int =
+    if (index >= 0 && index < structureBuffer.length) {
+      val size = treeSize(index, structureBuffer)
+      structureBuffer(index) = 0
+      structureBuffer.removeRange(index - size + 1, index)
+      valuesBuffer.removeRange(index - size + 1, index)
+      -size + 1
+    } else 0
+
   /** Inserts branch into the buffers with checking for duplicates.
     * @param branchIterator list of values
     * @return buffer length change */
@@ -848,13 +858,152 @@ object ArrayTreeFunctions {
       }
     } else offset
 
+  /** Inserts tree to the buffers at the given index, and keeps children distinct.
+    * Does nothing when an empty tree. Uses unsafe recursion.
+    * @return buffers length change */
+  final def insertChildDistinctUnsafe[T](
+    childStructure: IntSlice,
+    childValues: Slice[T],
+    index: Int,
+    structureBuffer: IntBuffer,
+    valuesBuffer: Buffer[T]
+  ): Int =
+    if (childStructure.length == 0) 0
+    else {
+      valuesBuffer(index) = childValues.last
+      childrenOf(childStructure, childValues).foldLeft(0) {
+        case (offset, (structure, values)) =>
+          val bufferIndex = index + offset
+          offset + (leftmostChildHavingValue(
+            childValues.last,
+            bufferIndex,
+            structureBuffer.length,
+            structureBuffer,
+            valuesBuffer
+          ) match {
+            case None =>
+              val s = treeSize(bufferIndex, structureBuffer) - 1
+              structureBuffer.increment(bufferIndex)
+              insertSlice(bufferIndex - s, childStructure, childValues, structureBuffer, valuesBuffer)
+
+            case Some(i) => insertChildDistinctUnsafe(structure, values, i, structureBuffer, valuesBuffer)
+          })
+      }
+    }
+
+  /** Inserts tree to the buffers at the given index, and keeps children distinct.
+    * Does nothing when an empty tree. Uses unsafe recursion.
+    * @return tuple of (insertion index, buffers length change) */
+  @`inline` final def insertChildDistinct[T](
+    proposedIndex: Int,
+    childStructure: IntSlice,
+    childValues: Slice[T],
+    structureBuffer: IntBuffer,
+    valuesBuffer: Buffer[T]
+  ): (Int, Int) = {
+    val (insertIndex, delta1, nextQueue) =
+      tryInsertDistinct(proposedIndex, childStructure, childValues, structureBuffer, valuesBuffer, true, Vector.empty)
+    val delta2 = insertChildrenDistinct(nextQueue, structureBuffer, valuesBuffer, delta1)
+    (insertIndex, delta2)
+  }
+
+  /** Inserts children into the buffers with checking for duplicates.
+    * Each child is inserted on the specified index or merged down with the nearest duplicate.
+    * Does nothing for an empty tree.
+    * @param queue list of (proposed index, tree to insert)
+    * @return buffer length change */
+  @tailrec
+  final def insertChildrenDistinct[T](
+    queue: Vector[(Int, IntSlice, Slice[T], Boolean)],
+    structureBuffer: IntBuffer,
+    valuesBuffer: Buffer[T],
+    offset: Int
+  ): Int =
+    if (queue.isEmpty) offset
+    else {
+      val (index, structure, values, onLeftSide) = queue.head
+      if (structure.length == 0) insertChildrenDistinct(queue.tail, structureBuffer, valuesBuffer, offset)
+      else {
+        val (_, delta, nextQueue) =
+          tryInsertDistinct(index, structure, values, structureBuffer, valuesBuffer, onLeftSide, queue.tail)
+        insertChildrenDistinct(nextQueue, structureBuffer, valuesBuffer, offset + delta)
+      }
+    }
+
+  /** Tries to insert child distinct to the tree while keeping children distinct.
+    * @param proposedIndex suggested insertion index
+    * @return tuple of (realInsertionIndex, buffer change delta, next insertions queue) */
+  final def tryInsertDistinct[T](
+    proposedIndex: Int,
+    childStructure: IntSlice,
+    childValues: Slice[T],
+    structureBuffer: IntBuffer,
+    valuesBuffer: Buffer[T],
+    onLeftSide: Boolean,
+    queue: Vector[(Int, IntSlice, Slice[T], Boolean)]
+  ): (Int, Int, Vector[(Int, IntSlice, Slice[T], Boolean)]) = {
+
+    val (insertIndex, isDistinct) =
+      if (structureBuffer.isEmpty) (0, true)
+      else if (proposedIndex >= 0 && proposedIndex < structureBuffer.length && valuesBuffer(proposedIndex) == childValues.last)
+        (proposedIndex, false)
+      else
+        nearestSiblingHavingValue(
+          childValues.last,
+          Math.max(0, proposedIndex),
+          structureBuffer.length,
+          structureBuffer,
+          valuesBuffer
+        ).map((_, false))
+          .getOrElse((if (onLeftSide) bottomIndex(proposedIndex, structureBuffer) else proposedIndex + 1, true))
+
+    val i = Math.max(0, insertIndex)
+
+    val (delta1, updatedQueue) = if (isDistinct) {
+      val parent = if (proposedIndex < 0) 0 else parentIndex(proposedIndex, structureBuffer)
+      if (parent >= 0) {
+        structureBuffer.increment(parent)
+      }
+      structureBuffer.shiftRight(i, 1)
+      structureBuffer.update(i, 0)
+      valuesBuffer.shiftRight(i, 1)
+      valuesBuffer.update(i, childValues.last)
+      (1, queue.map(shiftFromWithFlag(i, 1)))
+    } else (0, queue)
+
+    val (delta2, updatedQueue2) = if (childStructure.length > 1) {
+      if (structureBuffer(i) == 0) { // skip checking duplicates and insert remaining tree at once
+        val s = treeSize(i, structureBuffer)
+        structureBuffer.modify(i, _ + childStructure.last)
+        val d = insertSlice(i - s + 1, childStructure.init, childValues.init, structureBuffer, valuesBuffer)
+        (d, updatedQueue.map(shiftFromWithFlag(i - d + 1, d)))
+      } else {
+
+        val f = onLeftSide && insertIndex >= proposedIndex
+
+        val childrenInsertIndex =
+          if (f) bottomIndex(i + delta1, structureBuffer)
+          else insertIndex + delta1 - 1
+
+        val nextTail = childrenOf(childStructure, childValues).map {
+          case (s, v) => (childrenInsertIndex, s, v, f)
+        }
+        (0, nextTail ++: updatedQueue)
+      }
+
+    } else
+      (0, updatedQueue)
+
+    (i, delta1 + delta2, updatedQueue2)
+  }
+
   /** Inserts children into the buffers with checking for duplicates.
     * Each child is inserted on the right side (below) of existing children of its parentIndex.
-    * Does for an empty tree.
+    * Does nothing for an empty tree.
     * @param queue list of (parentIndex, tree to insert)
     * @return buffer length change */
   @tailrec
-  final def insertRightSubtreeListDistinct[T](
+  final def insertRightChildrenDistinct[T](
     queue: Vector[(Int, IntSlice, Slice[T])],
     structureBuffer: IntBuffer,
     valuesBuffer: Buffer[T],
@@ -865,7 +1014,7 @@ object ArrayTreeFunctions {
       val (parentIndex, structure, values) = queue.head
       val tail = queue.tail
 
-      if (structure.length == 0) insertRightSubtreeListDistinct(queue.tail, structureBuffer, valuesBuffer, offset)
+      if (structure.length == 0) insertRightChildrenDistinct(queue.tail, structureBuffer, valuesBuffer, offset)
       else {
         val (insertIndex, isDistinct) =
           rightmostChildHavingValue(values.last, parentIndex, structureBuffer.length, structureBuffer, valuesBuffer)
@@ -897,7 +1046,7 @@ object ArrayTreeFunctions {
         } else
           (0, updatedTail)
 
-        insertRightSubtreeListDistinct(updatedQueue, structureBuffer, valuesBuffer, offset + delta1 + delta2)
+        insertRightChildrenDistinct(updatedQueue, structureBuffer, valuesBuffer, offset + delta1 + delta2)
       }
     }
 
@@ -907,7 +1056,7 @@ object ArrayTreeFunctions {
     * @param queue list of (parentIndex, tree to insert)
     * @return buffer length change */
   @tailrec
-  final def insertLeftSubtreeListDistinct[T](
+  final def insertLeftChildrenDistinct[T](
     queue: Vector[(Int, IntSlice, Slice[T])],
     structureBuffer: IntBuffer,
     valuesBuffer: Buffer[T],
@@ -918,7 +1067,7 @@ object ArrayTreeFunctions {
       val (parentIndex, structure, values) = queue.head
       val tail = queue.tail
 
-      if (structure.length == 0) insertLeftSubtreeListDistinct(tail, structureBuffer, valuesBuffer, offset)
+      if (structure.length == 0) insertLeftChildrenDistinct(tail, structureBuffer, valuesBuffer, offset)
       else {
         val (insertIndex, isDistinct) =
           leftmostChildHavingValue(values.last, parentIndex, structureBuffer.length, structureBuffer, valuesBuffer)
@@ -949,7 +1098,7 @@ object ArrayTreeFunctions {
         } else
           (0, updatedTail)
 
-        insertLeftSubtreeListDistinct(updatedQueue, structureBuffer, valuesBuffer, offset + delta1 + delta2)
+        insertLeftChildrenDistinct(updatedQueue, structureBuffer, valuesBuffer, offset + delta1 + delta2)
       }
     }
 
@@ -959,6 +1108,14 @@ object ArrayTreeFunctions {
   /** Transforms (index,structure,content) by adding an offset d to the index if greater or equal to i. */
   @`inline` final def shiftFrom[T](i: Int, d: Int): ((Int, IntSlice, Slice[T])) => (Int, IntSlice, Slice[T]) = {
     case (p, s, c) => (shiftIfGreaterOrEqualTo(p, i, d), s, c)
+  }
+
+  /** Transforms (index,structure,content,flag) by adding an offset d to the index if greater or equal to i. */
+  @`inline` final def shiftFromWithFlag[T](
+    i: Int,
+    d: Int
+  ): ((Int, IntSlice, Slice[T], Boolean)) => (Int, IntSlice, Slice[T], Boolean) = {
+    case (p, s, c, b) => (shiftIfGreaterOrEqualTo(p, i, d), s, c, b)
   }
 
   /** Replaces value with the subtree in the buffers at the given index, allows duplicated children.
@@ -1026,7 +1183,7 @@ object ArrayTreeFunctions {
             .map {
               case (structure, values) => (insertIndex, structure, values)
             }
-          insertRightSubtreeListDistinct(queue.toVector, structureBuffer, valuesBuffer, 0)
+          insertRightChildrenDistinct(queue.toVector, structureBuffer, valuesBuffer, 0)
         }
 
       val delta2 = if (hasDuplicate) {
@@ -1037,39 +1194,6 @@ object ArrayTreeFunctions {
       delta1 + delta2
 
     } else 0
-
-  /** Inserts tree to the buffers at the given index, and keeps children distinct.
-    * Does nothing when an empty tree. Uses unsafe recursion.
-    * @return buffers length change */
-  final def insertTreeDistinctUnsafe[T](
-    treeStructure: IntSlice,
-    treeValues: Slice[T],
-    index: Int,
-    structureBuffer: IntBuffer,
-    valuesBuffer: Buffer[T]
-  ): Int =
-    if (treeStructure.length == 0) 0
-    else {
-      valuesBuffer(index) = treeValues.last
-      childrenOf(treeStructure, treeValues).foldLeft(0) {
-        case (offset, (structure, values)) =>
-          val bufferIndex = index + offset
-          offset + (leftmostChildHavingValue(
-            treeValues.last,
-            bufferIndex,
-            structureBuffer.length,
-            structureBuffer,
-            valuesBuffer
-          ) match {
-            case None =>
-              val s = treeSize(bufferIndex, structureBuffer) - 1
-              structureBuffer.increment(bufferIndex)
-              insertSlice(bufferIndex - s, treeStructure, treeValues, structureBuffer, valuesBuffer)
-
-            case Some(i) => insertTreeDistinctUnsafe(structure, values, i, structureBuffer, valuesBuffer)
-          })
-      }
-    }
 
   /** Ensures that a child's value at index is distinct, otherwise merges down with the nearest sibling
     * on the right (above, preferred) or on the left (below). */
@@ -1224,7 +1348,7 @@ object ArrayTreeFunctions {
         case ((structure, values), delta) =>
           if (keepDistinct)
             ArrayTreeFunctions
-              .insertLeftSubtreeListDistinct(
+              .insertLeftChildrenDistinct(
                 Vector((parentIndex + delta, structure, values)),
                 structureBuffer,
                 valuesBuffer,
@@ -1252,7 +1376,7 @@ object ArrayTreeFunctions {
         case (delta, (structure, values)) =>
           if (keepDistinct)
             ArrayTreeFunctions
-              .insertRightSubtreeListDistinct(
+              .insertRightChildrenDistinct(
                 Vector((parentIndex + delta, structure, values)),
                 structureBuffer,
                 valuesBuffer,

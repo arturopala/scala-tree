@@ -18,8 +18,8 @@ package com.github.arturopala.tree
 
 import com.github.arturopala.bufferandslice.{Buffer, IntBuffer, IntSlice, Slice}
 import com.github.arturopala.tree.LaxTreeOps._
-import com.github.arturopala.tree.internal.ArrayTree
-import com.github.arturopala.tree.internal.ArrayTreeFunctions.insertRightChildren
+import com.github.arturopala.tree.internal.ArrayTree._
+import com.github.arturopala.tree.internal.ArrayTreeFunctions
 
 import scala.reflect.ClassTag
 
@@ -33,15 +33,7 @@ class TreeDebugSpec extends FunSuite with TestWithBuffers {
 
     def tree[T: ClassTag](t: Tree[T]): Tree[T]
 
-    "debug" in {
-
-      ArrayTree.removeValue(
-        6,
-        None,
-        Tree("a", Tree("b", Tree("c", Tree("e", Tree("g")))), Tree("c", Tree("e", Tree("f")))).deflated,
-        true
-      ) shouldBe Tree("a", Tree("c", Tree("e", Tree("g"), Tree("f"))))
-    }
+    "debug" in {}
 
   }
 

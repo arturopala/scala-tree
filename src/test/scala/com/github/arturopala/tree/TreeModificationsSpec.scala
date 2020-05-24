@@ -29,7 +29,31 @@ class TreeModificationsSpec extends FunSuite {
 
     def tree[T: ClassTag](t: Tree[T]): Tree[T]
 
-    "modify distinct a child" in {
+    "modify distinct a child tree" in {
+      val f: Tree[String] => Tree[String] = t => t.insertTree(Tree("x", Tree("y")))
+      tree0.modifyTree("a", f) shouldBe tree0
+      tree1.modifyTree("a", f) shouldBe tree1
+      tree2.modifyTree("a", f) shouldBe tree2
+      tree2.modifyTree("b", f) shouldBe Tree("a", Tree("b", Tree("x", Tree("y"))))
+      tree3_1.modifyTree("b", f) shouldBe Tree("a", Tree("b", Tree("x", Tree("y")), Tree("c")))
+      tree3_2.modifyTree("b", f) shouldBe Tree("a", Tree("b", Tree("x", Tree("y"))), Tree("c"))
+      tree3_2.modifyTree("c", f) shouldBe Tree("a", Tree("b"), Tree("c", Tree("x", Tree("y"))))
+      val f2: Tree[String] => Tree[String] = t => Tree("c", Tree("d"))
+      tree3_1.modifyTree("b", f2) shouldBe Tree("a", Tree("c", Tree("d")))
+      tree3_2.modifyTree("b", f2) shouldBe Tree("a", Tree("c", Tree("d")))
+      tree3_2.modifyTree("c", f2) shouldBe Tree("a", Tree("b"), Tree("c", Tree("d")))
+      tree4_1.modifyTree("b", f2) shouldBe Tree("a", Tree("c", Tree("d")))
+      tree4_2.modifyTree("b", f2) shouldBe Tree("a", Tree("c", Tree("d")), Tree("d"))
+      tree4_2.modifyTree("d", f2) shouldBe Tree("a", Tree("b", Tree("c")), Tree("c", Tree("d")))
+      tree7.modifyTree("b", _ => Tree("d", Tree("e", Tree("g")))) shouldBe
+        Tree("a", Tree("d", Tree("e", Tree("g"), Tree("f"))), Tree("g"))
+      tree7.modifyTree("d", _ => Tree("b", Tree("c", Tree("e")), Tree("d"))) shouldBe
+        Tree("a", Tree("b", Tree("c", Tree("e")), Tree("d")), Tree("g"))
+      tree7.modifyTree("g", _ => Tree("b", Tree("c", Tree("e")), Tree("d"))) shouldBe
+        Tree("a", Tree("b", Tree("c", Tree("e")), Tree("d")), Tree("d", Tree("e", Tree("f"))))
+    }
+
+    "modify distinct a child value" in {
       val f: String => String = s => s + s
       tree0.modifyValue("a", f) shouldBe tree0
       tree0.modifyValue("b", f) shouldBe tree0
@@ -97,7 +121,8 @@ class TreeModificationsSpec extends FunSuite {
           Tree("c", Tree("f", Tree("i"), Tree("j"))),
           Tree("b"),
           Tree("d"),
-          Tree("c", Tree("h")))
+          Tree("c", Tree("h"))
+        )
     }
 
     "modify lax a value of a node selected by the path in the tree" in {

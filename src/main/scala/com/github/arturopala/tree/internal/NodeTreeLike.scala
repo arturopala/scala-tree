@@ -138,6 +138,9 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
   ): Either[Tree[T], Tree[T1]] =
     NodeTree.modifyValueAt(node, path.iterator, toPathItem, modify, keepDistinct = true)
 
+  final override def modifyTree[T1 >: T: ClassTag](value: T1, modify: Tree[T] => Tree[T1]): Tree[T1] =
+    NodeTree.modifyTree(node, value, modify, keepDistinct = true)
+
   final override def modifyTreeAt[T1 >: T: ClassTag](
     path: Iterable[T1],
     modify: Tree[T] => Tree[T1]

@@ -18,10 +18,242 @@ package com.github.arturopala.tree
 
 import com.github.arturopala.tree.internal.ArrayTreeFunctions._
 import com.github.arturopala.bufferandslice.{Buffer, IntBuffer, IntSlice, Slice}
+import com.github.arturopala.tree.internal.ArrayTreeFunctions
 
 class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
 
   "ArrayTreeFunctions" should {
+
+    "try insert child distinct or produce further insert queue" in {
+      testWithBuffers[String, (Int, Int, Vector[(Int, IntSlice, Slice[String], Boolean)])](
+        ArrayTreeFunctions.tryInsertDistinct(4, IntSlice(0, 1, 1), Slice("g", "e", "d"), _, _, true, Vector.empty),
+        IntBuffer(0, 0, 1, 1, 0, 3),
+        Buffer("g", "f", "e", "d", "b", "a")
+      ) {
+        case (structure, values, (index, delta, queue)) =>
+          structure shouldBe Array(0, 0, 1, 1, 0, 3)
+          values shouldBe Array("g", "f", "e", "d", "b", "a")
+          delta shouldBe 0
+          index shouldBe 3
+          queue shouldBe Vector((2, IntSlice(0, 1), Slice("g", "e"), false))
+      }
+      testWithBuffers[String, (Int, Int, Vector[(Int, IntSlice, Slice[String], Boolean)])](
+        ArrayTreeFunctions.tryInsertDistinct(2, IntSlice(0, 1), Slice("g", "e"), _, _, false, Vector.empty),
+        IntBuffer(0, 0, 1, 1, 0, 3),
+        Buffer("g", "f", "e", "d", "b", "a")
+      ) {
+        case (structure, values, (index, delta, queue)) =>
+          structure shouldBe Array(0, 0, 1, 1, 0, 3)
+          values shouldBe Array("g", "f", "e", "d", "b", "a")
+          delta shouldBe 0
+          index shouldBe 2
+          queue shouldBe Vector((1, IntSlice(0), Slice("g"), false))
+      }
+      testWithBuffers[String, (Int, Int, Vector[(Int, IntSlice, Slice[String], Boolean)])](
+        ArrayTreeFunctions.tryInsertDistinct(1, IntSlice(0), Slice("g"), _, _, false, Vector.empty),
+        IntBuffer(0, 0, 1, 1, 0, 3),
+        Buffer("g", "f", "e", "d", "b", "a")
+      ) {
+        case (structure, values, (index, delta, queue)) =>
+          structure shouldBe Array(0, 0, 0, 2, 1, 0, 3)
+          values shouldBe Array("g", "f", "g", "e", "d", "b", "a")
+          delta shouldBe 1
+          index shouldBe 2
+          queue shouldBe Vector.empty
+      }
+      testWithBuffers[String, (Int, Int, Vector[(Int, IntSlice, Slice[String], Boolean)])](
+        ArrayTreeFunctions.tryInsertDistinct(4, IntSlice(0, 1), Slice("e", "b"), _, _, true, Vector.empty),
+        IntBuffer(0, 0, 2, 0, 1, 0, 0, 2, 3),
+        Buffer("c", "d", "b", "d", "c", "d", "c", "a", "a")
+      ) {
+        case (structure, values, (index, delta, queue)) =>
+          structure shouldBe Array(0, 0, 2, 0, 1, 0, 0, 2, 3)
+          values shouldBe Array("c", "d", "b", "d", "c", "d", "c", "a", "a")
+          delta shouldBe 0
+          index shouldBe 2
+          queue shouldBe Vector((1, IntSlice(0), Slice("e"), false))
+      }
+      testWithBuffers[String, (Int, Int, Vector[(Int, IntSlice, Slice[String], Boolean)])](
+        ArrayTreeFunctions.tryInsertDistinct(3, IntSlice(0, 1), Slice("e", "b"), _, _, true, Vector.empty),
+        IntBuffer(0, 1, 0, 1, 0, 0, 2, 3),
+        Buffer("d", "b", "d", "c", "d", "c", "b", "a")
+      ) {
+        case (structure, values, (index, delta, queue)) =>
+          structure shouldBe Array(0, 1, 0, 1, 0, 0, 2, 3)
+          values shouldBe Array("d", "b", "d", "c", "d", "c", "b", "a")
+          delta shouldBe 0
+          index shouldBe 6
+          queue shouldBe Vector((4, IntSlice(0), Slice("e"), true))
+      }
+      testWithBuffers[String, (Int, Int, Vector[(Int, IntSlice, Slice[String], Boolean)])](
+        ArrayTreeFunctions.tryInsertDistinct(2, IntSlice(0, 1), Slice("e", "b"), _, _, true, Vector.empty),
+        IntBuffer(0, 0, 2, 1),
+        Buffer("d", "c", "b", "a")
+      ) {
+        case (structure, values, (index, delta, queue)) =>
+          structure shouldBe Array(0, 0, 2, 1)
+          values shouldBe Array("d", "c", "b", "a")
+          delta shouldBe 0
+          index shouldBe 2
+          queue shouldBe Vector((0, IntSlice(0), Slice("e"), true))
+      }
+      testWithBuffers[String, (Int, Int, Vector[(Int, IntSlice, Slice[String], Boolean)])](
+        ArrayTreeFunctions.tryInsertDistinct(1, IntSlice(0, 1), Slice("d", "b"), _, _, true, Vector.empty),
+        IntBuffer(0, 1, 1),
+        Buffer("c", "b", "a")
+      ) {
+        case (structure, values, (index, delta, queue)) =>
+          structure shouldBe Array(0, 1, 1)
+          values shouldBe Array("c", "b", "a")
+          delta shouldBe 0
+          index shouldBe 1
+          queue shouldBe Vector((0, IntSlice(0), Slice("d"), true))
+      }
+      testWithBuffers[String, (Int, Int, Vector[(Int, IntSlice, Slice[String], Boolean)])](
+        ArrayTreeFunctions.tryInsertDistinct(0, IntSlice(0, 1), Slice("c", "b"), _, _, true, Vector.empty),
+        IntBuffer(0, 1),
+        Buffer("b", "a")
+      ) {
+        case (structure, values, (index, delta, queue)) =>
+          structure shouldBe Array(0, 1, 1)
+          values shouldBe Array("c", "b", "a")
+          delta shouldBe 1
+          index shouldBe 0
+          queue shouldBe Vector()
+      }
+      testWithBuffers[String, (Int, Int, Vector[(Int, IntSlice, Slice[String], Boolean)])](
+        ArrayTreeFunctions.tryInsertDistinct(-1, IntSlice(0, 1), Slice("d", "c"), _, _, true, Vector.empty),
+        IntBuffer(0, 1),
+        Buffer("b", "a")
+      ) {
+        case (structure, values, (index, delta, queue)) =>
+          structure shouldBe Array(0, 1, 1, 1)
+          values shouldBe Array("d", "c", "b", "a")
+          delta shouldBe 2
+          index shouldBe 0
+          queue shouldBe Vector()
+      }
+      testWithBuffers[String, (Int, Int, Vector[(Int, IntSlice, Slice[String], Boolean)])](
+        ArrayTreeFunctions.tryInsertDistinct(0, IntSlice(0, 1), Slice("d", "c"), _, _, true, Vector.empty),
+        IntBuffer(0, 1),
+        Buffer("b", "a")
+      ) {
+        case (structure, values, (index, delta, queue)) =>
+          structure shouldBe Array(0, 1, 0, 2)
+          values shouldBe Array("d", "c", "b", "a")
+          delta shouldBe 2
+          index shouldBe 0
+          queue shouldBe Vector()
+      }
+      testWithBuffers[String, (Int, Int, Vector[(Int, IntSlice, Slice[String], Boolean)])](
+        ArrayTreeFunctions.tryInsertDistinct(1, IntSlice(0), Slice("d"), _, _, false, Vector.empty),
+        IntBuffer(0, 1, 1),
+        Buffer("c", "b", "a")
+      ) {
+        case (structure, values, (index, delta, queue)) =>
+          structure shouldBe Array(0, 1, 0, 2)
+          values shouldBe Array("c", "b", "d", "a")
+          delta shouldBe 1
+          index shouldBe 2
+          queue shouldBe Vector()
+      }
+      testWithBuffers[String, (Int, Int, Vector[(Int, IntSlice, Slice[String], Boolean)])](
+        ArrayTreeFunctions.tryInsertDistinct(1, IntSlice(0), Slice("d"), _, _, true, Vector.empty),
+        IntBuffer(0, 1, 1),
+        Buffer("c", "b", "a")
+      ) {
+        case (structure, values, (index, delta, queue)) =>
+          structure shouldBe Array(0, 0, 1, 2)
+          values shouldBe Array("d", "c", "b", "a")
+          delta shouldBe 1
+          index shouldBe 0
+          queue shouldBe Vector()
+      }
+      testWithBuffers[String, (Int, Int, Vector[(Int, IntSlice, Slice[String], Boolean)])](
+        ArrayTreeFunctions.tryInsertDistinct(-1, IntSlice(0, 1), Slice("c", "b"), _, _, true, Vector.empty),
+        IntBuffer(0),
+        Buffer("a")
+      ) {
+        case (structure, values, (index, delta, queue)) =>
+          structure shouldBe Array(0, 1, 1)
+          values shouldBe Array("c", "b", "a")
+          delta shouldBe 2
+          index shouldBe 0
+          queue shouldBe Vector()
+      }
+      testWithBuffers[String, (Int, Int, Vector[(Int, IntSlice, Slice[String], Boolean)])](
+        ArrayTreeFunctions.tryInsertDistinct(0, IntSlice(0), Slice("b"), _, _, true, Vector.empty),
+        IntBuffer(0, 0, 2),
+        Buffer("c", "b", "a")
+      ) {
+        case (structure, values, (index, delta, queue)) =>
+          structure shouldBe Array(0, 0, 2)
+          values shouldBe Array("c", "b", "a")
+          delta shouldBe 0
+          index shouldBe 1
+          queue shouldBe Vector()
+      }
+      testWithBuffers[String, (Int, Int, Vector[(Int, IntSlice, Slice[String], Boolean)])](
+        ArrayTreeFunctions.tryInsertDistinct(1, IntSlice(0), Slice("b"), _, _, true, Vector.empty),
+        IntBuffer(0, 0, 2),
+        Buffer("c", "b", "a")
+      ) {
+        case (structure, values, (index, delta, queue)) =>
+          structure shouldBe Array(0, 0, 2)
+          values shouldBe Array("c", "b", "a")
+          delta shouldBe 0
+          index shouldBe 1
+          queue shouldBe Vector()
+      }
+      testWithBuffers[String, (Int, Int, Vector[(Int, IntSlice, Slice[String], Boolean)])](
+        ArrayTreeFunctions.tryInsertDistinct(1, IntSlice(0), Slice("b"), _, _, false, Vector.empty),
+        IntBuffer(0, 0, 2),
+        Buffer("d", "c", "a")
+      ) {
+        case (structure, values, (index, delta, queue)) =>
+          structure shouldBe Array(0, 0, 0, 3)
+          values shouldBe Array("d", "c", "b", "a")
+          delta shouldBe 1
+          index shouldBe 2
+          queue shouldBe Vector()
+      }
+      testWithBuffers[String, (Int, Int, Vector[(Int, IntSlice, Slice[String], Boolean)])](
+        ArrayTreeFunctions.tryInsertDistinct(1, IntSlice(0), Slice("c"), _, _, true, Vector.empty),
+        IntBuffer(0, 0, 2),
+        Buffer("d", "b", "a")
+      ) {
+        case (structure, values, (index, delta, queue)) =>
+          structure shouldBe Array(0, 0, 0, 3)
+          values shouldBe Array("d", "c", "b", "a")
+          delta shouldBe 1
+          index shouldBe 1
+          queue shouldBe Vector()
+      }
+      testWithBuffers[String, (Int, Int, Vector[(Int, IntSlice, Slice[String], Boolean)])](
+        ArrayTreeFunctions.tryInsertDistinct(0, IntSlice(0), Slice("c"), _, _, true, Vector.empty),
+        IntBuffer(0, 1),
+        Buffer("b", "a")
+      ) {
+        case (structure, values, (index, delta, queue)) =>
+          structure shouldBe Array(0, 0, 2)
+          values shouldBe Array("c", "b", "a")
+          delta shouldBe 1
+          index shouldBe 0
+          queue shouldBe Vector()
+      }
+      testWithBuffers[String, (Int, Int, Vector[(Int, IntSlice, Slice[String], Boolean)])](
+        ArrayTreeFunctions.tryInsertDistinct(-1, IntSlice(0), Slice("b"), _, _, true, Vector.empty),
+        IntBuffer(0),
+        Buffer("a")
+      ) {
+        case (structure, values, (index, delta, queue)) =>
+          structure shouldBe Array(0, 1)
+          values shouldBe Array("b", "a")
+          delta shouldBe 1
+          index shouldBe 0
+          queue shouldBe Vector()
+      }
+    }
 
     "remove value and ensure children distinct" in {
       testWithBuffers[String, Int](
@@ -1359,9 +1591,32 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
       }
     }
 
+    "insert trees distinct" in {
+      testWithBuffers[String, Int](
+        insertChildrenDistinct(Vector((1, IntSlice(0, 1), Slice("e", "d"), true)), _, _, 0),
+        IntBuffer(0, 0, 2),
+        Buffer("c", "b", "a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 0, 1, 0, 3)
+          values shouldBe Array("c", "e", "d", "b", "a")
+          delta shouldBe 2
+      }
+      testWithBuffers[String, Int](
+        ArrayTreeFunctions.insertChildrenDistinct(Vector((1, IntSlice(0, 1), Slice("c", "b"), true)), _, _, 0),
+        IntBuffer(0, 0, 2),
+        Buffer("c", "b", "a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 0, 1, 2)
+          values shouldBe Array("c", "c", "b", "a")
+          delta shouldBe 1
+      }
+    }
+
     "insert trees distinct left side" in {
       testWithBuffers[String, Int](
-        insertLeftSubtreeListDistinct(Vector.empty, _, _, 0),
+        insertLeftChildrenDistinct(Vector.empty, _, _, 0),
         IntBuffer.empty,
         Buffer.empty[String]
       ) {
@@ -1371,7 +1626,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe 0
       }
       testWithBuffers[String, Int](
-        insertLeftSubtreeListDistinct(Vector((-1, IntSlice(), Slice.empty[String])), _, _, 0),
+        insertLeftChildrenDistinct(Vector((-1, IntSlice(), Slice.empty[String])), _, _, 0),
         IntBuffer.empty,
         Buffer.empty[String]
       ) {
@@ -1381,7 +1636,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe 0
       }
       testWithBuffers[String, Int](
-        insertLeftSubtreeListDistinct(Vector((-1, IntSlice(0), Slice("a"))), _, _, 0),
+        insertLeftChildrenDistinct(Vector((-1, IntSlice(0), Slice("a"))), _, _, 0),
         IntBuffer.empty,
         Buffer.empty[String]
       ) {
@@ -1391,7 +1646,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe 1
       }
       testWithBuffers[String, Int](
-        insertLeftSubtreeListDistinct(Vector((0, IntSlice(0), Slice("b"))), _, _, 0),
+        insertLeftChildrenDistinct(Vector((0, IntSlice(0), Slice("b"))), _, _, 0),
         IntBuffer(0),
         Buffer("a")
       ) {
@@ -1401,7 +1656,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe 1
       }
       testWithBuffers[String, Int](
-        insertLeftSubtreeListDistinct(Vector((-1, IntSlice(0), Slice("b"))), _, _, 0),
+        insertLeftChildrenDistinct(Vector((-1, IntSlice(0), Slice("b"))), _, _, 0),
         IntBuffer(0),
         Buffer("a")
       ) {
@@ -1411,7 +1666,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe 1
       }
       testWithBuffers[String, Int](
-        insertLeftSubtreeListDistinct(Vector((-1, IntSlice(0), Slice("a"))), _, _, 0),
+        insertLeftChildrenDistinct(Vector((-1, IntSlice(0), Slice("a"))), _, _, 0),
         IntBuffer(0),
         Buffer("a")
       ) {
@@ -1421,7 +1676,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe 0
       }
       testWithBuffers[String, Int](
-        insertLeftSubtreeListDistinct(Vector((0, IntSlice(0), Slice("c"))), _, _, 0),
+        insertLeftChildrenDistinct(Vector((0, IntSlice(0), Slice("c"))), _, _, 0),
         IntBuffer(0, 1),
         Buffer("b", "a")
       ) {
@@ -1431,7 +1686,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe 1
       }
       testWithBuffers[String, Int](
-        insertLeftSubtreeListDistinct(Vector((1, IntSlice(0), Slice("c"))), _, _, 0),
+        insertLeftChildrenDistinct(Vector((1, IntSlice(0), Slice("c"))), _, _, 0),
         IntBuffer(0, 1),
         Buffer("b", "a")
       ) {
@@ -1441,7 +1696,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe 1
       }
       testWithBuffers[String, Int](
-        insertLeftSubtreeListDistinct(Vector((1, IntSlice(0), Slice("b"))), _, _, 0),
+        insertLeftChildrenDistinct(Vector((1, IntSlice(0), Slice("b"))), _, _, 0),
         IntBuffer(0, 1),
         Buffer("b", "a")
       ) {
@@ -1451,7 +1706,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe 0
       }
       testWithBuffers[String, Int](
-        insertLeftSubtreeListDistinct(Vector((2, IntSlice(0, 1), Slice("c", "b"))), _, _, 0),
+        insertLeftChildrenDistinct(Vector((2, IntSlice(0, 1), Slice("c", "b"))), _, _, 0),
         IntBuffer(0, 1, 1),
         Buffer("c", "b", "a")
       ) {
@@ -1461,7 +1716,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe 0
       }
       testWithBuffers[String, Int](
-        insertLeftSubtreeListDistinct(Vector((2, IntSlice(0, 1), Slice("d", "b"))), _, _, 0),
+        insertLeftChildrenDistinct(Vector((2, IntSlice(0, 1), Slice("d", "b"))), _, _, 0),
         IntBuffer(0, 1, 1),
         Buffer("c", "b", "a")
       ) {
@@ -1471,7 +1726,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe 1
       }
       testWithBuffers[String, Int](
-        insertLeftSubtreeListDistinct(Vector((3, IntSlice(0, 0, 2), Slice("e", "c", "b"))), _, _, 0),
+        insertLeftChildrenDistinct(Vector((3, IntSlice(0, 0, 2), Slice("e", "c", "b"))), _, _, 0),
         IntBuffer(0, 0, 2, 1),
         Buffer("d", "c", "b", "a")
       ) {
@@ -1481,7 +1736,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe 1
       }
       testWithBuffers[String, Int](
-        insertLeftSubtreeListDistinct(Vector((3, IntSlice(0, 0, 2), Slice("c", "d", "b"))), _, _, 0),
+        insertLeftChildrenDistinct(Vector((3, IntSlice(0, 0, 2), Slice("c", "d", "b"))), _, _, 0),
         IntBuffer(0, 0, 2, 1),
         Buffer("d", "c", "b", "a")
       ) {
@@ -1491,7 +1746,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe 0
       }
       testWithBuffers[String, Int](
-        insertLeftSubtreeListDistinct(Vector((4, IntSlice(0, 1, 0, 2), Slice("e", "c", "d", "b"))), _, _, 0),
+        insertLeftChildrenDistinct(Vector((4, IntSlice(0, 1, 0, 2), Slice("e", "c", "d", "b"))), _, _, 0),
         IntBuffer(0, 0, 1, 2, 1),
         Buffer("d", "f", "c", "b", "a")
       ) {
@@ -1501,7 +1756,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe 1
       }
       testWithBuffers[String, Int](
-        insertLeftSubtreeListDistinct(Vector((2, IntSlice(0, 1, 0, 2), Slice("e", "c", "d", "b"))), _, _, 0),
+        insertLeftChildrenDistinct(Vector((2, IntSlice(0, 1, 0, 2), Slice("e", "c", "d", "b"))), _, _, 0),
         IntBuffer(0, 0, 2),
         Buffer("c", "b", "a")
       ) {
@@ -1514,7 +1769,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
 
     "insert trees distinct right side" in {
       testWithBuffers[String, Int](
-        insertRightSubtreeListDistinct(Vector.empty, _, _, 0),
+        insertRightChildrenDistinct(Vector.empty, _, _, 0),
         IntBuffer.empty,
         Buffer.empty[String]
       ) {
@@ -1524,7 +1779,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe 0
       }
       testWithBuffers[String, Int](
-        insertRightSubtreeListDistinct(Vector((-1, IntSlice(), Slice.empty[String])), _, _, 0),
+        insertRightChildrenDistinct(Vector((-1, IntSlice(), Slice.empty[String])), _, _, 0),
         IntBuffer.empty,
         Buffer.empty[String]
       ) {
@@ -1534,7 +1789,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe 0
       }
       testWithBuffers[String, Int](
-        insertRightSubtreeListDistinct(Vector((-1, IntSlice(0), Slice("a"))), _, _, 0),
+        insertRightChildrenDistinct(Vector((-1, IntSlice(0), Slice("a"))), _, _, 0),
         IntBuffer.empty,
         Buffer.empty[String]
       ) {
@@ -1544,7 +1799,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe 1
       }
       testWithBuffers[String, Int](
-        insertRightSubtreeListDistinct(Vector((0, IntSlice(0), Slice("b"))), _, _, 0),
+        insertRightChildrenDistinct(Vector((0, IntSlice(0), Slice("b"))), _, _, 0),
         IntBuffer(0),
         Buffer("a")
       ) {
@@ -1554,7 +1809,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe 1
       }
       testWithBuffers[String, Int](
-        insertRightSubtreeListDistinct(Vector((-1, IntSlice(0), Slice("b"))), _, _, 0),
+        insertRightChildrenDistinct(Vector((-1, IntSlice(0), Slice("b"))), _, _, 0),
         IntBuffer(0),
         Buffer("a")
       ) {
@@ -1564,7 +1819,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe 1
       }
       testWithBuffers[String, Int](
-        insertRightSubtreeListDistinct(Vector((-1, IntSlice(0), Slice("a"))), _, _, 0),
+        insertRightChildrenDistinct(Vector((-1, IntSlice(0), Slice("a"))), _, _, 0),
         IntBuffer(0),
         Buffer("a")
       ) {
@@ -1574,7 +1829,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe 0
       }
       testWithBuffers[String, Int](
-        insertRightSubtreeListDistinct(Vector((0, IntSlice(0), Slice("c"))), _, _, 0),
+        insertRightChildrenDistinct(Vector((0, IntSlice(0), Slice("c"))), _, _, 0),
         IntBuffer(0, 1),
         Buffer("b", "a")
       ) {
@@ -1584,7 +1839,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe 1
       }
       testWithBuffers[String, Int](
-        insertRightSubtreeListDistinct(Vector((1, IntSlice(0), Slice("c"))), _, _, 0),
+        insertRightChildrenDistinct(Vector((1, IntSlice(0), Slice("c"))), _, _, 0),
         IntBuffer(0, 1),
         Buffer("b", "a")
       ) {
@@ -1594,7 +1849,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe 1
       }
       testWithBuffers[String, Int](
-        insertRightSubtreeListDistinct(Vector((1, IntSlice(0), Slice("b"))), _, _, 0),
+        insertRightChildrenDistinct(Vector((1, IntSlice(0), Slice("b"))), _, _, 0),
         IntBuffer(0, 1),
         Buffer("b", "a")
       ) {
@@ -1604,7 +1859,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe 0
       }
       testWithBuffers[String, Int](
-        insertRightSubtreeListDistinct(Vector((2, IntSlice(0, 1), Slice("c", "b"))), _, _, 0),
+        insertRightChildrenDistinct(Vector((2, IntSlice(0, 1), Slice("c", "b"))), _, _, 0),
         IntBuffer(0, 1, 1),
         Buffer("c", "b", "a")
       ) {
@@ -1614,7 +1869,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe 0
       }
       testWithBuffers[String, Int](
-        insertRightSubtreeListDistinct(Vector((2, IntSlice(0, 1), Slice("d", "b"))), _, _, 0),
+        insertRightChildrenDistinct(Vector((2, IntSlice(0, 1), Slice("d", "b"))), _, _, 0),
         IntBuffer(0, 1, 1),
         Buffer("c", "b", "a")
       ) {
@@ -1624,7 +1879,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe 1
       }
       testWithBuffers[String, Int](
-        insertRightSubtreeListDistinct(Vector((3, IntSlice(0, 0, 2), Slice("e", "c", "b"))), _, _, 0),
+        insertRightChildrenDistinct(Vector((3, IntSlice(0, 0, 2), Slice("e", "c", "b"))), _, _, 0),
         IntBuffer(0, 0, 2, 1),
         Buffer("d", "c", "b", "a")
       ) {
@@ -1634,7 +1889,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe 1
       }
       testWithBuffers[String, Int](
-        insertRightSubtreeListDistinct(Vector((3, IntSlice(0, 0, 2), Slice("c", "d", "b"))), _, _, 0),
+        insertRightChildrenDistinct(Vector((3, IntSlice(0, 0, 2), Slice("c", "d", "b"))), _, _, 0),
         IntBuffer(0, 0, 2, 1),
         Buffer("d", "c", "b", "a")
       ) {
@@ -1644,7 +1899,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe 0
       }
       testWithBuffers[String, Int](
-        insertRightSubtreeListDistinct(Vector((4, IntSlice(0, 1, 0, 2), Slice("e", "c", "d", "b"))), _, _, 0),
+        insertRightChildrenDistinct(Vector((4, IntSlice(0, 1, 0, 2), Slice("e", "c", "d", "b"))), _, _, 0),
         IntBuffer(0, 0, 1, 2, 1),
         Buffer("d", "f", "c", "b", "a")
       ) {
@@ -1654,7 +1909,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe 1
       }
       testWithBuffers[String, Int](
-        insertRightSubtreeListDistinct(Vector((2, IntSlice(0, 1, 0, 2), Slice("e", "c", "d", "b"))), _, _, 0),
+        insertRightChildrenDistinct(Vector((2, IntSlice(0, 1, 0, 2), Slice("e", "c", "d", "b"))), _, _, 0),
         IntBuffer(0, 0, 2),
         Buffer("c", "b", "a")
       ) {
