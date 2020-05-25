@@ -623,7 +623,8 @@ object ArrayTree {
       .followEntirePath(path, target.size - 1, target.structure, target.content)
       .map(indexes =>
         if (indexes.isEmpty) Left(target)
-        else Right(modifyValue(indexes.last, modify, target, keepDistinct)))
+        else Right(modifyValue(indexes.last, modify, target, keepDistinct))
+      )
       .getOrElse(Left(target))
 
   /** Modifies value of the node selected by the path.
@@ -639,7 +640,8 @@ object ArrayTree {
       .followEntirePath(path, target.size - 1, target.structure, target.content, toPathItem)
       .map(indexes =>
         if (indexes.isEmpty) Left(target)
-        else Right(modifyValue(indexes.last, modify, target, keepDistinct)))
+        else Right(modifyValue(indexes.last, modify, target, keepDistinct))
+      )
       .getOrElse(Left(target))
 
   /** Modifies the tree at the index.
@@ -680,7 +682,8 @@ object ArrayTree {
       .followEntirePath(path, target.size - 1, target.structure, target.content)
       .map(indexes =>
         if (indexes.isEmpty) Left(target)
-        else Right(modifyTree(indexes.last, modify, target, keepDistinct)))
+        else Right(modifyTree(indexes.last, modify, target, keepDistinct))
+      )
       .getOrElse(Left(target))
 
   /** Modifies a subtree selected by the path.
@@ -696,7 +699,8 @@ object ArrayTree {
       .followEntirePath(path, target.size - 1, target.structure, target.content, toPathItem)
       .map(indexes =>
         if (indexes.isEmpty) Left(target)
-        else Right(modifyTree(indexes.last, modify, target, keepDistinct)))
+        else Right(modifyTree(indexes.last, modify, target, keepDistinct))
+      )
       .getOrElse(Left(target))
 
   /** Removes node at the index and merges children to parent.

@@ -19,6 +19,7 @@ package com.github.arturopala.tree.internal
 import com.github.arturopala.tree.{Tree, TreeBuilder}
 import com.github.arturopala.tree.Tree.{ArrayTree, Binary, Leaf, NodeTree, Unary}
 import com.github.arturopala.bufferandslice.{Buffer, IntBuffer, IntSlice, Slice}
+import com.github.arturopala.tree.internal.NodeTree.splitListWhen
 
 import scala.annotation.tailrec
 import scala.collection.mutable
@@ -644,50 +645,35 @@ object NodeTree {
         }
     }
 
-  /** Inserts new child into a tree keeping children distinct. */
-  final def insertTreeDistinct[T, T1 >: T](tree: NodeTree[T], newChild: NodeTree[T1]): Tree[T1] = {
-    val (children, hasDuplicate) = insertNewChild(newChild, tree.subtrees, prepend = true)
-    if (hasDuplicate) makeTreeDistinct(Tree(tree.value, children), maxLookupLevel = 1)
-    else Tree(tree.value, children)
-  }
-
-  /** Inserts new child into existing children.
-    * If child value exists already, inserts new child next to the duplicate,
-    * otherwise, prepends or appends depending on the flag.
-    * @param prepend if true, child is eventually prepended to the existing children,
-    *                if false, child is eventually appended.
-    * @return a tuple of (children, hasDuplicate)
+  /** Inserts new child into a tree keeping children distinct.
+    * @note distinct child is prepended on the lef side of existing children list,
+    *       otherwise merged down with existing duplicate.
     */
-  private final def insertNewChild[T, T1 >: T](
-    newChild: Tree.NodeTree[T1],
-    children: List[Tree.NodeTree[T]],
-    prepend: Boolean
-  ): (List[Tree.NodeTree[T1]], Boolean) =
-    splitListWhen[NodeTree[T]](_.value == newChild.value, children) match {
-      case None =>
-        (if (prepend) newChild +: children else children :+ newChild, false)
-
-      case Some((left, node, right)) =>
-        (left ::: (newChild :: node :: right), true)
-    }
+  final def insertTreeDistinct[T, T1 >: T](tree: NodeTree[T], newChild: NodeTree[T1]): Tree[T1] =
+    insertChildDistinct(tree.value, Nil, newChild, tree.subtrees, preserveExisting = true)
 
   /** Ensures that a child at an index position is distinct,
     * if not, then merges it with the nearest duplicate on the right side or left side.
     * The global order of children is preserved.
+    * @param preserveExisting when having duplicate on the right, whether to keep its current position
+    *                         or to prefer new child position (to the left) after merging.
     */
-  final def ensureChildDistinct[T](tree: NodeTree[T], index: Int): NodeTree[T] =
+  final def ensureChildDistinct[T](tree: NodeTree[T], index: Int, preserveExisting: Boolean): NodeTree[T] =
     tree.subtrees.drop(index) match {
       case Nil => tree
       case child :: tail =>
-        insertChildDistinct(tree.value, tree.subtrees.take(index), child, tail)
+        insertChildDistinct(tree.value, tree.subtrees.take(index), child, tail, preserveExisting)
     }
 
-  /** Inserts new children distinct between left and right siblings. */
+  /** Inserts new children distinct between left and right siblings.
+    * @param preserveExisting when having duplicate on the right, whether to keep its current position
+    *                         or to prefer new child position (to the left) after merging.*/
   final def insertChildrenDistinct[T](
     head: T,
     leftSiblings: List[NodeTree[T]],
     newChildren: List[NodeTree[T]],
-    rightSiblings: List[NodeTree[T]]
+    rightSiblings: List[NodeTree[T]],
+    preserveExisting: Boolean
   ): NodeTree[T] = {
 
     @tailrec
@@ -698,7 +684,7 @@ object NodeTree {
     ): (List[NodeTree[T]], List[NodeTree[T]]) =
       if (queue.hasNext) {
         val newChild = queue.next
-        val (newLeft, newRight) = insertDistinctBetweenSiblings(left, newChild, right)
+        val (newLeft, newRight) = insertDistinctBetweenSiblings(left, newChild, right, preserveExisting)
         insert(queue, newLeft, newRight)
       } else (left, right)
 
@@ -706,31 +692,37 @@ object NodeTree {
     Tree(head, left ::: right)
   }
 
-  /** Inserts new child distinct between left and right siblings. */
+  /** Inserts new child distinct between left and right siblings.
+    * @param preserveExisting when having duplicate on the right, whether to keep its current position
+    *                         or to prefer new child position (to the left) after merging.*/
   final def insertChildDistinct[T](
     head: T,
     leftSiblings: List[NodeTree[T]],
     newChild: NodeTree[T],
-    rightSiblings: List[NodeTree[T]]
+    rightSiblings: List[NodeTree[T]],
+    preserveExisting: Boolean
   ): NodeTree[T] = {
-    val (left, right) = insertDistinctBetweenSiblings(leftSiblings, newChild, rightSiblings)
+    val (left, right) = insertDistinctBetweenSiblings(leftSiblings, newChild, rightSiblings, preserveExisting)
     Tree(head, left ::: right)
   }
 
   /** Inserts new child distinct between left and right siblings.
     * If distinct then appends to the left side,
     * otherwise merges with the nearest duplicate on the left (preferred) or right.
+    * @param preserveExisting when having duplicate on the right, whether to keep its current position
+    *                         or to prefer new child position (to the left) after merging.
     */
   final def insertDistinctBetweenSiblings[T](
     leftSiblings: List[NodeTree[T]],
     newChild: NodeTree[T],
-    rightSiblings: List[NodeTree[T]]
+    rightSiblings: List[NodeTree[T]],
+    preserveExisting: Boolean
   ): (List[NodeTree[T]], List[NodeTree[T]]) =
     splitListWhen[NodeTree[T]](_.value == newChild.value, leftSiblings.reverse) match {
       case Some((right, duplicateOnLeft, left)) =>
-        val newNode =
-          insertChildrenDistinct(newChild.value, duplicateOnLeft.subtrees, newChild.subtrees, Nil)
-        (left.reverse ::: newNode :: right.reverse, rightSiblings)
+        val mergedNode =
+          insertChildrenDistinct(newChild.value, duplicateOnLeft.subtrees, newChild.subtrees, Nil, preserveExisting)
+        (left.reverse ::: mergedNode :: right.reverse, rightSiblings)
 
       case None =>
         splitListWhen[NodeTree[T]](_.value == newChild.value, rightSiblings) match {
@@ -738,9 +730,16 @@ object NodeTree {
             (leftSiblings :+ newChild, rightSiblings)
 
           case Some((left, duplicateOnRight, right)) =>
-            val newNode =
-              insertChildrenDistinct(newChild.value, newChild.subtrees, duplicateOnRight.subtrees, Nil)
-            (leftSiblings :+ newNode, left ::: right)
+            val mergedNode =
+              insertChildrenDistinct(
+                newChild.value,
+                newChild.subtrees,
+                duplicateOnRight.subtrees,
+                Nil,
+                preserveExisting
+              )
+            if (preserveExisting) (leftSiblings, left ::: mergedNode :: right)
+            else (leftSiblings :+ mergedNode, left ::: right)
         }
     }
 
@@ -979,7 +978,7 @@ object NodeTree {
         if (f(head)) Some((left.reverse, head, tail))
         else split(head :: left, tail)
     }
-    split(Nil, list)
+    if (list.isEmpty) None else split(Nil, list)
   }
 
   /** Joins single treeSplit back into a tree node. */
@@ -995,7 +994,7 @@ object NodeTree {
     val modifiedChild = Tree(modify(child.value), child.subtrees)
     if (keepDistinct && treeSplit.nonEmpty) {
       val (left, value, right) = treeSplit.head
-      val newHead = insertChildDistinct(value, left, modifiedChild, right)
+      val newHead = insertChildDistinct(value, left, modifiedChild, right, preserveExisting = false)
       TreeBuilder.fromChildAndTreeSplit(newHead, treeSplit.tail)
     } else {
       TreeBuilder.fromChildAndTreeSplit(modifiedChild, treeSplit)
@@ -1016,7 +1015,7 @@ object NodeTree {
       case tree: NodeTree[T1] =>
         if (keepDistinct && treeSplit.nonEmpty && tree.value != child.value) {
           val (left, value, right) = treeSplit.head
-          val newHead = insertChildDistinct(value, left, tree, right)
+          val newHead = insertChildDistinct(value, left, tree, right, preserveExisting = false)
           TreeBuilder.fromChildAndTreeSplit(newHead, treeSplit.tail)
         } else {
           TreeBuilder.fromChildAndTreeSplit(tree, treeSplit)
@@ -1038,7 +1037,7 @@ object NodeTree {
       case Some((left, node, right)) =>
         val modifiedNode = Tree(modify(node.value), node.subtrees)
         if (keepDistinct) {
-          insertChildDistinct(tree.value, left, modifiedNode, right)
+          insertChildDistinct(tree.value, left, modifiedNode, right, preserveExisting = false)
         } else {
           Tree(tree.value, left ::: modifiedNode :: right)
         }
@@ -1089,7 +1088,7 @@ object NodeTree {
 
           case t: NodeTree[T1] =>
             if (keepDistinct && t.value != node.value) {
-              insertChildDistinct(tree.value, left, t, right)
+              insertChildDistinct(tree.value, left, t, right, preserveExisting = false)
             } else {
               Tree(tree.value, left ::: t :: right)
             }
@@ -1167,7 +1166,7 @@ object NodeTree {
       case None => tree
       case Some((left, node, right)) =>
         if (keepDistinct && !node.isLeaf) {
-          insertChildrenDistinct(tree.value, left, node.subtrees, right)
+          insertChildrenDistinct(tree.value, left, node.subtrees, right, preserveExisting = false)
         } else {
           Tree(tree.value, left ::: node.subtrees ::: right)
         }

@@ -18,6 +18,8 @@ package com.github.arturopala.tree
 
 import com.github.arturopala.tree.LaxTreeOps._
 
+import scala.reflect.ClassTag
+
 class TreeInsertionsSpec extends FunSuite {
 
   test(Inflated, new Spec with InflatedTestTrees)
@@ -25,10 +27,14 @@ class TreeInsertionsSpec extends FunSuite {
 
   sealed trait Spec extends AnyWordSpecCompat with TestTrees {
 
+    def tree[T: ClassTag](t: Tree[T]): Tree[T]
+
     "insert distinct new value to a tree" in {
       tree0.insertValue("a") shouldBe Tree("a")
       tree1.insertValue("b") shouldBe Tree("a", Tree("b"))
       tree2.insertValue("c") shouldBe Tree("a", Tree("c"), Tree("b"))
+      tree2.insertValue("b") shouldBe tree2
+      tree3_1.insertValue("b") shouldBe tree3_1
       tree3_1.insertValue("d") shouldBe Tree("a", Tree("d"), Tree("b", Tree("c")))
       tree3_1.insertValue("c") shouldBe Tree("a", Tree("c"), Tree("b", Tree("c")))
       tree4_1.insertValue("c") shouldBe Tree("a", Tree("c"), Tree("b", Tree("c", Tree("d"))))
@@ -304,6 +310,10 @@ class TreeInsertionsSpec extends FunSuite {
         Tree("a", Tree("b", Tree("c"))),
         Tree("a", Tree("b"))
       )
+
+      tree(Tree("a", Tree("b", Tree("c")), Tree("b", Tree("d")), Tree("b", Tree("e"))))
+        .insertTreeLax(Tree("b", Tree("x"))) shouldBe
+        Tree("a", Tree("b", Tree("x")), Tree("b", Tree("c")), Tree("b", Tree("d")), Tree("b", Tree("e")))
     }
 
     "insert distinct new subtree to a tree" in {
@@ -360,7 +370,9 @@ class TreeInsertionsSpec extends FunSuite {
         Tree("d", Tree("e", Tree("f"))),
         Tree("g")
       )
-
+      tree(Tree("a", Tree("b", Tree("c")), Tree("b", Tree("d")), Tree("b", Tree("e"))))
+        .insertTree(Tree("b", Tree("x"))) shouldBe
+        Tree("a", Tree("b", Tree("x"), Tree("c")), Tree("b", Tree("d")), Tree("b", Tree("e")))
     }
 
     "insert lax new subtree to a tree at the specified path" in {
