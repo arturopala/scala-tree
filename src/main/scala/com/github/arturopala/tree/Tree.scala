@@ -27,14 +27,14 @@ import scala.reflect.ClassTag
   *
   * Conceptually, apart from an empty, each node of the tree has:
   *
-  *   - a value
-  *   - a collection of subtrees (children).
+  *   - a head value,
+  *   - a collection of children (sub-trees).
   *
-  * By the design choice, every node possibly have duplicated children values,
-  * although default set of modifications methods assumes and preserve uniqueness.
+  * By the design choice, every node may have duplicated children values,
+  * although default set of modifications methods assumes and preserves its uniqueness.
   *
-  * If the data is distinct by itself, or you don't care about uniqueness, there is
-  * a matching set of lax operations supplied as extensions methods in [[LaxTreeOps]].
+  * If the values in the tree are distinct by itself, or you don't care about uniqueness,
+  * there is a supplementary set of lax extensions methods in [[LaxTreeOps]].
   *
   * Internally, there are three main implementations of the Tree:
   *   - [[Tree.empty]], an empty tree singleton,
@@ -47,6 +47,10 @@ import scala.reflect.ClassTag
   * for individual targets while facing the same API.
   */
 sealed trait Tree[+T] extends TreeLike[T] {
+
+  // ---------------------------------------
+  // Common Tree API is defined in TreeLike.
+  // ---------------------------------------
 
   // OPTIMIZATION
 
@@ -78,7 +82,7 @@ sealed trait Tree[+T] extends TreeLike[T] {
     def stringify(o: Any): String = if (o.isInstanceOf[String]) s""""$o"""" else o.toString
 
     if (size < 50)
-      s"Tree(${stringify(valueOption.get)}${if (size > 1) s", ${children.map(_.toString).mkString(",")}" else ""})"
+      s"Tree(${stringify(headOption.get)}${if (size > 1) s", ${children.map(_.toString).mkString(",")}" else ""})"
     else s"Tree(size=$size, width=$width, height=$height, hashCode=${hashCode()})"
   }
 }
@@ -146,62 +150,78 @@ object Tree {
     case _                       => tree
   }
 
+  object Node {
+
+    /** Universal NodeTree extractor as a tuple of (head, children). */
+    def unapply[T](node: NodeTree[T]): Option[(T, List[NodeTree[T]])] =
+      Some((node.head, node.children))
+  }
+
   /**
-    * A Tree represented internally by linked node objects,
-    * each node consists of a value and a list of subtrees.
+    * A Tree represented internally by linked objects,
+    * each node consists of a head value and children collection.
     *
     * Concrete, specialized node types are [[Leaf]], [[Unary]], [[Binary]], and [[Bunch]].
     */
   sealed trait NodeTree[+T] extends Tree[T] with NodeTreeLike[T] {
-
     override protected val node: NodeTree[T] = this
-
-    val value: T
-    def subtrees: List[NodeTree[T]]
+    override def children: List[NodeTree[T]]
   }
 
   /** Concrete node of the Tree, consisting of a value and no subtrees. */
-  final class Leaf[+T] private[Tree] (val value: T) extends NodeTree[T] {
+  final class Leaf[+T] private[Tree] (val head: T) extends NodeTree[T] {
 
     override def size: Int = 1
     override def width: Int = 1
     override def height: Int = 1
     override def isLeaf: Boolean = true
-    override def subtrees: List[NodeTree[T]] = Nil
+    override def children: List[NodeTree[T]] = Nil
     override def childrenCount: Int = 0
   }
 
+  object Leaf {
+    def unapply[T](node: Leaf[T]): Option[T] = Some(node.head)
+  }
+
   /** Concrete node of the Tree, consisting of a value and a single subtree. */
-  final class Unary[+T] private[Tree] (val value: T, val subtree: NodeTree[T]) extends NodeTree[T] {
+  final class Unary[+T] private[Tree] (val head: T, val subtree: NodeTree[T]) extends NodeTree[T] {
 
     override val size: Int = 1 + subtree.size
     override val width: Int = Math.max(1, subtree.width)
     override val height: Int = 1 + subtree.height
     override def isLeaf: Boolean = false
-    override def subtrees: List[NodeTree[T]] = List(subtree)
+    override def children: List[NodeTree[T]] = List(subtree)
     override def childrenCount: Int = 1
   }
 
+  object Unary {
+    def unapply[T](node: Unary[T]): Option[(T, NodeTree[T])] = Some((node.head, node.subtree))
+  }
+
   /** Concrete node of the Tree, consisting of a value and two subtrees. */
-  final class Binary[+T] private[Tree] (val value: T, val left: NodeTree[T], val right: NodeTree[T])
+  final class Binary[+T] private[Tree] (val head: T, val left: NodeTree[T], val right: NodeTree[T])
       extends NodeTree[T] {
 
     override val size: Int = 1 + left.size + right.size
     override val width: Int = Math.max(1, left.width + right.width)
     override val height: Int = 1 + Math.max(left.height, right.height)
     override def isLeaf: Boolean = false
-    override def subtrees: List[NodeTree[T]] = List(left, right)
+    override def children: List[NodeTree[T]] = List(left, right)
     override def childrenCount: Int = 2
   }
 
-  /** Concrete node of the Tree, consisting of a value and a list of subtrees (more than two). */
-  final class Bunch[+T] private[Tree] (val value: T, val subtrees: List[NodeTree[T]]) extends NodeTree[T] {
+  object Binary {
+    def unapply[T](node: Binary[T]): Option[(T, NodeTree[T], NodeTree[T])] = Some((node.head, node.left, node.right))
+  }
 
-    override val size: Int = 1 + subtrees.map(_.size).sum
-    override val width: Int = Math.max(1, subtrees.map(_.width).sum)
-    override val height: Int = 1 + subtrees.maxBy(_.height).height
-    override def isLeaf: Boolean = subtrees.isEmpty
-    override def childrenCount: Int = subtrees.length
+  /** Concrete node of the Tree, consisting of a value and a list of subtrees (more than two). */
+  final class Bunch[+T] private[Tree] (val head: T, val children: List[NodeTree[T]]) extends NodeTree[T] {
+
+    override val size: Int = 1 + children.map(_.size).sum
+    override val width: Int = Math.max(1, children.map(_.width).sum)
+    override val height: Int = 1 + children.maxBy(_.height).height
+    override def isLeaf: Boolean = children.isEmpty
+    override def childrenCount: Int = children.length
   }
 
   /**
@@ -246,13 +266,13 @@ object Tree {
     tree1.eq(tree2) || (tree1.size == tree2.size &&
       tree1.width == tree2.width &&
       tree1.height == tree2.height &&
-      tree1.valueOption == tree2.valueOption && Compare.sameTrees(tree1, tree2))
+      tree1.headOption == tree2.headOption && Compare.sameTrees(tree1, tree2))
 
   /** Computes hashcode of the tree.
     * @group Utilities */
   final def hashCodeOf[T](tree: Tree[T]): Int = {
     var hash = 17
-    hash = hash * 31 + tree.valueOption.hashCode()
+    hash = hash * 31 + tree.headOption.hashCode()
     hash = hash * 29 + tree.size.hashCode()
     hash = hash * 13 + tree.width.hashCode()
     hash = hash * 19 + tree.height.hashCode()

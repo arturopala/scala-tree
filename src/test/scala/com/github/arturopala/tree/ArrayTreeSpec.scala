@@ -771,7 +771,7 @@ class ArrayTreeSpec extends AnyWordSpecCompat {
       val t2 = Tree("v", Tree("x"), Tree("y", Tree("z")))
       val f1: Tree[String] => Tree[String] = _.insertValueLax("z")
       val f2: Tree[String] => Tree[String] = _.insertTreeLax(t2)
-      val f3: Tree[String] => Tree[String] = t => t.children.headOption.getOrElse(Tree("z")).insertValueLax(t.value)
+      val f3: Tree[String] => Tree[String] = t => t.children.headOption.getOrElse(Tree("z")).insertValueLax(t.head)
       val f4: Tree[String] => Tree[String] = t => Tree.empty
 
       modifyTree(0, f1, Tree("a").deflated, false) shouldBe Tree("a", Tree("z"))
@@ -842,7 +842,7 @@ class ArrayTreeSpec extends AnyWordSpecCompat {
         case "d" => "c"
         case _   => "z"
       }
-      val f5: Tree[String] => Tree[String] = t => Tree(previous(t.value), Tree("x"), Tree("y"))
+      val f5: Tree[String] => Tree[String] = t => Tree(previous(t.head), Tree("x"), Tree("y"))
 
       modifyTree(0, f5, Tree("a").deflated, false) shouldBe Tree("z", Tree("x"), Tree("y"))
       modifyTree(0, f5, Tree("a", Tree("b")).deflated, false) shouldBe Tree("a", Tree("a", Tree("x"), Tree("y")))
@@ -862,7 +862,7 @@ class ArrayTreeSpec extends AnyWordSpecCompat {
       val t2 = Tree("v", Tree("x"), Tree("y", Tree("z")))
       val f1: Tree[String] => Tree[String] = _.insertValueLax("z")
       val f2: Tree[String] => Tree[String] = _.insertTreeLax(t2)
-      val f3: Tree[String] => Tree[String] = t => t.children.headOption.getOrElse(Tree("z")).insertValueLax(t.value)
+      val f3: Tree[String] => Tree[String] = t => t.children.headOption.getOrElse(Tree("z")).insertValueLax(t.head)
       val f4: Tree[String] => Tree[String] = t => Tree.empty
 
       modifyTree(0, f1, Tree("a").deflated, true) shouldBe Tree("a", Tree("z"))
@@ -934,7 +934,7 @@ class ArrayTreeSpec extends AnyWordSpecCompat {
         case _   => "z"
       }
 
-      val f5: Tree[String] => Tree[String] = t => Tree(previous(t.value), Tree("x"), Tree("y"))
+      val f5: Tree[String] => Tree[String] = t => Tree(previous(t.head), Tree("x"), Tree("y"))
       modifyTree(0, f5, Tree("a").deflated, true) shouldBe Tree("z", Tree("x"), Tree("y"))
       modifyTree(0, f5, Tree("a", Tree("b")).deflated, true) shouldBe Tree("a", Tree("a", Tree("x"), Tree("y")))
       modifyTree(0, f5, Tree("a", Tree("b"), Tree("c")).deflated, true) shouldBe Tree(

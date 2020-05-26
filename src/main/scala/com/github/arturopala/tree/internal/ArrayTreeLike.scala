@@ -33,8 +33,8 @@ abstract class ArrayTreeLike[T: ClassTag] extends TreeLike[T] {
 
   private def all[A]: A => Boolean = _ => true
 
-  final override def value: T = tree.content.last
-  final override def valueOption: Option[T] = Some(tree.content.last)
+  final override def head: T = tree.content.last
+  final override def headOption: Option[T] = Some(tree.content.last)
   final override def values: Seq[T] = tree.content.reverseIterator.toSeq
   final override def valueIterator(pred: T => Boolean, maxDepth: Int = Int.MaxValue): Iterator[T] =
     if (maxDepth >= height) tree.content.reverseIterator(pred)

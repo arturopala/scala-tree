@@ -35,8 +35,8 @@ trait EmptyTreeLike extends TreeLike[Nothing] {
   final override val isLeaf: Boolean = false
   final override val isEmpty: Boolean = true
   final override val childrenCount: Int = 0
-  final override def value: Nothing = throw new NoSuchElementException
-  final override val valueOption: Option[Nothing] = None
+  final override def head: Nothing = throw new NoSuchElementException
+  final override val headOption: Option[Nothing] = None
   final override val values: List[Nothing] = Nil
 
   final override def valueIterator(pred: Nothing => Boolean, maxDepth: Int = Int.MaxValue): Iterator[Nothing] =

@@ -96,14 +96,14 @@ trait TreeLike[+T] {
 
   // VALUES
 
-  /** Returns value of the tree's node
+  /** Returns value of this node.
     * @throws NoSuchElementException if an empty tree
     * @group values */
-  def value: T
+  def head: T
 
-  /** Returns option of a value of the node, if any.
+  /** Returns option of a value of this node, if any.
     * @group values */
-  def valueOption: Option[T]
+  def headOption: Option[T]
 
   /** Returns direct children values, i.e. values of the subtree nodes, if any.
     * @group values */

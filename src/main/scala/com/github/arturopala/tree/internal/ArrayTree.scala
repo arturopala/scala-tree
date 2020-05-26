@@ -244,7 +244,7 @@ object ArrayTree {
         ArrayTreeFunctions.removeValue(index + offset, parent, structureBuffer, valuesBuffer)
         offset = offset - 1
       } else if (tree.isLeaf) {
-        valuesBuffer(index + offset) = tree.value
+        valuesBuffer(index + offset) = tree.head
       } else {
         val (structure, values) = tree.toSlices
         val delta =
@@ -348,7 +348,7 @@ object ArrayTree {
   /** Checks if children of the tree rooted at the index contains the given value. */
   final def hasChildValue[T](index: Int, value: T, tree: Tree[T]): Boolean = tree match {
     case Tree.empty          => false
-    case t: Tree.NodeTree[T] => t.subtrees.exists(_.value == value)
+    case t: Tree.NodeTree[T] => t.children.exists(_.head == value)
     case t: ArrayTree[T] =>
       ArrayTreeFunctions.leftmostChildHavingValue(value, index, t.size, t.structure, t.content).isDefined
   }
@@ -561,7 +561,7 @@ object ArrayTree {
         if (update.isEmpty) {
           ArrayTreeFunctions.removeTree(index, parentIndex, structureBuffer, valuesBuffer).intAsSome
         } else {
-          val replacement = keepDistinct && update.value == valuesBuffer(index)
+          val replacement = keepDistinct && update.head == valuesBuffer(index)
           val delta1 = ArrayTreeFunctions.removeChildren(index, parentIndex, structureBuffer, valuesBuffer)
           val (structure, values) = update.toSlices[T1]
           val (insertIndex, delta2) =

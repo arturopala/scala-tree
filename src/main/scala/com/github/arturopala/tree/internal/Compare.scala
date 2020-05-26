@@ -33,7 +33,7 @@ object Compare {
       val t1 = iterator1.next()
       val t2 = iterator2.next()
       result =
-        result && t1.size == t2.size && t1.width == t2.width && t1.height == t2.height && t1.valueOption == t2.valueOption
+        result && t1.size == t2.size && t1.width == t2.width && t1.height == t2.height && t1.headOption == t2.headOption
     }
 
     result

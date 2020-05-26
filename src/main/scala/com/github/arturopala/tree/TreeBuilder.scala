@@ -288,7 +288,7 @@ object TreeBuilder {
 
       /** Concatenates new and existing subtrees of an expanded node. */
       override final def merge[T](newNode: NodeTree[T], existingSubtrees: List[NodeTree[T]]): NodeTree[T] =
-        Tree(newNode.value, existingSubtrees ::: newNode.subtrees)
+        Tree(newNode.head, existingSubtrees ::: newNode.children)
 
       /** Joins orphaned subtrees to the parent node. */
       override final def keepOrphanedSubtrees: Boolean = true
