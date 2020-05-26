@@ -28,10 +28,12 @@ import scala.reflect.ClassTag
 /** Collection of operations on the hierarchical, node-based, representation of the tree. */
 object NodeTree {
 
-  object NonEmptySubtree {
+  object NonEmptyNode {
+
+    /** Extracts head, first child and remaining children if non empty. */
     def unapply[T](node: NodeTree[T]): Option[(T, NodeTree[T], List[NodeTree[T]])] = node match {
       case _: Leaf[T]      => None
-      case node: Unary[T]  => Some((node.head, node.subtree, Nil))
+      case node: Unary[T]  => Some((node.head, node.child, Nil))
       case node: Binary[T] => Some((node.head, node.left, node.right :: Nil))
       case _               => Some((node.head, node.children.head, node.children.tail))
     }
@@ -50,17 +52,17 @@ object NodeTree {
     @tailrec
     override def next(): T = queue match {
       case Nil => throw new NoSuchElementException()
-      case (level, Node(value, subtrees)) :: xs =>
-        queue = seekNext(subtrees.map((level + 1, _)) ::: xs)
-        if (pred(value)) value else next()
+      case (level, Node(head, children)) :: xs =>
+        queue = seekNext(children.map((level + 1, _)) ::: xs)
+        if (pred(head)) head else next()
     }
 
     @tailrec
     private def seekNext(q: Queue): Queue = q match {
       case Nil => q
-      case (level, Node(value, subtrees)) :: xs =>
-        if (pred(value)) q
-        else seekNext(subtrees.map((level + 1, _)) ::: xs)
+      case (level, Node(head, children)) :: xs =>
+        if (pred(head)) q
+        else seekNext(children.map((level + 1, _)) ::: xs)
     }
   }
 
@@ -78,20 +80,20 @@ object NodeTree {
       @tailrec
       override def next(): T = queue match {
         case Nil => throw new NoSuchElementException()
-        case (level, Node(value, subtrees)) :: xs =>
+        case (level, Node(head, children)) :: xs =>
           queue =
-            if (level < maxDepth) seekNext(subtrees.map((level + 1, _)) ::: xs)
+            if (level < maxDepth) seekNext(children.map((level + 1, _)) ::: xs)
             else seekNext(xs)
 
-          if (pred(value)) value else next()
+          if (pred(head)) head else next()
       }
 
       @tailrec
       private def seekNext(q: Queue): Queue = q match {
         case Nil => q
-        case (level, Node(value, subtrees)) :: xs =>
-          if (pred(value)) q
-          else if (level < maxDepth) seekNext(subtrees.map((level + 1, _)) ::: xs)
+        case (level, Node(head, children)) :: xs =>
+          if (pred(head)) q
+          else if (level < maxDepth) seekNext(children.map((level + 1, _)) ::: xs)
           else seekNext(xs)
       }
     }
@@ -102,9 +104,9 @@ object NodeTree {
   private def values[T](pred: T => Boolean, result: List[T], queue: List[NodeTree[T]]): List[T] =
     queue match {
       case Nil => result.reverse
-      case Node(value, subtrees) :: xs =>
-        if (pred(value)) values(pred, value :: result, subtrees ::: xs)
-        else values(pred, result, subtrees ::: xs)
+      case Node(head, children) :: xs =>
+        if (pred(head)) values(pred, head :: result, children ::: xs)
+        else values(pred, result, children ::: xs)
     }
 
   @tailrec
@@ -194,17 +196,17 @@ object NodeTree {
     @tailrec
     override def next(): Tree[T] = queue match {
       case Nil => throw new NoSuchElementException()
-      case (node @ Node(_, subtrees)) :: xs =>
-        queue = seekNext(subtrees ::: xs)
+      case (node @ Node(_, children)) :: xs =>
+        queue = seekNext(children ::: xs)
         if (pred(node)) node else next()
     }
 
     @tailrec
     private def seekNext(q: Queue): Queue = q match {
       case Nil => q
-      case (node @ Node(_, subtrees)) :: xs =>
+      case (node @ Node(_, children)) :: xs =>
         if (pred(node)) q
-        else seekNext(subtrees ::: xs)
+        else seekNext(children ::: xs)
     }
   }
 
@@ -220,9 +222,9 @@ object NodeTree {
       @tailrec
       override def next(): Tree[T] = queue match {
         case Nil => throw new NoSuchElementException()
-        case (level, node @ Node(_, subtrees)) :: xs =>
+        case (level, node @ Node(_, children)) :: xs =>
           queue =
-            if (level < maxDepth) seekNext(subtrees.map((level + 1, _)) ::: xs)
+            if (level < maxDepth) seekNext(children.map((level + 1, _)) ::: xs)
             else seekNext(xs)
           if (pred(node)) node else next()
       }
@@ -230,9 +232,9 @@ object NodeTree {
       @tailrec
       private def seekNext(q: Queue): Queue = q match {
         case Nil => q
-        case (level, node @ Node(_, subtrees)) :: xs =>
+        case (level, node @ Node(_, children)) :: xs =>
           if (pred(node)) q
-          else if (level < maxDepth) seekNext(subtrees.map((level + 1, _)) ::: xs)
+          else if (level < maxDepth) seekNext(children.map((level + 1, _)) ::: xs)
           else seekNext(xs)
       }
     }
@@ -247,9 +249,9 @@ object NodeTree {
   ): List[NodeTree[T]] =
     queue match {
       case Nil => result.reverse
-      case (node @ Node(_, subtrees)) :: xs =>
-        if (pred(node)) trees(pred, node :: result, subtrees ::: xs)
-        else trees(pred, result, subtrees ::: xs)
+      case (node @ Node(_, children)) :: xs =>
+        if (pred(node)) trees(pred, node :: result, children ::: xs)
+        else trees(pred, result, children ::: xs)
     }
 
   /** Returns an iterator over filtered branches of the tree. */
@@ -263,20 +265,20 @@ object NodeTree {
 
       override def next(): Iterable[T] = queue match {
         case Nil => throw new NoSuchElementException()
-        case (acc, Node(value, subtrees)) :: xs =>
-          val branch = acc :+ value
-          queue = seekNext(subtrees.map((branch, _)) ::: xs)
+        case (acc, Node(head, children)) :: xs =>
+          val branch = acc :+ head
+          queue = seekNext(children.map((branch, _)) ::: xs)
           branch
       }
 
       @tailrec
       private def seekNext(q: Queue): Queue = q match {
         case Nil => q
-        case (acc, Node(value, subtrees)) :: xs =>
-          val branch = acc :+ value
-          subtrees match {
+        case (acc, Node(head, children)) :: xs =>
+          val branch = acc :+ head
+          children match {
             case Nil if pred(branch) => q
-            case _                   => seekNext(subtrees.map((branch, _)) ::: xs)
+            case _                   => seekNext(children.map((branch, _)) ::: xs)
           }
       }
     }
@@ -298,10 +300,10 @@ object NodeTree {
 
       override def next(): Iterable[T] = queue match {
         case Nil => throw new NoSuchElementException()
-        case (acc, Node(value, subtrees)) :: xs =>
-          val branch = acc :+ value
+        case (acc, Node(head, children)) :: xs =>
+          val branch = acc :+ head
           queue =
-            if (branch.length < maxDepth) seekNext(subtrees.map((branch, _)) ::: xs)
+            if (branch.length < maxDepth) seekNext(children.map((branch, _)) ::: xs)
             else seekNext(xs)
           branch
       }
@@ -309,12 +311,12 @@ object NodeTree {
       @tailrec
       private def seekNext(q: Queue): Queue = q match {
         case Nil => q
-        case (acc, Node(value, subtrees)) :: xs =>
-          val branch = acc :+ value
-          subtrees match {
+        case (acc, Node(head, children)) :: xs =>
+          val branch = acc :+ head
+          children match {
             case s if (s.isEmpty || branch.length >= maxDepth) && pred(branch) => q
             case _ =>
-              if (branch.length < maxDepth) seekNext(subtrees.map((branch, _)) ::: xs)
+              if (branch.length < maxDepth) seekNext(children.map((branch, _)) ::: xs)
               else seekNext(xs)
           }
       }
@@ -331,11 +333,11 @@ object NodeTree {
   ): List[List[T]] =
     queue match {
       case Nil => result.reverse
-      case (acc, Node(value, subtrees)) :: xs =>
-        val branch = value :: acc
-        subtrees match {
+      case (acc, Node(head, children)) :: xs =>
+        val branch = head :: acc
+        children match {
           case Nil if pred(branch) => branches(pred, branch.reverse :: result, xs)
-          case _                   => branches(pred, result, subtrees.map((branch, _)) ::: xs)
+          case _                   => branches(pred, result, children.map((branch, _)) ::: xs)
         }
     }
 
@@ -346,11 +348,11 @@ object NodeTree {
   private def countBranches[T](pred: List[T] => Boolean, result: Int, queue: List[(List[T], NodeTree[T])]): Int =
     queue match {
       case Nil => result
-      case (acc, Node(value, subtrees)) :: xs =>
-        val branch = value :: acc
-        subtrees match {
+      case (acc, Node(head, children)) :: xs =>
+        val branch = head :: acc
+        children match {
           case Nil if pred(branch) => countBranches(pred, 1 + result, xs)
-          case _                   => countBranches(pred, result, subtrees.map((branch, _)) ::: xs)
+          case _                   => countBranches(pred, result, children.map((branch, _)) ::: xs)
         }
     }
 
@@ -397,9 +399,9 @@ object NodeTree {
   @tailrec
   private def toPairsList[T](result: List[(Int, T)], queue: List[NodeTree[T]]): List[(Int, T)] =
     queue match {
-      case Nil                         => result
-      case Leaf(value) :: xs           => toPairsList((0, value) :: result, xs)
-      case Node(value, subtrees) :: xs => toPairsList((subtrees.size, value) :: result, subtrees ::: xs)
+      case Nil                        => result
+      case Leaf(head) :: xs           => toPairsList((0, head) :: result, xs)
+      case Node(head, children) :: xs => toPairsList((children.size, head) :: result, children ::: xs)
     }
 
   final def toSlices[T: ClassTag](node: NodeTree[T]): (IntSlice, Slice[T]) = {
@@ -429,20 +431,20 @@ object NodeTree {
     if (position < 0) (structure, values)
     else
       queue(queuePosition) match {
-        case Leaf(value) =>
+        case Leaf(head) =>
           structure.update(position, 0)
-          values.update(position, value)
+          values.update(position, head)
           toArrays(structure, values, queue, position - 1, queuePosition - 1)
 
-        case Node(value, subtrees) =>
-          structure.update(position, subtrees.size)
-          values.update(position, value)
-          var rp: Int = queuePosition + subtrees.size - 1
-          subtrees.foreach { subtree =>
-            queue(rp) = subtree
+        case Node(head, children) =>
+          structure.update(position, children.size)
+          values.update(position, head)
+          var rp: Int = queuePosition + children.size - 1
+          children.foreach { child =>
+            queue(rp) = child
             rp = rp - 1
           }
-          toArrays(structure, values, queue, position - 1, queuePosition + subtrees.size - 1)
+          toArrays(structure, values, queue, position - 1, queuePosition + children.size - 1)
       }
 
   @`inline` final def toStructureArray[T](node: NodeTree[T]): Array[Int] = {
@@ -465,14 +467,14 @@ object NodeTree {
           structure.update(position, 0)
           toStructureArray(structure, queue, position - 1, queuePosition - 1)
 
-        case Node(_, subtrees) =>
-          structure.update(position, subtrees.size)
-          var rp: Int = queuePosition + subtrees.size - 1
-          subtrees.foreach { subtree =>
-            queue(rp) = subtree
+        case Node(_, children) =>
+          structure.update(position, children.size)
+          var rp: Int = queuePosition + children.size - 1
+          children.foreach { child =>
+            queue(rp) = child
             rp = rp - 1
           }
-          toStructureArray(structure, queue, position - 1, queuePosition + subtrees.size - 1)
+          toStructureArray(structure, queue, position - 1, queuePosition + children.size - 1)
       }
 
   @tailrec
@@ -481,9 +483,9 @@ object NodeTree {
     queue: List[NodeTree[T]]
   ): List[(Int, Tree[T])] =
     queue match {
-      case Nil                         => result
-      case Leaf(value) :: xs           => toTreeList((0, Tree(value)) :: result, xs)
-      case Node(value, subtrees) :: xs => toTreeList((subtrees.size, Tree(value)) :: result, subtrees ::: xs)
+      case Nil                        => result
+      case Leaf(head) :: xs           => toTreeList((0, Tree(head)) :: result, xs)
+      case Node(head, children) :: xs => toTreeList((children.size, Tree(head)) :: result, children ::: xs)
     }
 
   @`inline` final def listMap[T, K](f: T => K, node: NodeTree[T]): List[(Int, K)] = listMap(f, Nil, List(node))
@@ -491,11 +493,11 @@ object NodeTree {
   @tailrec
   private final def listMap[T, K](f: T => K, result: List[(Int, K)], queue: List[NodeTree[T]]): List[(Int, K)] =
     queue match {
-      case Nil                              => result
-      case Leaf(value) :: xs                => listMap(f, (0, f(value)) :: result, xs)
-      case Unary(value, subtree) :: xs      => listMap(f, (1, f(value)) :: result, subtree :: xs)
-      case Binary(value, left, right) :: xs => listMap(f, (2, f(value)) :: result, left :: right :: xs)
-      case Node(value, subtrees) :: xs      => listMap(f, (subtrees.size, f(value)) :: result, subtrees ::: xs)
+      case Nil                             => result
+      case Leaf(head) :: xs                => listMap(f, (0, f(head)) :: result, xs)
+      case Unary(head, child) :: xs        => listMap(f, (1, f(head)) :: result, child :: xs)
+      case Binary(head, left, right) :: xs => listMap(f, (2, f(head)) :: result, left :: right :: xs)
+      case Node(head, children) :: xs      => listMap(f, (children.size, f(head)) :: result, children ::: xs)
     }
 
   @`inline` final def arrayMap[T, K](f: T => K, node: NodeTree[T])(
@@ -518,33 +520,33 @@ object NodeTree {
     if (position < 0) (structure, values)
     else
       queue(queuePosition) match {
-        case Leaf(value) =>
+        case Leaf(head) =>
           structure.update(position, 0)
-          values.update(position, f(value))
+          values.update(position, f(head))
           arrayMap(f, structure, values, queue, position - 1, queuePosition - 1)
 
-        case Unary(value, subtree) =>
+        case Unary(head, child) =>
           structure.update(position, 1)
-          values.update(position, f(value))
-          queue(queuePosition) = subtree
+          values.update(position, f(head))
+          queue(queuePosition) = child
           arrayMap(f, structure, values, queue, position - 1, queuePosition)
 
-        case Binary(value, left, right) =>
+        case Binary(head, left, right) =>
           structure.update(position, 2)
-          values.update(position, f(value))
+          values.update(position, f(head))
           queue(queuePosition) = right
           queue(queuePosition + 1) = left
           arrayMap(f, structure, values, queue, position - 1, queuePosition + 1)
 
-        case Node(value, subtrees) =>
-          structure.update(position, subtrees.size)
-          values.update(position, f(value))
-          var rp: Int = queuePosition + subtrees.size - 1
-          subtrees.foreach { subtree =>
-            queue(rp) = subtree
+        case Node(head, children) =>
+          structure.update(position, children.size)
+          values.update(position, f(head))
+          var rp: Int = queuePosition + children.size - 1
+          children.foreach { child =>
+            queue(rp) = child
             rp = rp - 1
           }
-          arrayMap(f, structure, values, queue, position - 1, queuePosition + subtrees.size - 1)
+          arrayMap(f, structure, values, queue, position - 1, queuePosition + children.size - 1)
       }
 
   @tailrec
@@ -554,9 +556,9 @@ object NodeTree {
     queue: List[NodeTree[T]]
   ): List[(Int, Tree[K])] =
     queue match {
-      case Nil                         => result
-      case Leaf(value) :: xs           => listFlatMap(f, (0, f(value)) :: result, xs)
-      case Node(value, subtrees) :: xs => listFlatMap(f, (subtrees.size, f(value)) :: result, subtrees ::: xs)
+      case Nil                        => result
+      case Leaf(head) :: xs           => listFlatMap(f, (0, f(head)) :: result, xs)
+      case Node(head, children) :: xs => listFlatMap(f, (children.size, f(head)) :: result, children ::: xs)
     }
 
   final def mkStringUsingBranches[T](
@@ -594,14 +596,14 @@ object NodeTree {
   ): StringBuilder =
     queue match {
       case Nil => builder
-      case (level, prefix, Node(value, subtrees)) :: xs =>
-        val string = show(value)
+      case (level, prefix, Node(head, children)) :: xs =>
+        val string = show(head)
         if (level <= maxDepth) {
           if (newBranch) builder.append(branchSeparator).append(prefix)
           if (level > 1) builder.append(valueSeparator)
           builder.append(string)
         }
-        val subtrees2 = if (level >= maxDepth) Nil else subtrees
+        val subtrees2 = if (level >= maxDepth) Nil else children
         subtrees2 match {
           case Nil =>
             mkStringUsingBranches(
@@ -622,7 +624,7 @@ object NodeTree {
               branchEnd,
               maxDepth,
               builder,
-              subtrees.map((level + 1, prefix + (if (level > 1) valueSeparator else "") + string, _)) ::: xs,
+              children.map((level + 1, prefix + (if (level > 1) valueSeparator else "") + string, _)) ::: xs,
               newBranch = false
             )
         }
@@ -763,7 +765,7 @@ object NodeTree {
       }
     }
 
-  /** Groups children by its value. */
+  /** Groups children by its head. */
   private final def groupChildrenByValue[T](seq: Seq[NodeTree[T]]): Vector[Vector[NodeTree[T]]] = {
     val map: mutable.Map[T, Int] = mutable.Map.empty
     val buffer = Buffer.empty[Vector[NodeTree[T]]]
@@ -976,8 +978,8 @@ object NodeTree {
   ): Tree[T1] = {
     val modifiedChild = Tree(modify(child.head), child.children)
     if (keepDistinct && treeSplit.nonEmpty) {
-      val (left, value, right) = treeSplit.head
-      val newHead = insertChildDistinct(value, left, modifiedChild, right, preserveExisting = false)
+      val (left, head, right) = treeSplit.head
+      val newHead = insertChildDistinct(head, left, modifiedChild, right, preserveExisting = false)
       TreeBuilder.fromChildAndTreeSplit(newHead, treeSplit.tail)
     } else {
       TreeBuilder.fromChildAndTreeSplit(modifiedChild, treeSplit)
@@ -997,8 +999,8 @@ object NodeTree {
 
       case tree: NodeTree[T1] =>
         if (keepDistinct && treeSplit.nonEmpty && tree.head != child.head) {
-          val (left, value, right) = treeSplit.head
-          val newHead = insertChildDistinct(value, left, tree, right, preserveExisting = false)
+          val (left, head, right) = treeSplit.head
+          val newHead = insertChildDistinct(head, left, tree, right, preserveExisting = false)
           TreeBuilder.fromChildAndTreeSplit(newHead, treeSplit.tail)
         } else {
           TreeBuilder.fromChildAndTreeSplit(tree, treeSplit)
@@ -1124,12 +1126,12 @@ object NodeTree {
       else tree
     } else if (child.size <= 1) TreeBuilder.fromTreeSplit(treeSplit)
     else {
-      val (left, value, right) = treeSplit.head
+      val (left, head, right) = treeSplit.head
       val newChild =
         if (keepDistinct)
-          makeTreeDistinct(Tree(value, left ::: child.children ::: right), maxLookupLevel = 1)
+          makeTreeDistinct(Tree(head, left ::: child.children ::: right), maxLookupLevel = 1)
         else
-          Tree(value, left ::: child.children ::: right)
+          Tree(head, left ::: child.children ::: right)
 
       TreeBuilder.fromChildAndTreeSplit(newChild, treeSplit.tail)
     }

@@ -184,18 +184,18 @@ object Tree {
   }
 
   /** Concrete node of the Tree, consisting of a value and a single subtree. */
-  final class Unary[+T] private[Tree] (val head: T, val subtree: NodeTree[T]) extends NodeTree[T] {
+  final class Unary[+T] private[Tree] (val head: T, val child: NodeTree[T]) extends NodeTree[T] {
 
-    override val size: Int = 1 + subtree.size
-    override val width: Int = Math.max(1, subtree.width)
-    override val height: Int = 1 + subtree.height
+    override val size: Int = 1 + child.size
+    override val width: Int = Math.max(1, child.width)
+    override val height: Int = 1 + child.height
     override def isLeaf: Boolean = false
-    override def children: List[NodeTree[T]] = List(subtree)
+    override def children: List[NodeTree[T]] = List(child)
     override def childrenCount: Int = 1
   }
 
   object Unary {
-    def unapply[T](node: Unary[T]): Option[(T, NodeTree[T])] = Some((node.head, node.subtree))
+    def unapply[T](node: Unary[T]): Option[(T, NodeTree[T])] = Some((node.head, node.child))
   }
 
   /** Concrete node of the Tree, consisting of a value and two subtrees. */
