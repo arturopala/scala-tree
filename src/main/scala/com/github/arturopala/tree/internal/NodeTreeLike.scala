@@ -19,6 +19,7 @@ package com.github.arturopala.tree.internal
 import com.github.arturopala.tree.{Tree, TreeBuilder, TreeLike}
 import com.github.arturopala.tree.Tree.{ArrayTree, NodeTree, empty}
 import com.github.arturopala.bufferandslice.{Buffer, IntBuffer, IntSlice, Slice}
+import com.github.arturopala.tree.internal.IterableOps._
 
 import scala.collection.Iterator
 import scala.reflect.ClassTag
@@ -32,26 +33,32 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
   /** [[Tree.NodeTree]] under consideration. */
   protected val node: NodeTree[T]
 
-  final override def headOption: Option[T] = Some(node.head)
-  final def isEmpty: Boolean = node.size == 0
+  @`inline` final override def headOption: Option[T] = Some(node.head)
 
-  @`inline` final def all[A]: A => Boolean = _ => true
-  @`inline` final def identity[A, A1 >: A]: A => A1 = x => x
+  @`inline` final def isEmpty: Boolean = node.size == 0
 
-  final override def values: List[T] = NodeTree.values[T](all, node)
+  final override def values: Iterable[T] = iterableFrom(NodeTree.valuesIterator(node))
+
   final def valuesUnsafe: List[T] = node.head :: node.children.flatMap(_.valuesUnsafe)
-  final override def valueIterator(pred: T => Boolean, maxDepth: Int = Int.MaxValue): Iterator[T] =
-    if (maxDepth >= height) NodeTree.valueIterator(pred, node)
-    else NodeTree.valueIteratorWithLimit(pred, node, maxDepth)
 
-  final override def childrenValues: List[T] = node.children.map(_.head)
-  final override def trees: List[Tree[T]] = NodeTree.trees[T](all, node)
-  final def treesUnsafe: List[Tree[T]] = node :: node.children.flatMap(_.treesUnsafe)
-  final override def treeIterator(pred: Tree[T] => Boolean, maxDepth: Int = Int.MaxValue): Iterator[Tree[T]] =
-    if (maxDepth >= height) NodeTree.treeIterator(pred, node)
-    else NodeTree.treeIteratorWithLimit(pred, node, maxDepth)
+  final override def valuesWithFilter(pred: T => Boolean, maxDepth: Int = Int.MaxValue): Iterable[T] = iterableFrom {
+    if (maxDepth >= height) NodeTree.valuesIteratorWithFilter(pred, node)
+    else NodeTree.valuesIteratorWithLimit(pred, node, maxDepth)
+  }
 
-  final override def branches: Seq[Iterable[T]] = NodeTree.branches[T](all, node)
+  final override def childrenValues: Iterable[T] = iterableFrom(node.children.iterator.map(_.head))
+
+  final override def trees: Iterable[Tree[T]] = iterableFrom(NodeTree.treesIterator(node))
+
+  final def treesUnsafe: Iterable[Tree[T]] = node :: node.children.flatMap(_.treesUnsafe)
+
+  final override def treesWithFilter(pred: Tree[T] => Boolean, maxDepth: Int = Int.MaxValue): Iterable[Tree[T]] =
+    iterableFrom {
+      if (maxDepth >= height) NodeTree.treesIteratorWithFilter(pred, node)
+      else NodeTree.treesIteratorWithLimit(pred, node, maxDepth)
+    }
+
+  final override def branches: Iterable[Iterable[T]] = iterableFrom(NodeTree.branchesIterator(node))
 
   final def branchesUnsafe: List[List[T]] = node.children match {
     case Nil => List(List(node.head))
@@ -59,9 +66,14 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
       node.children.flatMap(_.branchesUnsafe).map(node.head :: _)
   }
 
-  final override def branchIterator(pred: Iterable[T] => Boolean, maxDepth: Int = Int.MaxValue): Iterator[Iterable[T]] =
-    if (maxDepth >= height) NodeTree.branchIterator(pred, node)
-    else NodeTree.branchIteratorWithLimit(pred, node, maxDepth)
+  final override def branchesWithFilter(
+    pred: Iterable[T] => Boolean,
+    maxDepth: Int = Int.MaxValue
+  ): Iterable[Iterable[T]] =
+    iterableFrom {
+      if (maxDepth >= height) NodeTree.branchesIteratorWithFilter(pred, node)
+      else NodeTree.branchesIteratorWithLimit(pred, node, maxDepth)
+    }
 
   final override def countBranches(pred: Iterable[T] => Boolean): Int =
     NodeTree.countBranches(pred, node)

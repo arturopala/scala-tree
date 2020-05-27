@@ -24,8 +24,8 @@ object Compare {
   /** Checks if two trees are the same */
   @`inline` final def sameTrees[T](tree1: Tree[T], tree2: Tree[T]): Boolean = {
 
-    val iterator1: Iterator[Tree[T]] = tree1.treeIterator(_ => true)
-    val iterator2: Iterator[Tree[T]] = tree2.treeIterator(_ => true)
+    val iterator1: Iterator[Tree[T]] = tree1.trees.iterator
+    val iterator2: Iterator[Tree[T]] = tree2.trees.iterator
 
     var result: Boolean = true
 

@@ -37,26 +37,26 @@ trait EmptyTreeLike extends TreeLike[Nothing] {
   final override val childrenCount: Int = 0
   final override def head: Nothing = throw new NoSuchElementException
   final override val headOption: Option[Nothing] = None
-  final override val values: List[Nothing] = Nil
+  final override val values: Iterable[Nothing] = Nil
 
-  final override def valueIterator(pred: Nothing => Boolean, maxDepth: Int = Int.MaxValue): Iterator[Nothing] =
-    Iterator.empty
+  final override def valuesWithFilter(pred: Nothing => Boolean, maxDepth: Int = Int.MaxValue): Iterable[Nothing] =
+    Iterable.empty
 
-  final override val childrenValues: List[Nothing] = Nil
-  final override val children: List[Tree[Nothing]] = Nil
-  final override val trees: List[Tree[Nothing]] = Nil
+  final override val childrenValues: Iterable[Nothing] = Nil
+  final override val children: Iterable[Tree[Nothing]] = Nil
+  final override val trees: Iterable[Tree[Nothing]] = Nil
 
-  final override def treeIterator(
+  final override def treesWithFilter(
     pred: Tree[Nothing] => Boolean,
     maxDepth: Int = Int.MaxValue
-  ): Iterator[Tree[Nothing]] = Iterator.empty
+  ): Iterable[Tree[Nothing]] = Iterable.empty
 
-  final override val branches: List[List[Nothing]] = Nil
+  final override val branches: Iterable[Iterable[Nothing]] = Nil
 
-  final override def branchIterator(
+  final override def branchesWithFilter(
     pred: Iterable[Nothing] => Boolean,
     maxDepth: Int = Int.MaxValue
-  ): Iterator[List[Nothing]] = Iterator.empty
+  ): Iterable[Iterable[Nothing]] = Iterable.empty
 
   final override def countBranches(pred: Iterable[Nothing] => Boolean): Int = 0
 

@@ -40,7 +40,10 @@ trait AnyWordSpecCompat extends munit.FunSuite {
   implicit class IterableExt[T](iterable: Iterable[T]) {
 
     def shouldBe(expected: Iterable[T])(implicit loc: munit.Location): Unit = {
-      assert(iterable.size == expected.size, "both collections must have the same size")
+      assert(
+        iterable.size == expected.size,
+        s"both collections must have the same size, expected ${expected.toSeq}, but got ${iterable.toSeq}"
+      )
       iterable.zip(expected).foreach { case (a, b) => assertEquals(a, b) }
     }
   }

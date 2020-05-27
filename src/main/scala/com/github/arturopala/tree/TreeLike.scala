@@ -107,65 +107,61 @@ trait TreeLike[+T] {
 
   /** Returns direct children values, i.e. values of the subtree nodes, if any.
     * @group values */
-  def childrenValues: Seq[T]
+  def childrenValues: Iterable[T]
 
-  /** Lists all the node's values in the tree.
+  /** Iterates over all the node's values in this tree.
     * @group values */
-  def values: Seq[T]
+  def values: Iterable[T]
 
   /** Iterates over filtered node's values, top-down, depth-first.
     * @param pred return true to include the value in the result, false otherwise.
     * @param maxDepth number of levels to go inside the tree, default to max
     * @group values */
-  def valueIterator(pred: T => Boolean, maxDepth: Int = Int.MaxValue): Iterator[T]
+  def valuesWithFilter(pred: T => Boolean, maxDepth: Int = Int.MaxValue): Iterable[T]
 
   /** Iterates over filtered node's values, paired with the node's level, top-down, depth-first.
     * @param pred return true to include the value in the result, false otherwise.
     * @param maxDepth number of levels to go inside the tree, default to max
     * @group values */
-  def valueWithLevelIterator(pred: T => Boolean, maxDepth: Int = Int.MaxValue): Iterator[(Int, T)] = ???
+  def valueAndLevelPairs(pred: T => Boolean, maxDepth: Int = Int.MaxValue): Iterable[(Int, T)] = ???
 
   // TREES
 
   /** Returns direct children trees, i.e. the subtrees.
     * @group sub-trees */
-  def children: Seq[Tree[T]]
+  def children: Iterable[Tree[T]]
 
-  /** Lists all the possible subtrees in the tree inclusive.
+  /** Iterates over all the possible subtrees in this tree inclusive.
     * Top tree is listed first, then children depth-first.
     * @group sub-trees */
-  def trees: Seq[Tree[T]]
+  def trees: Iterable[Tree[T]]
 
   /** Iterates over filtered trees in this tree inclusive, top-down, depth-first.
     * The top tree is returned first, then children left-to-right and depth-first.
-    *
     * @param pred return true to include the tree in the result, false otherwise.
     * @param maxDepth number of levels to go inside the tree, default to max
     * @group sub-trees */
-  def treeIterator(pred: Tree[T] => Boolean, maxDepth: Int = Int.MaxValue): Iterator[Tree[T]]
+  def treesWithFilter(pred: Tree[T] => Boolean, maxDepth: Int = Int.MaxValue): Iterable[Tree[T]]
 
   /** Iterates over filtered trees in this tree inclusive, paired with the node's level, top-down, depth-first.
     * The top tree is returned first, then children left-to-right and depth-first.
-    *
     * @param pred return true to include the tree in the result, false otherwise.
     * @param maxDepth number of levels to go inside the tree, default to max
     * @group sub-trees */
-  def treeWithLevelIterator(pred: Tree[T] => Boolean, maxDepth: Int = Int.MaxValue): Iterator[(Int, Tree[T])] = ???
+  def treeAndLevelPairs(pred: Tree[T] => Boolean, maxDepth: Int = Int.MaxValue): Iterable[(Int, Tree[T])] = ???
 
   // BRANCHES
 
-  /** Lists all the branches of the tree starting at the root.
-    *
-    * @note Uses unsafe nested recursions, result same as [[branchIterator()]].
+  /** Iterates over all the branches in this tree.
     * @group branches */
-  def branches: Seq[Iterable[T]]
+  def branches: Iterable[Iterable[T]]
 
-  /** Iterates over filtered branches of the tree starting at the root.
+  /** Iterates over filtered branches in this tree.
     * @param pred return true to include the branch in the result, false otherwise.
     * @param maxDepth maximum length of the returned branches, default to max
     * @group branches
     */
-  def branchIterator(pred: Iterable[T] => Boolean, maxDepth: Int = Int.MaxValue): Iterator[Iterable[T]]
+  def branchesWithFilter(pred: Iterable[T] => Boolean, maxDepth: Int = Int.MaxValue): Iterable[Iterable[T]]
 
   // CHECKS
 
