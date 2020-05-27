@@ -18,7 +18,7 @@ package com.github.arturopala.tree.internal
 
 object VectorOps {
 
-  implicit class VectorExt[T](vector: Vector[T]) {
+  final implicit class VectorExt[T](vector: Vector[T]) {
 
     /** Returns tail without failing when empty. */
     def safeTail: Vector[T] = if (vector.isEmpty) Vector.empty[T] else vector.tail

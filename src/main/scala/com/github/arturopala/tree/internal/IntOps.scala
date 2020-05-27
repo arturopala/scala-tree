@@ -18,7 +18,7 @@ package com.github.arturopala.tree.internal
 
 object IntOps {
 
-  implicit class IntExt(value: Int) {
+  final implicit class IntExt(value: Int) {
     def intAsSome: Option[Int] = Some(value)
     def nonZeroIntAsSome: Option[Int] = if (value == 0) None else Some(value)
   }

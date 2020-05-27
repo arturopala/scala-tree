@@ -19,7 +19,7 @@ package com.github.arturopala.tree.internal
 object IterableOps {
 
   /** Creates [[Iterable]] from an iterator supplier. */
-  def iterableFrom[T](createIterator: => Iterator[T]): Iterable[T] =
+  final def iterableFrom[T](createIterator: => Iterator[T]): Iterable[T] =
     new Iterable[T] {
       override def iterator: Iterator[T] = createIterator
     }

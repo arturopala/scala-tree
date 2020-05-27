@@ -49,3 +49,32 @@ final class MapFilterIterator[A, B](iterator: Iterator[A], f: A => B, pred: B =>
     }
 
 }
+
+/** Iterator over items fulfilling the predicate.
+  * Items itself are provided by the supplied iterator. */
+final class FilterIterator[A](iterator: Iterator[A], pred: A => Boolean) extends Iterator[A] {
+
+  var hasNext: Boolean = false
+  var v: A = _
+
+  seekNext()
+
+  override def next(): A =
+    if (hasNext) {
+      val value = v
+      seekNext()
+      value
+    } else throw new NoSuchElementException
+
+  @tailrec
+  def seekNext(): Unit =
+    if (iterator.hasNext) {
+      v = iterator.next()
+      if (pred(v)) {
+        hasNext = true
+      } else seekNext()
+    } else {
+      hasNext = false
+    }
+
+}

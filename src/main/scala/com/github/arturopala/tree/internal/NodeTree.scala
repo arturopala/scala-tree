@@ -16,10 +16,13 @@
 
 package com.github.arturopala.tree.internal
 
+import java.util.NoSuchElementException
+
 import com.github.arturopala.tree.{Tree, TreeBuilder}
 import com.github.arturopala.tree.Tree.{ArrayTree, Binary, Leaf, Node, NodeTree, Unary}
 import com.github.arturopala.bufferandslice.{Buffer, IntBuffer, IntSlice, Slice}
 import com.github.arturopala.tree.internal.VectorOps._
+import com.github.arturopala.tree.internal.IteratorOps._
 
 import scala.annotation.tailrec
 import scala.collection.mutable
@@ -42,52 +45,37 @@ object NodeTree {
     }
   }
 
+  object Node2 {
+
+    /** Universal NodeTree extractor as a tuple of (head, childrenIterator). */
+    def unapply[T](node: NodeTree[T]): Option[(T, Iterator[Tree[T]])] =
+      Some((node.head, node.children.iterator))
+  }
+
   /** Returns an iterator over all the nodes of the tree, goes depth-first. */
   final def valuesIterator[T](node: NodeTree[T]): Iterator[T] = new Iterator[T] {
 
-    type Queue = Vector[NodeTree[T]]
-    var queue: Queue = Vector(node)
+    type Queue = Iterator[Tree[T]]
+    var queue: Queue = Iterator(node)
 
     override def hasNext: Boolean = queue.nonEmpty
 
     override def next(): T =
       if (queue.isEmpty) throw new NoSuchElementException()
       else {
-        val Node(head, children) = queue.head
-        queue = children ++: queue.safeTail
+        val Node2(head: T, children: Iterator[Tree[T]]) = queue.next
+        queue = children ++: queue.trim
         head
       }
   }
 
   /** Returns an iterator over the filtered nodes of the tree, goes depth-first with maxDepth limit. */
-  final def valuesIteratorWithFilter[T](pred: T => Boolean, node: NodeTree[T]): Iterator[T] = new Iterator[T] {
+  final def valuesIteratorWithFilter[T](pred: T => Boolean, node: NodeTree[T]): Iterator[T] =
+    new FilterIterator(valuesIterator(node), pred)
 
-    type Queue = Vector[NodeTree[T]]
-    var queue: Queue = seekNext(Vector(node))
-
-    override def hasNext: Boolean = queue.nonEmpty
-
-    @tailrec
-    override def next(): T =
-      if (queue.isEmpty) throw new NoSuchElementException()
-      else {
-        val Node(head, children) = queue.head
-        queue = seekNext(children ++: queue.safeTail)
-        if (pred(head)) head else next()
-      }
-
-    @tailrec
-    private def seekNext(q: Queue): Queue =
-      if (q.isEmpty) q
-      else {
-        val Node(head, children) = q.head
-        if (pred(head)) q
-        else seekNext(children ++: q.safeTail)
-      }
-  }
-
-  /** Returns an iterator over the filtered nodes of the tree, goes depth-first with maxDepth limit. */
-  final def valuesIteratorWithLimit[T](pred: T => Boolean, node: NodeTree[T], maxDepth: Int): Iterator[T] =
+  /** Returns an iterator over the filtered nodes of the tree, goes depth-first with maxDepth limit.
+    * @note uses Vector internally */
+  final def valuesIteratorWithLimit2[T](pred: T => Boolean, node: NodeTree[T], maxDepth: Int): Iterator[T] =
     new Iterator[T] {
 
       type Queue = Vector[(Int, NodeTree[T])]
@@ -118,6 +106,48 @@ object NodeTree {
           else if (level < maxDepth) seekNext(children.map((level + 1, _)) ++: q.safeTail)
           else seekNext(q.safeTail)
         }
+    }
+
+  /** Returns an iterator over the filtered nodes of the tree, goes depth-first with maxDepth limit.
+    * @note uses Iterator internally */
+  final def valuesIteratorWithLimit[T](pred: T => Boolean, node: NodeTree[T], maxDepth: Int): Iterator[T] =
+    new Iterator[T] {
+
+      type Queue = Iterator[(Int, Tree[T])]
+      var queue: Queue =
+        if (maxDepth > 0) Iterator((1, node))
+        else Iterator.empty
+
+      var hasNext: Boolean = false
+      var nextItem: T = _
+
+      seekNext()
+
+      override def next(): T =
+        if (hasNext) {
+          val result = nextItem
+          seekNext()
+          result
+        } else throw new NoSuchElementException
+
+      @tailrec
+      private def seekNext(): Unit = {
+        hasNext = false
+        if (queue.hasNext) {
+          val (level, Node2(head: T, children: Iterator[Tree[T]])) = queue.next
+          if (level < maxDepth) {
+            queue = children.map((level + 1, _)) ++: queue.trim
+          } else {
+            queue = queue.trim
+          }
+          if (pred(head)) {
+            nextItem = head
+            hasNext = true
+          } else {
+            seekNext()
+          }
+        }
+      }
     }
 
   final def values[T](pred: T => Boolean, node: NodeTree[T]): List[T] = values(pred, Nil, List(node))
@@ -210,50 +240,67 @@ object NodeTree {
   /** Returns an iterator over all (sub)trees of the tree inclusive, goes depth-first. */
   final def treesIterator[T](node: NodeTree[T]): Iterator[Tree[T]] = new Iterator[Tree[T]] {
 
-    type Queue = Vector[NodeTree[T]]
-    var queue: Queue = Vector(node)
+    type Queue = Iterator[Tree[T]]
+    var queue: Queue = Iterator(node)
 
     override def hasNext: Boolean = queue.nonEmpty
 
     override def next(): Tree[T] =
       if (queue.isEmpty) throw new NoSuchElementException()
       else {
-        val node @ Node(_, children) = queue.head
-        queue = children ++: queue.safeTail
+        val node = queue.next
+        queue = node.children.iterator ++: queue.trim
         node
       }
   }
 
   /** Returns an iterator over filtered (sub)trees of the tree, goes depth-first. */
   final def treesIteratorWithFilter[T](pred: Tree[T] => Boolean, node: NodeTree[T]): Iterator[Tree[T]] =
+    new FilterIterator(treesIterator(node), pred)
+
+  /** Returns an iterator over filtered (sub)trees of the tree with depth limit, goes depth-first.
+    * @note uses Iterator internally */
+  final def treesIteratorWithLimit[T](pred: Tree[T] => Boolean, node: NodeTree[T], maxDepth: Int): Iterator[Tree[T]] =
     new Iterator[Tree[T]] {
 
-      type Queue = Vector[NodeTree[T]]
-      var queue: Queue = seekNext(Vector(node))
+      type Queue = Iterator[(Int, Tree[T])]
+      var queue: Queue = if (maxDepth > 0) Iterator((1, node)) else Iterator.empty
 
-      override def hasNext: Boolean = queue.nonEmpty
+      var hasNext: Boolean = false
+      var nextItem: Tree[T] = _
 
-      @tailrec
+      seekNext()
+
       override def next(): Tree[T] =
-        if (queue.isEmpty) throw new NoSuchElementException()
-        else {
-          val node @ Node(_, children) = queue.head
-          queue = seekNext(children ++: queue.safeTail)
-          if (pred(node)) node else next()
-        }
+        if (hasNext) {
+          val result = nextItem
+          seekNext()
+          result
+        } else throw new NoSuchElementException
 
       @tailrec
-      private def seekNext(q: Queue): Queue =
-        if (q.isEmpty) q
-        else {
-          val node @ Node(_, children) = q.head
-          if (pred(node)) q
-          else seekNext(children ++: q.safeTail)
+      private def seekNext(): Unit = {
+        hasNext = false
+        if (queue.hasNext) {
+          val (level, node) = queue.next
+          if (level < maxDepth) {
+            queue = node.children.iterator.map((level + 1, _)) ++: queue.trim
+          } else {
+            queue = queue.trim
+          }
+          if (pred(node)) {
+            nextItem = node
+            hasNext = true
+          } else {
+            seekNext()
+          }
         }
+      }
     }
 
-  /** Returns an iterator over filtered (sub)trees of the tree with depth limit, goes depth-first. */
-  final def treesIteratorWithLimit[T](pred: Tree[T] => Boolean, node: NodeTree[T], maxDepth: Int): Iterator[Tree[T]] =
+  /** Returns an iterator over filtered (sub)trees of the tree with depth limit, goes depth-first.
+    * @note uses Vector internally */
+  final def treesIteratorWithLimit2[T](pred: Tree[T] => Boolean, node: NodeTree[T], maxDepth: Int): Iterator[Tree[T]] =
     new Iterator[Tree[T]] {
 
       type Queue = Vector[(Int, NodeTree[T])]
@@ -302,17 +349,17 @@ object NodeTree {
   final def pathsIterator[T](node: NodeTree[T]): Iterator[Iterable[T]] =
     new Iterator[Iterable[T]] {
 
-      type Queue = Vector[(Vector[T], NodeTree[T])]
-      var queue: Queue = Vector((Vector.empty, node))
+      type Queue = Iterator[(Vector[T], Tree[T])]
+      var queue: Queue = Iterator((Vector.empty, node))
 
       override def hasNext: Boolean = queue.nonEmpty
 
       override def next(): Iterable[T] =
         if (queue.isEmpty) throw new NoSuchElementException()
         else {
-          val (acc, Node(head, children)) = queue.head
+          val (acc, Node2(head: T, children: Iterator[Tree[T]])) = queue.next
           val branch = acc :+ head
-          queue = children.map((branch, _)) ++: queue.safeTail
+          queue = children.map((branch, _)) ++: queue.trim
           branch
         }
     }
@@ -440,21 +487,21 @@ object NodeTree {
     }
 
   final def countBranches[T](pred: Iterable[T] => Boolean, node: NodeTree[T]): Int =
-    countBranches(pred, 0, Vector((Vector.empty, node)))
+    countBranches(pred, 0, Iterator((Vector.empty, node)))
 
   @tailrec
   private def countBranches[T](
     pred: Iterable[T] => Boolean,
     result: Int,
-    queue: Vector[(Vector[T], NodeTree[T])]
+    queue: Iterator[(Vector[T], Tree[T])]
   ): Int =
     if (queue.isEmpty) result
     else {
-      val (acc, Node(head, children)) = queue.head
+      val (acc, Node2(head: T, children: Iterator[Tree[T]])) = queue.next
       val branch = acc :+ head
       children match {
-        case Nil if pred(branch) => countBranches(pred, 1 + result, queue.safeTail)
-        case _                   => countBranches(pred, result, children.map((branch, _)) ++: queue.safeTail)
+        case i if i.isEmpty && pred(branch) => countBranches(pred, 1 + result, queue.trim)
+        case _                              => countBranches(pred, result, children.map((branch, _)) ++: queue.trim)
       }
     }
 

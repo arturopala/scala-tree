@@ -33,7 +33,9 @@ class TreeDebugSpec extends FunSuite with TestWithBuffers {
 
     def tree[T: ClassTag](t: Tree[T]): Tree[T]
 
-    "debug" in {}
+    "debug" in {
+      tree3_1.valuesWithFilter(all, 2).toList shouldBe List("a", "b")
+    }
 
   }
 
