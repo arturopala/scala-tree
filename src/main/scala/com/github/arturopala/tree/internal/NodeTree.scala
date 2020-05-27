@@ -439,19 +439,23 @@ object NodeTree {
         }
     }
 
-  final def countBranches[T](pred: List[T] => Boolean, node: NodeTree[T]): Int =
-    countBranches(pred, 0, List((Nil, node)))
+  final def countBranches[T](pred: Iterable[T] => Boolean, node: NodeTree[T]): Int =
+    countBranches(pred, 0, Vector((Vector.empty, node)))
 
   @tailrec
-  private def countBranches[T](pred: List[T] => Boolean, result: Int, queue: List[(List[T], NodeTree[T])]): Int =
-    queue match {
-      case Nil => result
-      case (acc, Node(head, children)) :: xs =>
-        val branch = head :: acc
-        children match {
-          case Nil if pred(branch) => countBranches(pred, 1 + result, xs)
-          case _                   => countBranches(pred, result, children.map((branch, _)) ::: xs)
-        }
+  private def countBranches[T](
+    pred: Iterable[T] => Boolean,
+    result: Int,
+    queue: Vector[(Vector[T], NodeTree[T])]
+  ): Int =
+    if (queue.isEmpty) result
+    else {
+      val (acc, Node(head, children)) = queue.head
+      val branch = acc :+ head
+      children match {
+        case Nil if pred(branch) => countBranches(pred, 1 + result, queue.safeTail)
+        case _                   => countBranches(pred, result, children.map((branch, _)) ++: queue.safeTail)
+      }
     }
 
   final def insertBranchUnsafe[T, T1 >: T: ClassTag](tree: NodeTree[T], branchIterator: Iterator[T1]): NodeTree[T1] =

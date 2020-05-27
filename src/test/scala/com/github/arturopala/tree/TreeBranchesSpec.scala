@@ -40,6 +40,41 @@ class TreeBranchesSpec extends FunSuite {
       )
     }
 
+    "count all branches" in {
+      tree0.countBranches(all) shouldBe 0
+      tree1.countBranches(all) shouldBe 1
+      tree2.countBranches(all) shouldBe 1
+      tree3_1.countBranches(all) shouldBe 1
+      tree3_2.countBranches(all) shouldBe 2
+      tree4_1.countBranches(all) shouldBe 1
+      tree4_2.countBranches(all) shouldBe 2
+      tree4_3.countBranches(all) shouldBe 3
+      tree7.countBranches(all) shouldBe 3
+      tree9.countBranches(all) shouldBe 3
+
+      tree0.countBranches(_.size > 2) shouldBe 0
+      tree1.countBranches(_.size > 2) shouldBe 0
+      tree2.countBranches(_.size > 2) shouldBe 0
+      tree3_1.countBranches(_.size > 2) shouldBe 1
+      tree3_2.countBranches(_.size > 2) shouldBe 0
+      tree4_1.countBranches(_.size > 2) shouldBe 1
+      tree4_2.countBranches(_.size > 2) shouldBe 1
+      tree4_3.countBranches(_.size > 2) shouldBe 0
+      tree7.countBranches(_.size > 2) shouldBe 2
+      tree9.countBranches(_.size > 2) shouldBe 3
+
+      tree0.countBranches(_.size <= 2) shouldBe 0
+      tree1.countBranches(_.size <= 2) shouldBe 1
+      tree2.countBranches(_.size <= 2) shouldBe 1
+      tree3_1.countBranches(_.size <= 2) shouldBe 0
+      tree3_2.countBranches(_.size <= 2) shouldBe 2
+      tree4_1.countBranches(_.size <= 2) shouldBe 0
+      tree4_2.countBranches(_.size <= 2) shouldBe 1
+      tree4_3.countBranches(_.size <= 2) shouldBe 3
+      tree7.countBranches(_.size <= 2) shouldBe 1
+      tree9.countBranches(_.size <= 2) shouldBe 0
+    }
+
     "iterate over branches with filter" in {
       tree0.branchesWithFilter(all).map(_.toList).toList shouldBe Nil
       tree1.branchesWithFilter(all).map(_.toList).toList shouldBe List(List("a"))
