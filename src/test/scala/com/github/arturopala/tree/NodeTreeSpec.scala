@@ -27,6 +27,347 @@ class NodeTreeSpec extends AnyWordSpecCompat {
 
   s"NodeTree" should {
 
+    "iterate over tree values depth-first" in {
+      valuesIterator(Tree("a"), true).toList shouldBe List("a")
+      valuesIterator(Tree("a", Tree("b")), true).toList shouldBe List("a", "b")
+      valuesIterator(Tree("a", Tree("b"), Tree("c")), true).toList shouldBe List("a", "b", "c")
+      valuesIterator(Tree("a", Tree("b", Tree("c")), Tree("d")), true).toList shouldBe List("a", "b", "c", "d")
+      valuesIterator(Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e"))), true).toList shouldBe
+        List("a", "b", "c", "d", "e")
+      valuesIterator(
+        Tree("a", Tree("b", Tree("c", Tree("d")), Tree("e")), Tree("f", Tree("g"), Tree("h", Tree("i")))),
+        true
+      ).toList shouldBe
+        List("a", "b", "c", "d", "e", "f", "g", "h", "i")
+    }
+
+    "iterate over tree values breadth-first" in {
+      valuesIterator(Tree("a"), false).toList shouldBe List("a")
+      valuesIterator(Tree("a", Tree("b")), false).toList shouldBe List("a", "b")
+      valuesIterator(Tree("a", Tree("b"), Tree("c")), false).toList shouldBe List("a", "b", "c")
+      valuesIterator(Tree("a", Tree("b", Tree("c")), Tree("d")), false).toList shouldBe List("a", "b", "d", "c")
+      valuesIterator(Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e"))), false).toList shouldBe
+        List("a", "b", "d", "c", "e")
+      valuesIterator(
+        Tree("a", Tree("b", Tree("c", Tree("d")), Tree("e")), Tree("f", Tree("g"), Tree("h", Tree("i")))),
+        false
+      ).toList shouldBe
+        List("a", "b", "f", "c", "e", "g", "h", "d", "i")
+    }
+
+    "iterate over tree values depth-first with filter" in {
+      val pred = Set("a", "c", "d", "f", "g", "i").contains _
+      valuesIteratorWithFilter(pred, Tree("a"), true).toList shouldBe List("a")
+      valuesIteratorWithFilter(pred, Tree("a", Tree("b")), true).toList shouldBe List("a")
+      valuesIteratorWithFilter(pred, Tree("a", Tree("b"), Tree("c")), true).toList shouldBe List("a", "c")
+      valuesIteratorWithFilter(pred, Tree("a", Tree("b", Tree("c")), Tree("d")), true).toList shouldBe
+        List("a", "c", "d")
+      valuesIteratorWithFilter(pred, Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e"))), true).toList shouldBe
+        List("a", "c", "d")
+      valuesIteratorWithFilter(
+        pred,
+        Tree("a", Tree("b", Tree("c", Tree("d")), Tree("e")), Tree("f", Tree("g"), Tree("h", Tree("i")))),
+        true
+      ).toList shouldBe
+        List("a", "c", "d", "f", "g", "i")
+    }
+
+    "iterate over tree values breadth-first with filter" in {
+      val pred = Set("b", "c", "e", "f", "h", "g").contains _
+      valuesIteratorWithFilter(pred, Tree("a"), false).toList shouldBe List()
+      valuesIteratorWithFilter(pred, Tree("a", Tree("b")), false).toList shouldBe List("b")
+      valuesIteratorWithFilter(pred, Tree("a", Tree("b"), Tree("c")), false).toList shouldBe List("b", "c")
+      valuesIteratorWithFilter(pred, Tree("a", Tree("b", Tree("c")), Tree("d")), false).toList shouldBe List("b", "c")
+      valuesIteratorWithFilter(pred, Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e"))), false).toList shouldBe
+        List("b", "c", "e")
+      valuesIteratorWithFilter(
+        pred,
+        Tree("a", Tree("b", Tree("c", Tree("d")), Tree("e")), Tree("f", Tree("g"), Tree("h", Tree("i")))),
+        false
+      ).toList shouldBe
+        List("b", "f", "c", "e", "g", "h")
+    }
+
+    "iterate over tree values depth-first with filter and depth limit" in {
+      val pred = Set("a", "c", "d", "f", "g", "i").contains _
+      valuesIteratorWithLimit(pred, Tree("a"), 2, true).toList shouldBe List("a")
+      valuesIteratorWithLimit(pred, Tree("a", Tree("b")), 2, true).toList shouldBe List("a")
+      valuesIteratorWithLimit(pred, Tree("a", Tree("b"), Tree("c")), 2, true).toList shouldBe List("a", "c")
+      valuesIteratorWithLimit(pred, Tree("a", Tree("b", Tree("c")), Tree("d")), 2, true).toList shouldBe
+        List("a", "d")
+      valuesIteratorWithLimit(pred, Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e"))), 2, true).toList shouldBe
+        List("a", "d")
+      valuesIteratorWithLimit(
+        pred,
+        Tree("a", Tree("b", Tree("c", Tree("d")), Tree("e")), Tree("f", Tree("g"), Tree("h", Tree("i")))),
+        3,
+        true
+      ).toList shouldBe
+        List("a", "c", "f", "g")
+    }
+
+    "iterate over tree values breadth-first with filter and limit" in {
+      val pred = Set("b", "c", "e", "f", "h", "g").contains _
+      valuesIteratorWithLimit(pred, Tree("a"), 2, false).toList shouldBe List()
+      valuesIteratorWithLimit(pred, Tree("a", Tree("b")), 2, false).toList shouldBe List("b")
+      valuesIteratorWithLimit(pred, Tree("a", Tree("b"), Tree("c")), 2, false).toList shouldBe List("b", "c")
+      valuesIteratorWithLimit(pred, Tree("a", Tree("b", Tree("c")), Tree("d")), 2, false).toList shouldBe List("b")
+      valuesIteratorWithLimit(pred, Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e"))), 2, false).toList shouldBe
+        List("b")
+      valuesIteratorWithLimit(
+        pred,
+        Tree("a", Tree("b", Tree("c", Tree("d")), Tree("e")), Tree("f", Tree("g"), Tree("h", Tree("i")))),
+        2,
+        false
+      ).toList shouldBe
+        List("b", "f")
+    }
+
+    "iterate over trees depth-first" in {
+      treesIterator(Tree("a"), true).toList shouldBe List(Tree("a"))
+      treesIterator(Tree("a", Tree("b")), true).toList shouldBe List(Tree("a", Tree("b")), Tree("b"))
+      treesIterator(Tree("a", Tree("b"), Tree("c")), true).toList shouldBe List(
+        Tree("a", Tree("b"), Tree("c")),
+        Tree("b"),
+        Tree("c")
+      )
+      treesIterator(Tree("a", Tree("b", Tree("c")), Tree("d")), true).toList shouldBe List(
+        Tree("a", Tree("b", Tree("c")), Tree("d")),
+        Tree("b", Tree("c")),
+        Tree("c"),
+        Tree("d")
+      )
+      treesIterator(Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e"))), true).toList shouldBe
+        List(
+          Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e"))),
+          Tree("b", Tree("c")),
+          Tree("c"),
+          Tree("d", Tree("e")),
+          Tree("e")
+        )
+      treesIterator(
+        Tree("a", Tree("b", Tree("c", Tree("d")), Tree("e")), Tree("f", Tree("g"), Tree("h", Tree("i")))),
+        true
+      ).toList shouldBe
+        List(
+          Tree("a", Tree("b", Tree("c", Tree("d")), Tree("e")), Tree("f", Tree("g"), Tree("h", Tree("i")))),
+          Tree("b", Tree("c", Tree("d")), Tree("e")),
+          Tree("c", Tree("d")),
+          Tree("d"),
+          Tree("e"),
+          Tree("f", Tree("g"), Tree("h", Tree("i"))),
+          Tree("g"),
+          Tree("h", Tree("i")),
+          Tree("i")
+        )
+    }
+
+    "iterate over trees depth-first with filter" in {
+      treesIterator(Tree("a"), true).toList shouldBe List(Tree("a"))
+      treesIterator(Tree("a", Tree("b")), true).toList shouldBe List(Tree("a", Tree("b")), Tree("b"))
+      treesIterator(Tree("a", Tree("b"), Tree("c")), true).toList shouldBe List(
+        Tree("a", Tree("b"), Tree("c")),
+        Tree("b"),
+        Tree("c")
+      )
+      treesIterator(Tree("a", Tree("b", Tree("c")), Tree("d")), true).toList shouldBe List(
+        Tree("a", Tree("b", Tree("c")), Tree("d")),
+        Tree("b", Tree("c")),
+        Tree("c"),
+        Tree("d")
+      )
+      treesIterator(Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e"))), true).toList shouldBe
+        List(
+          Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e"))),
+          Tree("b", Tree("c")),
+          Tree("c"),
+          Tree("d", Tree("e")),
+          Tree("e")
+        )
+      treesIterator(
+        Tree("a", Tree("b", Tree("c", Tree("d")), Tree("e")), Tree("f", Tree("g"), Tree("h", Tree("i")))),
+        true
+      ).toList shouldBe
+        List(
+          Tree("a", Tree("b", Tree("c", Tree("d")), Tree("e")), Tree("f", Tree("g"), Tree("h", Tree("i")))),
+          Tree("b", Tree("c", Tree("d")), Tree("e")),
+          Tree("c", Tree("d")),
+          Tree("d"),
+          Tree("e"),
+          Tree("f", Tree("g"), Tree("h", Tree("i"))),
+          Tree("g"),
+          Tree("h", Tree("i")),
+          Tree("i")
+        )
+    }
+
+    "iterate over trees breadth-first" in {
+      treesIterator(Tree("a"), false).toList shouldBe List(Tree("a"))
+      treesIterator(Tree("a", Tree("b")), false).toList shouldBe List(Tree("a", Tree("b")), Tree("b"))
+      treesIterator(Tree("a", Tree("b"), Tree("c")), false).toList shouldBe List(
+        Tree("a", Tree("b"), Tree("c")),
+        Tree("b"),
+        Tree("c")
+      )
+      treesIterator(Tree("a", Tree("b", Tree("c")), Tree("d")), false).toList shouldBe List(
+        Tree("a", Tree("b", Tree("c")), Tree("d")),
+        Tree("b", Tree("c")),
+        Tree("d"),
+        Tree("c")
+      )
+      treesIterator(Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e"))), false).toList shouldBe
+        List(
+          Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e"))),
+          Tree("b", Tree("c")),
+          Tree("d", Tree("e")),
+          Tree("c"),
+          Tree("e")
+        )
+      treesIterator(
+        Tree("a", Tree("b", Tree("c", Tree("d")), Tree("e")), Tree("f", Tree("g"), Tree("h", Tree("i")))),
+        false
+      ).toList shouldBe
+        List(
+          Tree("a", Tree("b", Tree("c", Tree("d")), Tree("e")), Tree("f", Tree("g"), Tree("h", Tree("i")))),
+          Tree("b", Tree("c", Tree("d")), Tree("e")),
+          Tree("f", Tree("g"), Tree("h", Tree("i"))),
+          Tree("c", Tree("d")),
+          Tree("e"),
+          Tree("g"),
+          Tree("h", Tree("i")),
+          Tree("d"),
+          Tree("i")
+        )
+    }
+
+    "iterate over trees depth-first with filter" in {
+      val pred: Tree[String] => Boolean = t => t.size % 2 == 0 || t.isLeaf
+      treesIteratorWithFilter(pred, Tree("a"), true).toList shouldBe List(Tree("a"))
+      treesIteratorWithFilter(pred, Tree("a", Tree("b")), true).toList shouldBe List(Tree("a", Tree("b")), Tree("b"))
+      treesIteratorWithFilter(pred, Tree("a", Tree("b"), Tree("c")), true).toList shouldBe List(Tree("b"), Tree("c"))
+      treesIteratorWithFilter(pred, Tree("a", Tree("b", Tree("c")), Tree("d")), true).toList shouldBe List(
+        Tree("a", Tree("b", Tree("c")), Tree("d")),
+        Tree("b", Tree("c")),
+        Tree("c"),
+        Tree("d")
+      )
+      treesIteratorWithFilter(pred, Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e"))), true).toList shouldBe
+        List(
+          Tree("b", Tree("c")),
+          Tree("c"),
+          Tree("d", Tree("e")),
+          Tree("e")
+        )
+      treesIteratorWithFilter(
+        pred,
+        Tree("a", Tree("b", Tree("c", Tree("d")), Tree("e")), Tree("f", Tree("g"), Tree("h", Tree("i")))),
+        true
+      ).toList shouldBe
+        List(
+          Tree("b", Tree("c", Tree("d")), Tree("e")),
+          Tree("c", Tree("d")),
+          Tree("d"),
+          Tree("e"),
+          Tree("f", Tree("g"), Tree("h", Tree("i"))),
+          Tree("g"),
+          Tree("h", Tree("i")),
+          Tree("i")
+        )
+    }
+
+    "iterate over trees breadth-first with filter" in {
+      val pred: Tree[String] => Boolean = t => t.size % 2 != 0
+      treesIteratorWithFilter(pred, Tree("a"), false).toList shouldBe List(Tree("a"))
+      treesIteratorWithFilter(pred, Tree("a", Tree("b")), false).toList shouldBe List(Tree("b"))
+      treesIteratorWithFilter(pred, Tree("a", Tree("b"), Tree("c")), false).toList shouldBe List(
+        Tree("a", Tree("b"), Tree("c")),
+        Tree("b"),
+        Tree("c")
+      )
+      treesIteratorWithFilter(pred, Tree("a", Tree("b", Tree("c")), Tree("d")), false).toList shouldBe List(
+        Tree("d"),
+        Tree("c")
+      )
+      treesIteratorWithFilter(pred, Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e"))), false).toList shouldBe
+        List(
+          Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e"))),
+          Tree("c"),
+          Tree("e")
+        )
+      treesIteratorWithFilter(
+        pred,
+        Tree("a", Tree("b", Tree("c", Tree("d")), Tree("e")), Tree("f", Tree("g"), Tree("h", Tree("i")))),
+        false
+      ).toList shouldBe
+        List(
+          Tree("a", Tree("b", Tree("c", Tree("d")), Tree("e")), Tree("f", Tree("g"), Tree("h", Tree("i")))),
+          Tree("e"),
+          Tree("g"),
+          Tree("d"),
+          Tree("i")
+        )
+    }
+
+    "iterate over trees depth-first with filter and depth limit" in {
+      val pred: Tree[String] => Boolean = t => t.size % 2 == 0 || t.isLeaf
+      treesIteratorWithLimit(pred, Tree("a"), 2, true).toList shouldBe List(Tree("a"))
+      treesIteratorWithLimit(pred, Tree("a", Tree("b")), 2, true).toList shouldBe List(Tree("a", Tree("b")), Tree("b"))
+      treesIteratorWithLimit(pred, Tree("a", Tree("b"), Tree("c")), 2, true).toList shouldBe List(Tree("b"), Tree("c"))
+      treesIteratorWithLimit(pred, Tree("a", Tree("b", Tree("c")), Tree("d")), 2, true).toList shouldBe List(
+        Tree("a", Tree("b", Tree("c")), Tree("d")),
+        Tree("b", Tree("c")),
+        Tree("d")
+      )
+      treesIteratorWithLimit(pred, Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e"))), 2, true).toList shouldBe
+        List(
+          Tree("b", Tree("c")),
+          Tree("d", Tree("e"))
+        )
+      treesIteratorWithLimit(
+        pred,
+        Tree("a", Tree("b", Tree("c", Tree("d")), Tree("e")), Tree("f", Tree("g"), Tree("h", Tree("i")))),
+        3,
+        true
+      ).toList shouldBe
+        List(
+          Tree("b", Tree("c", Tree("d")), Tree("e")),
+          Tree("c", Tree("d")),
+          Tree("e"),
+          Tree("f", Tree("g"), Tree("h", Tree("i"))),
+          Tree("g"),
+          Tree("h", Tree("i"))
+        )
+    }
+
+    "iterate over trees breadth-first with filter and depth limit" in {
+      val pred: Tree[String] => Boolean = t => t.size % 2 != 0
+      treesIteratorWithLimit(pred, Tree("a"), 2, false).toList shouldBe List(Tree("a"))
+      treesIteratorWithLimit(pred, Tree("a", Tree("b")), 2, false).toList shouldBe List(Tree("b"))
+      treesIteratorWithLimit(pred, Tree("a", Tree("b"), Tree("c")), 2, false).toList shouldBe List(
+        Tree("a", Tree("b"), Tree("c")),
+        Tree("b"),
+        Tree("c")
+      )
+      treesIteratorWithLimit(pred, Tree("a", Tree("b", Tree("c")), Tree("d")), 2, false).toList shouldBe List(
+        Tree("d")
+      )
+      treesIteratorWithLimit(pred, Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e"))), 2, false).toList shouldBe
+        List(
+          Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e")))
+        )
+      treesIteratorWithLimit(
+        pred,
+        Tree("a", Tree("b", Tree("c", Tree("d")), Tree("e")), Tree("f", Tree("g"), Tree("h", Tree("i")))),
+        3,
+        false
+      ).toList shouldBe
+        List(
+          Tree("a", Tree("b", Tree("c", Tree("d")), Tree("e")), Tree("f", Tree("g"), Tree("h", Tree("i")))),
+          Tree("e"),
+          Tree("g")
+        )
+    }
+
     "insert new child distinct between siblings" in {
       insertDistinctBetweenSiblings(List(), Tree("a"), List(), false) shouldBe
         (List(Tree("a")), List())
