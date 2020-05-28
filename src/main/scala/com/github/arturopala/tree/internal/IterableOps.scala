@@ -21,7 +21,7 @@ object IterableOps {
   /** Creates [[Iterable]] from an iterator supplier. */
   final def iterableFrom[T](createIterator: => Iterator[T]): Iterable[T] =
     new Iterable[T] {
-      override def iterator: Iterator[T] = createIterator
+      final override def iterator: Iterator[T] = createIterator
     }
 
 }

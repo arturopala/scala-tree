@@ -83,10 +83,10 @@ object ArrayTreeFunctions {
   }
 
   /** Lists indexes of the children values of the parent node, if any. */
-  final def childrenIndexes(parentIndex: Int, treeStructure: Int => Int): IntBuffer = {
-    val result = IntBuffer()
+  final def childrenIndexes(parentIndex: Int, treeStructure: Int => Int): IntBuffer =
     if (parentIndex >= 0) {
       val numberOfChildren = treeStructure(parentIndex)
+      val result = new IntBuffer(numberOfChildren)
       if (numberOfChildren > 0) {
         result.push(parentIndex - 1)
         var n = numberOfChildren - 1
@@ -102,27 +102,47 @@ object ArrayTreeFunctions {
           n = n - 1
         }
       }
-    }
-    result
-  }
+      result
+    } else IntBuffer.empty
+
+  /** Lists indexes, in the reverse order, of the children values of the parent node, if any. */
+  final def childrenIndexesReverse(parentIndex: Int, treeStructure: Int => Int): IntBuffer =
+    if (parentIndex >= 0) {
+      val numberOfChildren = treeStructure(parentIndex)
+      val result = new IntBuffer(numberOfChildren)
+      if (numberOfChildren > 0) {
+        var n = numberOfChildren - 1
+        var i = parentIndex - 1
+        result(n) = i
+        while (n > 0 && i >= 0) {
+          var a = treeStructure(i)
+          while (a > 0) {
+            i = i - 1
+            a = a - 1 + treeStructure(i)
+          }
+          i = i - 1
+          n = n - 1
+          result(n) = i
+        }
+      }
+      result
+    } else IntBuffer.empty
 
   /** Returns a list of children of a tree represented by the structure and content slices. */
   @`inline` final def childrenOf[T](treeStructure: IntSlice, treeValues: Slice[T]): Iterator[(IntSlice, Slice[T])] =
-    childrenIndexes(treeStructure.length - 1, treeStructure).asSlice
-      .map(subtreeAt(_, treeStructure, treeValues))
-      .iterator(_._1.length > 0)
+    childrenIndexes(treeStructure.length - 1, treeStructure).iterator
+      .map(treeAt(_, treeStructure, treeValues))
 
   /** Returns a reversed list of children of a tree represented by the structure and content slices. */
   @`inline` final def reversedChildrenOf[T](
     treeStructure: IntSlice,
     treeValues: Slice[T]
   ): Iterator[(IntSlice, Slice[T])] =
-    childrenIndexes(treeStructure.length - 1, treeStructure).asSlice
-      .map(subtreeAt(_, treeStructure, treeValues))
-      .reverseIterator(_._1.length > 0)
+    childrenIndexes(treeStructure.length - 1, treeStructure).reverseIterator
+      .map(treeAt(_, treeStructure, treeValues))
 
   /** Returns a structure and content slices representing a subtree rooted at the given index. */
-  final def subtreeAt[T](index: Int, treeStructure: IntSlice, treeValues: Slice[T]): (IntSlice, Slice[T]) = {
+  final def treeAt[T](index: Int, treeStructure: IntSlice, treeValues: Slice[T]): (IntSlice, Slice[T]) = {
     val size = treeSize(index, treeStructure)
     val structure = treeStructure.slice(index - size + 1, index + 1)
     val values = treeValues.slice(index - size + 1, index + 1)
@@ -130,17 +150,17 @@ object ArrayTreeFunctions {
   }
 
   /** Returns a structure and content slices representing a subtree rooted at the given index. */
-  final def subtreeAt[T](index: Int, treeStructure: IntBuffer, treeValues: Buffer[T]): (IntSlice, Slice[T]) = {
+  final def treeAt[T](index: Int, treeStructure: IntBuffer, treeValues: Buffer[T]): (IntSlice, Slice[T]) = {
     val size = treeSize(index, treeStructure)
     val structure = treeStructure.slice(index - size + 1, index + 1)
     val values = treeValues.slice(index - size + 1, index + 1)
     (structure, values)
   }
 
-  /** Appends children indexes to the buffer, starting from the given position.
+  /** Writes children indexes to the buffer range of [position, position + numberOfChildren).
     * @return number of children appended
     */
-  final def writeChildrenIndexes(
+  final def writeChildrenIndexesToBuffer(
     parentIndex: Int,
     treeStructure: Int => Int,
     buffer: IntBuffer,
@@ -320,26 +340,49 @@ object ArrayTreeFunctions {
   }
 
   /** Iterates over tree's node indexes, top-down, depth first. */
-  final def nodeIndexIterator(startIndex: Int, treeStructure: Int => Int): Iterator[Int] = new Iterator[Int] {
+  final def nodesIndexIteratorDepthFirst(startIndex: Int, treeStructure: Int => Int): Iterator[Int] =
+    new Iterator[Int] {
 
-    var i: Int = startIndex
-    var hasNext: Boolean = i >= 0
-    var a: Int = if (hasNext) treeStructure(i) else 0
+      private var i: Int = startIndex
+      var hasNext: Boolean = i >= 0
+      private var a: Int = if (hasNext) treeStructure(i) else 0
 
-    override def next(): Int =
-      if (hasNext) {
-        val index = i
-        hasNext = a > 0 && i > 0
+      final override def next(): Int =
         if (hasNext) {
-          i = i - 1
-          a = a - 1 + treeStructure(i)
-        }
-        index
-      } else throw new NoSuchElementException
-  }
+          val index = i
+          hasNext = a > 0 && i > 0
+          if (hasNext) {
+            i = i - 1
+            a = a - 1 + treeStructure(i)
+          }
+          index
+        } else throw new NoSuchElementException
+    }
 
-  /** Iterates over tree's branches as index lists, depth first. */
-  final def nodeIndexIteratorWithLimit(
+  /** Iterates over tree's node indexes, top-down, breadth-first. */
+  final def nodesIndexIteratorBreadthFirst(startIndex: Int, treeStructure: Int => Int): Iterator[Int] =
+    new Iterator[Int] {
+
+      private val queue: IntBuffer =
+        if (startIndex < 0) IntBuffer.empty
+        else IntBuffer(startIndex)
+
+      final def hasNext: Boolean = queue.nonEmpty
+
+      final override def next(): Int =
+        if (hasNext) {
+          val index = queue.pop
+          val numberOfChildren = treeStructure(index)
+          if (numberOfChildren > 0) {
+            queue.shiftRight(0, numberOfChildren)
+            writeChildrenIndexesToBuffer(index, treeStructure, queue, 0)
+          }
+          index
+        } else throw new NoSuchElementException
+    }
+
+  /** Iterates over tree's nodes down to the specified depth, top-down, depth first. */
+  final def nodesIndexIteratorDepthFirstWithLimit(
     startIndex: Int,
     treeStructure: Int => Int,
     maxDepth: Int = Int.MaxValue
@@ -347,24 +390,24 @@ object ArrayTreeFunctions {
     new Iterator[Int] {
 
       var hasNext: Boolean = false
-      var i: Int = startIndex
+      private var i: Int = startIndex
 
-      val counters = new IntBuffer(8)
-      val indexes = new IntBuffer(8)
+      private val counters = new IntBuffer(8)
+      private val indexes = new IntBuffer(8)
 
       if (maxDepth > 0) {
         indexes.push(startIndex)
         seekNext(false)
       }
 
-      override def next(): Int =
+      final override def next(): Int =
         if (hasNext) {
           val result = i
           seekNext(true)
           result
         } else throw new NoSuchElementException
 
-      def seekNext(check: Boolean): Unit =
+      final def seekNext(check: Boolean): Unit =
         if (check && counters.isEmpty) { hasNext = false }
         else {
           i = indexes.peek
@@ -376,10 +419,44 @@ object ArrayTreeFunctions {
               BranchIteratorUtils.retract(counters, indexes)
             } else {
               counters.push(c)
-              writeChildrenIndexes(i, treeStructure, indexes, indexes.length)
+              writeChildrenIndexesToBuffer(i, treeStructure, indexes, indexes.length)
             }
           }
         }
+    }
+
+  /** Iterates over tree's node indexes down to the specified depth, top-down, breadth-first. */
+  final def nodesIndexIteratorBreadthFirstWithLimit(
+    startIndex: Int,
+    treeStructure: Int => Int,
+    maxDepth: Int = Int.MaxValue
+  ): Iterator[Int] =
+    new Iterator[Int] {
+
+      private val queue: IntBuffer =
+        if (startIndex < 0 || maxDepth < 1) IntBuffer.empty
+        else IntBuffer(startIndex)
+
+      private val levels: IntBuffer =
+        if (startIndex < 0 || maxDepth < 1) IntBuffer.empty
+        else IntBuffer(1)
+
+      final def hasNext: Boolean = queue.nonEmpty
+
+      final override def next(): Int =
+        if (hasNext) {
+          val index = queue.pop
+          val level = levels.pop
+          if (level < maxDepth) {
+            val numberOfChildren = treeStructure(index)
+            if (numberOfChildren > 0) {
+              queue.shiftRight(0, numberOfChildren)
+              writeChildrenIndexesToBuffer(index, treeStructure, queue, 0)
+              levels.insertFromIterator(0, numberOfChildren, Iterator.continually(level + 1))
+            }
+          }
+          index
+        } else throw new NoSuchElementException
     }
 
   /** Iterates over tree's branches as index lists, depth first. */
@@ -387,21 +464,21 @@ object ArrayTreeFunctions {
     startIndex: Int,
     treeStructure: Int => Int,
     maxDepth: Int = Int.MaxValue
-  ): Iterator[IntSlice] =
-    new Iterator[IntSlice] {
+  ): Iterator[IntBuffer] =
+    new Iterator[IntBuffer] {
 
       var hasNext: Boolean = false
-      var array: IntSlice = IntSlice.empty
+      private var array: IntBuffer = IntBuffer.empty
 
-      val counters = new IntBuffer(8)
-      val indexes = new IntBuffer(8)
+      private val counters = new IntBuffer(8)
+      private val indexes = new IntBuffer(8)
 
       if (maxDepth > 0) {
         indexes.push(startIndex)
         seekNext(false)
       }
 
-      override def next(): IntSlice =
+      final override def next(): IntBuffer =
         if (hasNext) {
           val result = array
           seekNext(true)
@@ -409,7 +486,7 @@ object ArrayTreeFunctions {
         } else throw new NoSuchElementException
 
       @tailrec
-      def seekNext(check: Boolean): Unit =
+      final def seekNext(check: Boolean): Unit =
         if (check && counters.isEmpty) { hasNext = false }
         else {
           val i = indexes.peek
@@ -417,12 +494,12 @@ object ArrayTreeFunctions {
           else {
             val c = treeStructure(i)
             if (c == 0 || counters.length >= maxDepth - 1) {
-              array = BranchIteratorUtils.readBranch(counters, indexes).push(i).asSlice
+              array = BranchIteratorUtils.readBranch(counters, indexes).push(i)
               hasNext = true
               BranchIteratorUtils.retract(counters, indexes)
             } else {
               counters.push(c)
-              writeChildrenIndexes(i, treeStructure, indexes, indexes.length)
+              writeChildrenIndexesToBuffer(i, treeStructure, indexes, indexes.length)
               seekNext(false)
             }
           }
@@ -431,7 +508,7 @@ object ArrayTreeFunctions {
 
   private object BranchIteratorUtils {
 
-    def readBranch(counters: IntBuffer, indexes: IntBuffer): IntBuffer = {
+    final def readBranch(counters: IntBuffer, indexes: IntBuffer): IntBuffer = {
       val branchIndexes = new IntBuffer(8)
       var i = 0
       var ci = 0
@@ -444,7 +521,7 @@ object ArrayTreeFunctions {
       branchIndexes
     }
 
-    def sizeBranch(counters: IntBuffer): Int = {
+    final def sizeBranch(counters: IntBuffer): Int = {
       var l = 0
       var i = 0
       var ci = 0
@@ -457,7 +534,7 @@ object ArrayTreeFunctions {
       l
     }
 
-    def retract(counters: IntBuffer, indexes: IntBuffer): Unit =
+    final def retract(counters: IntBuffer, indexes: IntBuffer): Unit =
       if (counters.length >= 1) {
         var value = counters.pop - 1
         indexes.pop
@@ -468,7 +545,7 @@ object ArrayTreeFunctions {
         if (value != 0) counters.push(value)
       }
 
-    def retract(counters: IntBuffer): Unit =
+    final def retract(counters: IntBuffer): Unit =
       if (counters.length >= 1) {
         var value = counters.pop - 1
         while (value == 0 && counters.length >= 1) {
@@ -544,7 +621,7 @@ object ArrayTreeFunctions {
             n = n + 1
           } else {
             counters.push(c)
-            writeChildrenIndexes(i, treeStructure, indexes, indexes.length)
+            writeChildrenIndexesToBuffer(i, treeStructure, indexes, indexes.length)
           }
         }
         counters.nonEmpty
@@ -686,7 +763,7 @@ object ArrayTreeFunctions {
           val ci = children(n) // child index
           if (ci >= 0 && pathSegment.contains(toPathItem(treeValues(ci)))) {
             indexes.push(ci)
-            writeChildrenIndexes(ci, treeStructure, children, 0)
+            writeChildrenIndexesToBuffer(ci, treeStructure, children, 0)
             pathSegment = None
             n = -1 // force inner loop exit
           } else {

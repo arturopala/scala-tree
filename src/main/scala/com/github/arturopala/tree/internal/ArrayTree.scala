@@ -18,7 +18,6 @@ package com.github.arturopala.tree.internal
 
 import com.github.arturopala.bufferandslice._
 import com.github.arturopala.tree.Tree.ArrayTree
-import com.github.arturopala.tree.internal.ArrayTreeFunctions.reversedChildrenOf
 import com.github.arturopala.tree.{Tree, TreeBuilder}
 import com.github.arturopala.tree.internal.IntOps._
 
@@ -32,7 +31,7 @@ import scala.reflect.ClassTag
 object ArrayTree {
 
   /** Iterates over filtered values, top-down, depth-first. */
-  final def valueIterator[T: ClassTag](
+  final def valuesIteratorWithLimit[T: ClassTag](
     startIndex: Int,
     treeStructure: Int => Int,
     treeValues: Int => T,
@@ -40,27 +39,65 @@ object ArrayTree {
     maxDepth: Int
   ): Iterator[T] =
     new MapFilterIterator[Int, T](
-      ArrayTreeFunctions.nodeIndexIteratorWithLimit(startIndex, treeStructure, maxDepth),
+      ArrayTreeFunctions.nodesIndexIteratorDepthFirstWithLimit(startIndex, treeStructure, maxDepth),
       treeValues,
       pred
     )
 
-  /** Iterates over filtered tree's branches with pred. */
-  final def branchIterator[T: ClassTag](
+  /** Iterates over filtered tree's branches. */
+  final def branchesIterator[T: ClassTag](
+    startIndex: Int,
+    treeStructure: Int => Int,
+    treeValues: Int => T
+  ): Iterator[Iterable[T]] =
+    ArrayTreeFunctions
+      .branchesIndexListIterator(startIndex, treeStructure)
+      .map(_.map(treeValues))
+
+  /** Iterates over filtered tree's branches. */
+  final def branchesIteratorWithFilter[T: ClassTag](
+    startIndex: Int,
+    treeStructure: Int => Int,
+    treeValues: Int => T,
+    pred: Iterable[T] => Boolean
+  ): Iterator[Iterable[T]] =
+    new MapFilterIterator[IntBuffer, Iterable[T]](
+      ArrayTreeFunctions.branchesIndexListIterator(startIndex, treeStructure),
+      _.map(treeValues),
+      pred
+    )
+
+  /** Iterates over filtered tree's branches with depth limit. */
+  final def branchesIteratorWithLimit[T: ClassTag](
     startIndex: Int,
     treeStructure: Int => Int,
     treeValues: Int => T,
     pred: Iterable[T] => Boolean,
     maxDepth: Int
   ): Iterator[Iterable[T]] =
-    new MapFilterIterator[IntSlice, Iterable[T]](
+    new MapFilterIterator[IntBuffer, Iterable[T]](
       ArrayTreeFunctions.branchesIndexListIterator(startIndex, treeStructure, maxDepth),
-      _.map(treeValues).asIterable,
+      _.map(treeValues),
       pred
     )
 
+  /** Iterates over all subtrees (including the tree itself), top-down, depth-first. */
+  final def treesIterator[T: ClassTag](
+    startIndex: Int,
+    treeStructure: IntSlice,
+    treeValues: Slice[T]
+  ): Iterator[Tree[T]] = {
+    assert(
+      treeStructure.length == treeValues.length,
+      "When iterating over the tree's subtrees, structure and values mst be the same size."
+    )
+    ArrayTreeFunctions
+      .nodesIndexIteratorDepthFirst(startIndex, treeStructure)
+      .map(treeAt(_, treeStructure, treeValues))
+  }
+
   /** Iterates over filtered subtrees (including the tree itself), top-down, depth-first. */
-  final def treeIterator[T: ClassTag](
+  final def treesIteratorWithFilter[T: ClassTag](
     startIndex: Int,
     treeStructure: IntSlice,
     treeValues: Slice[T],
@@ -71,14 +108,14 @@ object ArrayTree {
       "When iterating over the tree's subtrees, structure and values mst be the same size."
     )
     new MapFilterIterator[Int, Tree[T]](
-      ArrayTreeFunctions.nodeIndexIterator(startIndex, treeStructure),
+      ArrayTreeFunctions.nodesIndexIteratorDepthFirst(startIndex, treeStructure),
       treeAt(_, treeStructure, treeValues),
       pred
     )
   }
 
   /** Iterates over filtered subtrees (including the tree itself) with depth limit, top-down, depth-first. */
-  final def treeIteratorWithLimit[T: ClassTag](
+  final def treesIteratorWithLimit[T: ClassTag](
     startIndex: Int,
     treeStructure: IntSlice,
     treeValues: Slice[T],
@@ -90,7 +127,7 @@ object ArrayTree {
       "When iterating over the tree's subtrees, structure and values mst be the same size."
     )
     new MapFilterIterator[Int, Tree[T]](
-      ArrayTreeFunctions.nodeIndexIteratorWithLimit(startIndex, treeStructure, maxDepth),
+      ArrayTreeFunctions.nodesIndexIteratorDepthFirstWithLimit(startIndex, treeStructure, maxDepth),
       treeAt(_, treeStructure, treeValues),
       pred
     )
@@ -190,7 +227,7 @@ object ArrayTree {
 
   /** Returns tree rooted at the given index. */
   final def treeAt[T: ClassTag](index: Int, treeStructure: IntSlice, treeValues: Slice[T]): Tree[T] = {
-    val (structure, values) = ArrayTreeFunctions.subtreeAt(index, treeStructure, treeValues)
+    val (structure, values) = ArrayTreeFunctions.treeAt(index, treeStructure, treeValues)
     fromSlices(structure, values)
   }
 

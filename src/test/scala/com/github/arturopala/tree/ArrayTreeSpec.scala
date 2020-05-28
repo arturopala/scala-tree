@@ -65,52 +65,96 @@ class ArrayTreeSpec extends AnyWordSpecCompat {
     "iterate over tree's values with depth limit" in {
       val all: String => Boolean = _ => true
       val none: String => Boolean = _ => false
-      valueIterator(0, Array(0), Array("a"), all, 0).toList shouldBe Nil
-      valueIterator(0, Array(0), Array("a"), all, 1).toList shouldBe List("a")
-      valueIterator(0, Array(0), Array("a"), none, 1).toList shouldBe Nil
-      valueIterator(1, Array(0, 1), Array("b", "a"), all, 0).toList shouldBe Nil
-      valueIterator(1, Array(0, 1), Array("b", "a"), all, 1).toList shouldBe List("a")
-      valueIterator(1, Array(0, 1), Array("b", "a"), all, 2).toList shouldBe List("a", "b")
-      valueIterator(2, Array(0, 1, 1), Array("c", "b", "a"), all, 0).toList shouldBe Nil
-      valueIterator(2, Array(0, 1, 1), Array("c", "b", "a"), all, 1).toList shouldBe List("a")
-      valueIterator(2, Array(0, 1, 1), Array("c", "b", "a"), all, 2).toList shouldBe List("a", "b")
-      valueIterator(2, Array(0, 1, 1), Array("c", "b", "a"), all, 3).toList shouldBe List("a", "b", "c")
-      valueIterator(2, Array(0, 1, 1), Array("c", "b", "a"), none, 3).toList shouldBe Nil
-      valueIterator(2, Array(0, 0, 2), Array("c", "b", "a"), all, 0).toList shouldBe Nil
-      valueIterator(2, Array(0, 0, 2), Array("c", "b", "a"), all, 1).toList shouldBe List("a")
-      valueIterator(2, Array(0, 0, 2), Array("c", "b", "a"), all, 2).toList shouldBe List("a", "b", "c")
-      valueIterator(2, Array(0, 0, 2), Array("c", "b", "a"), none, 2).toList shouldBe Nil
-      valueIterator(3, Array(0, 0, 1, 2), Array("d", "c", "b", "a"), all, 0).toList shouldBe Nil
-      valueIterator(3, Array(0, 0, 1, 2), Array("d", "c", "b", "a"), all, 1).toList shouldBe List("a")
-      valueIterator(3, Array(0, 0, 1, 2), Array("d", "c", "b", "a"), all, 2).toList shouldBe List("a", "b", "d")
-      valueIterator(3, Array(0, 0, 1, 2), Array("d", "c", "b", "a"), all, 3).toList shouldBe List("a", "b", "c", "d")
-      valueIterator(3, Array(0, 1, 0, 2), Array("d", "c", "b", "a"), all, 0).toList shouldBe Nil
-      valueIterator(3, Array(0, 1, 0, 2), Array("d", "c", "b", "a"), all, 1).toList shouldBe List("a")
-      valueIterator(3, Array(0, 1, 0, 2), Array("d", "c", "b", "a"), all, 2).toList shouldBe List("a", "b", "c")
-      valueIterator(3, Array(0, 1, 0, 2), Array("d", "c", "b", "a"), all, 3).toList shouldBe List("a", "b", "c", "d")
+      valuesIteratorWithLimit(0, Array(0), Array("a"), all, 0).toList shouldBe Nil
+      valuesIteratorWithLimit(0, Array(0), Array("a"), all, 1).toList shouldBe List("a")
+      valuesIteratorWithLimit(0, Array(0), Array("a"), none, 1).toList shouldBe Nil
+      valuesIteratorWithLimit(1, Array(0, 1), Array("b", "a"), all, 0).toList shouldBe Nil
+      valuesIteratorWithLimit(1, Array(0, 1), Array("b", "a"), all, 1).toList shouldBe List("a")
+      valuesIteratorWithLimit(1, Array(0, 1), Array("b", "a"), all, 2).toList shouldBe List("a", "b")
+      valuesIteratorWithLimit(2, Array(0, 1, 1), Array("c", "b", "a"), all, 0).toList shouldBe Nil
+      valuesIteratorWithLimit(2, Array(0, 1, 1), Array("c", "b", "a"), all, 1).toList shouldBe List("a")
+      valuesIteratorWithLimit(2, Array(0, 1, 1), Array("c", "b", "a"), all, 2).toList shouldBe List("a", "b")
+      valuesIteratorWithLimit(2, Array(0, 1, 1), Array("c", "b", "a"), all, 3).toList shouldBe List("a", "b", "c")
+      valuesIteratorWithLimit(2, Array(0, 1, 1), Array("c", "b", "a"), none, 3).toList shouldBe Nil
+      valuesIteratorWithLimit(2, Array(0, 0, 2), Array("c", "b", "a"), all, 0).toList shouldBe Nil
+      valuesIteratorWithLimit(2, Array(0, 0, 2), Array("c", "b", "a"), all, 1).toList shouldBe List("a")
+      valuesIteratorWithLimit(2, Array(0, 0, 2), Array("c", "b", "a"), all, 2).toList shouldBe List("a", "b", "c")
+      valuesIteratorWithLimit(2, Array(0, 0, 2), Array("c", "b", "a"), none, 2).toList shouldBe Nil
+      valuesIteratorWithLimit(3, Array(0, 0, 1, 2), Array("d", "c", "b", "a"), all, 0).toList shouldBe Nil
+      valuesIteratorWithLimit(3, Array(0, 0, 1, 2), Array("d", "c", "b", "a"), all, 1).toList shouldBe List("a")
+      valuesIteratorWithLimit(3, Array(0, 0, 1, 2), Array("d", "c", "b", "a"), all, 2).toList shouldBe List(
+        "a",
+        "b",
+        "d"
+      )
+      valuesIteratorWithLimit(3, Array(0, 0, 1, 2), Array("d", "c", "b", "a"), all, 3).toList shouldBe List(
+        "a",
+        "b",
+        "c",
+        "d"
+      )
+      valuesIteratorWithLimit(3, Array(0, 1, 0, 2), Array("d", "c", "b", "a"), all, 0).toList shouldBe Nil
+      valuesIteratorWithLimit(3, Array(0, 1, 0, 2), Array("d", "c", "b", "a"), all, 1).toList shouldBe List("a")
+      valuesIteratorWithLimit(3, Array(0, 1, 0, 2), Array("d", "c", "b", "a"), all, 2).toList shouldBe List(
+        "a",
+        "b",
+        "c"
+      )
+      valuesIteratorWithLimit(3, Array(0, 1, 0, 2), Array("d", "c", "b", "a"), all, 3).toList shouldBe List(
+        "a",
+        "b",
+        "c",
+        "d"
+      )
+    }
+
+    "iterate over tree's branches" in {
+      val v = "abcdefghijklmnopqrtuvxyz".apply(_)
+      branchesIterator(0, Array(0), v).map(_.toList).toList shouldBe List(List('a'))
+      branchesIterator(1, Array(0, 1), v).map(_.toList).toList shouldBe List(List('b', 'a'))
+      branchesIterator(2, Array(0, 1, 1), v).map(_.toList).toList shouldBe List(List('c', 'b', 'a'))
+      branchesIterator(2, Array(0, 0, 2), v).map(_.toList).toList shouldBe List(List('c', 'b'), List('c', 'a'))
+      branchesIterator(3, Array(0, 0, 0, 3), v).map(_.toList).toList shouldBe List(
+        List('d', 'c'),
+        List('d', 'b'),
+        List('d', 'a')
+      )
+      branchesIterator(3, Array(0, 0, 2, 1), v).map(_.toList).toList shouldBe List(
+        List('d', 'c', 'b'),
+        List('d', 'c', 'a')
+      )
+      branchesIterator(8, Array(0, 1, 0, 1, 0, 2, 0, 2, 2), v).map(_.toList).toList shouldBe List(
+        List('i', 'h', 'g'),
+        List('i', 'h', 'f', 'e'),
+        List('i', 'h', 'f', 'd', 'c'),
+        List('i', 'b', 'a')
+      )
     }
 
     "iterate over tree's branches as values lists without filter" in {
       val v: Int => Int = _ * 10
       val f: Iterable[Int] => Boolean = _ => true
-      branchIterator(0, Array(0), v, f, 0).map(_.toList).toList shouldBe Nil
-      branchIterator(0, Array(0), v, f, 10).map(_.toList).toList shouldBe List(List(0))
-      branchIterator(1, Array(0, 1), v, f, 10).map(_.toList).toList shouldBe List(List(10, 0))
-      branchIterator(2, Array(0, 1, 1), v, f, 10).map(_.toList).toList shouldBe List(List(20, 10, 0))
-      branchIterator(2, Array(0, 0, 2), v, f, 10).map(_.toList).toList shouldBe List(List(20, 10), List(20, 0))
-      branchIterator(3, Array(0, 0, 0, 3), v, f, 10).map(_.toList).toList shouldBe List(
+      branchesIteratorWithLimit(0, Array(0), v, f, 0).map(_.toList).toList shouldBe Nil
+      branchesIteratorWithLimit(0, Array(0), v, f, 10).map(_.toList).toList shouldBe List(List(0))
+      branchesIteratorWithLimit(1, Array(0, 1), v, f, 10).map(_.toList).toList shouldBe List(List(10, 0))
+      branchesIteratorWithLimit(2, Array(0, 1, 1), v, f, 10).map(_.toList).toList shouldBe List(List(20, 10, 0))
+      branchesIteratorWithLimit(2, Array(0, 0, 2), v, f, 10).map(_.toList).toList shouldBe List(
+        List(20, 10),
+        List(20, 0)
+      )
+      branchesIteratorWithLimit(3, Array(0, 0, 0, 3), v, f, 10).map(_.toList).toList shouldBe List(
         List(30, 20),
         List(30, 10),
         List(30, 0)
       )
-      branchIterator(3, Array(0, 0, 2, 1), v, f, 10).map(_.toList).toList shouldBe List(
+      branchesIteratorWithLimit(3, Array(0, 0, 2, 1), v, f, 10).map(_.toList).toList shouldBe List(
         List(30, 20, 10),
         List(30, 20, 0)
       )
-      branchIterator(3, Array(0, 0, 2, 1), v, f, 0).map(_.toList).toList shouldBe Nil
-      branchIterator(3, Array(0, 0, 2, 1), v, f, 1).map(_.toList).toList shouldBe List(List(30))
-      branchIterator(3, Array(0, 0, 2, 1), v, f, 2).map(_.toList).toList shouldBe List(List(30, 20))
-      branchIterator(3, Array(0, 0, 2, 1), v, f, 3).map(_.toList).toList shouldBe List(
+      branchesIteratorWithLimit(3, Array(0, 0, 2, 1), v, f, 0).map(_.toList).toList shouldBe Nil
+      branchesIteratorWithLimit(3, Array(0, 0, 2, 1), v, f, 1).map(_.toList).toList shouldBe List(List(30))
+      branchesIteratorWithLimit(3, Array(0, 0, 2, 1), v, f, 2).map(_.toList).toList shouldBe List(List(30, 20))
+      branchesIteratorWithLimit(3, Array(0, 0, 2, 1), v, f, 3).map(_.toList).toList shouldBe List(
         List(30, 20, 10),
         List(30, 20, 0)
       )
@@ -159,26 +203,32 @@ class ArrayTreeSpec extends AnyWordSpecCompat {
 
     "iterate over tree's subtrees" in {
       val f: Tree[String] => Boolean = _ => true
-      val l = treeIterator(0, IntSlice(0), Slice("a"), f).toList
+      val l = treesIteratorWithFilter(0, IntSlice(0), Slice("a"), f).toList
       l shouldBe List(Tree("a"))
       l should not be List(Tree("b"))
       l should not be List(Tree("a", Tree("b")))
       l should not be Nil
-      treeIterator(1, IntSlice(0, 1), Slice("b", "a"), f).toList shouldBe List(Tree("a", Tree("b")), Tree("b"))
-      treeIterator(2, IntSlice(0, 1, 1), Slice("c", "b", "a"), f).toList shouldBe List(
+      treesIteratorWithFilter(1, IntSlice(0, 1), Slice("b", "a"), f).toList shouldBe List(
+        Tree("a", Tree("b")),
+        Tree("b")
+      )
+      treesIteratorWithFilter(2, IntSlice(0, 1, 1), Slice("c", "b", "a"), f).toList shouldBe List(
         Tree("a", Tree("b", Tree("c"))),
         Tree("b", Tree("c")),
         Tree("c")
       )
-      treeIterator(1, IntSlice(0, 1, 1), Slice("c", "b", "a"), f).toList shouldBe List(Tree("b", Tree("c")), Tree("c"))
-      treeIterator(2, IntSlice(0, 0, 2), Slice("c", "b", "a"), f).toList shouldBe List(
+      treesIteratorWithFilter(1, IntSlice(0, 1, 1), Slice("c", "b", "a"), f).toList shouldBe List(
+        Tree("b", Tree("c")),
+        Tree("c")
+      )
+      treesIteratorWithFilter(2, IntSlice(0, 0, 2), Slice("c", "b", "a"), f).toList shouldBe List(
         Tree("a", Tree("b"), Tree("c")),
         Tree("b"),
         Tree("c")
       )
-      treeIterator(1, IntSlice(0, 0, 2), Slice("c", "b", "a"), f).toList shouldBe List(Tree("b"))
-      treeIterator(0, IntSlice(0, 0, 2), Slice("c", "b", "a"), f).toList shouldBe List(Tree("c"))
-      treeIterator(2, IntSlice(0, 0, 1, 2, 1), Slice("e", "d", "c", "b", "a"), f).toList shouldBe List(
+      treesIteratorWithFilter(1, IntSlice(0, 0, 2), Slice("c", "b", "a"), f).toList shouldBe List(Tree("b"))
+      treesIteratorWithFilter(0, IntSlice(0, 0, 2), Slice("c", "b", "a"), f).toList shouldBe List(Tree("c"))
+      treesIteratorWithFilter(2, IntSlice(0, 0, 1, 2, 1), Slice("e", "d", "c", "b", "a"), f).toList shouldBe List(
         Tree("c", Tree("d")),
         Tree("d")
       )

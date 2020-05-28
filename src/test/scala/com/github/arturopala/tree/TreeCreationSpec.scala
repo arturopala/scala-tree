@@ -130,10 +130,23 @@ class TreeCreationSpec extends FunSuite {
       tree9.isLeaf shouldBe false
       tree9.countBranches(_.nonEmpty) shouldBe 3
       tree9.countBranches(_.toSeq.contains("e")) shouldBe 2
+      tree9.childrenValues.toList shouldBe List("b", "e")
+      tree9.children.toList shouldBe List(
+        Tree("b", Tree("c", Tree("d"))),
+        Tree("e", Tree("f", Tree("g")), Tree("h", Tree("i")))
+      )
       showAsArrays(tree9, "\n") shouldBe
         """[a,b,c,d]
           |[a,e,f,g]
           |[a,e,h,i]""".stripMargin
+
+      tree7.childrenCount shouldBe 3
+      tree7.childrenValues.toList shouldBe List("b", "d", "g")
+      tree7.children.toList shouldBe List(
+        Tree("b", Tree("c")),
+        Tree("d", Tree("e", Tree("f"))),
+        Tree("g")
+      )
     }
 
   }
