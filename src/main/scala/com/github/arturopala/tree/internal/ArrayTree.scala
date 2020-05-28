@@ -30,7 +30,22 @@ import scala.reflect.ClassTag
   */
 object ArrayTree {
 
-  /** Iterates over filtered values, top-down, depth-first. */
+  /** Iterates over all values of the tree.
+    * @param depthFirst if true, enumerates values depth-first,
+    *                   if false, breadth-first. */
+  final def valuesIterator[T: ClassTag](
+    startIndex: Int,
+    treeStructure: Int => Int,
+    treeValues: Int => T,
+    depthFirst: Boolean
+  ): Iterator[T] =
+    (if (depthFirst) ArrayTreeFunctions.nodesIndexIteratorDepthFirst(startIndex, treeStructure)
+     else ArrayTreeFunctions.nodesIndexIteratorBreadthFirst(startIndex, treeStructure))
+      .map(treeValues)
+
+  /** Iterates over filtered values of the tree.
+    * @param depthFirst if true, enumerates values depth-first,
+    *                   if false, breadth-first. */
   final def valuesIteratorWithLimit[T: ClassTag](
     startIndex: Int,
     treeStructure: Int => Int,
@@ -83,7 +98,9 @@ object ArrayTree {
       pred
     )
 
-  /** Iterates over all subtrees (including the tree itself), top-down, depth-first. */
+  /** Iterates over all subtrees (including the tree itself).
+    * @param depthFirst if true, enumerates values depth-first,
+    *                   if false, breadth-first. */
   final def treesIterator[T: ClassTag](
     startIndex: Int,
     treeStructure: IntSlice,
@@ -101,7 +118,9 @@ object ArrayTree {
       .map(treeAt(_, treeStructure, treeValues))
   }
 
-  /** Iterates over filtered subtrees (including the tree itself), top-down, depth-first. */
+  /** Iterates over filtered subtrees (including the tree itself).
+    * @param depthFirst if true, enumerates values depth-first,
+    *                   if false, breadth-first. */
   final def treesIteratorWithFilter[T: ClassTag](
     startIndex: Int,
     treeStructure: IntSlice,
@@ -122,7 +141,9 @@ object ArrayTree {
     )
   }
 
-  /** Iterates over filtered subtrees (including the tree itself) with depth limit, top-down, depth-first. */
+  /** Iterates over filtered subtrees (including the tree itself) with depth limit.
+    * @param depthFirst if true, enumerates values depth-first,
+    *                   if false, breadth-first. */
   final def treesIteratorWithLimit[T: ClassTag](
     startIndex: Int,
     treeStructure: IntSlice,
