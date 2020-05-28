@@ -36,10 +36,12 @@ object ArrayTree {
     treeStructure: Int => Int,
     treeValues: Int => T,
     pred: T => Boolean,
-    maxDepth: Int
+    maxDepth: Int,
+    depthFirst: Boolean
   ): Iterator[T] =
     new MapFilterIterator[Int, T](
-      ArrayTreeFunctions.nodesIndexIteratorDepthFirstWithLimit(startIndex, treeStructure, maxDepth),
+      if (depthFirst) ArrayTreeFunctions.nodesIndexIteratorDepthFirstWithLimit(startIndex, treeStructure, maxDepth)
+      else ArrayTreeFunctions.nodesIndexIteratorBreadthFirstWithLimit(startIndex, treeStructure, maxDepth),
       treeValues,
       pred
     )
@@ -85,14 +87,17 @@ object ArrayTree {
   final def treesIterator[T: ClassTag](
     startIndex: Int,
     treeStructure: IntSlice,
-    treeValues: Slice[T]
+    treeValues: Slice[T],
+    depthFirst: Boolean
   ): Iterator[Tree[T]] = {
     assert(
       treeStructure.length == treeValues.length,
       "When iterating over the tree's subtrees, structure and values mst be the same size."
     )
-    ArrayTreeFunctions
-      .nodesIndexIteratorDepthFirst(startIndex, treeStructure)
+    (if (depthFirst)
+       ArrayTreeFunctions
+         .nodesIndexIteratorDepthFirst(startIndex, treeStructure)
+     else ArrayTreeFunctions.nodesIndexIteratorBreadthFirst(startIndex, treeStructure))
       .map(treeAt(_, treeStructure, treeValues))
   }
 
@@ -101,14 +106,17 @@ object ArrayTree {
     startIndex: Int,
     treeStructure: IntSlice,
     treeValues: Slice[T],
-    pred: Tree[T] => Boolean
+    pred: Tree[T] => Boolean,
+    depthFirst: Boolean
   ): Iterator[Tree[T]] = {
     assert(
       treeStructure.length == treeValues.length,
       "When iterating over the tree's subtrees, structure and values mst be the same size."
     )
     new MapFilterIterator[Int, Tree[T]](
-      ArrayTreeFunctions.nodesIndexIteratorDepthFirst(startIndex, treeStructure),
+      if (depthFirst)
+        ArrayTreeFunctions.nodesIndexIteratorDepthFirst(startIndex, treeStructure)
+      else ArrayTreeFunctions.nodesIndexIteratorBreadthFirst(startIndex, treeStructure),
       treeAt(_, treeStructure, treeValues),
       pred
     )
@@ -120,14 +128,16 @@ object ArrayTree {
     treeStructure: IntSlice,
     treeValues: Slice[T],
     pred: Tree[T] => Boolean,
-    maxDepth: Int
+    maxDepth: Int,
+    depthFirst: Boolean
   ): Iterator[Tree[T]] = {
     assert(
       treeStructure.length == treeValues.length,
       "When iterating over the tree's subtrees, structure and values mst be the same size."
     )
     new MapFilterIterator[Int, Tree[T]](
-      ArrayTreeFunctions.nodesIndexIteratorDepthFirstWithLimit(startIndex, treeStructure, maxDepth),
+      if (depthFirst) ArrayTreeFunctions.nodesIndexIteratorDepthFirstWithLimit(startIndex, treeStructure, maxDepth)
+      else ArrayTreeFunctions.nodesIndexIteratorBreadthFirstWithLimit(startIndex, treeStructure, maxDepth),
       treeAt(_, treeStructure, treeValues),
       pred
     )

@@ -43,7 +43,7 @@ abstract class ArrayTreeLike[T: ClassTag] extends TreeLike[T] {
   final override def valuesWithFilter(pred: T => Boolean, maxDepth: Int = Int.MaxValue): Iterable[T] = iterableFrom {
     if (maxDepth >= height) tree.content.reverseIterator(pred)
     else
-      ArrayTree.valuesIteratorWithLimit(tree.structure.length - 1, tree.structure, tree.content, pred, maxDepth)
+      ArrayTree.valuesIteratorWithLimit(tree.structure.length - 1, tree.structure, tree.content, pred, maxDepth, true)
   }
 
   final override def childrenValues: Iterable[T] =
@@ -63,13 +63,14 @@ abstract class ArrayTreeLike[T: ClassTag] extends TreeLike[T] {
     )
 
   final override def trees: Iterable[Tree[T]] =
-    iterableFrom(ArrayTree.treesIterator(tree.structure.length - 1, tree.structure, tree.content))
+    iterableFrom(ArrayTree.treesIterator(tree.structure.length - 1, tree.structure, tree.content, true))
 
   final override def treesWithFilter(pred: Tree[T] => Boolean, maxDepth: Int = Int.MaxValue): Iterable[Tree[T]] =
     iterableFrom {
       if (maxDepth >= height)
-        ArrayTree.treesIteratorWithFilter(tree.structure.length - 1, tree.structure, tree.content, pred)
-      else ArrayTree.treesIteratorWithLimit(tree.structure.length - 1, tree.structure, tree.content, pred, maxDepth)
+        ArrayTree.treesIteratorWithFilter(tree.structure.length - 1, tree.structure, tree.content, pred, true)
+      else
+        ArrayTree.treesIteratorWithLimit(tree.structure.length - 1, tree.structure, tree.content, pred, maxDepth, true)
     }
 
   final override def branches: Iterable[Iterable[T]] =
