@@ -16,6 +16,8 @@
 
 package com.github.arturopala.tree
 
+import com.github.arturopala.tree.TreeMode.Traversing.{TopDownBreadthFirst, TopDownDepthFirst}
+
 class TreeValuesSpec extends FunSuite {
 
   test(Inflated, new Spec with InflatedTestTrees)
@@ -23,17 +25,30 @@ class TreeValuesSpec extends FunSuite {
 
   sealed trait Spec extends AnyWordSpecCompat with TestTrees {
 
-    "list all nodes" in {
-      tree0.values shouldBe Nil
-      tree1.values shouldBe List("a")
-      tree2.values shouldBe List("a", "b")
-      tree3_1.values shouldBe List("a", "b", "c")
-      tree3_2.values shouldBe List("a", "b", "c")
-      tree4_1.values shouldBe List("a", "b", "c", "d")
-      tree4_2.values shouldBe List("a", "b", "c", "d")
-      tree4_3.values shouldBe List("a", "b", "c", "d")
-      tree7.values shouldBe List("a", "b", "c", "d", "e", "f", "g")
-      tree9.values shouldBe List("a", "b", "c", "d", "e", "f", "g", "h", "i")
+    "list all nodes top-down and depth-first" in {
+      tree0.values(TopDownDepthFirst) shouldBe Nil
+      tree1.values(TopDownDepthFirst) shouldBe List("a")
+      tree2.values(TopDownDepthFirst) shouldBe List("a", "b")
+      tree3_1.values(TopDownDepthFirst) shouldBe List("a", "b", "c")
+      tree3_2.values(TopDownDepthFirst) shouldBe List("a", "b", "c")
+      tree4_1.values(TopDownDepthFirst) shouldBe List("a", "b", "c", "d")
+      tree4_2.values(TopDownDepthFirst) shouldBe List("a", "b", "c", "d")
+      tree4_3.values(TopDownDepthFirst) shouldBe List("a", "b", "c", "d")
+      tree7.values(TopDownDepthFirst) shouldBe List("a", "b", "c", "d", "e", "f", "g")
+      tree9.values(TopDownDepthFirst) shouldBe List("a", "b", "c", "d", "e", "f", "g", "h", "i")
+    }
+
+    "list all nodes top-down and breadth-first" in {
+      tree0.values(TopDownBreadthFirst) shouldBe Nil
+      tree1.values(TopDownBreadthFirst) shouldBe List("a")
+      tree2.values(TopDownBreadthFirst) shouldBe List("a", "b")
+      tree3_1.values(TopDownBreadthFirst) shouldBe List("a", "b", "c")
+      tree3_2.values(TopDownBreadthFirst) shouldBe List("a", "b", "c")
+      tree4_1.values(TopDownBreadthFirst) shouldBe List("a", "b", "c", "d")
+      tree4_2.values(TopDownBreadthFirst) shouldBe List("a", "b", "d", "c")
+      tree4_3.values(TopDownBreadthFirst) shouldBe List("a", "b", "c", "d")
+      tree7.values(TopDownBreadthFirst) shouldBe List("a", "b", "d", "g", "c", "e", "f")
+      tree9.values(TopDownBreadthFirst) shouldBe List("a", "b", "e", "c", "f", "h", "d", "g", "i")
     }
 
     "iterate over nodes with filter" in {

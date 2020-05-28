@@ -18,6 +18,8 @@ package com.github.arturopala.tree.internal
 
 import com.github.arturopala.bufferandslice.{Buffer, IntBuffer, IntSlice, Slice}
 import com.github.arturopala.tree.Tree.ArrayTree
+import com.github.arturopala.tree.TreeMode.Traversing
+import com.github.arturopala.tree.TreeMode.Traversing.TopDownDepthFirst
 import com.github.arturopala.tree.{Tree, TreeBuilder, TreeLike}
 import com.github.arturopala.tree.internal.IterableOps._
 
@@ -32,13 +34,16 @@ abstract class ArrayTreeLike[T: ClassTag] extends TreeLike[T] {
 
   protected val tree: ArrayTree[T]
 
-  private def all[A]: A => Boolean = _ => true
-
   final override def head: T = tree.content.last
 
   final override def headOption: Option[T] = Some(tree.content.last)
 
-  final override def values: Iterable[T] = iterableFrom(tree.content.reverseIterator)
+  final override def values(mode: Traversing = TopDownDepthFirst): Iterable[T] =
+    if (mode.isDepthFirst) iterableFrom(tree.content.reverseIterator)
+    else
+      iterableFrom(
+        ArrayTree.valuesIterator(tree.structure.length - 1, tree.structure, tree.content, depthFirst = false)
+      )
 
   final override def valuesWithFilter(pred: T => Boolean, maxDepth: Int = Int.MaxValue): Iterable[T] = iterableFrom {
     if (maxDepth >= height) tree.content.reverseIterator(pred)

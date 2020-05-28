@@ -17,6 +17,8 @@
 package com.github.arturopala.tree
 
 import com.github.arturopala.bufferandslice.{Buffer, IntBuffer, IntSlice, Slice}
+import com.github.arturopala.tree.TreeMode.Traversing
+import com.github.arturopala.tree.TreeMode.Traversing._
 
 import scala.collection.Iterator
 import scala.reflect.ClassTag
@@ -110,8 +112,14 @@ trait TreeLike[+T] {
   def childrenValues: Iterable[T]
 
   /** Iterates over all the node's values in this tree.
+    * @param mode tree traversing mode, either depth-first or breadth-first
     * @group values */
-  def values: Iterable[T]
+  def values(mode: Traversing = TopDownDepthFirst): Iterable[T]
+
+  /** Iterates over all the leaf's values in this tree.
+    * @note Leaf is the node without children.
+    * @group values */
+  def leafs: Iterable[T] = ???
 
   /** Iterates over filtered node's values, top-down, depth-first.
     * @param pred return true to include the value in the result, false otherwise.

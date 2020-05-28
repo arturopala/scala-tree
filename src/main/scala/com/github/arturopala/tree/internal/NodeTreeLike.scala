@@ -19,6 +19,8 @@ package com.github.arturopala.tree.internal
 import com.github.arturopala.tree.{Tree, TreeBuilder, TreeLike}
 import com.github.arturopala.tree.Tree.{ArrayTree, NodeTree, empty}
 import com.github.arturopala.bufferandslice.{Buffer, IntBuffer, IntSlice, Slice}
+import com.github.arturopala.tree.TreeMode.Traversing
+import com.github.arturopala.tree.TreeMode.Traversing.TopDownDepthFirst
 import com.github.arturopala.tree.internal.IterableOps._
 
 import scala.collection.Iterator
@@ -37,7 +39,8 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
 
   @`inline` final def isEmpty: Boolean = node.size == 0
 
-  final override def values: Iterable[T] = iterableFrom(NodeTree.valuesIterator(node, true))
+  final override def values(mode: Traversing = TopDownDepthFirst): Iterable[T] =
+    iterableFrom(NodeTree.valuesIterator(node, mode.isDepthFirst))
 
   final def valuesUnsafe: List[T] = node.head :: node.children.flatMap(_.valuesUnsafe)
 

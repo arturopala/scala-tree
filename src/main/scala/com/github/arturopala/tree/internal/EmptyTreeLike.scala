@@ -19,6 +19,8 @@ package com.github.arturopala.tree.internal
 import com.github.arturopala.tree.Tree.empty
 import com.github.arturopala.tree.{Tree, TreeBuilder, TreeLike}
 import com.github.arturopala.bufferandslice.{Buffer, IntBuffer, IntSlice, Slice}
+import com.github.arturopala.tree.TreeMode.Traversing
+import com.github.arturopala.tree.TreeMode.Traversing.TopDownDepthFirst
 
 import scala.collection.Iterator
 import scala.reflect.ClassTag
@@ -37,7 +39,8 @@ trait EmptyTreeLike extends TreeLike[Nothing] {
   final override val childrenCount: Int = 0
   final override def head: Nothing = throw new NoSuchElementException
   final override val headOption: Option[Nothing] = None
-  final override val values: Iterable[Nothing] = Nil
+  final override def values(mode: Traversing = TopDownDepthFirst): Iterable[Nothing] =
+    Iterable.empty
 
   final override def valuesWithFilter(pred: Nothing => Boolean, maxDepth: Int = Int.MaxValue): Iterable[Nothing] =
     Iterable.empty

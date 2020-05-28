@@ -16,14 +16,16 @@
 
 package com.github.arturopala.tree
 
+import com.github.arturopala.tree.TreeMode.Traversing.TopDownDepthFirst
+
 class DeflatedTreeSpec extends AnyWordSpecCompat with DeflatedTestTrees {
 
   "DeflatedTree" should {
 
     "return nodes in the same order as an inflated tree" in {
-      TestTrees.tree3_2.values shouldBe tree3_2.values
-      TestTrees.tree7.values shouldBe tree7.values
-      TestTrees.tree9.values shouldBe tree9.values
+      TestTrees.tree3_2.values(TopDownDepthFirst) shouldBe tree3_2.values(TopDownDepthFirst)
+      TestTrees.tree7.values(TopDownDepthFirst) shouldBe tree7.values(TopDownDepthFirst)
+      TestTrees.tree9.values(TopDownDepthFirst) shouldBe tree9.values(TopDownDepthFirst)
     }
 
     "return children in the same order as an inflated tree" in {
