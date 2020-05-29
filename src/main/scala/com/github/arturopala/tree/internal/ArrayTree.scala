@@ -61,6 +61,26 @@ object ArrayTree {
       pred
     )
 
+  /** Iterates over filtered values and levels of the tree.
+    * @param depthFirst if true, enumerates values depth-first,
+    *                   if false, breadth-first. */
+  final def valuesAndLevelsIteratorWithLimit[T: ClassTag](
+    startIndex: Int,
+    treeStructure: Int => Int,
+    treeValues: Int => T,
+    pred: T => Boolean,
+    maxDepth: Int,
+    depthFirst: Boolean
+  ): Iterator[(Int, T, Boolean)] =
+    new MapFilterIterator[(Int, Int), (Int, T, Boolean)](
+      if (depthFirst)
+        ArrayTreeFunctions.nodesIndexAndLevelIteratorDepthFirstWithLimit(startIndex, treeStructure, maxDepth)
+      else
+        ArrayTreeFunctions.nodesIndexAndLevelIteratorBreadthFirstWithLimit(startIndex, treeStructure, maxDepth),
+      { case (level: Int, index: Int) => (level, treeValues(index), treeStructure(index) == 0) },
+      (t: (Int, T, Boolean)) => pred(t._2)
+    )
+
   /** Iterates over filtered tree's branches. */
   final def branchesIterator[T: ClassTag](
     startIndex: Int,

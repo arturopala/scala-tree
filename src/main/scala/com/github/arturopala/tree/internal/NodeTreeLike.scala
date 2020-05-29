@@ -53,6 +53,13 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
     else NodeTree.valuesIteratorWithLimit(pred, node, maxDepth, mode.isDepthFirst)
   }
 
+  def valuesAndLevelsWithFilter(
+    pred: T => Boolean,
+    mode: TraversingMode = TopDownDepthFirst,
+    maxDepth: Int = Int.MaxValue
+  ): Iterable[(Int, T, Boolean)] =
+    iterableFrom(NodeTree.valuesAndLevelsIteratorWithFilter(pred, node, maxDepth, mode.isDepthFirst))
+
   final override def childrenValues: Iterable[T] = iterableFrom(node.children.iterator.map(_.head))
 
   final override def trees(mode: TraversingMode = TopDownDepthFirst): Iterable[Tree[T]] =

@@ -81,55 +81,51 @@ object NodeTree {
   final def valuesIteratorWithFilter[T](pred: T => Boolean, node: NodeTree[T], depthFirst: Boolean): Iterator[T] =
     new FilterIterator(valuesIterator(node, depthFirst), pred)
 
-  /** Returns an iterator over the filtered nodes of the tree, goes depth-first with maxDepth limit.
-    * @note uses Vector internally */
-  final def valuesIteratorWithLimit2[T](
+  /** Returns an iterator over all the values and levels of the tree.
+    * @param depthFirst if true, enumerates values depth-first,
+    *                   if false, breadth-first.
+    */
+  final def valuesAndLevelsIterator[T](
+    node: NodeTree[T],
+    maxDepth: Int,
+    depthFirst: Boolean
+  ): Iterator[(Int, T, Boolean)] =
+    new Iterator[(Int, T, Boolean)] {
+
+      type Queue = Iterator[(Int, Tree[T])]
+      var queue: Queue =
+        if (maxDepth > 0) Iterator((1, node))
+        else Iterator.empty
+
+      override final def hasNext: Boolean = queue.nonEmpty
+
+      override final def next(): (Int, T, Boolean) =
+        if (queue.isEmpty) throw new NoSuchElementException()
+        else {
+          val (level, node @ Node2(head: T, children: Iterator[Tree[T]])) = queue.next
+          if (level < maxDepth)
+            queue =
+              if (depthFirst) children.map((level + 1, _)) ++: queue.trim
+              else queue.trim :++ children.map((level + 1, _))
+          else
+            queue = queue.trim
+          (level, head, node.isLeaf)
+        }
+    }
+
+  /** Returns an iterator over the filtered values and levels of the tree with maxDepth limit.
+    * @param depthFirst if true, enumerates values depth-first,
+    *                   if false, breadth-first.
+    */
+  final def valuesAndLevelsIteratorWithFilter[T](
     pred: T => Boolean,
     node: NodeTree[T],
     maxDepth: Int,
     depthFirst: Boolean
-  ): Iterator[T] =
-    new Iterator[T] {
+  ): Iterator[(Int, T, Boolean)] =
+    new FilterIterator(valuesAndLevelsIterator(node, maxDepth, depthFirst), (t: (Int, T, Boolean)) => pred(t._2))
 
-      type Queue = Vector[(Int, NodeTree[T])]
-      var queue: Queue =
-        if (maxDepth > 0) seekNext(Vector((1, node)))
-        else Vector.empty
-
-      override final def hasNext: Boolean = queue.nonEmpty
-
-      @tailrec
-      override final def next(): T =
-        if (queue.isEmpty) throw new NoSuchElementException()
-        else {
-          val (level, Node(head, children)) = queue.head
-          queue =
-            if (level < maxDepth)
-              seekNext(
-                if (depthFirst) children.map((level + 1, _)) ++: queue.safeTail
-                else queue.safeTail ++ children.map((level + 1, _))
-              )
-            else seekNext(queue.safeTail)
-
-          if (pred(head)) head else next()
-        }
-
-      @tailrec
-      private final def seekNext(q: Queue): Queue =
-        if (q.isEmpty) q
-        else {
-          val (level, Node(head, children)) = q.head
-          if (pred(head)) q
-          else if (level < maxDepth)
-            seekNext(
-              if (depthFirst) children.map((level + 1, _)) ++: q.safeTail
-              else q.safeTail ++ children.map((level + 1, _))
-            )
-          else seekNext(q.safeTail)
-        }
-    }
-
-  /** Returns an iterator over the filtered nodes of the tree, goes depth-first with maxDepth limit.
+  /** Returns an iterator over the filtered nodes of the tree with maxDepth limit.
     * @note uses Iterator internally */
   final def valuesIteratorWithLimit[T](
     pred: T => Boolean,
@@ -265,7 +261,7 @@ object NodeTree {
       else contains(nextOpt.get, path.tail, requiresFullMatch, toPathItem)
     }
 
-  /** Returns an iterator over all (sub)trees of the tree inclusive, goes depth-first. */
+  /** Returns an iterator over all (sub)trees of the tree inclusive. */
   final def treesIterator[T](node: NodeTree[T], depthFirst: Boolean): Iterator[Tree[T]] = new Iterator[Tree[T]] {
 
     type Queue = Iterator[Tree[T]]
@@ -284,7 +280,7 @@ object NodeTree {
       }
   }
 
-  /** Returns an iterator over filtered (sub)trees of the tree, goes depth-first. */
+  /** Returns an iterator over filtered (sub)trees of the tree. */
   final def treesIteratorWithFilter[T](
     pred: Tree[T] => Boolean,
     node: NodeTree[T],
@@ -292,7 +288,7 @@ object NodeTree {
   ): Iterator[Tree[T]] =
     new FilterIterator(treesIterator(node, depthFirst), pred)
 
-  /** Returns an iterator over filtered (sub)trees of the tree with depth limit, goes depth-first.
+  /** Returns an iterator over filtered (sub)trees of the tree with depth limit.
     * @note uses Iterator internally */
   final def treesIteratorWithLimit[T](
     pred: Tree[T] => Boolean,
@@ -339,7 +335,7 @@ object NodeTree {
       }
     }
 
-  /** Returns an iterator over filtered (sub)trees of the tree with depth limit, goes depth-first.
+  /** Returns an iterator over filtered (sub)trees of the tree with depth limit.
     * @note uses Vector internally */
   final def treesIteratorWithLimit2[T](pred: Tree[T] => Boolean, node: NodeTree[T], maxDepth: Int): Iterator[Tree[T]] =
     new Iterator[Tree[T]] {

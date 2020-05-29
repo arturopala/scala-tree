@@ -132,16 +132,17 @@ trait TreeLike[+T] {
     maxDepth: Int = Int.MaxValue
   ): Iterable[T]
 
-  /** Iterates over filtered node's values, paired with the node's level, top-down, depth-first.
+  /** Iterates over filtered node's values, paired with the node's level and isLeaf flag.
     * @param pred return true to include the value in the result, false otherwise.
     * @param mode tree traversing mode, either depth-first or breadth-first
     * @param maxDepth number of levels to go inside the tree, default to max
+    * @return an iterable of (level, value, isLeaf)
     * @group values */
-  def valueAndLevelPairs(
+  def valuesAndLevelsWithFilter(
     pred: T => Boolean,
     mode: TraversingMode = TopDownDepthFirst,
     maxDepth: Int = Int.MaxValue
-  ): Iterable[(Int, T)] = ???
+  ): Iterable[(Int, T, Boolean)]
 
   // TREES
 
@@ -170,7 +171,7 @@ trait TreeLike[+T] {
     * @param mode tree traversing mode, either depth-first or breadth-first
     * @param maxDepth number of levels to go inside the tree, default to max
     * @group sub-trees */
-  def treeAndLevelPairs(
+  def treesAndLevelsWithFilter(
     pred: Tree[T] => Boolean,
     mode: TraversingMode = TopDownDepthFirst,
     maxDepth: Int = Int.MaxValue

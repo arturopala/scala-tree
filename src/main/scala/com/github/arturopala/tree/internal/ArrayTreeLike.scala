@@ -56,6 +56,23 @@ abstract class ArrayTreeLike[T: ClassTag] extends TreeLike[T] {
         .valuesIteratorWithLimit(tree.structure.top, tree.structure, tree.content, pred, maxDepth, mode.isDepthFirst)
   }
 
+  def valuesAndLevelsWithFilter(
+    pred: T => Boolean,
+    mode: TraversingMode = TopDownDepthFirst,
+    maxDepth: Int = Int.MaxValue
+  ): Iterable[(Int, T, Boolean)] =
+    iterableFrom(
+      ArrayTree
+        .valuesAndLevelsIteratorWithLimit(
+          tree.structure.top,
+          tree.structure,
+          tree.content,
+          pred,
+          maxDepth,
+          mode.isDepthFirst
+        )
+    )
+
   final override def childrenValues: Iterable[T] =
     iterableFrom(
       ArrayTreeFunctions

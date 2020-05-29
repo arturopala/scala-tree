@@ -381,7 +381,7 @@ object ArrayTreeFunctions {
         } else throw new NoSuchElementException
     }
 
-  /** Iterates over tree's nodes down to the specified depth, top-down, depth first. */
+  /** Iterates over tree's node indexes down to the specified depth, top-down, depth first. */
   final def nodesIndexIteratorDepthFirstWithLimit(
     startIndex: Int,
     treeStructure: Int => Int,
@@ -425,6 +425,52 @@ object ArrayTreeFunctions {
         }
     }
 
+  /** Iterates over pairs of (level, index) down to the specified depth, top-down, depth first.
+    * @return iterator over tuples of (level, index) */
+  final def nodesIndexAndLevelIteratorDepthFirstWithLimit(
+    startIndex: Int,
+    treeStructure: Int => Int,
+    maxDepth: Int = Int.MaxValue
+  ): Iterator[(Int, Int)] =
+    new Iterator[(Int, Int)] {
+
+      var hasNext: Boolean = false
+      private var i: (Int, Int) = (1, startIndex)
+
+      private val counters = new IntBuffer(8)
+      private val indexes = new IntBuffer(8)
+
+      if (maxDepth > 0) {
+        indexes.push(startIndex)
+        seekNext(false)
+      }
+
+      final override def next(): (Int, Int) =
+        if (hasNext) {
+          val result = i
+          seekNext(true)
+          result
+        } else throw new NoSuchElementException
+
+      final def seekNext(check: Boolean): Unit =
+        if (check && counters.isEmpty) { hasNext = false }
+        else {
+          val index = indexes.peek
+          i = (counters.length + 1, index)
+          if (index < 0) { hasNext = false }
+          else {
+            hasNext = true
+            val c = treeStructure(index)
+            if (c == 0 || counters.length >= maxDepth - 1) {
+              BranchIteratorUtils.retract(counters, indexes)
+            } else {
+              counters.push(c)
+              writeChildrenIndexesToBuffer(index, treeStructure, indexes, indexes.length)
+            }
+          }
+        }
+    }
+
   /** Iterates over tree's node indexes down to the specified depth, top-down, breadth-first. */
   final def nodesIndexIteratorBreadthFirstWithLimit(
     startIndex: Int,
@@ -456,6 +502,41 @@ object ArrayTreeFunctions {
             }
           }
           index
+        } else throw new NoSuchElementException
+    }
+
+  /** Iterates over pairs of (level, index) down to the specified depth, top-down, breadth-first.
+    * @return iterator over tuples of (level, index) */
+  final def nodesIndexAndLevelIteratorBreadthFirstWithLimit(
+    startIndex: Int,
+    treeStructure: Int => Int,
+    maxDepth: Int = Int.MaxValue
+  ): Iterator[(Int, Int)] =
+    new Iterator[(Int, Int)] {
+
+      private val queue: IntBuffer =
+        if (startIndex < 0 || maxDepth < 1) IntBuffer.empty
+        else IntBuffer(startIndex)
+
+      private val levels: IntBuffer =
+        if (startIndex < 0 || maxDepth < 1) IntBuffer.empty
+        else IntBuffer(1)
+
+      final def hasNext: Boolean = queue.nonEmpty
+
+      final override def next(): (Int, Int) =
+        if (hasNext) {
+          val index = queue.pop
+          val level = levels.pop
+          if (level < maxDepth) {
+            val numberOfChildren = treeStructure(index)
+            if (numberOfChildren > 0) {
+              queue.shiftRight(0, numberOfChildren)
+              writeChildrenIndexesToBuffer(index, treeStructure, queue, 0)
+              levels.insertFromIterator(0, numberOfChildren, Iterator.continually(level + 1))
+            }
+          }
+          (level, index)
         } else throw new NoSuchElementException
     }
 

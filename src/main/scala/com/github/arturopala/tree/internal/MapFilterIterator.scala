@@ -27,7 +27,7 @@ final class MapFilterIterator[A, B](iterator: Iterator[A], f: A => B, pred: B =>
   var hasNext: Boolean = false
   var v: B = seekNext
 
-  override def next(): B =
+  final override def next(): B =
     if (hasNext) {
       val value = v
       v = seekNext
@@ -35,7 +35,7 @@ final class MapFilterIterator[A, B](iterator: Iterator[A], f: A => B, pred: B =>
     } else throw new NoSuchElementException
 
   @tailrec
-  def seekNext: B =
+  final def seekNext: B =
     if (iterator.hasNext) {
       val i = iterator.next()
       v = f(i)
@@ -59,7 +59,7 @@ final class FilterIterator[A](iterator: Iterator[A], pred: A => Boolean) extends
 
   seekNext()
 
-  override def next(): A =
+  final override def next(): A =
     if (hasNext) {
       val value = v
       seekNext()
@@ -67,7 +67,7 @@ final class FilterIterator[A](iterator: Iterator[A], pred: A => Boolean) extends
     } else throw new NoSuchElementException
 
   @tailrec
-  def seekNext(): Unit =
+  final def seekNext(): Unit =
     if (iterator.hasNext) {
       v = iterator.next()
       if (pred(v)) {

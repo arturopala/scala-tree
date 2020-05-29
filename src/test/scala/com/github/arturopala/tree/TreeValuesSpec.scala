@@ -51,50 +51,96 @@ class TreeValuesSpec extends FunSuite {
       tree9.values(TopDownBreadthFirst) shouldBe List("a", "b", "e", "c", "f", "h", "d", "g", "i")
     }
 
-    "iterate over nodes with filter" in {
-      tree0.valuesWithFilter(all).toList shouldBe Nil
-      tree1.valuesWithFilter(all).toList shouldBe List("a")
-      tree2.valuesWithFilter(all).toList shouldBe List("a", "b")
-      tree3_1.valuesWithFilter(all).toList shouldBe List("a", "b", "c")
-      tree3_2.valuesWithFilter(all).toList shouldBe List("a", "b", "c")
-      tree4_1.valuesWithFilter(all).toList shouldBe List("a", "b", "c", "d")
-      tree4_2.valuesWithFilter(all).toList shouldBe List("a", "b", "c", "d")
-      tree4_3.valuesWithFilter(all).toList shouldBe List("a", "b", "c", "d")
-      tree7.valuesWithFilter(all).toList shouldBe List("a", "b", "c", "d", "e", "f", "g")
-      tree9.valuesWithFilter(all).toList shouldBe List("a", "b", "c", "d", "e", "f", "g", "h", "i")
+    "iterate over nodes with filter top-down and depth-first" in {
+      tree0.valuesWithFilter(all, TopDownDepthFirst).toList shouldBe Nil
+      tree1.valuesWithFilter(all, TopDownDepthFirst).toList shouldBe List("a")
+      tree2.valuesWithFilter(all, TopDownDepthFirst).toList shouldBe List("a", "b")
+      tree3_1.valuesWithFilter(all, TopDownDepthFirst).toList shouldBe List("a", "b", "c")
+      tree3_2.valuesWithFilter(all, TopDownDepthFirst).toList shouldBe List("a", "b", "c")
+      tree4_1.valuesWithFilter(all, TopDownDepthFirst).toList shouldBe List("a", "b", "c", "d")
+      tree4_2.valuesWithFilter(all, TopDownDepthFirst).toList shouldBe List("a", "b", "c", "d")
+      tree4_3.valuesWithFilter(all, TopDownDepthFirst).toList shouldBe List("a", "b", "c", "d")
+      tree7.valuesWithFilter(all, TopDownDepthFirst).toList shouldBe List("a", "b", "c", "d", "e", "f", "g")
+      tree9.valuesWithFilter(all, TopDownDepthFirst).toList shouldBe List("a", "b", "c", "d", "e", "f", "g", "h", "i")
 
-      tree0.valuesWithFilter(none).toList shouldBe Nil
-      tree1.valuesWithFilter(none).toList shouldBe Nil
-      tree2.valuesWithFilter(none).toList shouldBe Nil
-      tree3_1.valuesWithFilter(none).toList shouldBe Nil
-      tree3_2.valuesWithFilter(none).toList shouldBe Nil
-      tree4_1.valuesWithFilter(none).toList shouldBe Nil
-      tree4_2.valuesWithFilter(none).toList shouldBe Nil
-      tree4_3.valuesWithFilter(none).toList shouldBe Nil
-      tree7.valuesWithFilter(none).toList shouldBe Nil
-      tree9.valuesWithFilter(none).toList shouldBe Nil
+      tree0.valuesWithFilter(none, TopDownDepthFirst).toList shouldBe Nil
+      tree1.valuesWithFilter(none, TopDownDepthFirst).toList shouldBe Nil
+      tree2.valuesWithFilter(none, TopDownDepthFirst).toList shouldBe Nil
+      tree3_1.valuesWithFilter(none, TopDownDepthFirst).toList shouldBe Nil
+      tree3_2.valuesWithFilter(none, TopDownDepthFirst).toList shouldBe Nil
+      tree4_1.valuesWithFilter(none, TopDownDepthFirst).toList shouldBe Nil
+      tree4_2.valuesWithFilter(none, TopDownDepthFirst).toList shouldBe Nil
+      tree4_3.valuesWithFilter(none, TopDownDepthFirst).toList shouldBe Nil
+      tree7.valuesWithFilter(none, TopDownDepthFirst).toList shouldBe Nil
+      tree9.valuesWithFilter(none, TopDownDepthFirst).toList shouldBe Nil
 
-      tree0.valuesWithFilter(even).toList shouldBe Nil
-      tree1.valuesWithFilter(even).toList shouldBe Nil
-      tree2.valuesWithFilter(even).toList shouldBe List("b")
-      tree3_1.valuesWithFilter(even).toList shouldBe List("b")
-      tree3_2.valuesWithFilter(even).toList shouldBe List("b")
-      tree4_1.valuesWithFilter(even).toList shouldBe List("b", "d")
-      tree4_2.valuesWithFilter(even).toList shouldBe List("b", "d")
-      tree4_3.valuesWithFilter(even).toList shouldBe List("b", "d")
-      tree7.valuesWithFilter(even).toList shouldBe List("b", "d", "f")
-      tree9.valuesWithFilter(even).toList shouldBe List("b", "d", "f", "h")
+      tree0.valuesWithFilter(even, TopDownDepthFirst).toList shouldBe Nil
+      tree1.valuesWithFilter(even, TopDownDepthFirst).toList shouldBe Nil
+      tree2.valuesWithFilter(even, TopDownDepthFirst).toList shouldBe List("b")
+      tree3_1.valuesWithFilter(even, TopDownDepthFirst).toList shouldBe List("b")
+      tree3_2.valuesWithFilter(even, TopDownDepthFirst).toList shouldBe List("b")
+      tree4_1.valuesWithFilter(even, TopDownDepthFirst).toList shouldBe List("b", "d")
+      tree4_2.valuesWithFilter(even, TopDownDepthFirst).toList shouldBe List("b", "d")
+      tree4_3.valuesWithFilter(even, TopDownDepthFirst).toList shouldBe List("b", "d")
+      tree7.valuesWithFilter(even, TopDownDepthFirst).toList shouldBe List("b", "d", "f")
+      tree9.valuesWithFilter(even, TopDownDepthFirst).toList shouldBe List("b", "d", "f", "h")
 
-      tree0.valuesWithFilter(odd).toList shouldBe Nil
-      tree1.valuesWithFilter(odd).toList shouldBe List("a")
-      tree2.valuesWithFilter(odd).toList shouldBe List("a")
-      tree3_1.valuesWithFilter(odd).toList shouldBe List("a", "c")
-      tree3_2.valuesWithFilter(odd).toList shouldBe List("a", "c")
-      tree4_1.valuesWithFilter(odd).toList shouldBe List("a", "c")
-      tree4_2.valuesWithFilter(odd).toList shouldBe List("a", "c")
-      tree4_3.valuesWithFilter(odd).toList shouldBe List("a", "c")
-      tree7.valuesWithFilter(odd).toList shouldBe List("a", "c", "e", "g")
-      tree9.valuesWithFilter(odd).toList shouldBe List("a", "c", "e", "g", "i")
+      tree0.valuesWithFilter(odd, TopDownDepthFirst).toList shouldBe Nil
+      tree1.valuesWithFilter(odd, TopDownDepthFirst).toList shouldBe List("a")
+      tree2.valuesWithFilter(odd, TopDownDepthFirst).toList shouldBe List("a")
+      tree3_1.valuesWithFilter(odd, TopDownDepthFirst).toList shouldBe List("a", "c")
+      tree3_2.valuesWithFilter(odd, TopDownDepthFirst).toList shouldBe List("a", "c")
+      tree4_1.valuesWithFilter(odd, TopDownDepthFirst).toList shouldBe List("a", "c")
+      tree4_2.valuesWithFilter(odd, TopDownDepthFirst).toList shouldBe List("a", "c")
+      tree4_3.valuesWithFilter(odd, TopDownDepthFirst).toList shouldBe List("a", "c")
+      tree7.valuesWithFilter(odd, TopDownDepthFirst).toList shouldBe List("a", "c", "e", "g")
+      tree9.valuesWithFilter(odd, TopDownDepthFirst).toList shouldBe List("a", "c", "e", "g", "i")
+    }
+
+    "iterate over nodes with filter top-down and breadth-first" in {
+      tree0.valuesWithFilter(all, TopDownBreadthFirst).toList shouldBe Nil
+      tree1.valuesWithFilter(all, TopDownBreadthFirst).toList shouldBe List("a")
+      tree2.valuesWithFilter(all, TopDownBreadthFirst).toList shouldBe List("a", "b")
+      tree3_1.valuesWithFilter(all, TopDownBreadthFirst).toList shouldBe List("a", "b", "c")
+      tree3_2.valuesWithFilter(all, TopDownBreadthFirst).toList shouldBe List("a", "b", "c")
+      tree4_1.valuesWithFilter(all, TopDownBreadthFirst).toList shouldBe List("a", "b", "c", "d")
+      tree4_2.valuesWithFilter(all, TopDownBreadthFirst).toList shouldBe List("a", "b", "d", "c")
+      tree4_3.valuesWithFilter(all, TopDownBreadthFirst).toList shouldBe List("a", "b", "c", "d")
+      tree7.valuesWithFilter(all, TopDownBreadthFirst).toList shouldBe List("a", "b", "d", "g", "c", "e", "f")
+      tree9.valuesWithFilter(all, TopDownBreadthFirst).toList shouldBe List("a", "b", "e", "c", "f", "h", "d", "g", "i")
+
+      tree0.valuesWithFilter(none, TopDownBreadthFirst).toList shouldBe Nil
+      tree1.valuesWithFilter(none, TopDownBreadthFirst).toList shouldBe Nil
+      tree2.valuesWithFilter(none, TopDownBreadthFirst).toList shouldBe Nil
+      tree3_1.valuesWithFilter(none, TopDownBreadthFirst).toList shouldBe Nil
+      tree3_2.valuesWithFilter(none, TopDownBreadthFirst).toList shouldBe Nil
+      tree4_1.valuesWithFilter(none, TopDownBreadthFirst).toList shouldBe Nil
+      tree4_2.valuesWithFilter(none, TopDownBreadthFirst).toList shouldBe Nil
+      tree4_3.valuesWithFilter(none, TopDownBreadthFirst).toList shouldBe Nil
+      tree7.valuesWithFilter(none, TopDownBreadthFirst).toList shouldBe Nil
+      tree9.valuesWithFilter(none, TopDownBreadthFirst).toList shouldBe Nil
+
+      tree0.valuesWithFilter(even, TopDownBreadthFirst).toList shouldBe Nil
+      tree1.valuesWithFilter(even, TopDownBreadthFirst).toList shouldBe Nil
+      tree2.valuesWithFilter(even, TopDownBreadthFirst).toList shouldBe List("b")
+      tree3_1.valuesWithFilter(even, TopDownBreadthFirst).toList shouldBe List("b")
+      tree3_2.valuesWithFilter(even, TopDownBreadthFirst).toList shouldBe List("b")
+      tree4_1.valuesWithFilter(even, TopDownBreadthFirst).toList shouldBe List("b", "d")
+      tree4_2.valuesWithFilter(even, TopDownBreadthFirst).toList shouldBe List("b", "d")
+      tree4_3.valuesWithFilter(even, TopDownBreadthFirst).toList shouldBe List("b", "d")
+      tree7.valuesWithFilter(even, TopDownBreadthFirst).toList shouldBe List("b", "d", "f")
+      tree9.valuesWithFilter(even, TopDownBreadthFirst).toList shouldBe List("b", "f", "h", "d")
+
+      tree0.valuesWithFilter(odd, TopDownBreadthFirst).toList shouldBe Nil
+      tree1.valuesWithFilter(odd, TopDownBreadthFirst).toList shouldBe List("a")
+      tree2.valuesWithFilter(odd, TopDownBreadthFirst).toList shouldBe List("a")
+      tree3_1.valuesWithFilter(odd, TopDownBreadthFirst).toList shouldBe List("a", "c")
+      tree3_2.valuesWithFilter(odd, TopDownBreadthFirst).toList shouldBe List("a", "c")
+      tree4_1.valuesWithFilter(odd, TopDownBreadthFirst).toList shouldBe List("a", "c")
+      tree4_2.valuesWithFilter(odd, TopDownBreadthFirst).toList shouldBe List("a", "c")
+      tree4_3.valuesWithFilter(odd, TopDownBreadthFirst).toList shouldBe List("a", "c")
+      tree7.valuesWithFilter(odd, TopDownBreadthFirst).toList shouldBe List("a", "g", "c", "e")
+      tree9.valuesWithFilter(odd, TopDownBreadthFirst).toList shouldBe List("a", "e", "c", "g", "i")
     }
 
     "iterate top-down, depth-first, over nodes with filter and maxDepth" in {
@@ -287,6 +333,220 @@ class TreeValuesSpec extends FunSuite {
       tree9.valuesWithFilter(even, TopDownBreadthFirst, 3).toList shouldBe List("b", "f", "h")
       tree9.valuesWithFilter(even, TopDownBreadthFirst, 4).toList shouldBe List("b", "f", "h", "d")
       tree9.valuesWithFilter(even, TopDownBreadthFirst, 5).toList shouldBe List("b", "f", "h", "d")
+    }
+
+    "iterate over values and levels with filter top-down and depth-first" in {
+      tree0.valuesAndLevelsWithFilter(all, TopDownDepthFirst).toList shouldBe Nil
+      tree1.valuesAndLevelsWithFilter(all, TopDownDepthFirst).toList shouldBe List((1, "a", true))
+      tree2.valuesAndLevelsWithFilter(all, TopDownDepthFirst).toList shouldBe List((1, "a", false), (2, "b", true))
+      tree3_1.valuesAndLevelsWithFilter(all, TopDownDepthFirst).toList shouldBe List(
+        (1, "a", false),
+        (2, "b", false),
+        (3, "c", true)
+      )
+      tree3_2.valuesAndLevelsWithFilter(all, TopDownDepthFirst).toList shouldBe List(
+        (1, "a", false),
+        (2, "b", true),
+        (2, "c", true)
+      )
+      tree4_1.valuesAndLevelsWithFilter(all, TopDownDepthFirst).toList shouldBe List(
+        (1, "a", false),
+        (2, "b", false),
+        (3, "c", false),
+        (4, "d", true)
+      )
+      tree4_2.valuesAndLevelsWithFilter(all, TopDownDepthFirst).toList shouldBe List(
+        (1, "a", false),
+        (2, "b", false),
+        (3, "c", true),
+        (2, "d", true)
+      )
+      tree4_3.valuesAndLevelsWithFilter(all, TopDownDepthFirst).toList shouldBe List(
+        (1, "a", false),
+        (2, "b", true),
+        (2, "c", true),
+        (2, "d", true)
+      )
+      tree7.valuesAndLevelsWithFilter(all, TopDownDepthFirst).toList shouldBe List(
+        (1, "a", false),
+        (2, "b", false),
+        (3, "c", true),
+        (2, "d", false),
+        (3, "e", false),
+        (4, "f", true),
+        (2, "g", true)
+      )
+      tree9.valuesAndLevelsWithFilter(all, TopDownDepthFirst).toList shouldBe List(
+        (1, "a", false),
+        (2, "b", false),
+        (3, "c", false),
+        (4, "d", true),
+        (2, "e", false),
+        (3, "f", false),
+        (4, "g", true),
+        (3, "h", false),
+        (4, "i", true)
+      )
+
+      tree0.valuesAndLevelsWithFilter(none, TopDownDepthFirst).toList shouldBe Nil
+      tree1.valuesAndLevelsWithFilter(none, TopDownDepthFirst).toList shouldBe Nil
+      tree2.valuesAndLevelsWithFilter(none, TopDownDepthFirst).toList shouldBe Nil
+      tree3_1.valuesAndLevelsWithFilter(none, TopDownDepthFirst).toList shouldBe Nil
+      tree3_2.valuesAndLevelsWithFilter(none, TopDownDepthFirst).toList shouldBe Nil
+      tree4_1.valuesAndLevelsWithFilter(none, TopDownDepthFirst).toList shouldBe Nil
+      tree4_2.valuesAndLevelsWithFilter(none, TopDownDepthFirst).toList shouldBe Nil
+      tree4_3.valuesAndLevelsWithFilter(none, TopDownDepthFirst).toList shouldBe Nil
+      tree7.valuesAndLevelsWithFilter(none, TopDownDepthFirst).toList shouldBe Nil
+      tree9.valuesAndLevelsWithFilter(none, TopDownDepthFirst).toList shouldBe Nil
+
+      tree0.valuesAndLevelsWithFilter(even, TopDownDepthFirst).toList shouldBe Nil
+      tree1.valuesAndLevelsWithFilter(even, TopDownDepthFirst).toList shouldBe Nil
+      tree2.valuesAndLevelsWithFilter(even, TopDownDepthFirst).toList shouldBe List((2, "b", true))
+      tree3_1.valuesAndLevelsWithFilter(even, TopDownDepthFirst).toList shouldBe List((2, "b", false))
+      tree3_2.valuesAndLevelsWithFilter(even, TopDownDepthFirst).toList shouldBe List((2, "b", true))
+      tree4_1.valuesAndLevelsWithFilter(even, TopDownDepthFirst).toList shouldBe List((2, "b", false), (4, "d", true))
+      tree4_2.valuesAndLevelsWithFilter(even, TopDownDepthFirst).toList shouldBe List((2, "b", false), (2, "d", true))
+      tree4_3.valuesAndLevelsWithFilter(even, TopDownDepthFirst).toList shouldBe List((2, "b", true), (2, "d", true))
+      tree7.valuesAndLevelsWithFilter(even, TopDownDepthFirst).toList shouldBe List(
+        (2, "b", false),
+        (2, "d", false),
+        (4, "f", true)
+      )
+      tree9.valuesAndLevelsWithFilter(even, TopDownDepthFirst).toList shouldBe List(
+        (2, "b", false),
+        (4, "d", true),
+        (3, "f", false),
+        (3, "h", false)
+      )
+
+      tree0.valuesAndLevelsWithFilter(odd, TopDownDepthFirst).toList shouldBe Nil
+      tree1.valuesAndLevelsWithFilter(odd, TopDownDepthFirst).toList shouldBe List((1, "a", true))
+      tree2.valuesAndLevelsWithFilter(odd, TopDownDepthFirst).toList shouldBe List((1, "a", false))
+      tree3_1.valuesAndLevelsWithFilter(odd, TopDownDepthFirst).toList shouldBe List((1, "a", false), (3, "c", true))
+      tree3_2.valuesAndLevelsWithFilter(odd, TopDownDepthFirst).toList shouldBe List((1, "a", false), (2, "c", true))
+      tree4_1.valuesAndLevelsWithFilter(odd, TopDownDepthFirst).toList shouldBe List((1, "a", false), (3, "c", false))
+      tree4_2.valuesAndLevelsWithFilter(odd, TopDownDepthFirst).toList shouldBe List((1, "a", false), (3, "c", true))
+      tree4_3.valuesAndLevelsWithFilter(odd, TopDownDepthFirst).toList shouldBe List((1, "a", false), (2, "c", true))
+      tree7.valuesAndLevelsWithFilter(odd, TopDownDepthFirst).toList shouldBe List(
+        (1, "a", false),
+        (3, "c", true),
+        (3, "e", false),
+        (2, "g", true)
+      )
+      tree9.valuesAndLevelsWithFilter(odd, TopDownDepthFirst).toList shouldBe List(
+        (1, "a", false),
+        (3, "c", false),
+        (2, "e", false),
+        (4, "g", true),
+        (4, "i", true)
+      )
+    }
+
+    "iterate over values and levels with filter top-down and breadth-first" in {
+      tree0.valuesAndLevelsWithFilter(all, TopDownBreadthFirst).toList shouldBe Nil
+      tree1.valuesAndLevelsWithFilter(all, TopDownBreadthFirst).toList shouldBe List((1, "a", true))
+      tree2.valuesAndLevelsWithFilter(all, TopDownBreadthFirst).toList shouldBe List((1, "a", false), (2, "b", true))
+      tree3_1.valuesAndLevelsWithFilter(all, TopDownBreadthFirst).toList shouldBe List(
+        (1, "a", false),
+        (2, "b", false),
+        (3, "c", true)
+      )
+      tree3_2.valuesAndLevelsWithFilter(all, TopDownBreadthFirst).toList shouldBe List(
+        (1, "a", false),
+        (2, "b", true),
+        (2, "c", true)
+      )
+      tree4_1.valuesAndLevelsWithFilter(all, TopDownBreadthFirst).toList shouldBe List(
+        (1, "a", false),
+        (2, "b", false),
+        (3, "c", false),
+        (4, "d", true)
+      )
+      tree4_2.valuesAndLevelsWithFilter(all, TopDownBreadthFirst).toList shouldBe List(
+        (1, "a", false),
+        (2, "b", false),
+        (2, "d", true),
+        (3, "c", true)
+      )
+      tree4_3.valuesAndLevelsWithFilter(all, TopDownBreadthFirst).toList shouldBe List(
+        (1, "a", false),
+        (2, "b", true),
+        (2, "c", true),
+        (2, "d", true)
+      )
+      tree7.valuesAndLevelsWithFilter(all, TopDownBreadthFirst).toList shouldBe List(
+        (1, "a", false),
+        (2, "b", false),
+        (2, "d", false),
+        (2, "g", true),
+        (3, "c", true),
+        (3, "e", false),
+        (4, "f", true)
+      )
+      tree9.valuesAndLevelsWithFilter(all, TopDownBreadthFirst).toList shouldBe List(
+        (1, "a", false),
+        (2, "b", false),
+        (2, "e", false),
+        (3, "c", false),
+        (3, "f", false),
+        (3, "h", false),
+        (4, "d", true),
+        (4, "g", true),
+        (4, "i", true)
+      )
+
+      tree0.valuesAndLevelsWithFilter(none, TopDownBreadthFirst).toList shouldBe Nil
+      tree1.valuesAndLevelsWithFilter(none, TopDownBreadthFirst).toList shouldBe Nil
+      tree2.valuesAndLevelsWithFilter(none, TopDownBreadthFirst).toList shouldBe Nil
+      tree3_1.valuesAndLevelsWithFilter(none, TopDownBreadthFirst).toList shouldBe Nil
+      tree3_2.valuesAndLevelsWithFilter(none, TopDownBreadthFirst).toList shouldBe Nil
+      tree4_1.valuesAndLevelsWithFilter(none, TopDownBreadthFirst).toList shouldBe Nil
+      tree4_2.valuesAndLevelsWithFilter(none, TopDownBreadthFirst).toList shouldBe Nil
+      tree4_3.valuesAndLevelsWithFilter(none, TopDownBreadthFirst).toList shouldBe Nil
+      tree7.valuesAndLevelsWithFilter(none, TopDownBreadthFirst).toList shouldBe Nil
+      tree9.valuesAndLevelsWithFilter(none, TopDownBreadthFirst).toList shouldBe Nil
+
+      tree0.valuesAndLevelsWithFilter(even, TopDownBreadthFirst).toList shouldBe Nil
+      tree1.valuesAndLevelsWithFilter(even, TopDownBreadthFirst).toList shouldBe Nil
+      tree2.valuesAndLevelsWithFilter(even, TopDownBreadthFirst).toList shouldBe List((2, "b", true))
+      tree3_1.valuesAndLevelsWithFilter(even, TopDownBreadthFirst).toList shouldBe List((2, "b", false))
+      tree3_2.valuesAndLevelsWithFilter(even, TopDownBreadthFirst).toList shouldBe List((2, "b", true))
+      tree4_1.valuesAndLevelsWithFilter(even, TopDownBreadthFirst).toList shouldBe List((2, "b", false), (4, "d", true))
+      tree4_2.valuesAndLevelsWithFilter(even, TopDownBreadthFirst).toList shouldBe List((2, "b", false), (2, "d", true))
+      tree4_3.valuesAndLevelsWithFilter(even, TopDownBreadthFirst).toList shouldBe List((2, "b", true), (2, "d", true))
+      tree7.valuesAndLevelsWithFilter(even, TopDownBreadthFirst).toList shouldBe List(
+        (2, "b", false),
+        (2, "d", false),
+        (4, "f", true)
+      )
+      tree9.valuesAndLevelsWithFilter(even, TopDownBreadthFirst).toList shouldBe List(
+        (2, "b", false),
+        (3, "f", false),
+        (3, "h", false),
+        (4, "d", true)
+      )
+
+      tree0.valuesAndLevelsWithFilter(odd, TopDownBreadthFirst).toList shouldBe Nil
+      tree1.valuesAndLevelsWithFilter(odd, TopDownBreadthFirst).toList shouldBe List((1, "a", true))
+      tree2.valuesAndLevelsWithFilter(odd, TopDownBreadthFirst).toList shouldBe List((1, "a", false))
+      tree3_1.valuesAndLevelsWithFilter(odd, TopDownBreadthFirst).toList shouldBe List((1, "a", false), (3, "c", true))
+      tree3_2.valuesAndLevelsWithFilter(odd, TopDownBreadthFirst).toList shouldBe List((1, "a", false), (2, "c", true))
+      tree4_1.valuesAndLevelsWithFilter(odd, TopDownBreadthFirst).toList shouldBe List((1, "a", false), (3, "c", false))
+      tree4_2.valuesAndLevelsWithFilter(odd, TopDownBreadthFirst).toList shouldBe List((1, "a", false), (3, "c", true))
+      tree4_3.valuesAndLevelsWithFilter(odd, TopDownBreadthFirst).toList shouldBe List((1, "a", false), (2, "c", true))
+      tree7.valuesAndLevelsWithFilter(odd, TopDownBreadthFirst).toList shouldBe List(
+        (1, "a", false),
+        (2, "g", true),
+        (3, "c", true),
+        (3, "e", false)
+      )
+      tree9.valuesAndLevelsWithFilter(odd, TopDownBreadthFirst).toList shouldBe List(
+        (1, "a", false),
+        (2, "e", false),
+        (3, "c", false),
+        (4, "g", true),
+        (4, "i", true)
+      )
     }
 
   }
