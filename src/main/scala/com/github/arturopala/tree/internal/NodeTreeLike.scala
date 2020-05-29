@@ -35,9 +35,11 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
   /** [[Tree.NodeTree]] under consideration. */
   protected val node: NodeTree[T]
 
-  @`inline` final override def headOption: Option[T] = Some(node.head)
-
   @`inline` final def isEmpty: Boolean = node.size == 0
+
+  // VALUES
+
+  @`inline` final override def headOption: Option[T] = Some(node.head)
 
   final override def values(mode: TraversingMode = TopDownDepthFirst): Iterable[T] =
     iterableFrom(NodeTree.valuesIterator(node, mode.isDepthFirst))
@@ -62,6 +64,8 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
 
   final override def childrenValues: Iterable[T] = iterableFrom(node.children.iterator.map(_.head))
 
+  // TREES
+
   final override def trees(mode: TraversingMode = TopDownDepthFirst): Iterable[Tree[T]] =
     iterableFrom(NodeTree.treesIterator(node, mode.isDepthFirst))
 
@@ -76,6 +80,15 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
       if (maxDepth >= height) NodeTree.treesIteratorWithFilter(pred, node, mode.isDepthFirst)
       else NodeTree.treesIteratorWithLimit(pred, node, maxDepth, mode.isDepthFirst)
     }
+
+  def treesAndLevelsWithFilter(
+    pred: Tree[T] => Boolean,
+    mode: TraversingMode = TopDownDepthFirst,
+    maxDepth: Int = Int.MaxValue
+  ): Iterable[(Int, Tree[T])] =
+    iterableFrom(NodeTree.treesAndLevelsIteratorWithFilter(pred, node, maxDepth, mode.isDepthFirst))
+
+  // BRANCHES
 
   final override def branches: Iterable[Iterable[T]] = iterableFrom(NodeTree.branchesIterator(node))
 

@@ -72,6 +72,12 @@ trait EmptyTreeLike extends TreeLike[Nothing] {
     maxDepth: Int = Int.MaxValue
   ): Iterable[Tree[Nothing]] = Iterable.empty
 
+  def treesAndLevelsWithFilter(
+    pred: Tree[Nothing] => Boolean,
+    mode: TraversingMode = TopDownDepthFirst,
+    maxDepth: Int = Int.MaxValue
+  ): Iterable[(Int, Tree[Nothing])] = Iterable.empty
+
   final override val branches: Iterable[Iterable[Nothing]] =
     Iterable.empty
 

@@ -109,6 +109,7 @@ object NodeTree {
               else queue.trim :++ children.map((level + 1, _))
           else
             queue = queue.trim
+
           (level, head, node.isLeaf)
         }
     }
@@ -185,82 +186,6 @@ object NodeTree {
         else values(pred, result, children ::: xs)
     }
 
-  @tailrec
-  final def select[T, T1 >: T, R](
-    node: NodeTree[T],
-    path: Iterable[T1],
-    result: NodeTree[T] => R
-  ): Option[R] =
-    if (path.isEmpty || (path.nonEmpty && path.head != node.head)) None
-    else if (path.tail.isEmpty) {
-      if (path.head == node.head) Some(result(node)) else None
-    } else {
-      val nextOpt = node.children.collect {
-        case nextNode if path.tail.head == nextNode.head => nextNode
-      }.lastOption
-      if (nextOpt.isEmpty) None
-      else select(nextOpt.get, path.tail, result)
-    }
-
-  @tailrec
-  final def select[T, K, R](
-    node: NodeTree[T],
-    path: Iterable[K],
-    toResult: NodeTree[T] => R,
-    toPathItem: T => K
-  ): Option[R] =
-    if (path.isEmpty || (path.nonEmpty && path.head != toPathItem(node.head))) None
-    else if (path.tail.isEmpty) {
-      if (path.head == toPathItem(node.head)) Some(toResult(node)) else None
-    } else {
-      val nextOpt = node.children.collect {
-        case nextNode if path.tail.head == toPathItem(nextNode.head) => nextNode
-      }.lastOption
-      if (nextOpt.isEmpty) None
-      else select(nextOpt.get, path.tail, toResult, toPathItem)
-    }
-
-  @`inline` final def containsBranch[T, T1 >: T](node: NodeTree[T], branch: Iterable[T1]): Boolean =
-    contains(node, branch, requiresFullMatch = true)
-
-  @`inline` final def containsBranch[T, K](node: NodeTree[T], branch: Iterable[K], toPathItem: T => K): Boolean =
-    contains(node, branch, requiresFullMatch = true, toPathItem)
-
-  @`inline` final def containsPath[T, T1 >: T](node: NodeTree[T], path: Iterable[T1]): Boolean =
-    contains(node, path, requiresFullMatch = false)
-
-  @`inline` final def containsPath[T, K](node: NodeTree[T], path: Iterable[K], toPathItem: T => K): Boolean =
-    contains(node, path, requiresFullMatch = false, toPathItem)
-
-  @tailrec
-  final def contains[T, T1 >: T](node: NodeTree[T], path: Iterable[T1], requiresFullMatch: Boolean): Boolean =
-    if (path.isEmpty || (path.nonEmpty && path.head != node.head)) false
-    else if (path.tail.isEmpty) (!requiresFullMatch || node.isLeaf) && path.head == node.head
-    else {
-      val nextOpt = node.children.collect {
-        case nextNode if nextNode.head == path.tail.head => nextNode
-      }.lastOption
-      if (nextOpt.isEmpty) false
-      else contains(nextOpt.get, path.tail, requiresFullMatch)
-    }
-
-  @tailrec
-  final def contains[T, K](
-    node: NodeTree[T],
-    path: Iterable[K],
-    requiresFullMatch: Boolean,
-    toPathItem: T => K
-  ): Boolean =
-    if (path.isEmpty || (path.nonEmpty && path.head != toPathItem(node.head))) false
-    else if (path.tail.isEmpty) (!requiresFullMatch || node.isLeaf) && path.head == toPathItem(node.head)
-    else {
-      val nextOpt = node.children.collect {
-        case nextNode if toPathItem(nextNode.head) == path.tail.head => nextNode
-      }.lastOption
-      if (nextOpt.isEmpty) false
-      else contains(nextOpt.get, path.tail, requiresFullMatch, toPathItem)
-    }
-
   /** Returns an iterator over all (sub)trees of the tree inclusive. */
   final def treesIterator[T](node: NodeTree[T], depthFirst: Boolean): Iterator[Tree[T]] = new Iterator[Tree[T]] {
 
@@ -276,17 +201,53 @@ object NodeTree {
         queue =
           if (depthFirst) node.children.iterator ++: queue.trim
           else queue.trim :++ node.children.iterator
+
         node
       }
   }
 
-  /** Returns an iterator over filtered (sub)trees of the tree. */
+  /** Returns an iterator over filtered trees of the tree. */
   final def treesIteratorWithFilter[T](
     pred: Tree[T] => Boolean,
     node: NodeTree[T],
     depthFirst: Boolean
   ): Iterator[Tree[T]] =
     new FilterIterator(treesIterator(node, depthFirst), pred)
+
+  /** Returns an iterator over pairs of (level, tree) of the tree inclusive. */
+  final def treesAndLevelsIterator[T](node: NodeTree[T], maxDepth: Int, depthFirst: Boolean): Iterator[(Int, Tree[T])] =
+    new Iterator[(Int, Tree[T])] {
+
+      type Queue = Iterator[(Int, Tree[T])]
+      var queue: Queue =
+        if (maxDepth > 0) Iterator((1, node))
+        else Iterator.empty
+
+      override final def hasNext: Boolean = queue.nonEmpty
+
+      override final def next(): (Int, Tree[T]) =
+        if (queue.isEmpty) throw new NoSuchElementException()
+        else {
+          val pair = queue.next
+          if (pair._1 < maxDepth)
+            queue =
+              if (depthFirst) pair._2.children.iterator.map((pair._1 + 1, _)) ++: queue.trim
+              else queue.trim :++ pair._2.children.iterator.map((pair._1 + 1, _))
+          else
+            queue = queue.trim
+
+          pair
+        }
+    }
+
+  /** Returns an iterator over filtered pairs of (level, tree) of the tree. */
+  final def treesAndLevelsIteratorWithFilter[T](
+    pred: Tree[T] => Boolean,
+    node: NodeTree[T],
+    maxDepth: Int,
+    depthFirst: Boolean
+  ): Iterator[(Int, Tree[T])] =
+    new FilterIterator(treesAndLevelsIterator(node, maxDepth, depthFirst), (t: (Int, Tree[T])) => pred(t._2))
 
   /** Returns an iterator over filtered (sub)trees of the tree with depth limit.
     * @note uses Iterator internally */
@@ -335,38 +296,7 @@ object NodeTree {
       }
     }
 
-  /** Returns an iterator over filtered (sub)trees of the tree with depth limit.
-    * @note uses Vector internally */
-  final def treesIteratorWithLimit2[T](pred: Tree[T] => Boolean, node: NodeTree[T], maxDepth: Int): Iterator[Tree[T]] =
-    new Iterator[Tree[T]] {
-
-      type Queue = Vector[(Int, NodeTree[T])]
-      var queue: Queue = if (maxDepth > 0) seekNext(Vector((1, node))) else Vector.empty
-
-      override def hasNext: Boolean = queue.nonEmpty
-
-      @tailrec
-      override def next(): Tree[T] =
-        if (queue.isEmpty) throw new NoSuchElementException()
-        else {
-          val (level, node @ Node(_, children)) = queue.head
-          queue =
-            if (level < maxDepth) seekNext(children.map((level + 1, _)) ++: queue.safeTail)
-            else seekNext(queue.safeTail)
-          if (pred(node)) node else next()
-        }
-
-      @tailrec
-      private def seekNext(q: Queue): Queue =
-        if (q.isEmpty) q
-        else {
-          val (level, node @ Node(_, children)) = q.head
-          if (pred(node)) q
-          else if (level < maxDepth) seekNext(children.map((level + 1, _)) ++: q.safeTail)
-          else seekNext(q.safeTail)
-        }
-    }
-
+  /** Lists the trees fulfilling the predicate. */
   final def trees[T](pred: Tree[T] => Boolean, node: NodeTree[T]): List[NodeTree[T]] = trees(pred, Nil, List(node))
 
   @tailrec
@@ -540,6 +470,82 @@ object NodeTree {
         case i if i.isEmpty && pred(branch) => countBranches(pred, 1 + result, queue.trim)
         case _                              => countBranches(pred, result, children.map((branch, _)) ++: queue.trim)
       }
+    }
+
+  @tailrec
+  final def select[T, T1 >: T, R](
+    node: NodeTree[T],
+    path: Iterable[T1],
+    result: NodeTree[T] => R
+  ): Option[R] =
+    if (path.isEmpty || (path.nonEmpty && path.head != node.head)) None
+    else if (path.tail.isEmpty) {
+      if (path.head == node.head) Some(result(node)) else None
+    } else {
+      val nextOpt = node.children.collect {
+        case nextNode if path.tail.head == nextNode.head => nextNode
+      }.lastOption
+      if (nextOpt.isEmpty) None
+      else select(nextOpt.get, path.tail, result)
+    }
+
+  @tailrec
+  final def select[T, K, R](
+    node: NodeTree[T],
+    path: Iterable[K],
+    toResult: NodeTree[T] => R,
+    toPathItem: T => K
+  ): Option[R] =
+    if (path.isEmpty || (path.nonEmpty && path.head != toPathItem(node.head))) None
+    else if (path.tail.isEmpty) {
+      if (path.head == toPathItem(node.head)) Some(toResult(node)) else None
+    } else {
+      val nextOpt = node.children.collect {
+        case nextNode if path.tail.head == toPathItem(nextNode.head) => nextNode
+      }.lastOption
+      if (nextOpt.isEmpty) None
+      else select(nextOpt.get, path.tail, toResult, toPathItem)
+    }
+
+  @`inline` final def containsBranch[T, T1 >: T](node: NodeTree[T], branch: Iterable[T1]): Boolean =
+    contains(node, branch, requiresFullMatch = true)
+
+  @`inline` final def containsBranch[T, K](node: NodeTree[T], branch: Iterable[K], toPathItem: T => K): Boolean =
+    contains(node, branch, requiresFullMatch = true, toPathItem)
+
+  @`inline` final def containsPath[T, T1 >: T](node: NodeTree[T], path: Iterable[T1]): Boolean =
+    contains(node, path, requiresFullMatch = false)
+
+  @`inline` final def containsPath[T, K](node: NodeTree[T], path: Iterable[K], toPathItem: T => K): Boolean =
+    contains(node, path, requiresFullMatch = false, toPathItem)
+
+  @tailrec
+  final def contains[T, T1 >: T](node: NodeTree[T], path: Iterable[T1], requiresFullMatch: Boolean): Boolean =
+    if (path.isEmpty || (path.nonEmpty && path.head != node.head)) false
+    else if (path.tail.isEmpty) (!requiresFullMatch || node.isLeaf) && path.head == node.head
+    else {
+      val nextOpt = node.children.collect {
+        case nextNode if nextNode.head == path.tail.head => nextNode
+      }.lastOption
+      if (nextOpt.isEmpty) false
+      else contains(nextOpt.get, path.tail, requiresFullMatch)
+    }
+
+  @tailrec
+  final def contains[T, K](
+    node: NodeTree[T],
+    path: Iterable[K],
+    requiresFullMatch: Boolean,
+    toPathItem: T => K
+  ): Boolean =
+    if (path.isEmpty || (path.nonEmpty && path.head != toPathItem(node.head))) false
+    else if (path.tail.isEmpty) (!requiresFullMatch || node.isLeaf) && path.head == toPathItem(node.head)
+    else {
+      val nextOpt = node.children.collect {
+        case nextNode if toPathItem(nextNode.head) == path.tail.head => nextNode
+      }.lastOption
+      if (nextOpt.isEmpty) false
+      else contains(nextOpt.get, path.tail, requiresFullMatch, toPathItem)
     }
 
   final def insertBranchUnsafe[T, T1 >: T: ClassTag](tree: NodeTree[T], branchIterator: Iterator[T1]): NodeTree[T1] =

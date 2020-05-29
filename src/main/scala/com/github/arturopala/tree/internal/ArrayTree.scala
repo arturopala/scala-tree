@@ -61,7 +61,7 @@ object ArrayTree {
       pred
     )
 
-  /** Iterates over filtered values and levels of the tree.
+  /** Iterates over filtered tuples of (level, value, isLeaf) of the tree.
     * @param depthFirst if true, enumerates values depth-first,
     *                   if false, breadth-first. */
   final def valuesAndLevelsIteratorWithLimit[T: ClassTag](
@@ -183,6 +183,26 @@ object ArrayTree {
       pred
     )
   }
+
+  /** Iterates over filtered pairs of (level, tree) of the tree.
+    * @param depthFirst if true, enumerates values depth-first,
+    *                   if false, breadth-first. */
+  final def treesAndLevelsIteratorWithLimit[T: ClassTag](
+    startIndex: Int,
+    treeStructure: IntSlice,
+    treeValues: Slice[T],
+    pred: Tree[T] => Boolean,
+    maxDepth: Int,
+    depthFirst: Boolean
+  ): Iterator[(Int, Tree[T])] =
+    new MapFilterIterator[(Int, Int), (Int, Tree[T])](
+      if (depthFirst)
+        ArrayTreeFunctions.nodesIndexAndLevelIteratorDepthFirstWithLimit(startIndex, treeStructure, maxDepth)
+      else
+        ArrayTreeFunctions.nodesIndexAndLevelIteratorBreadthFirstWithLimit(startIndex, treeStructure, maxDepth),
+      { case (level: Int, index: Int) => (level, treeAt(index, treeStructure, treeValues)) },
+      (t: (Int, Tree[T])) => pred(t._2)
+    )
 
   /** Checks if the tree contains given branch. */
   @`inline` final def containsBranch[T, T1 >: T](

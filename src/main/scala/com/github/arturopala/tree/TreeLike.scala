@@ -175,7 +175,7 @@ trait TreeLike[+T] {
     pred: Tree[T] => Boolean,
     mode: TraversingMode = TopDownDepthFirst,
     maxDepth: Int = Int.MaxValue
-  ): Iterable[(Int, Tree[T])] = ???
+  ): Iterable[(Int, Tree[T])]
 
   // BRANCHES
 
@@ -286,19 +286,23 @@ trait TreeLike[+T] {
 
   // TRANSFORMATION
 
-  /** Maps all nodes of the tree using provided function and returns a new tree.
+  /** Maps every node of the tree using provided function and returns a new tree.
     * @group transformation */
   def map[K: ClassTag](f: T => K): Tree[K]
 
-  /** Flat-maps all nodes of the tree using provided function and returns a new tree.
+  /** Flat-maps every node of the tree using provided function and returns a new tree.
     * Keeps all the node's children distinct.
     * @group transformation */
   def flatMap[K: ClassTag](f: T => Tree[K]): Tree[K] = ???
 
-  /** Maps all branches of the tree using provided function and returns a new tree.
+  /** Maps every branch of the tree using provided function and returns a new tree.
     * Keeps all the node's children distinct.
     * @group transformation */
   def mapBranches[K: ClassTag](f: Iterable[T] => Iterable[K]): Tree[K] = ???
+
+  /** Maps every children sequence of the tree using provided function and returns a new tree.
+    * @group transformation */
+  def mapChildren[K: ClassTag](f: Iterable[Tree[T]] => Iterable[Tree[K]]): Tree[K] = ???
 
   /** Filters the tree node's values, any node which doesn't satisfy a predicate is removed,
     * and its children merged with the remaining siblings of the parent,
@@ -317,6 +321,17 @@ trait TreeLike[+T] {
     * and eventually returns a whole tree updated.
     * @group transformation */
   def filterBranches(f: Iterable[T] => Boolean): Tree[T] = ???
+
+  /** Attempts to trim the branches of the tree to keep height at the given limit.
+    * Trims only branches longer then the limit.
+    * If the tree is already lower then the limit then returns the tree intact.
+    * @param height maximum length of the branch prefix to keep
+    * @group transformation */
+  def trim(height: Int): Tree[T] = ???
+
+  /** Drops all the leaves (nodes without children).
+    * @group transformation */
+  def dropLeaves: Tree[T] = ???
 
   // AGGREGATE
 
@@ -607,13 +622,6 @@ trait TreeLike[+T] {
   /** Computes new version of the tree where each node have distinct children.
     * @group optimization */
   def distinct: Tree[T] = ???
-
-  /** Attempts to trim the branches of the tree to keep height at the given limit.
-    * Trims only branches longer then the limit.
-    * If the tree is already lower then the limit then returns the tree intact.
-    * @param height maximum length of the branch prefix to keep
-    * @group optimization */
-  def trim(height: Int): Tree[T] = ???
 
   // VISUALIZATION
 

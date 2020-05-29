@@ -34,6 +34,8 @@ abstract class ArrayTreeLike[T: ClassTag] extends TreeLike[T] {
 
   protected val tree: ArrayTree[T]
 
+  // VALUES
+
   final override def head: T = tree.content.last
 
   final override def headOption: Option[T] = Some(tree.content.last)
@@ -89,6 +91,8 @@ abstract class ArrayTreeLike[T: ClassTag] extends TreeLike[T] {
         .map(ArrayTree.treeAt(_, tree.structure, tree.content))
     )
 
+  // TREES
+
   final override def trees(mode: TraversingMode = TopDownDepthFirst): Iterable[Tree[T]] =
     iterableFrom(ArrayTree.treesIterator(tree.structure.top, tree.structure, tree.content, mode.isDepthFirst))
 
@@ -104,6 +108,24 @@ abstract class ArrayTreeLike[T: ClassTag] extends TreeLike[T] {
         ArrayTree
           .treesIteratorWithLimit(tree.structure.top, tree.structure, tree.content, pred, maxDepth, mode.isDepthFirst)
     }
+
+  def treesAndLevelsWithFilter(
+    pred: Tree[T] => Boolean,
+    mode: TraversingMode = TopDownDepthFirst,
+    maxDepth: Int = Int.MaxValue
+  ): Iterable[(Int, Tree[T])] =
+    iterableFrom(
+      ArrayTree.treesAndLevelsIteratorWithLimit(
+        tree.structure.top,
+        tree.structure,
+        tree.content,
+        pred,
+        maxDepth,
+        mode.isDepthFirst
+      )
+    )
+
+  // BRANCHES
 
   final override def branches: Iterable[Iterable[T]] =
     iterableFrom(ArrayTree.branchesIterator(tree.structure.top, tree.structure, tree.content))
