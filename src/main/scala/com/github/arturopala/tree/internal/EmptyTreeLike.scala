@@ -19,8 +19,8 @@ package com.github.arturopala.tree.internal
 import com.github.arturopala.tree.Tree.empty
 import com.github.arturopala.tree.{Tree, TreeBuilder, TreeLike}
 import com.github.arturopala.bufferandslice.{Buffer, IntBuffer, IntSlice, Slice}
-import com.github.arturopala.tree.TreeMode.Traversing
-import com.github.arturopala.tree.TreeMode.Traversing.TopDownDepthFirst
+import com.github.arturopala.tree.TreeOptions.TraversingMode
+import com.github.arturopala.tree.TreeOptions.TraversingMode.TopDownDepthFirst
 
 import scala.collection.Iterator
 import scala.reflect.ClassTag
@@ -37,28 +37,38 @@ trait EmptyTreeLike extends TreeLike[Nothing] {
   final override val isLeaf: Boolean = false
   final override val isEmpty: Boolean = true
   final override val childrenCount: Int = 0
+
   final override def head: Nothing = throw new NoSuchElementException
+
   final override val headOption: Option[Nothing] = None
-  final override def values(mode: Traversing = TopDownDepthFirst): Iterable[Nothing] =
+
+  final override def values(mode: TraversingMode = TopDownDepthFirst): Iterable[Nothing] =
     Iterable.empty
 
   final override def valuesWithFilter(
     pred: Nothing => Boolean,
-    mode: Traversing = TopDownDepthFirst,
+    mode: TraversingMode = TopDownDepthFirst,
     maxDepth: Int = Int.MaxValue
   ): Iterable[Nothing] =
     Iterable.empty
 
-  final override val childrenValues: Iterable[Nothing] = Nil
-  final override val children: Iterable[Tree[Nothing]] = Nil
-  final override val trees: Iterable[Tree[Nothing]] = Nil
+  final override val childrenValues: Iterable[Nothing] =
+    Iterable.empty
+
+  final override val children: Iterable[Tree[Nothing]] =
+    Iterable.empty
+
+  final override def trees(mode: TraversingMode = TopDownDepthFirst): Iterable[Tree[Nothing]] =
+    Iterable.empty
 
   final override def treesWithFilter(
     pred: Tree[Nothing] => Boolean,
+    mode: TraversingMode = TopDownDepthFirst,
     maxDepth: Int = Int.MaxValue
   ): Iterable[Tree[Nothing]] = Iterable.empty
 
-  final override val branches: Iterable[Iterable[Nothing]] = Nil
+  final override val branches: Iterable[Iterable[Nothing]] =
+    Iterable.empty
 
   final override def branchesWithFilter(
     pred: Iterable[Nothing] => Boolean,

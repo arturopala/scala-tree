@@ -18,8 +18,8 @@ package com.github.arturopala.tree.internal
 
 import com.github.arturopala.bufferandslice.{Buffer, IntBuffer, IntSlice, Slice}
 import com.github.arturopala.tree.Tree.ArrayTree
-import com.github.arturopala.tree.TreeMode.Traversing
-import com.github.arturopala.tree.TreeMode.Traversing.TopDownDepthFirst
+import com.github.arturopala.tree.TreeOptions.TraversingMode
+import com.github.arturopala.tree.TreeOptions.TraversingMode.TopDownDepthFirst
 import com.github.arturopala.tree.{Tree, TreeBuilder, TreeLike}
 import com.github.arturopala.tree.internal.IterableOps._
 
@@ -38,7 +38,7 @@ abstract class ArrayTreeLike[T: ClassTag] extends TreeLike[T] {
 
   final override def headOption: Option[T] = Some(tree.content.last)
 
-  final override def values(mode: Traversing = TopDownDepthFirst): Iterable[T] =
+  final override def values(mode: TraversingMode = TopDownDepthFirst): Iterable[T] =
     if (mode.isDepthFirst) iterableFrom(tree.content.reverseIterator)
     else
       iterableFrom(
@@ -47,7 +47,7 @@ abstract class ArrayTreeLike[T: ClassTag] extends TreeLike[T] {
 
   final override def valuesWithFilter(
     pred: T => Boolean,
-    mode: Traversing = TopDownDepthFirst,
+    mode: TraversingMode = TopDownDepthFirst,
     maxDepth: Int = Int.MaxValue
   ): Iterable[T] = iterableFrom {
     if (mode == TopDownDepthFirst && maxDepth >= height) tree.content.reverseIterator(pred)
@@ -72,15 +72,20 @@ abstract class ArrayTreeLike[T: ClassTag] extends TreeLike[T] {
         .map(ArrayTree.treeAt(_, tree.structure, tree.content))
     )
 
-  final override def trees: Iterable[Tree[T]] =
-    iterableFrom(ArrayTree.treesIterator(tree.structure.top, tree.structure, tree.content, true))
+  final override def trees(mode: TraversingMode = TopDownDepthFirst): Iterable[Tree[T]] =
+    iterableFrom(ArrayTree.treesIterator(tree.structure.top, tree.structure, tree.content, mode.isDepthFirst))
 
-  final override def treesWithFilter(pred: Tree[T] => Boolean, maxDepth: Int = Int.MaxValue): Iterable[Tree[T]] =
+  final override def treesWithFilter(
+    pred: Tree[T] => Boolean,
+    mode: TraversingMode = TopDownDepthFirst,
+    maxDepth: Int = Int.MaxValue
+  ): Iterable[Tree[T]] =
     iterableFrom {
       if (maxDepth >= height)
-        ArrayTree.treesIteratorWithFilter(tree.structure.top, tree.structure, tree.content, pred, true)
+        ArrayTree.treesIteratorWithFilter(tree.structure.top, tree.structure, tree.content, pred, mode.isDepthFirst)
       else
-        ArrayTree.treesIteratorWithLimit(tree.structure.top, tree.structure, tree.content, pred, maxDepth, true)
+        ArrayTree
+          .treesIteratorWithLimit(tree.structure.top, tree.structure, tree.content, pred, maxDepth, mode.isDepthFirst)
     }
 
   final override def branches: Iterable[Iterable[T]] =

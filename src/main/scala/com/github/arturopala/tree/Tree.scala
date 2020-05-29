@@ -17,7 +17,7 @@
 package com.github.arturopala.tree
 
 import com.github.arturopala.bufferandslice.{IntSlice, Slice}
-import com.github.arturopala.tree.internal._
+import com.github.arturopala.tree.internal.{Compare, _}
 
 import scala.reflect.ClassTag
 
@@ -69,14 +69,21 @@ sealed trait Tree[+T] extends TreeLike[T] {
   // EQUALITY, HASH CODE, AND TO_STRING
 
   final override def equals(obj: Any): Boolean = obj match {
-    case otherTree: Tree[_] => Tree.equals(this, otherTree)
+    case otherTree: Tree[_] => Compare.sameTrees(this, otherTree)
     case _                  => false
   }
 
   final override def hashCode(): Int = hashcode
 
   // Tree is immutable so we shall calculate hashcode once
-  protected lazy val hashcode: Int = Tree.hashCodeOf(this)
+  protected final lazy val hashcode: Int = {
+    var hash = 17
+    hash = hash * 31 + headOption.hashCode()
+    hash = hash * 29 + size.hashCode()
+    hash = hash * 13 + width.hashCode()
+    hash = hash * 19 + height.hashCode()
+    hash
+  }
 
   override def toString: String = {
     def stringify(o: Any): String = if (o.isInstanceOf[String]) s""""$o"""" else o.toString
@@ -255,28 +262,7 @@ object Tree {
     * An empty Tree singleton.
     */
   final case object empty extends Tree[Nothing] with EmptyTreeLike {
-
-    override protected lazy val hashcode: Int = 0
     override val toString: String = "Tree.empty"
-  }
-
-  /** Checks equality of the two trees.
-    * @group Utilities */
-  final def equals[T](tree1: Tree[T], tree2: Tree[T]): Boolean =
-    tree1.eq(tree2) || (tree1.size == tree2.size &&
-      tree1.width == tree2.width &&
-      tree1.height == tree2.height &&
-      tree1.headOption == tree2.headOption && Compare.sameTrees(tree1, tree2))
-
-  /** Computes hashcode of the tree.
-    * @group Utilities */
-  final def hashCodeOf[T](tree: Tree[T]): Int = {
-    var hash = 17
-    hash = hash * 31 + tree.headOption.hashCode()
-    hash = hash * 29 + tree.size.hashCode()
-    hash = hash * 13 + tree.width.hashCode()
-    hash = hash * 19 + tree.height.hashCode()
-    hash
   }
 
   @`inline` final def preferInflated[T, T1 >: T](node: Tree.NodeTree[T], tree: Tree.ArrayTree[T1]): Boolean =

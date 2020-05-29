@@ -16,19 +16,26 @@
 
 package com.github.arturopala.tree
 
-/** Set of enums used to represent available processing options. */
-object TreeMode {
+/** Set of enums representing available processing options. */
+object TreeOptions {
 
-  /** Options of traversing the tree using iterators. */
-  sealed trait Traversing {
+  /** Modes of traversing the tree using iterators. */
+  sealed trait TraversingMode {
     val isDepthFirst: Boolean
   }
 
-  object Traversing {
-    case object TopDownDepthFirst extends Traversing {
+  object TraversingMode {
+
+    /** Traversing mode where nodes are served by pursuing the first branch
+      * from the root to the leaf, and then slowly retracting while trying
+      * to explore forking branches. */
+    case object TopDownDepthFirst extends TraversingMode {
       val isDepthFirst: Boolean = true
     }
-    case object TopDownBreadthFirst extends Traversing {
+
+    /** Traversing mode where nodes are served level by level,
+      * from the root to the leafs. */
+    case object TopDownBreadthFirst extends TraversingMode {
       val isDepthFirst: Boolean = false
     }
   }

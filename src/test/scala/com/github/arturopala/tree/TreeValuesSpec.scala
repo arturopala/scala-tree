@@ -16,7 +16,7 @@
 
 package com.github.arturopala.tree
 
-import com.github.arturopala.tree.TreeMode.Traversing.{TopDownBreadthFirst, TopDownDepthFirst}
+import com.github.arturopala.tree.TreeOptions.TraversingMode.{TopDownBreadthFirst, TopDownDepthFirst}
 
 class TreeValuesSpec extends FunSuite {
 

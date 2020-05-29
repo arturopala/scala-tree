@@ -18,26 +18,30 @@ package com.github.arturopala.tree.internal
 
 import com.github.arturopala.tree.Tree
 
-/** Comparison and equality helpers */
+/** Tree comparison and equality helpers */
 object Compare {
 
   /** Checks if two trees are the same */
-  @`inline` final def sameTrees[T](tree1: Tree[T], tree2: Tree[T]): Boolean = {
+  @`inline` final def sameTrees[T](tree1: Tree[T], tree2: Tree[T]): Boolean =
+    tree1.eq(tree2) || (tree1.size == tree2.size &&
+      tree1.width == tree2.width &&
+      tree1.height == tree2.height &&
+      tree1.headOption == tree2.headOption && {
 
-    val iterator1: Iterator[Tree[T]] = tree1.trees.iterator
-    val iterator2: Iterator[Tree[T]] = tree2.trees.iterator
+      val iterator1: Iterator[Tree[T]] = tree1.trees().iterator
+      val iterator2: Iterator[Tree[T]] = tree2.trees().iterator
 
-    var result: Boolean = true
+      var result: Boolean = true
 
-    while (result && iterator1.hasNext && iterator2.hasNext) {
-      val t1 = iterator1.next()
-      val t2 = iterator2.next()
-      result =
-        result && t1.size == t2.size && t1.width == t2.width && t1.height == t2.height && t1.headOption == t2.headOption
-    }
+      while (result && iterator1.hasNext && iterator2.hasNext) {
+        val t1 = iterator1.next()
+        val t2 = iterator2.next()
+        result =
+          result && t1.size == t2.size && t1.width == t2.width && t1.height == t2.height && t1.headOption == t2.headOption
+      }
 
-    result
-  }
+      result
+    })
 
   /** Checks if two iterators would return same elements. */
   final def sameElements[T](iterator1: Iterator[T], iterator2: Iterator[T]): Boolean = {

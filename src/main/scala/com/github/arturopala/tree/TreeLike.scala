@@ -17,8 +17,8 @@
 package com.github.arturopala.tree
 
 import com.github.arturopala.bufferandslice.{Buffer, IntBuffer, IntSlice, Slice}
-import com.github.arturopala.tree.TreeMode.Traversing
-import com.github.arturopala.tree.TreeMode.Traversing._
+import com.github.arturopala.tree.TreeOptions.TraversingMode
+import com.github.arturopala.tree.TreeOptions.TraversingMode._
 
 import scala.collection.Iterator
 import scala.reflect.ClassTag
@@ -114,7 +114,7 @@ trait TreeLike[+T] {
   /** Iterates over all the node's values in this tree.
     * @param mode tree traversing mode, either depth-first or breadth-first
     * @group values */
-  def values(mode: Traversing = TopDownDepthFirst): Iterable[T]
+  def values(mode: TraversingMode = TopDownDepthFirst): Iterable[T]
 
   /** Iterates over all the leaf's values in this tree.
     * @note Leaf is the node without children.
@@ -123,19 +123,25 @@ trait TreeLike[+T] {
 
   /** Iterates over filtered node's values, top-down, depth-first.
     * @param pred return true to include the value in the result, false otherwise.
+    * @param mode tree traversing mode, either depth-first or breadth-first
     * @param maxDepth number of levels to go inside the tree, default to max
     * @group values */
   def valuesWithFilter(
     pred: T => Boolean,
-    mode: Traversing = TopDownDepthFirst,
+    mode: TraversingMode = TopDownDepthFirst,
     maxDepth: Int = Int.MaxValue
   ): Iterable[T]
 
   /** Iterates over filtered node's values, paired with the node's level, top-down, depth-first.
     * @param pred return true to include the value in the result, false otherwise.
+    * @param mode tree traversing mode, either depth-first or breadth-first
     * @param maxDepth number of levels to go inside the tree, default to max
     * @group values */
-  def valueAndLevelPairs(pred: T => Boolean, maxDepth: Int = Int.MaxValue): Iterable[(Int, T)] = ???
+  def valueAndLevelPairs(
+    pred: T => Boolean,
+    mode: TraversingMode = TopDownDepthFirst,
+    maxDepth: Int = Int.MaxValue
+  ): Iterable[(Int, T)] = ???
 
   // TREES
 
@@ -144,23 +150,31 @@ trait TreeLike[+T] {
   def children: Iterable[Tree[T]]
 
   /** Iterates over all the possible subtrees in this tree inclusive.
-    * Top tree is listed first, then children depth-first.
+    * @param mode tree traversing mode, either depth-first or breadth-first
     * @group sub-trees */
-  def trees: Iterable[Tree[T]]
+  def trees(mode: TraversingMode = TopDownDepthFirst): Iterable[Tree[T]]
 
-  /** Iterates over filtered trees in this tree inclusive, top-down, depth-first.
-    * The top tree is returned first, then children left-to-right and depth-first.
+  /** Iterates over filtered trees in this tree inclusive.
     * @param pred return true to include the tree in the result, false otherwise.
+    * @param mode tree traversing mode, either depth-first or breadth-first
     * @param maxDepth number of levels to go inside the tree, default to max
     * @group sub-trees */
-  def treesWithFilter(pred: Tree[T] => Boolean, maxDepth: Int = Int.MaxValue): Iterable[Tree[T]]
+  def treesWithFilter(
+    pred: Tree[T] => Boolean,
+    mode: TraversingMode = TopDownDepthFirst,
+    maxDepth: Int = Int.MaxValue
+  ): Iterable[Tree[T]]
 
-  /** Iterates over filtered trees in this tree inclusive, paired with the node's level, top-down, depth-first.
-    * The top tree is returned first, then children left-to-right and depth-first.
+  /** Iterates over filtered trees in this tree inclusive, paired with the node's level.
     * @param pred return true to include the tree in the result, false otherwise.
+    * @param mode tree traversing mode, either depth-first or breadth-first
     * @param maxDepth number of levels to go inside the tree, default to max
     * @group sub-trees */
-  def treeAndLevelPairs(pred: Tree[T] => Boolean, maxDepth: Int = Int.MaxValue): Iterable[(Int, Tree[T])] = ???
+  def treeAndLevelPairs(
+    pred: Tree[T] => Boolean,
+    mode: TraversingMode = TopDownDepthFirst,
+    maxDepth: Int = Int.MaxValue
+  ): Iterable[(Int, Tree[T])] = ???
 
   // BRANCHES
 

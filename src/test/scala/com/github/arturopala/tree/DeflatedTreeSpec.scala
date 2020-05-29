@@ -16,7 +16,7 @@
 
 package com.github.arturopala.tree
 
-import com.github.arturopala.tree.TreeMode.Traversing.TopDownDepthFirst
+import com.github.arturopala.tree.TreeOptions.TraversingMode.TopDownDepthFirst
 
 class DeflatedTreeSpec extends AnyWordSpecCompat with DeflatedTestTrees {
 
