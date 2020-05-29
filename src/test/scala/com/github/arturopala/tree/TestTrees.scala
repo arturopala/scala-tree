@@ -20,22 +20,50 @@ import com.github.arturopala.tree.Tree.NodeTree
 
 import scala.reflect.ClassTag
 
+/** Exemplary trees of growing complexity for testing. */
 trait TestTrees {
 
+  /** empty tree */
   val tree0: Tree[String]
+
+  /** [a] */
   val tree1: Tree[String]
+
+  /** [a,b] */
   val tree2: Tree[String]
+
+  /** [a,b,c] */
   val tree3_1: Tree[String]
+
+  /** - [a,b]
+    * - [a,c] */
   val tree3_2: Tree[String]
+
+  /** [a,b,c,d] */
   val tree4_1: Tree[String]
+
+  /** - [a,b,c]
+    * - [a,d] */
   val tree4_2: Tree[String]
+
+  /** - [a,b]
+    * - [a,c]
+    * - [a,d] */
   val tree4_3: Tree[String]
+
+  /** - [a,b,c]
+    * - [a,d,e,f]
+    * - [a,g] */
   val tree7: Tree[String]
+
+  /** - [a,b,c,d]
+    * - [a,e,f,g]
+    * - [a,e,h,i] */
   val tree9: Tree[String]
+
   val allTrees: Seq[Tree[String]]
 }
 
-/** Collection of simple trees for use in testing. */
 object TestTrees {
 
   val tree0: Tree[String] = Tree[String]()

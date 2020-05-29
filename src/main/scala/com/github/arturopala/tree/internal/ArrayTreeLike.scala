@@ -42,19 +42,24 @@ abstract class ArrayTreeLike[T: ClassTag] extends TreeLike[T] {
     if (mode.isDepthFirst) iterableFrom(tree.content.reverseIterator)
     else
       iterableFrom(
-        ArrayTree.valuesIterator(tree.structure.length - 1, tree.structure, tree.content, depthFirst = false)
+        ArrayTree.valuesIterator(tree.structure.top, tree.structure, tree.content, depthFirst = false)
       )
 
-  final override def valuesWithFilter(pred: T => Boolean, maxDepth: Int = Int.MaxValue): Iterable[T] = iterableFrom {
-    if (maxDepth >= height) tree.content.reverseIterator(pred)
+  final override def valuesWithFilter(
+    pred: T => Boolean,
+    mode: Traversing = TopDownDepthFirst,
+    maxDepth: Int = Int.MaxValue
+  ): Iterable[T] = iterableFrom {
+    if (mode == TopDownDepthFirst && maxDepth >= height) tree.content.reverseIterator(pred)
     else
-      ArrayTree.valuesIteratorWithLimit(tree.structure.length - 1, tree.structure, tree.content, pred, maxDepth, true)
+      ArrayTree
+        .valuesIteratorWithLimit(tree.structure.top, tree.structure, tree.content, pred, maxDepth, mode.isDepthFirst)
   }
 
   final override def childrenValues: Iterable[T] =
     iterableFrom(
       ArrayTreeFunctions
-        .childrenIndexes(tree.structure.length - 1, tree.structure)
+        .childrenIndexes(tree.structure.top, tree.structure)
         .iterator
         .map(tree.content)
     )
@@ -62,24 +67,24 @@ abstract class ArrayTreeLike[T: ClassTag] extends TreeLike[T] {
   final override def children: Iterable[Tree[T]] =
     iterableFrom(
       ArrayTreeFunctions
-        .childrenIndexes(tree.structure.length - 1, tree.structure)
+        .childrenIndexes(tree.structure.top, tree.structure)
         .iterator
         .map(ArrayTree.treeAt(_, tree.structure, tree.content))
     )
 
   final override def trees: Iterable[Tree[T]] =
-    iterableFrom(ArrayTree.treesIterator(tree.structure.length - 1, tree.structure, tree.content, true))
+    iterableFrom(ArrayTree.treesIterator(tree.structure.top, tree.structure, tree.content, true))
 
   final override def treesWithFilter(pred: Tree[T] => Boolean, maxDepth: Int = Int.MaxValue): Iterable[Tree[T]] =
     iterableFrom {
       if (maxDepth >= height)
-        ArrayTree.treesIteratorWithFilter(tree.structure.length - 1, tree.structure, tree.content, pred, true)
+        ArrayTree.treesIteratorWithFilter(tree.structure.top, tree.structure, tree.content, pred, true)
       else
-        ArrayTree.treesIteratorWithLimit(tree.structure.length - 1, tree.structure, tree.content, pred, maxDepth, true)
+        ArrayTree.treesIteratorWithLimit(tree.structure.top, tree.structure, tree.content, pred, maxDepth, true)
     }
 
   final override def branches: Iterable[Iterable[T]] =
-    iterableFrom(ArrayTree.branchesIterator(tree.structure.length - 1, tree.structure, tree.content))
+    iterableFrom(ArrayTree.branchesIterator(tree.structure.top, tree.structure, tree.content))
 
   final override def branchesWithFilter(
     pred: Iterable[T] => Boolean,
@@ -87,12 +92,12 @@ abstract class ArrayTreeLike[T: ClassTag] extends TreeLike[T] {
   ): Iterable[Iterable[T]] =
     iterableFrom(
       if (maxDepth >= height)
-        ArrayTree.branchesIteratorWithFilter(tree.structure.length - 1, tree.structure, tree.content, pred)
-      else ArrayTree.branchesIteratorWithLimit(tree.structure.length - 1, tree.structure, tree.content, pred, maxDepth)
+        ArrayTree.branchesIteratorWithFilter(tree.structure.top, tree.structure, tree.content, pred)
+      else ArrayTree.branchesIteratorWithLimit(tree.structure.top, tree.structure, tree.content, pred, maxDepth)
     )
 
   final override def countBranches(pred: Iterable[T] => Boolean): Int =
-    ArrayTree.countBranches(tree.structure.length - 1, tree.structure, tree.content, pred)
+    ArrayTree.countBranches(tree.structure.top, tree.structure, tree.content, pred)
 
   // MODIFICATIONS
 
@@ -100,7 +105,7 @@ abstract class ArrayTreeLike[T: ClassTag] extends TreeLike[T] {
     ArrayTree.prepend(value, tree)
 
   final override def insertValue[T1 >: T: ClassTag](value: T1): Tree[T1] =
-    ArrayTree.insertValue(tree.structure.length - 1, value, tree, keepDistinct = true)
+    ArrayTree.insertValue(tree.structure.top, value, tree, keepDistinct = true)
 
   final override def insertValueAt[T1 >: T: ClassTag](path: Iterable[T1], value: T1): Tree[T1] =
     ArrayTree.insertValueAt(path, value, tree, keepDistinct = true)
@@ -112,7 +117,7 @@ abstract class ArrayTreeLike[T: ClassTag] extends TreeLike[T] {
   ): Either[Tree[T], Tree[T1]] = ArrayTree.insertValueAt(path, value, tree, f, keepDistinct = true)
 
   final override def insertTree[T1 >: T: ClassTag](subtree: Tree[T1]): Tree[T1] =
-    ArrayTree.insertTreeDistinct(tree.structure.length - 1, subtree, tree)
+    ArrayTree.insertTreeDistinct(tree.structure.top, subtree, tree)
 
   final override def insertTreeAt[T1 >: T: ClassTag](path: Iterable[T1], subtree: Tree[T1]): Tree[T1] =
     ArrayTree.insertTreeAt(path, subtree, tree, keepDistinct = true)
@@ -125,7 +130,7 @@ abstract class ArrayTreeLike[T: ClassTag] extends TreeLike[T] {
     ArrayTree.insertTreeAt(path, subtree, tree, f, keepDistinct = true)
 
   final override def insertBranch[T1 >: T: ClassTag](branch: Iterable[T1]): Tree[T1] =
-    ArrayTree.insertBranch(tree.structure.length - 1, branch, tree)
+    ArrayTree.insertBranch(tree.structure.top, branch, tree)
 
   // MODIFICATIONS
 
@@ -189,25 +194,25 @@ abstract class ArrayTreeLike[T: ClassTag] extends TreeLike[T] {
   // PATH-BASED OPERATIONS
 
   final override def selectValue[K](path: Iterable[K], f: T => K): Option[T] =
-    ArrayTree.selectValue(path, tree.structure.length - 1, tree.structure, tree.content, f)
+    ArrayTree.selectValue(path, tree.structure.top, tree.structure, tree.content, f)
 
   final override def selectTree[T1 >: T: ClassTag](path: Iterable[T1]): Option[Tree[T]] =
-    ArrayTree.selectTree(path, tree.structure.length - 1, tree.structure, tree.content)
+    ArrayTree.selectTree(path, tree.structure.top, tree.structure, tree.content)
 
   final override def selectTree[K](path: Iterable[K], f: T => K): Option[Tree[T]] =
-    ArrayTree.selectTree(path, tree.structure.length - 1, tree.structure, tree.content, f)
+    ArrayTree.selectTree(path, tree.structure.top, tree.structure, tree.content, f)
 
   final override def containsBranch[T1 >: T](branch: Iterable[T1]): Boolean =
-    ArrayTree.containsBranch(branch, tree.structure.length - 1, tree.structure, tree.content)
+    ArrayTree.containsBranch(branch, tree.structure.top, tree.structure, tree.content)
 
   final override def containsBranch[K](branch: Iterable[K], f: T => K): Boolean =
-    ArrayTree.containsBranch(branch, tree.structure.length - 1, tree.structure, tree.content, f)
+    ArrayTree.containsBranch(branch, tree.structure.top, tree.structure, tree.content, f)
 
   final override def containsPath[T1 >: T](path: Iterable[T1]): Boolean =
-    ArrayTree.containsPath(path, tree.structure.length - 1, tree.structure, tree.content)
+    ArrayTree.containsPath(path, tree.structure.top, tree.structure, tree.content)
 
   final override def containsPath[K](path: Iterable[K], f: T => K): Boolean =
-    ArrayTree.containsPath(path, tree.structure.length - 1, tree.structure, tree.content, f)
+    ArrayTree.containsPath(path, tree.structure.top, tree.structure, tree.content, f)
 
   final override def toPairsIterator: Iterator[(Int, T)] = tree.structure.iterator.zip(tree.content.iterator)
 
@@ -232,7 +237,7 @@ abstract class ArrayTreeLike[T: ClassTag] extends TreeLike[T] {
   ): String =
     ArrayTreeFunctions
       .mkStringFromBranches(
-        tree.structure.length - 1,
+        tree.structure.top,
         tree.structure,
         tree.content,
         show,

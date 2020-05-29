@@ -130,7 +130,7 @@ object ArrayTreeFunctions {
 
   /** Returns a list of children of a tree represented by the structure and content slices. */
   @`inline` final def childrenOf[T](treeStructure: IntSlice, treeValues: Slice[T]): Iterator[(IntSlice, Slice[T])] =
-    childrenIndexes(treeStructure.length - 1, treeStructure).iterator
+    childrenIndexes(treeStructure.top, treeStructure).iterator
       .map(treeAt(_, treeStructure, treeValues))
 
   /** Returns a reversed list of children of a tree represented by the structure and content slices. */
@@ -138,7 +138,7 @@ object ArrayTreeFunctions {
     treeStructure: IntSlice,
     treeValues: Slice[T]
   ): Iterator[(IntSlice, Slice[T])] =
-    childrenIndexes(treeStructure.length - 1, treeStructure).reverseIterator
+    childrenIndexes(treeStructure.top, treeStructure).reverseIterator
       .map(treeAt(_, treeStructure, treeValues))
 
   /** Returns a structure and content slices representing a subtree rooted at the given index. */
@@ -211,7 +211,7 @@ object ArrayTreeFunctions {
           if (children(i) == childIndex) {
             result =
               if (i > 0) Some(children(i - 1))
-              else if (i < children.length - 1) Some(children(i + 1))
+              else if (i < children.top) Some(children(i + 1))
               else None
             i = -1
           } else if (children(i) < childIndex) {
@@ -637,7 +637,7 @@ object ArrayTreeFunctions {
 
   /** Calculates the height of the tree, i.e. the length of the longest branch. */
   @`inline` final def calculateHeight(treeStructure: IntSlice): Int =
-    calculateHeight(treeStructure.length - 1, treeStructure)
+    calculateHeight(treeStructure.top, treeStructure)
 
   /** Calculates the height of the tree at index, i.e. the length of the longest branch. */
   @`inline` final def calculateHeight(startIndex: Int, treeStructure: Int => Int): Int =

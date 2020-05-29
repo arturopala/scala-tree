@@ -34,9 +34,9 @@ a matching set of lax operations supplied as extensions methods in `LaxTreeOps`.
 
 Internally, there are three main implementations of the `Tree`:
 
-- `Tree.empty`, an empty tree singleton,
-- `Tree.NodeTree`, a deeply-nested hierarchy of immutable nodes (inflated tree),
-- `Tree.ArrayTree`, encoded as a twin linear arrays of structure and values (deflated tree).
+- `Tree.empty` an empty tree singleton, i.e. `Tree[Nothing]`,
+- `Tree.NodeTree` a classic, deeply-nested hierarchy of immutable nodes (inflated tree),
+- `Tree.ArrayTree` the tree encoded in an ultra-compact flat format of twin linear arrays of structure and values (deflated tree).
 
 The reason for having an inflated and deflated variants of the tree
 is such that each one exhibits different performance and memory

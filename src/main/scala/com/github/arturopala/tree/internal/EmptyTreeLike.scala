@@ -42,7 +42,11 @@ trait EmptyTreeLike extends TreeLike[Nothing] {
   final override def values(mode: Traversing = TopDownDepthFirst): Iterable[Nothing] =
     Iterable.empty
 
-  final override def valuesWithFilter(pred: Nothing => Boolean, maxDepth: Int = Int.MaxValue): Iterable[Nothing] =
+  final override def valuesWithFilter(
+    pred: Nothing => Boolean,
+    mode: Traversing = TopDownDepthFirst,
+    maxDepth: Int = Int.MaxValue
+  ): Iterable[Nothing] =
     Iterable.empty
 
   final override val childrenValues: Iterable[Nothing] = Nil

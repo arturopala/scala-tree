@@ -125,7 +125,11 @@ trait TreeLike[+T] {
     * @param pred return true to include the value in the result, false otherwise.
     * @param maxDepth number of levels to go inside the tree, default to max
     * @group values */
-  def valuesWithFilter(pred: T => Boolean, maxDepth: Int = Int.MaxValue): Iterable[T]
+  def valuesWithFilter(
+    pred: T => Boolean,
+    mode: Traversing = TopDownDepthFirst,
+    maxDepth: Int = Int.MaxValue
+  ): Iterable[T]
 
   /** Iterates over filtered node's values, paired with the node's level, top-down, depth-first.
     * @param pred return true to include the value in the result, false otherwise.
