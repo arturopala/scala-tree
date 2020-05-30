@@ -23,10 +23,10 @@ Design
 ---
 
 Conceptually, apart from an empty, each node of the tree has:
-- a value
+- a head value
 - a collection of subtrees (children).
 
-By the design choice, every node possibly have duplicated children values,
+By the design choice, every node can have duplicated children values,
 although default set of modifications methods assumes and preserve uniqueness.
 
 If the data is distinct by itself, or you don't care about uniqueness, there is 

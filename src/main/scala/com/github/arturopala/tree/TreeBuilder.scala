@@ -241,7 +241,7 @@ object TreeBuilder {
   @tailrec
   final def fromReverseTreeIterator[T: ClassTag](iterator: Iterator[Tree[T]], child: Tree[T]): Tree[T] =
     if (iterator.hasNext) {
-      val tree = iterator.next().insertTree(child)
+      val tree = iterator.next().insertChild(child)
       fromReverseTreeIterator(iterator, tree)
     } else {
       child

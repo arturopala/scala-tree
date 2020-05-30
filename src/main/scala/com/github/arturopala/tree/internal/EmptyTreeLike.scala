@@ -92,18 +92,18 @@ trait EmptyTreeLike extends TreeLike[Nothing] {
 
   final override def prepend[T1 >: Nothing: ClassTag](value: T1): Tree[T1] = Tree(value)
 
-  final override def insertValue[T1: ClassTag](value: T1): Tree[T1] = Tree(value)
+  final override def insertLeaf[T1: ClassTag](value: T1): Tree[T1] = Tree(value)
 
-  final override def insertValueAt[T1: ClassTag](path: Iterable[T1], value: T1): Tree[T1] =
+  final override def insertLeafAt[T1: ClassTag](path: Iterable[T1], value: T1): Tree[T1] =
     Tree.empty.insertBranch(path.toList :+ value)
 
-  final override def insertValueAt[K, T1 >: Nothing: ClassTag](
+  final override def insertLeafAt[K, T1 >: Nothing: ClassTag](
     path: Iterable[K],
     value: T1,
-    f: Nothing => K
+    toPathItem: Nothing => K
   ): Either[Tree[Nothing], Tree[T1]] = Left(Tree.empty)
 
-  final override def insertTree[T1: ClassTag](subtree: Tree[T1]): Tree[T1] = subtree
+  final override def insertChild[T1: ClassTag](child: Tree[T1]): Tree[T1] = child
 
   final override def insertTreeAt[T1 >: Nothing: ClassTag](path: Iterable[T1], subtree: Tree[T1]): Tree[T1] =
     if (path.isEmpty) subtree
@@ -113,7 +113,7 @@ trait EmptyTreeLike extends TreeLike[Nothing] {
   final override def insertTreeAt[K, T1 >: Nothing: ClassTag](
     path: Iterable[K],
     subtree: Tree[T1],
-    f: Nothing => K
+    toPathItem: Nothing => K
   ): Either[Tree[Nothing], Tree[T1]] =
     if (path.isEmpty) Right(subtree) else Left(empty)
 
@@ -121,7 +121,7 @@ trait EmptyTreeLike extends TreeLike[Nothing] {
     if (branch.isEmpty) Tree.empty
     else TreeBuilder.linearTreeFromSequence(branch.toList)
 
-  def modifyValue[T1 >: Nothing: ClassTag](value: T1, modify: Nothing => T1): Tree[T1] =
+  def modifyChildValue[T1 >: Nothing: ClassTag](value: T1, modify: Nothing => T1): Tree[T1] =
     Tree.empty
 
   final override def modifyValueAt[T1 >: Nothing: ClassTag](
@@ -137,7 +137,7 @@ trait EmptyTreeLike extends TreeLike[Nothing] {
   ): Either[Tree[Nothing], Tree[T1]] =
     Left(empty)
 
-  final override def modifyTree[T1 >: Nothing: ClassTag](value: T1, modify: Tree[Nothing] => Tree[T1]): Tree[T1] =
+  final override def modifyChild[T1 >: Nothing: ClassTag](value: T1, modify: Tree[Nothing] => Tree[T1]): Tree[T1] =
     Tree.empty
 
   final override def modifyTreeAt[T1: ClassTag](
@@ -153,7 +153,7 @@ trait EmptyTreeLike extends TreeLike[Nothing] {
   ): Either[Tree[Nothing], Tree[T1]] =
     Left(empty)
 
-  final override def removeValue[T1 >: Nothing: ClassTag](value: T1): Tree[Nothing] =
+  final override def removeChildValue[T1 >: Nothing: ClassTag](value: T1): Tree[Nothing] =
     Tree.empty
 
   final override def removeValueAt[T1 >: Nothing: ClassTag](path: Iterable[T1]): Tree[Nothing] =
@@ -165,7 +165,7 @@ trait EmptyTreeLike extends TreeLike[Nothing] {
   ): Tree[Nothing] =
     Tree.empty
 
-  final override def removeTree[T1 >: Nothing: ClassTag](value: T1): Tree[Nothing] =
+  final override def removeChild[T1 >: Nothing: ClassTag](value: T1): Tree[Nothing] =
     Tree.empty
 
   final override def removeTreeAt[T1 >: Nothing: ClassTag](path: Iterable[T1]): Tree[Nothing] =
@@ -177,13 +177,13 @@ trait EmptyTreeLike extends TreeLike[Nothing] {
   ): Tree[Nothing] =
     Tree.empty
 
-  final override def selectValue[K](path: Iterable[K], f: Nothing => K): Option[Nothing] = None
+  final override def selectValue[K](path: Iterable[K], toPathItem: Nothing => K): Option[Nothing] = None
   final override def selectTree[T1: ClassTag](path: Iterable[T1]): Option[Tree[Nothing]] = None
-  final override def selectTree[K](path: Iterable[K], f: Nothing => K): Option[Tree[Nothing]] = None
+  final override def selectTree[K](path: Iterable[K], toPathItem: Nothing => K): Option[Tree[Nothing]] = None
   final override def containsBranch[T1](branch: Iterable[T1]): Boolean = false
-  final override def containsBranch[K](branch: Iterable[K], f: Nothing => K): Boolean = false
+  final override def containsBranch[K](branch: Iterable[K], toPathItem: Nothing => K): Boolean = false
   final override def containsPath[T1 >: Nothing](path: Iterable[T1]): Boolean = false
-  final override def containsPath[K](path: Iterable[K], f: Nothing => K): Boolean = false
+  final override def containsPath[K](path: Iterable[K], toPathItem: Nothing => K): Boolean = false
 
   final override def map[K: ClassTag](f: Nothing => K): Tree[K] = empty
 

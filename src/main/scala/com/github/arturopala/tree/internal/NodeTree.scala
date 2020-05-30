@@ -1008,7 +1008,7 @@ object NodeTree {
       case (treeSplit, None, _, remainingTree) =>
         val newNode =
           if (keepDistinct && !remainingTree.isLeaf)
-            remainingTree.insertTree(nodeToInsert).asInstanceOf[NodeTree[T1]]
+            remainingTree.insertChild(nodeToInsert).asInstanceOf[NodeTree[T1]]
           else Tree(remainingTree.head, nodeToInsert :: remainingTree.children)
         Some(TreeBuilder.fromChildAndTreeSplit(newNode, treeSplit))
     }
@@ -1025,7 +1025,7 @@ object NodeTree {
         case (treeSplit, recipientTree) =>
           val newNode =
             if (keepDistinct && !recipientTree.isLeaf)
-              recipientTree.insertTree(nodeToInsert).asInstanceOf[NodeTree[T1]]
+              recipientTree.insertChild(nodeToInsert).asInstanceOf[NodeTree[T1]]
             else Tree(recipientTree.head, nodeToInsert :: recipientTree.children)
           Right(TreeBuilder.fromChildAndTreeSplit(newNode, treeSplit))
       }

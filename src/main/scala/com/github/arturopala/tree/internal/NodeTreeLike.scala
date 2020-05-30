@@ -114,27 +114,27 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
 
   final override def prepend[T1 >: T: ClassTag](value: T1): Tree[T1] = Tree(value, node)
 
-  final override def insertValue[T1 >: T: ClassTag](value: T1): Tree[T1] =
+  final override def insertLeaf[T1 >: T: ClassTag](value: T1): Tree[T1] =
     if (node.children.exists(_.head == value)) node
     else Tree(node.head, Tree(value) :: node.children)
 
-  final override def insertValueAt[T1 >: T: ClassTag](path: Iterable[T1], value: T1): Tree[T1] =
+  final override def insertLeafAt[T1 >: T: ClassTag](path: Iterable[T1], value: T1): Tree[T1] =
     NodeTree.insertTreeAt(node, path.iterator, Tree(value), keepDistinct = true).getOrElse(node)
 
-  final override def insertValueAt[K, T1 >: T: ClassTag](
+  final override def insertLeafAt[K, T1 >: T: ClassTag](
     path: Iterable[K],
     value: T1,
-    f: T => K
+    toPathItem: T => K
   ): Either[Tree[T], Tree[T1]] =
-    NodeTree.insertTreeAt(node, path.iterator, f, Tree(value), keepDistinct = true)
+    NodeTree.insertTreeAt(node, path.iterator, toPathItem, Tree(value), keepDistinct = true)
 
-  final override def insertTree[T1 >: T: ClassTag](subtree: Tree[T1]): Tree[T1] = subtree match {
+  final override def insertChild[T1 >: T: ClassTag](child: Tree[T1]): Tree[T1] = child match {
     case Tree.empty         => node
     case tree: NodeTree[T1] => NodeTree.insertTreeDistinct(node, tree)
     case tree: ArrayTree[T1] =>
       if (Tree.preferInflated(node, tree))
         NodeTree.insertTreeDistinct(node, tree.inflated.asInstanceOf[NodeTree[T1]])
-      else node.deflated[T1].insertTree(tree)
+      else node.deflated[T1].insertChild(tree)
   }
 
   final override def insertTreeAt[T1 >: T: ClassTag](path: Iterable[T1], subtree: Tree[T1]): Tree[T1] =
@@ -152,12 +152,13 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
   final override def insertTreeAt[K, T1 >: T: ClassTag](
     path: Iterable[K],
     subtree: Tree[T1],
-    f: T => K
+    toPathItem: T => K
   ): Either[Tree[T], Tree[T1]] = subtree match {
     case Tree.empty         => Left(node)
-    case tree: NodeTree[T1] => NodeTree.insertTreeAt(node, path.iterator, f, tree, keepDistinct = true)
+    case tree: NodeTree[T1] => NodeTree.insertTreeAt(node, path.iterator, toPathItem, tree, keepDistinct = true)
     case tree: ArrayTree[T1] =>
-      NodeTree.insertTreeAt(node, path.iterator, f, tree.inflated.asInstanceOf[NodeTree[T1]], keepDistinct = true)
+      NodeTree
+        .insertTreeAt(node, path.iterator, toPathItem, tree.inflated.asInstanceOf[NodeTree[T1]], keepDistinct = true)
   }
 
   final override def insertBranch[T1 >: T: ClassTag](branch: Iterable[T1]): Tree[T1] =
@@ -165,7 +166,7 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
 
   // DISTINCT MODIFICATIONS
 
-  final override def modifyValue[T1 >: T: ClassTag](value: T1, modify: T => T1): Tree[T1] =
+  final override def modifyChildValue[T1 >: T: ClassTag](value: T1, modify: T => T1): Tree[T1] =
     NodeTree.modifyValue(node, value, modify, keepDistinct = true)
 
   final override def modifyValueAt[T1 >: T: ClassTag](
@@ -181,7 +182,7 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
   ): Either[Tree[T], Tree[T1]] =
     NodeTree.modifyValueAt(node, path.iterator, toPathItem, modify, keepDistinct = true)
 
-  final override def modifyTree[T1 >: T: ClassTag](value: T1, modify: Tree[T] => Tree[T1]): Tree[T1] =
+  final override def modifyChild[T1 >: T: ClassTag](value: T1, modify: Tree[T] => Tree[T1]): Tree[T1] =
     NodeTree.modifyTree(node, value, modify, keepDistinct = true)
 
   final override def modifyTreeAt[T1 >: T: ClassTag](
@@ -199,7 +200,7 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
 
   // DISTINCT REMOVALS
 
-  final override def removeValue[T1 >: T: ClassTag](value: T1): Tree[T] =
+  final override def removeChildValue[T1 >: T: ClassTag](value: T1): Tree[T] =
     NodeTree.removeValue(node, value, keepDistinct = true)
 
   final override def removeValueAt[T1 >: T: ClassTag](path: Iterable[T1]): Tree[T] =
@@ -208,7 +209,7 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
   final override def removeValueAt[K, T1 >: T: ClassTag](path: Iterable[K], toPathItem: T => K): Tree[T] =
     NodeTree.removeValueAt(node, path.iterator, toPathItem, keepDistinct = true)
 
-  final override def removeTree[T1 >: T: ClassTag](value: T1): Tree[T] =
+  final override def removeChild[T1 >: T: ClassTag](value: T1): Tree[T] =
     NodeTree.removeTree(node, value)
 
   final override def removeTreeAt[T1 >: T: ClassTag](path: Iterable[T1]): Tree[T] =
@@ -229,23 +230,24 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
     mapNodeUnsafe(node)
   }
 
-  final override def selectValue[K](path: Iterable[K], f: T => K): Option[T] =
-    NodeTree.select(node, path, (n: NodeTree[T]) => n.head, f)
+  final override def selectValue[K](path: Iterable[K], toPathItem: T => K): Option[T] =
+    NodeTree.select(node, path, (n: NodeTree[T]) => n.head, toPathItem)
 
   final override def selectTree[T1 >: T: ClassTag](path: Iterable[T1]): Option[Tree[T]] =
     NodeTree.select(node, path, (n: NodeTree[T]) => n)
 
-  final override def selectTree[K](path: Iterable[K], f: T => K): Option[Tree[T]] =
-    NodeTree.select(node, path, (n: NodeTree[T]) => n, f)
+  final override def selectTree[K](path: Iterable[K], toPathItem: T => K): Option[Tree[T]] =
+    NodeTree.select(node, path, (n: NodeTree[T]) => n, toPathItem)
 
   final override def containsBranch[T1 >: T](branch: Iterable[T1]): Boolean =
     NodeTree.containsBranch(node, branch)
 
-  final override def containsBranch[K](branch: Iterable[K], f: T => K): Boolean =
-    NodeTree.containsBranch(node, branch, f)
+  final override def containsBranch[K](branch: Iterable[K], toPathItem: T => K): Boolean =
+    NodeTree.containsBranch(node, branch, toPathItem)
 
   final override def containsPath[T1 >: T](path: Iterable[T1]): Boolean = NodeTree.containsPath(node, path)
-  final override def containsPath[K](path: Iterable[K], f: T => K): Boolean = NodeTree.containsPath(node, path, f)
+  final override def containsPath[K](path: Iterable[K], toPathItem: T => K): Boolean =
+    NodeTree.containsPath(node, path, toPathItem)
 
   final override def toPairsIterator: Iterator[(Int, T)] = NodeTree.toPairsList(node).iterator
   final override def toArrays[T1 >: T: ClassTag]: (Array[Int], Array[T1]) = NodeTree.toArrays(node)

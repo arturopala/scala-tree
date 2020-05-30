@@ -148,20 +148,20 @@ abstract class ArrayTreeLike[T: ClassTag] extends TreeLike[T] {
   final override def prepend[T1 >: T: ClassTag](value: T1): ArrayTree[T1] =
     ArrayTree.prepend(value, tree)
 
-  final override def insertValue[T1 >: T: ClassTag](value: T1): Tree[T1] =
+  final override def insertLeaf[T1 >: T: ClassTag](value: T1): Tree[T1] =
     ArrayTree.insertValue(tree.structure.top, value, tree, keepDistinct = true)
 
-  final override def insertValueAt[T1 >: T: ClassTag](path: Iterable[T1], value: T1): Tree[T1] =
+  final override def insertLeafAt[T1 >: T: ClassTag](path: Iterable[T1], value: T1): Tree[T1] =
     ArrayTree.insertValueAt(path, value, tree, keepDistinct = true)
 
-  final override def insertValueAt[K, T1 >: T: ClassTag](
+  final override def insertLeafAt[K, T1 >: T: ClassTag](
     path: Iterable[K],
     value: T1,
-    f: T => K
-  ): Either[Tree[T], Tree[T1]] = ArrayTree.insertValueAt(path, value, tree, f, keepDistinct = true)
+    toPathItem: T => K
+  ): Either[Tree[T], Tree[T1]] = ArrayTree.insertValueAt(path, value, tree, toPathItem, keepDistinct = true)
 
-  final override def insertTree[T1 >: T: ClassTag](subtree: Tree[T1]): Tree[T1] =
-    ArrayTree.insertTreeDistinct(tree.structure.top, subtree, tree)
+  final override def insertChild[T1 >: T: ClassTag](child: Tree[T1]): Tree[T1] =
+    ArrayTree.insertTreeDistinct(tree.structure.top, child, tree)
 
   final override def insertTreeAt[T1 >: T: ClassTag](path: Iterable[T1], subtree: Tree[T1]): Tree[T1] =
     ArrayTree.insertTreeAt(path, subtree, tree, keepDistinct = true)
@@ -169,16 +169,16 @@ abstract class ArrayTreeLike[T: ClassTag] extends TreeLike[T] {
   final override def insertTreeAt[K, T1 >: T: ClassTag](
     path: Iterable[K],
     subtree: Tree[T1],
-    f: T => K
+    toPathItem: T => K
   ): Either[Tree[T], Tree[T1]] =
-    ArrayTree.insertTreeAt(path, subtree, tree, f, keepDistinct = true)
+    ArrayTree.insertTreeAt(path, subtree, tree, toPathItem, keepDistinct = true)
 
   final override def insertBranch[T1 >: T: ClassTag](branch: Iterable[T1]): Tree[T1] =
     ArrayTree.insertBranch(tree.structure.top, branch, tree)
 
   // MODIFICATIONS
 
-  final override def modifyValue[T1 >: T: ClassTag](value: T1, modify: T => T1): Tree[T1] =
+  final override def modifyChildValue[T1 >: T: ClassTag](value: T1, modify: T => T1): Tree[T1] =
     ArrayTree.modifyValue(value, modify, tree, keepDistinct = true)
 
   final override def modifyValueAt[T1 >: T: ClassTag](
@@ -194,7 +194,7 @@ abstract class ArrayTreeLike[T: ClassTag] extends TreeLike[T] {
   ): Either[Tree[T], Tree[T1]] =
     ArrayTree.modifyValueAt(path, modify, tree, toPathItem, keepDistinct = true)
 
-  final override def modifyTree[T1 >: T: ClassTag](value: T1, modify: Tree[T] => Tree[T1]): Tree[T1] =
+  final override def modifyChild[T1 >: T: ClassTag](value: T1, modify: Tree[T] => Tree[T1]): Tree[T1] =
     ArrayTree.modifyTree(value, modify, tree, keepDistinct = true)
 
   final override def modifyTreeAt[T1 >: T: ClassTag](
@@ -212,7 +212,7 @@ abstract class ArrayTreeLike[T: ClassTag] extends TreeLike[T] {
 
   // REMOVALS
 
-  final override def removeValue[T1 >: T: ClassTag](value: T1): Tree[T] =
+  final override def removeChildValue[T1 >: T: ClassTag](value: T1): Tree[T] =
     ArrayTree.removeValue(value, tree, keepDistinct = true)
 
   final override def removeValueAt[T1 >: T: ClassTag](path: Iterable[T1]): Tree[T] =
@@ -221,7 +221,7 @@ abstract class ArrayTreeLike[T: ClassTag] extends TreeLike[T] {
   final override def removeValueAt[K, T1 >: T: ClassTag](path: Iterable[K], toPathItem: T => K): Tree[T] =
     ArrayTree.removeValueAt(path, tree, toPathItem, keepDistinct = true)
 
-  final override def removeTree[T1 >: T: ClassTag](value: T1): Tree[T] =
+  final override def removeChild[T1 >: T: ClassTag](value: T1): Tree[T] =
     ArrayTree.removeTree(tree, value)
 
   final override def removeTreeAt[T1 >: T: ClassTag](path: Iterable[T1]): Tree[T] =
@@ -237,26 +237,26 @@ abstract class ArrayTreeLike[T: ClassTag] extends TreeLike[T] {
 
   // PATH-BASED OPERATIONS
 
-  final override def selectValue[K](path: Iterable[K], f: T => K): Option[T] =
-    ArrayTree.selectValue(path, tree.structure.top, tree.structure, tree.content, f)
+  final override def selectValue[K](path: Iterable[K], toPathItem: T => K): Option[T] =
+    ArrayTree.selectValue(path, tree.structure.top, tree.structure, tree.content, toPathItem)
 
   final override def selectTree[T1 >: T: ClassTag](path: Iterable[T1]): Option[Tree[T]] =
     ArrayTree.selectTree(path, tree.structure.top, tree.structure, tree.content)
 
-  final override def selectTree[K](path: Iterable[K], f: T => K): Option[Tree[T]] =
-    ArrayTree.selectTree(path, tree.structure.top, tree.structure, tree.content, f)
+  final override def selectTree[K](path: Iterable[K], toPathItem: T => K): Option[Tree[T]] =
+    ArrayTree.selectTree(path, tree.structure.top, tree.structure, tree.content, toPathItem)
 
   final override def containsBranch[T1 >: T](branch: Iterable[T1]): Boolean =
     ArrayTree.containsBranch(branch, tree.structure.top, tree.structure, tree.content)
 
-  final override def containsBranch[K](branch: Iterable[K], f: T => K): Boolean =
-    ArrayTree.containsBranch(branch, tree.structure.top, tree.structure, tree.content, f)
+  final override def containsBranch[K](branch: Iterable[K], toPathItem: T => K): Boolean =
+    ArrayTree.containsBranch(branch, tree.structure.top, tree.structure, tree.content, toPathItem)
 
   final override def containsPath[T1 >: T](path: Iterable[T1]): Boolean =
     ArrayTree.containsPath(path, tree.structure.top, tree.structure, tree.content)
 
-  final override def containsPath[K](path: Iterable[K], f: T => K): Boolean =
-    ArrayTree.containsPath(path, tree.structure.top, tree.structure, tree.content, f)
+  final override def containsPath[K](path: Iterable[K], toPathItem: T => K): Boolean =
+    ArrayTree.containsPath(path, tree.structure.top, tree.structure, tree.content, toPathItem)
 
   final override def toPairsIterator: Iterator[(Int, T)] = tree.structure.iterator.zip(tree.content.iterator)
 
