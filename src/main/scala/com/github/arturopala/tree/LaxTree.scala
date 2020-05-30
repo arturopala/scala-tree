@@ -266,10 +266,11 @@ object LaxTreeOps {
       case Tree.empty => Tree.empty
 
       case node: NodeTree[T] =>
-        val list: List[(Int, Tree[K])] =
-          NodeTree.listFlatMap(f, List((node.children.size, f(node.head))), node.children)
+        val list: Vector[(Int, Tree[K])] =
+          NodeTree.listFlatMap(f, Vector((node.children.size, f(node.head))), node.children.toVector)
+
         TreeBuilder
-          .fromSizeAndTreePairsList(list, Nil, TreeBuilder.TreeMergeStrategy.Join)
+          .fromSizeAndTreePairsSequence(list, Nil, TreeBuilder.TreeMergeStrategy.Join)
           .headOption
           .getOrElse(empty)
 
@@ -281,7 +282,7 @@ object LaxTreeOps {
       case Tree.empty => Tree(value)
 
       case node: NodeTree[T] =>
-        Tree(node.head, Tree(value) :: node.children)
+        Tree(node.head, Tree(value) +: node.children)
 
       case tree: ArrayTree[T] =>
         ArrayTree.insertValue(tree.structure.length - 1, value, tree, keepDistinct = false)
@@ -318,10 +319,10 @@ object LaxTreeOps {
       case node: NodeTree[T] =>
         subtree match {
           case Tree.empty         => node
-          case tree: NodeTree[T1] => Tree(node.head, tree :: node.children)
+          case tree: NodeTree[T1] => Tree(node.head, tree +: node.children)
           case tree: ArrayTree[T1] =>
             if (Tree.preferInflated(node, tree))
-              Tree(node.head, tree.inflated.asInstanceOf[NodeTree[T1]] :: node.children)
+              Tree(node.head, tree.inflated.asInstanceOf[NodeTree[T1]] +: node.children)
             else node.deflated[T1].insertChildLax(tree)
         }
 

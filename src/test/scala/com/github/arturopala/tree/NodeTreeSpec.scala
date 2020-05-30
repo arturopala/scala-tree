@@ -623,32 +623,32 @@ class NodeTreeSpec extends AnyWordSpecCompat {
     }
 
     "build tree from triples list" in {
-      buildTreeFromPartials(List(), Nil) shouldBe Nil
-      buildTreeFromPartials(List((0, "a", Nil)), Nil) shouldBe List(Tree("a"))
-      buildTreeFromPartials(List((0, "a", List(Tree("b")))), Nil) shouldBe List(Tree("a", Tree("b")))
-      buildTreeFromPartials(List((0, "a", List(Tree("b"), Tree("c")))), Nil) shouldBe List(
+      buildTreeFromPartials(Vector(), Nil) shouldBe Nil
+      buildTreeFromPartials(Vector((0, "a", Nil)), Nil) shouldBe List(Tree("a"))
+      buildTreeFromPartials(Vector((0, "a", List(Tree("b")))), Nil) shouldBe List(Tree("a", Tree("b")))
+      buildTreeFromPartials(Vector((0, "a", List(Tree("b"), Tree("c")))), Nil) shouldBe List(
         Tree("a", Tree("b"), Tree("c"))
       )
-      buildTreeFromPartials(List((0, "d", Nil), (1, "a", List(Tree("b"), Tree("c")))), Nil) shouldBe List(
+      buildTreeFromPartials(Vector((0, "d", Nil), (1, "a", List(Tree("b"), Tree("c")))), Nil) shouldBe List(
         Tree("a", Tree("b"), Tree("c"), Tree("d"))
       )
-      buildTreeFromPartials(List((0, "d", List(Tree("e", Tree("f")))), (1, "a", List(Tree("b"), Tree("c")))), Nil) shouldBe List(
+      buildTreeFromPartials(Vector((0, "d", List(Tree("e", Tree("f")))), (1, "a", List(Tree("b"), Tree("c")))), Nil) shouldBe List(
         Tree("a", Tree("b"), Tree("c"), Tree("d", Tree("e", Tree("f"))))
       )
       buildTreeFromPartials(
-        List((0, "d", List(Tree("e", Tree("f")), Tree("g"))), (1, "a", List(Tree("b"), Tree("c")))),
+        Vector((0, "d", List(Tree("e", Tree("f")), Tree("g"))), (1, "a", List(Tree("b"), Tree("c")))),
         Nil
       ) shouldBe List(Tree("a", Tree("b"), Tree("c"), Tree("d", Tree("e", Tree("f")), Tree("g"))))
       buildTreeFromPartials(
-        List((0, "h", Nil), (1, "d", List(Tree("e", Tree("f")), Tree("g"))), (1, "a", List(Tree("b"), Tree("c")))),
+        Vector((0, "h", Nil), (1, "d", List(Tree("e", Tree("f")), Tree("g"))), (1, "a", List(Tree("b"), Tree("c")))),
         Nil
       ) shouldBe List(Tree("a", Tree("b"), Tree("c"), Tree("d", Tree("e", Tree("f")), Tree("g"), Tree("h"))))
       buildTreeFromPartials(
-        List((0, "h", Nil), (0, "d", List(Tree("e", Tree("f")), Tree("g"))), (2, "a", List(Tree("b"), Tree("c")))),
+        Vector((0, "h", Nil), (0, "d", List(Tree("e", Tree("f")), Tree("g"))), (2, "a", List(Tree("b"), Tree("c")))),
         Nil
       ) shouldBe List(Tree("a", Tree("b"), Tree("c"), Tree("d", Tree("e", Tree("f")), Tree("g")), Tree("h")))
       buildTreeFromPartials(
-        List(
+        Vector(
           (0, "h", List(Tree("i"), Tree("j"))),
           (0, "d", List(Tree("e", Tree("f")), Tree("g"))),
           (2, "a", List(Tree("b"), Tree("c")))

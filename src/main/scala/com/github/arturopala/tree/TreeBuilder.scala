@@ -147,7 +147,7 @@ object TreeBuilder {
   final def fromArraysHead[T: ClassTag](structure: Array[Int], values: Array[T]): Tree[T] =
     fromArrays(structure, values).headOption.getOrElse(Tree.empty)
 
-  /** Builds a tree from a list of pairs (numberOfChildren, node), where:
+  /** Builds a tree from a sequence of pairs (numberOfChildren, node), where:
     *   - `node` is a new node, and
     *   - `numberOfChildren` is a number of preceding elements in the list
     *                      to become direct subtrees of the current node.
@@ -155,12 +155,12 @@ object TreeBuilder {
     * @note - Nodes of subtrees must always precede the parent node, and appear in the reverse order.
     *       - The sum of all numberOfChildren values must be the size of the list minus one.
     */
-  final def fromSizeAndTreePairsList[T](
-    list: List[(Int, Tree[T])],
+  final def fromSizeAndTreePairsSequence[T](
+    sequence: Seq[(Int, Tree[T])],
     result: List[NodeTree[T]] = Nil,
     strategy: TreeMergeStrategy = TreeMergeStrategy.Join
-  ): List[Tree[T]] =
-    fromSizeAndTreePairs(list.iterator, result, strategy)
+  ): Seq[Tree[T]] =
+    fromSizeAndTreePairs(sequence.iterator, result, strategy)
 
   /** Builds a tree from an iterator of pairs (numberOfChildren, node). */
   final def fromSizeAndTreePairsIterator[T](
@@ -247,24 +247,26 @@ object TreeBuilder {
       child
     }
 
-  /** Builds a tree from the list of tree splits (leftChildren, value, rightChildren).
+  /** Builds a tree from the sequence of tree splits (leftChildren, value, rightChildren).
     * @param child bottom tree node, put in the middle between first leftChildren and rightChildren.
     */
   final def fromChildAndTreeSplit[T](
     child: NodeTree[T],
-    treeSplit: List[(List[NodeTree[T]], T, List[NodeTree[T]])]
+    treeSplit: Seq[(Seq[NodeTree[T]], T, Seq[NodeTree[T]])]
   ): Tree[T] =
-    treeSplit.foldLeft(child) { case (n, (l, v, r)) => Tree(v, l ::: (n :: r)) }
+    treeSplit.foldLeft(child) { case (n, (l, v, r)) => Tree(v, l ++: (n +: r)) }
 
-  /** Builds a tree from the list of tree splits (leftChildren, value, rightChildren).
+  /** Builds a tree from the sequence of tree splits (leftChildren, value, rightChildren).
     */
   final def fromTreeSplit[T](
-    treeSplit: List[(List[NodeTree[T]], T, List[NodeTree[T]])]
-  ): Tree[T] = treeSplit match {
-    case Nil => Tree.empty
-    case (hl, hv, hr) :: xs =>
-      xs.foldLeft(Tree(hv, hl ::: hr)) { case (n, (l, v, r)) => Tree(v, l ::: (n :: r)) }
-  }
+    treeSplit: Seq[(Seq[NodeTree[T]], T, Seq[NodeTree[T]])]
+  ): Tree[T] =
+    if (treeSplit.isEmpty) Tree.empty
+    else
+      treeSplit.head match {
+        case (hl, hv, hr) =>
+          treeSplit.tail.foldLeft(Tree(hv, hl ++: hr)) { case (n, (l, v, r)) => Tree(v, l ++: (n +: r)) }
+      }
 
   /** There are multiple ways to merge the tree after expanding a node.
     * As we don't want to be constrained by an arbitrary choice,
@@ -288,7 +290,7 @@ object TreeBuilder {
 
       /** Concatenates new and existing subtrees of an expanded node. */
       override final def merge[T](newNode: NodeTree[T], existingSubtrees: List[NodeTree[T]]): NodeTree[T] =
-        Tree(newNode.head, existingSubtrees ::: newNode.children)
+        Tree(newNode.head, existingSubtrees ++ newNode.children)
 
       /** Joins orphaned subtrees to the parent node. */
       override final def keepOrphanedSubtrees: Boolean = true

@@ -44,7 +44,7 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
   final override def values(mode: TraversingMode = TopDownDepthFirst): Iterable[T] =
     iterableFrom(NodeTree.valuesIterator(node, mode.isDepthFirst))
 
-  final def valuesUnsafe: List[T] = node.head :: node.children.flatMap(_.valuesUnsafe)
+  final def valuesUnsafe: Iterable[T] = node.head +: node.children.flatMap(_.valuesUnsafe)
 
   final override def leaves: Iterable[T] =
     iterableFrom(NodeTree.leavesIterator(node))
@@ -72,7 +72,7 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
   final override def trees(mode: TraversingMode = TopDownDepthFirst): Iterable[Tree[T]] =
     iterableFrom(NodeTree.treesIterator(node, mode.isDepthFirst))
 
-  final def treesUnsafe: Iterable[Tree[T]] = node :: node.children.flatMap(_.treesUnsafe)
+  final def treesUnsafe: Iterable[Tree[T]] = node +: node.children.flatMap(_.treesUnsafe)
 
   final override def treesWithFilter(
     pred: Tree[T] => Boolean,
@@ -95,10 +95,10 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
 
   final override def branches: Iterable[Iterable[T]] = iterableFrom(NodeTree.branchesIterator(node))
 
-  final def branchesUnsafe: List[List[T]] = node.children match {
+  final def branchesUnsafe: Seq[Seq[T]] = node.children match {
     case Nil => List(List(node.head))
     case _ =>
-      node.children.flatMap(_.branchesUnsafe).map(node.head :: _)
+      node.children.flatMap(_.branchesUnsafe).map(node.head +: _)
   }
 
   final override def branchesWithFilter(
@@ -119,7 +119,7 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
 
   final override def insertLeaf[T1 >: T: ClassTag](value: T1): Tree[T1] =
     if (node.children.exists(_.head == value)) node
-    else Tree(node.head, Tree(value) :: node.children)
+    else Tree(node.head, Tree(value) +: node.children)
 
   final override def insertLeafAt[T1 >: T: ClassTag](path: Iterable[T1], value: T1): Tree[T1] =
     NodeTree.insertTreeAt(node, path.iterator, Tree(value), keepDistinct = true).getOrElse(node)

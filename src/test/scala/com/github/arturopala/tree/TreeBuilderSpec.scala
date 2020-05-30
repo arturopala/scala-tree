@@ -50,7 +50,7 @@ class TreeBuilderSpec extends AnyWordSpecCompat {
     "create a new tree from the list of single-node trees" in {
       val list: List[(Int, Tree[String])] = List((0, Tree("a")), (0, Tree("b")), (0, Tree("c")), (3, Tree("d")))
 
-      val trees = fromSizeAndTreePairsList(list)
+      val trees = fromSizeAndTreePairsSequence(list)
 
       trees.size shouldBe 1
       trees.head.size shouldBe 4
@@ -66,7 +66,7 @@ class TreeBuilderSpec extends AnyWordSpecCompat {
       val list: List[(Int, Tree[String])] =
         List((0, Tree("a", Tree("A"))), (0, Tree("b", Tree("B"))), (0, Tree("c", Tree("C"))), (3, Tree("d", Tree("D"))))
 
-      val trees = fromSizeAndTreePairsList(list)
+      val trees = fromSizeAndTreePairsSequence(list)
 
       trees.size shouldBe 1
       trees.head.size shouldBe 8
@@ -83,7 +83,7 @@ class TreeBuilderSpec extends AnyWordSpecCompat {
       val list: List[(Int, Tree[String])] =
         List((0, Tree("a", Tree("A"))), (1, Tree("b", Tree("B"))), (1, Tree("c", Tree("C"))), (1, Tree("d", Tree("D"))))
 
-      val trees = fromSizeAndTreePairsList(list)
+      val trees = fromSizeAndTreePairsSequence(list)
 
       trees.size shouldBe 1
       trees.head.size shouldBe 8

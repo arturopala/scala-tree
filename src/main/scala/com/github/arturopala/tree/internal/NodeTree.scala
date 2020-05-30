@@ -32,12 +32,12 @@ import scala.reflect.ClassTag
 object NodeTree {
 
   /** Type alias of a tree split, i.e. a tuple of (leftChildren, head, rightChildren). */
-  type TreeSplit[T] = (List[NodeTree[T]], T, List[NodeTree[T]])
+  type TreeSplit[T] = (Seq[NodeTree[T]], T, Seq[NodeTree[T]])
 
   object NonEmptyNode {
 
     /** Extracts head, first child and remaining children if non empty. */
-    def unapply[T](node: NodeTree[T]): Option[(T, NodeTree[T], List[NodeTree[T]])] = node match {
+    def unapply[T](node: NodeTree[T]): Option[(T, NodeTree[T], Seq[NodeTree[T]])] = node match {
       case _: Leaf[T]      => None
       case node: Unary[T]  => Some((node.head, node.child, Nil))
       case node: Binary[T] => Some((node.head, node.left, node.right :: Nil))
@@ -210,15 +210,16 @@ object NodeTree {
       }
     }
 
-  final def values[T](pred: T => Boolean, node: NodeTree[T]): List[T] = values(pred, Nil, List(node))
+  /** Sequence of all values of the tree fulfilling the predicate. */
+  final def values[T](pred: T => Boolean, node: NodeTree[T]): Vector[T] = values(pred, Vector.empty[T], Vector(node))
 
   @tailrec
-  private def values[T](pred: T => Boolean, result: List[T], queue: List[NodeTree[T]]): List[T] =
-    queue match {
-      case Nil => result.reverse
-      case Node(head, children) :: xs =>
-        if (pred(head)) values(pred, head :: result, children ::: xs)
-        else values(pred, result, children ::: xs)
+  private def values[T](pred: T => Boolean, result: Vector[T], queue: Vector[NodeTree[T]]): Vector[T] =
+    if (queue.isEmpty) result
+    else {
+      val Node(head, children) = queue.head
+      if (pred(head)) values(pred, result :+ head, children ++: queue.safeTail)
+      else values(pred, result, children ++: queue.safeTail)
     }
 
   /** Returns an iterator over all (sub)trees of the tree inclusive. */
@@ -331,20 +332,21 @@ object NodeTree {
       }
     }
 
-  /** Lists the trees fulfilling the predicate. */
-  final def trees[T](pred: Tree[T] => Boolean, node: NodeTree[T]): List[NodeTree[T]] = trees(pred, Nil, List(node))
+  /** Lists all the trees fulfilling the predicate. */
+  final def trees[T](pred: Tree[T] => Boolean, node: NodeTree[T]): Vector[NodeTree[T]] =
+    trees(pred, Vector.empty, Vector(node))
 
   @tailrec
   private def trees[T](
     pred: Tree[T] => Boolean,
-    result: List[NodeTree[T]],
-    queue: List[NodeTree[T]]
-  ): List[NodeTree[T]] =
-    queue match {
-      case Nil => result.reverse
-      case (node @ Node(_, children)) :: xs =>
-        if (pred(node)) trees(pred, node :: result, children ::: xs)
-        else trees(pred, result, children ::: xs)
+    result: Vector[NodeTree[T]],
+    queue: Vector[NodeTree[T]]
+  ): Vector[NodeTree[T]] =
+    if (queue.isEmpty) result
+    else {
+      val node @ Node(_, children) = queue.head
+      if (pred(node)) trees(pred, result :+ node, children ++: queue.safeTail)
+      else trees(pred, result, children ++: queue.safeTail)
     }
 
   /** Returns an iterator over all paths of the tree. */
@@ -469,24 +471,25 @@ object NodeTree {
         }
     }
 
-  final def branches[T](pred: List[T] => Boolean, node: NodeTree[T]): List[List[T]] =
-    branches(pred, Nil, List((Nil, node)))
+  final def branches[T](pred: Iterable[T] => Boolean, node: NodeTree[T]): Iterable[Iterable[T]] =
+    branches(pred, Vector.empty, Vector((Vector.empty, node)))
 
   @tailrec
   private def branches[T](
-    pred: List[T] => Boolean,
-    result: List[List[T]],
-    queue: List[(List[T], NodeTree[T])]
-  ): List[List[T]] =
-    queue match {
-      case Nil => result.reverse
-      case (acc, Node(head, children)) :: xs =>
-        val branch = head :: acc
-        children match {
-          case Nil if pred(branch) => branches(pred, branch.reverse :: result, xs)
-          case _                   => branches(pred, result, children.map((branch, _)) ::: xs)
-        }
-    }
+    pred: Iterable[T] => Boolean,
+    result: Vector[Vector[T]],
+    queue: Vector[(Vector[T], NodeTree[T])]
+  ): Vector[Vector[T]] =
+    if (queue.isEmpty) result
+    else
+      queue.head match {
+        case (acc, Node(head, children)) =>
+          val branch = acc :+ head
+          children match {
+            case Nil if pred(branch) => branches(pred, result :+ branch, queue.safeTail)
+            case _                   => branches(pred, result, children.map((branch, _)) ++: queue.safeTail)
+          }
+      }
 
   final def countBranches[T](pred: Iterable[T] => Boolean, node: NodeTree[T]): Int =
     countBranches(pred, 0, Iterator((Vector.empty, node)))
@@ -591,45 +594,46 @@ object NodeTree {
   @tailrec
   private def insertBranchInSubtrees[T, T1 >: T: ClassTag](
     branchHead: T1,
-    subtreesLeft: List[NodeTree[T]],
-    subtreesRight: List[NodeTree[T]],
+    subtreesLeft: Seq[NodeTree[T]],
+    subtreesRight: Seq[NodeTree[T]],
     branchTailIterator: Iterator[T1]
-  ): List[NodeTree[T1]] =
+  ): Seq[NodeTree[T1]] =
     subtreesRight match {
       case Nil =>
         val branchTree: NodeTree[T1] =
-          TreeBuilder.linearTreeFromSequence(branchHead :: branchTailIterator.toList).asInstanceOf[NodeTree[T1]]
-        branchTree :: subtreesLeft
+          TreeBuilder.linearTreeFromSequence(branchHead +: branchTailIterator.toSeq).asInstanceOf[NodeTree[T1]]
+        branchTree +: subtreesLeft
 
       case head :: tail if head.head == branchHead =>
         val modified = insertBranchUnsafe(head, branchTailIterator)
-        subtreesLeft.reverse ::: (modified :: tail)
+        subtreesLeft.reverse ++: (modified :: tail)
 
       case head :: tail =>
-        insertBranchInSubtrees(branchHead, head :: subtreesLeft, tail, branchTailIterator)
+        insertBranchInSubtrees(branchHead, head +: subtreesLeft, tail, branchTailIterator)
     }
 
   final def insertBranch[T, T1 >: T: ClassTag](tree: NodeTree[T], branchIterator: Iterator[T1]): Option[Tree[T1]] =
     splitTreeFollowingPath(tree, branchIterator).flatMap {
       case (treeSplit, Some(value), remainingBranchIterator, remainingTree) =>
         val branchTree: NodeTree[T1] =
-          TreeBuilder.linearTreeFromSequence(value :: remainingBranchIterator.toList).asInstanceOf[NodeTree[T1]]
+          TreeBuilder.linearTreeFromSequence(value +: remainingBranchIterator.toSeq).asInstanceOf[NodeTree[T1]]
 
-        val newNode = Tree(remainingTree.head, branchTree :: remainingTree.children)
+        val newNode = Tree(remainingTree.head, branchTree +: remainingTree.children)
         Some(TreeBuilder.fromChildAndTreeSplit(newNode, treeSplit))
 
       case _ => None
     }
 
-  final def toPairsList[T](node: NodeTree[T]): List[(Int, T)] = toPairsList(Nil, List(node))
+  final def toPairsList[T](node: NodeTree[T]): Seq[(Int, T)] = toPairsList(Vector.empty, Vector(node))
 
   @tailrec
-  private def toPairsList[T](result: List[(Int, T)], queue: List[NodeTree[T]]): List[(Int, T)] =
-    queue match {
-      case Nil                        => result
-      case Leaf(head) :: xs           => toPairsList((0, head) :: result, xs)
-      case Node(head, children) :: xs => toPairsList((children.size, head) :: result, children ::: xs)
-    }
+  private def toPairsList[T](result: Vector[(Int, T)], queue: Vector[NodeTree[T]]): Seq[(Int, T)] =
+    if (queue.isEmpty) result
+    else
+      queue.head match {
+        case Leaf(head)           => toPairsList((0, head) +: result, queue.safeTail)
+        case Node(head, children) => toPairsList((children.size, head) +: result, children ++: queue.safeTail)
+      }
 
   final def toSlices[T: ClassTag](node: NodeTree[T]): (IntSlice, Slice[T]) = {
     val (structure, values) = toArrays(node)
@@ -706,26 +710,29 @@ object NodeTree {
 
   @tailrec
   final def toTreeList[T](
-    result: List[(Int, Tree[T])],
-    queue: List[NodeTree[T]]
-  ): List[(Int, Tree[T])] =
-    queue match {
-      case Nil                        => result
-      case Leaf(head) :: xs           => toTreeList((0, Tree(head)) :: result, xs)
-      case Node(head, children) :: xs => toTreeList((children.size, Tree(head)) :: result, children ::: xs)
-    }
+    result: Vector[(Int, Tree[T])],
+    queue: Vector[NodeTree[T]]
+  ): Vector[(Int, Tree[T])] =
+    if (queue.isEmpty) result
+    else
+      queue.head match {
+        case Leaf(head)           => toTreeList((0, Tree(head)) +: result, queue.safeTail)
+        case Node(head, children) => toTreeList((children.size, Tree(head)) +: result, children ++: queue.safeTail)
+      }
 
-  @`inline` final def listMap[T, K](f: T => K, node: NodeTree[T]): List[(Int, K)] = listMap(f, Nil, List(node))
+  @`inline` final def listMap[T, K](f: T => K, node: NodeTree[T]): Vector[(Int, K)] =
+    listMap(f, Vector.empty, Vector(node))
 
   @tailrec
-  private final def listMap[T, K](f: T => K, result: List[(Int, K)], queue: List[NodeTree[T]]): List[(Int, K)] =
-    queue match {
-      case Nil                             => result
-      case Leaf(head) :: xs                => listMap(f, (0, f(head)) :: result, xs)
-      case Unary(head, child) :: xs        => listMap(f, (1, f(head)) :: result, child :: xs)
-      case Binary(head, left, right) :: xs => listMap(f, (2, f(head)) :: result, left :: right :: xs)
-      case Node(head, children) :: xs      => listMap(f, (children.size, f(head)) :: result, children ::: xs)
-    }
+  private final def listMap[T, K](f: T => K, result: Vector[(Int, K)], queue: Vector[NodeTree[T]]): Vector[(Int, K)] =
+    if (queue.isEmpty) result
+    else
+      queue.head match {
+        case Leaf(head)                => listMap(f, (0, f(head)) +: result, queue.safeTail)
+        case Unary(head, child)        => listMap(f, (1, f(head)) +: result, child +: queue.safeTail)
+        case Binary(head, left, right) => listMap(f, (2, f(head)) +: result, left +: right +: queue.safeTail)
+        case Node(head, children)      => listMap(f, (children.size, f(head)) +: result, children ++: queue.safeTail)
+      }
 
   @`inline` final def arrayMap[T, K](f: T => K, node: NodeTree[T])(
     implicit tag: ClassTag[K]
@@ -779,14 +786,15 @@ object NodeTree {
   @tailrec
   final def listFlatMap[T, K](
     f: T => Tree[K],
-    result: List[(Int, Tree[K])],
-    queue: List[NodeTree[T]]
-  ): List[(Int, Tree[K])] =
-    queue match {
-      case Nil                        => result
-      case Leaf(head) :: xs           => listFlatMap(f, (0, f(head)) :: result, xs)
-      case Node(head, children) :: xs => listFlatMap(f, (children.size, f(head)) :: result, children ::: xs)
-    }
+    result: Vector[(Int, Tree[K])],
+    queue: Vector[NodeTree[T]]
+  ): Vector[(Int, Tree[K])] =
+    if (queue.isEmpty) result
+    else
+      queue.head match {
+        case Leaf(head)           => listFlatMap(f, (0, f(head)) +: result, queue.safeTail)
+        case Node(head, children) => listFlatMap(f, (children.size, f(head)) +: result, children ++: queue.safeTail)
+      }
 
   final def mkStringUsingBranches[T](
     node: NodeTree[T],
@@ -806,7 +814,7 @@ object NodeTree {
         branchEnd,
         maxDepth,
         new StringBuilder(branchStart),
-        List((1, branchStart, node)),
+        Vector((1, branchStart, node)),
         newBranch = false
       )
 
@@ -818,44 +826,46 @@ object NodeTree {
     branchEnd: String,
     maxDepth: Int,
     builder: StringBuilder,
-    queue: List[(Int, String, NodeTree[T])],
+    queue: Vector[(Int, String, NodeTree[T])],
     newBranch: Boolean
   ): StringBuilder =
-    queue match {
-      case Nil => builder
-      case (level, prefix, Node(head, children)) :: xs =>
-        val string = show(head)
-        if (level <= maxDepth) {
-          if (newBranch) builder.append(branchSeparator).append(prefix)
-          if (level > 1) builder.append(valueSeparator)
-          builder.append(string)
-        }
-        val subtrees2 = if (level >= maxDepth) Nil else children
-        subtrees2 match {
-          case Nil =>
-            mkStringUsingBranches(
-              show,
-              valueSeparator,
-              branchSeparator,
-              branchEnd,
-              maxDepth,
-              builder.append(branchEnd),
-              xs,
-              newBranch = true
-            )
-          case _ =>
-            mkStringUsingBranches(
-              show,
-              valueSeparator,
-              branchSeparator,
-              branchEnd,
-              maxDepth,
-              builder,
-              children.map((level + 1, prefix + (if (level > 1) valueSeparator else "") + string, _)) ::: xs,
-              newBranch = false
-            )
-        }
-    }
+    if (queue.isEmpty) builder
+    else
+      queue.head match {
+        case (level, prefix, Node(head, children)) =>
+          val string = show(head)
+          if (level <= maxDepth) {
+            if (newBranch) builder.append(branchSeparator).append(prefix)
+            if (level > 1) builder.append(valueSeparator)
+            builder.append(string)
+          }
+          val subtrees2 = if (level >= maxDepth) Nil else children
+          subtrees2 match {
+            case Nil =>
+              mkStringUsingBranches(
+                show,
+                valueSeparator,
+                branchSeparator,
+                branchEnd,
+                maxDepth,
+                builder.append(branchEnd),
+                queue.safeTail,
+                newBranch = true
+              )
+            case _ =>
+              mkStringUsingBranches(
+                show,
+                valueSeparator,
+                branchSeparator,
+                branchEnd,
+                maxDepth,
+                builder,
+                children
+                  .map((level + 1, prefix + (if (level > 1) valueSeparator else "") + string, _)) ++: queue.safeTail,
+                newBranch = false
+              )
+          }
+      }
 
   /** Inserts new child into a tree keeping children distinct.
     * @note distinct child is prepended on the lef side of existing children list,
@@ -882,18 +892,18 @@ object NodeTree {
     *                         or to prefer new child position (to the left) after merging.*/
   final def insertChildrenDistinct[T](
     head: T,
-    leftSiblings: List[NodeTree[T]],
-    newChildren: List[NodeTree[T]],
-    rightSiblings: List[NodeTree[T]],
+    leftSiblings: Seq[NodeTree[T]],
+    newChildren: Seq[NodeTree[T]],
+    rightSiblings: Seq[NodeTree[T]],
     preserveExisting: Boolean
   ): NodeTree[T] = {
 
     @tailrec
     def insert(
       queue: Iterator[NodeTree[T]],
-      left: List[NodeTree[T]],
-      right: List[NodeTree[T]]
-    ): (List[NodeTree[T]], List[NodeTree[T]]) =
+      left: Seq[NodeTree[T]],
+      right: Seq[NodeTree[T]]
+    ): (Seq[NodeTree[T]], Seq[NodeTree[T]]) =
       if (queue.hasNext) {
         val newChild = queue.next
         val (newLeft, newRight) = insertDistinctBetweenSiblings(left, newChild, right, preserveExisting)
@@ -901,7 +911,7 @@ object NodeTree {
       } else (left, right)
 
     val (left, right) = insert(newChildren.iterator, leftSiblings, rightSiblings)
-    Tree(head, left ::: right)
+    Tree(head, left ++ right)
   }
 
   /** Inserts new child distinct between left and right siblings.
@@ -909,13 +919,13 @@ object NodeTree {
     *                         or to prefer new child position (to the left) after merging.*/
   final def insertChildDistinct[T](
     head: T,
-    leftSiblings: List[NodeTree[T]],
+    leftSiblings: Seq[NodeTree[T]],
     newChild: NodeTree[T],
-    rightSiblings: List[NodeTree[T]],
+    rightSiblings: Seq[NodeTree[T]],
     preserveExisting: Boolean
   ): NodeTree[T] = {
     val (left, right) = insertDistinctBetweenSiblings(leftSiblings, newChild, rightSiblings, preserveExisting)
-    Tree(head, left ::: right)
+    Tree(head, left ++ right)
   }
 
   /** Inserts new child distinct between left and right siblings.
@@ -925,19 +935,19 @@ object NodeTree {
     *                         or to prefer new child position (to the left) after merging.
     */
   final def insertDistinctBetweenSiblings[T](
-    leftSiblings: List[NodeTree[T]],
+    leftSiblings: Seq[NodeTree[T]],
     newChild: NodeTree[T],
-    rightSiblings: List[NodeTree[T]],
+    rightSiblings: Seq[NodeTree[T]],
     preserveExisting: Boolean
-  ): (List[NodeTree[T]], List[NodeTree[T]]) =
-    splitListWhen[NodeTree[T]](_.head == newChild.head, leftSiblings.reverse) match {
+  ): (Seq[NodeTree[T]], Seq[NodeTree[T]]) =
+    splitSequenceWhen[NodeTree[T]](_.head == newChild.head, leftSiblings.reverse) match {
       case Some((right, duplicateOnLeft, left)) =>
         val mergedNode =
           insertChildrenDistinct(newChild.head, duplicateOnLeft.children, newChild.children, Nil, preserveExisting)
-        (left.reverse ::: mergedNode :: right.reverse, rightSiblings)
+        (left.reverse ++: mergedNode +: right.reverse, rightSiblings)
 
       case None =>
-        splitListWhen[NodeTree[T]](_.head == newChild.head, rightSiblings) match {
+        splitSequenceWhen[NodeTree[T]](_.head == newChild.head, rightSiblings) match {
           case None =>
             (leftSiblings :+ newChild, rightSiblings)
 
@@ -950,8 +960,8 @@ object NodeTree {
                 Nil,
                 preserveExisting
               )
-            if (preserveExisting) (leftSiblings, left ::: mergedNode :: right)
-            else (leftSiblings :+ mergedNode, left ::: right)
+            if (preserveExisting) (leftSiblings, left ++: mergedNode +: right)
+            else (leftSiblings :+ mergedNode, left ++: right)
         }
     }
 
@@ -1010,20 +1020,21 @@ object NodeTree {
     *                if false, they are appended.*/
   @tailrec
   final def buildTreeFromPartials[T, T1 >: T](
-    list: List[(Int, T, List[NodeTree[T1]])],
-    result: List[NodeTree[T1]],
+    queue: Vector[(Int, T, Seq[NodeTree[T1]])],
+    result: Seq[NodeTree[T1]],
     prepend: Boolean = true
-  ): List[NodeTree[T1]] =
-    list match {
-      case Nil => result
-      case (numberOfChildrenToCollect, nodeValue, partialChildren) :: xs =>
-        val node = Tree(
-          nodeValue,
-          if (prepend) partialChildren ::: result.take(numberOfChildrenToCollect)
-          else result.take(numberOfChildrenToCollect) ::: partialChildren
-        )
-        buildTreeFromPartials(xs, node :: result.drop(numberOfChildrenToCollect), prepend)
-    }
+  ): Seq[NodeTree[T1]] =
+    if (queue.isEmpty) result
+    else
+      queue.head match {
+        case (numberOfChildrenToCollect, nodeValue, partialChildren) =>
+          val node = Tree(
+            nodeValue,
+            if (prepend) partialChildren ++: result.take(numberOfChildrenToCollect)
+            else result.take(numberOfChildrenToCollect) ++: partialChildren
+          )
+          buildTreeFromPartials(queue.safeTail, node +: result.drop(numberOfChildrenToCollect), prepend)
+      }
 
   final def insertTreeAt[T, T1 >: T: ClassTag](
     tree: NodeTree[T],
@@ -1037,14 +1048,14 @@ object NodeTree {
           TreeBuilder
             .fromTreeSequence((Tree(value) +: remainingBranchIterator.map(Tree.apply[T1]).toVector) :+ nodeToInsert)
             .asInstanceOf[NodeTree[T1]]
-        val newNode = Tree(remainingTree.head, branchTree :: remainingTree.children)
+        val newNode = Tree(remainingTree.head, branchTree +: remainingTree.children)
         Some(TreeBuilder.fromChildAndTreeSplit(newNode, treeSplit))
 
       case (treeSplit, None, _, remainingTree) =>
         val newNode =
           if (keepDistinct && !remainingTree.isLeaf)
             remainingTree.insertChild(nodeToInsert).asInstanceOf[NodeTree[T1]]
-          else Tree(remainingTree.head, nodeToInsert :: remainingTree.children)
+          else Tree(remainingTree.head, nodeToInsert +: remainingTree.children)
         Some(TreeBuilder.fromChildAndTreeSplit(newNode, treeSplit))
     }
 
@@ -1061,7 +1072,7 @@ object NodeTree {
           val newNode =
             if (keepDistinct && !recipientTree.isLeaf)
               recipientTree.insertChild(nodeToInsert).asInstanceOf[NodeTree[T1]]
-            else Tree(recipientTree.head, nodeToInsert :: recipientTree.children)
+            else Tree(recipientTree.head, nodeToInsert +: recipientTree.children)
           Right(TreeBuilder.fromChildAndTreeSplit(newNode, treeSplit))
       }
       .getOrElse(Left(tree))
@@ -1076,7 +1087,7 @@ object NodeTree {
   final def splitTreeFollowingEntirePath[T, T1 >: T](
     tree: NodeTree[T],
     pathIterator: Iterator[T1]
-  ): Option[(List[TreeSplit[T]], NodeTree[T])] =
+  ): Option[(Vector[TreeSplit[T]], NodeTree[T])] =
     splitTreeFollowingPath[T, T1](tree, pathIterator).flatMap {
       case (_, Some(_), _, _)                  => None
       case (treeSplit, None, _, remainingTree) => Some((treeSplit, remainingTree))
@@ -1094,27 +1105,27 @@ object NodeTree {
   final def splitTreeFollowingPath[T, T1 >: T](
     tree: NodeTree[T],
     pathIterator: Iterator[T1]
-  ): Option[(List[TreeSplit[T]], Option[T1], Iterator[T1], NodeTree[T])] =
+  ): Option[(Vector[TreeSplit[T]], Option[T1], Iterator[T1], NodeTree[T])] =
     if (pathIterator.isEmpty) None
     else {
       val head = pathIterator.next
-      if (tree.head == head) Some(splitTreeFollowingPath(tree, pathIterator, Nil)) else None
+      if (tree.head == head) Some(splitTreeFollowingPath(tree, pathIterator, Vector.empty)) else None
     }
 
   @tailrec
   private def splitTreeFollowingPath[T, T1 >: T](
     tree: NodeTree[T],
     pathIterator: Iterator[T1],
-    queue: List[TreeSplit[T]]
-  ): (List[TreeSplit[T]], Option[T1], Iterator[T1], NodeTree[T]) =
+    queue: Vector[TreeSplit[T]]
+  ): (Vector[TreeSplit[T]], Option[T1], Iterator[T1], NodeTree[T]) =
     if (pathIterator.hasNext) {
       val value: T1 = pathIterator.next()
-      splitListWhen[NodeTree[T]](_.head == value, tree.children) match {
+      splitSequenceWhen[NodeTree[T]](_.head == value, tree.children) match {
         case None =>
           (queue, Some(value), pathIterator, tree)
 
         case Some((left, node, right)) =>
-          splitTreeFollowingPath(node, pathIterator, (left, tree.head, right) :: queue)
+          splitTreeFollowingPath(node, pathIterator, (left, tree.head, right) +: queue)
       }
     } else {
       (queue, None, pathIterator, tree)
@@ -1132,7 +1143,7 @@ object NodeTree {
     tree: NodeTree[T],
     pathIterator: Iterator[K],
     toPathItem: T => K
-  ): Option[(List[TreeSplit[T]], NodeTree[T])] =
+  ): Option[(Vector[TreeSplit[T]], NodeTree[T])] =
     splitTreeFollowingPath(tree, pathIterator, toPathItem).flatMap {
       case (_, Some(_), _, _)                  => None
       case (treeSplit, None, _, remainingTree) => Some((treeSplit, remainingTree))
@@ -1153,11 +1164,11 @@ object NodeTree {
     tree: NodeTree[T],
     pathIterator: Iterator[K],
     toPathItem: T => K
-  ): Option[(List[TreeSplit[T]], Option[K], Iterator[K], NodeTree[T])] =
+  ): Option[(Vector[TreeSplit[T]], Option[K], Iterator[K], NodeTree[T])] =
     if (pathIterator.isEmpty) None
     else {
       val head = pathIterator.next
-      if (toPathItem(tree.head) == head) Some(splitTreeFollowingPath(tree, pathIterator, toPathItem, Nil))
+      if (toPathItem(tree.head) == head) Some(splitTreeFollowingPath(tree, pathIterator, toPathItem, Vector.empty))
       else None
     }
 
@@ -1166,29 +1177,29 @@ object NodeTree {
     tree: NodeTree[T],
     pathIterator: Iterator[K],
     toPathItem: T => K,
-    queue: List[TreeSplit[T]]
-  ): (List[TreeSplit[T]], Option[K], Iterator[K], NodeTree[T]) =
+    queue: Vector[TreeSplit[T]]
+  ): (Vector[TreeSplit[T]], Option[K], Iterator[K], NodeTree[T]) =
     if (pathIterator.hasNext) {
       val pathItem: K = pathIterator.next()
-      splitListWhen[NodeTree[T]](node => toPathItem(node.head) == pathItem, tree.children) match {
+      splitSequenceWhen[NodeTree[T]](node => toPathItem(node.head) == pathItem, tree.children) match {
         case None =>
           (queue, Some(pathItem), pathIterator, tree)
 
         case Some((left, node, right)) =>
-          splitTreeFollowingPath(node, pathIterator, toPathItem, (left, tree.head, right) :: queue)
+          splitTreeFollowingPath(node, pathIterator, toPathItem, (left, tree.head, right) +: queue)
       }
     } else {
       (queue, None, pathIterator, tree)
     }
 
-  /** Optionally splits list into left and right part around matching element. */
-  final def splitListWhen[T](f: T => Boolean, list: List[T]): Option[(List[T], T, List[T])] = {
+  /** Optionally splits sequence into left and right part around matching element. */
+  final def splitSequenceWhen[T](f: T => Boolean, list: Seq[T]): Option[(Seq[T], T, Seq[T])] = {
     @tailrec
-    def split(left: List[T], right: List[T]): Option[(List[T], T, List[T])] = right match {
+    def split(left: Seq[T], right: Seq[T]): Option[(Seq[T], T, Seq[T])] = right match {
       case Nil => None
       case head :: tail =>
         if (f(head)) Some((left.reverse, head, tail))
-        else split(head :: left, tail)
+        else split(head +: left, tail)
     }
     if (list.isEmpty) None else split(Nil, list)
   }
@@ -1198,7 +1209,7 @@ object NodeTree {
 
   /** Modifies a value of a child, and builds a tree back from the treeSplit. */
   final def modifyChildValueInSplit[T, T1 >: T: ClassTag](
-    treeSplit: List[TreeSplit[T]],
+    treeSplit: Vector[TreeSplit[T]],
     child: NodeTree[T],
     modify: T => T1,
     keepDistinct: Boolean
@@ -1215,7 +1226,7 @@ object NodeTree {
 
   /** Modifies a child, and builds a tree back from the treeSplit. */
   final def modifyChildInSplit[T, T1 >: T: ClassTag](
-    treeSplit: List[TreeSplit[T]],
+    treeSplit: Vector[TreeSplit[T]],
     child: NodeTree[T],
     modify: Tree[T] => Tree[T1],
     keepDistinct: Boolean
@@ -1244,14 +1255,14 @@ object NodeTree {
     modify: T => T1,
     keepDistinct: Boolean
   ): Tree[T1] =
-    splitListWhen[NodeTree[T]](_.head == value, tree.children) match {
+    splitSequenceWhen[NodeTree[T]](_.head == value, tree.children) match {
       case None => tree
       case Some((left, node, right)) =>
         val modifiedNode = Tree(modify(node.head), node.children)
         if (keepDistinct) {
           insertChildDistinct(tree.head, left, modifiedNode, right, preserveExisting = false)
         } else {
-          Tree(tree.head, left ::: modifiedNode :: right)
+          Tree(tree.head, left ++: modifiedNode +: right)
         }
     }
 
@@ -1291,18 +1302,18 @@ object NodeTree {
     modify: Tree[T] => Tree[T1],
     keepDistinct: Boolean
   ): Tree[T1] =
-    splitListWhen[NodeTree[T]](_.head == value, tree.children) match {
+    splitSequenceWhen[NodeTree[T]](_.head == value, tree.children) match {
       case None => tree
       case Some((left, node, right)) =>
         modify(node) match {
           case Tree.empty =>
-            Tree(tree.head, left ::: right)
+            Tree(tree.head, left ++ right)
 
           case t: NodeTree[T1] =>
             if (keepDistinct && t.head != node.head) {
               insertChildDistinct(tree.head, left, t, right, preserveExisting = false)
             } else {
-              Tree(tree.head, left ::: t :: right)
+              Tree(tree.head, left ++: t +: right)
             }
 
           case t: ArrayTree[T1] =>
@@ -1343,7 +1354,7 @@ object NodeTree {
   /** Removes the child node and inserts its children into the treeSplit. */
   final def removeChildValueFromSplit[T](
     tree: NodeTree[T],
-    treeSplit: List[TreeSplit[T]],
+    treeSplit: Vector[TreeSplit[T]],
     child: NodeTree[T],
     keepDistinct: Boolean
   ): Tree[T] =
@@ -1356,9 +1367,9 @@ object NodeTree {
       val (left, head, right) = treeSplit.head
       val newChild =
         if (keepDistinct)
-          makeTreeDistinct(Tree(head, left ::: child.children ::: right), maxLookupLevel = 1)
+          makeTreeDistinct(Tree(head, left ++ child.children ++ right), maxLookupLevel = 1)
         else
-          Tree(head, left ::: child.children ::: right)
+          Tree(head, left ++ child.children ++ right)
 
       TreeBuilder.fromChildAndTreeSplit(newChild, treeSplit.tail)
     }
@@ -1374,13 +1385,13 @@ object NodeTree {
     value: T1,
     keepDistinct: Boolean
   ): Tree[T] =
-    splitListWhen[NodeTree[T]](_.head == value, tree.children) match {
+    splitSequenceWhen[NodeTree[T]](_.head == value, tree.children) match {
       case None => tree
       case Some((left, node, right)) =>
         if (keepDistinct && !node.isLeaf) {
           insertChildrenDistinct(tree.head, left, node.children, right, preserveExisting = false)
         } else {
-          Tree(tree.head, left ::: node.children ::: right)
+          Tree(tree.head, left ++ node.children ++ right)
         }
     }
 
@@ -1426,9 +1437,9 @@ object NodeTree {
     tree: NodeTree[T],
     value: T1
   ): Tree[T] =
-    splitListWhen[NodeTree[T]](_.head == value, tree.children) match {
+    splitSequenceWhen[NodeTree[T]](_.head == value, tree.children) match {
       case None                   => tree
-      case Some((left, _, right)) => Tree(tree.head, left ::: right)
+      case Some((left, _, right)) => Tree(tree.head, left ++ right)
     }
 
   /** Removes the tree selected by the path. */

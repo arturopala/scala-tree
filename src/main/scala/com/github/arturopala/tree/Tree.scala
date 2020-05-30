@@ -49,7 +49,7 @@ import scala.reflect.ClassTag
 sealed trait Tree[+T] extends TreeLike[T] {
 
   // ---------------------------------------
-  // Common Tree API is defined in TreeLike.
+  // Common Tree API is specified in TreeLike.
   // ---------------------------------------
 
   // OPTIMIZATION
@@ -132,7 +132,7 @@ object Tree {
 
   /** Creates a tree node from the value and list of subtrees.
     * @group Creation */
-  final def apply[T](value: T, subtrees: List[NodeTree[T]]): NodeTree[T] = subtrees match {
+  final def apply[T](value: T, subtrees: Seq[NodeTree[T]]): NodeTree[T] = subtrees match {
     case Nil           => new Leaf(value)
     case x :: Nil      => new Unary(value, x)
     case x :: y :: Nil => new Binary(value, x, y)
@@ -160,7 +160,7 @@ object Tree {
   object Node {
 
     /** Universal NodeTree extractor as a tuple of (head, children). */
-    def unapply[T](node: NodeTree[T]): Option[(T, List[NodeTree[T]])] =
+    def unapply[T](node: NodeTree[T]): Option[(T, Seq[NodeTree[T]])] =
       Some((node.head, node.children))
   }
 
@@ -172,7 +172,7 @@ object Tree {
     */
   sealed trait NodeTree[+T] extends Tree[T] with NodeTreeLike[T] {
     override protected val node: NodeTree[T] = this
-    override def children: List[NodeTree[T]]
+    override def children: Seq[NodeTree[T]]
   }
 
   /** Concrete node of the Tree, consisting of a value and no subtrees. */
@@ -222,7 +222,7 @@ object Tree {
   }
 
   /** Concrete node of the Tree, consisting of a value and a list of subtrees (more than two). */
-  final class Bunch[+T] private[Tree] (val head: T, val children: List[NodeTree[T]]) extends NodeTree[T] {
+  final class Bunch[+T] private[Tree] (val head: T, val children: Seq[NodeTree[T]]) extends NodeTree[T] {
 
     override val size: Int = 1 + children.map(_.size).sum
     override val width: Int = Math.max(1, children.map(_.width).sum)
