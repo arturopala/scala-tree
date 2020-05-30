@@ -109,35 +109,34 @@ object Tree {
 
   /** Creates a leaf tree.
     * @group Creation */
-  final def apply[T](value: T): NodeTree[T] = new Leaf(value)
+  final def apply[T](head: T): NodeTree[T] = new Leaf(head)
 
-  /** Creates a tree having a single subtree.
+  /** Creates a tree having a single child.
     * @group Creation */
-  final def apply[T](value: T, subtree: NodeTree[T]): NodeTree[T] = new Unary(value, subtree)
+  final def apply[T](head: T, child: NodeTree[T]): NodeTree[T] = new Unary(head, child)
 
-  /** Creates a tree having two subtrees.
+  /** Creates a tree having two children.
     * @group Creation */
-  final def apply[T](value: T, left: NodeTree[T], right: NodeTree[T]): NodeTree[T] = new Binary(value, left, right)
+  final def apply[T](head: T, left: NodeTree[T], right: NodeTree[T]): NodeTree[T] = new Binary(head, left, right)
 
-  /** Creates a tree node from the value and multiple subtrees.
+  /** Creates a tree node from the head and multiple children.
     * @group Creation */
   final def apply[T](
-    value: T,
-    subtree1: NodeTree[T],
-    subtree2: NodeTree[T],
-    subtree3: NodeTree[T],
-    others: NodeTree[T]*
+    head: T,
+    child1: NodeTree[T],
+    child2: NodeTree[T],
+    child3: NodeTree[T],
+    otherChildren: NodeTree[T]*
   ): NodeTree[T] =
-    new Bunch(value, subtree1 :: subtree2 :: subtree3 :: others.toList)
+    new Bunch(head, child1 +: child2 +: child3 +: otherChildren.toIndexedSeq)
 
   /** Creates a tree node from the value and list of subtrees.
     * @group Creation */
-  final def apply[T](value: T, subtrees: Seq[NodeTree[T]]): NodeTree[T] = subtrees match {
-    case Nil           => new Leaf(value)
-    case x :: Nil      => new Unary(value, x)
-    case x :: y :: Nil => new Binary(value, x, y)
-    case _             => new Bunch(value, subtrees)
-  }
+  final def apply[T](head: T, children: Seq[NodeTree[T]]): NodeTree[T] =
+    if (children.isEmpty) new Leaf(head)
+    else if (children.size == 1) new Unary(head, children.head)
+    else if (children.size == 2) new Binary(head, children.head, children(1))
+    else new Bunch(head, children)
 
   /** Deflates the tree, if inflated, otherwise returns as is.
     * @group Utilities */
@@ -238,7 +237,7 @@ object Tree {
   final class ArrayTree[T: ClassTag] private[tree] (
     val structure: IntSlice,
     val content: Slice[T],
-    delayedWidth: => Int,
+    delayedWidth:  => Int,
     delayedHeight: => Int
   ) extends ArrayTreeLike[T] with Tree[T] {
 

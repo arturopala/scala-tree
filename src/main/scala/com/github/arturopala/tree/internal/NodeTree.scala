@@ -882,9 +882,9 @@ object NodeTree {
     */
   final def ensureChildDistinct[T](tree: NodeTree[T], index: Int, preserveExisting: Boolean): NodeTree[T] =
     tree.children.drop(index) match {
-      case Nil => tree
-      case child :: tail =>
-        insertChildDistinct(tree.head, tree.children.take(index), child, tail, preserveExisting)
+      case s if s.isEmpty => tree
+      case s =>
+        insertChildDistinct(tree.head, tree.children.take(index), s.head, s.tail, preserveExisting)
     }
 
   /** Inserts new children distinct between left and right siblings.
@@ -1195,12 +1195,12 @@ object NodeTree {
   /** Optionally splits sequence into left and right part around matching element. */
   final def splitSequenceWhen[T](f: T => Boolean, list: Seq[T]): Option[(Seq[T], T, Seq[T])] = {
     @tailrec
-    def split(left: Seq[T], right: Seq[T]): Option[(Seq[T], T, Seq[T])] = right match {
-      case Nil => None
-      case head :: tail =>
-        if (f(head)) Some((left.reverse, head, tail))
-        else split(head +: left, tail)
-    }
+    def split(left: Seq[T], right: Seq[T]): Option[(Seq[T], T, Seq[T])] =
+      if (right.isEmpty) None
+      else {
+        if (f(right.head)) Some((left.reverse, right.head, right.tail))
+        else split(right.head +: left, right.tail)
+      }
     if (list.isEmpty) None else split(Nil, list)
   }
 
