@@ -52,6 +52,41 @@ object NodeTree {
       Some((node.head, node.children.iterator))
   }
 
+  final def leavesIterator[T](node: NodeTree[T]): Iterator[T] = new Iterator[T] {
+
+    type Queue = Iterator[Tree[T]]
+    private var queue: Queue = Iterator(node)
+
+    var hasNext: Boolean = false
+    private var nextItem: T = _
+
+    seekNext()
+
+    override final def next(): T =
+      if (hasNext) {
+        val result = nextItem
+        seekNext()
+        result
+      } else throw new NoSuchElementException
+
+    @tailrec
+    private final def seekNext(): Unit = {
+      hasNext = false
+      if (queue.hasNext) {
+        queue.next match {
+          case Leaf(head) =>
+            nextItem = head
+            hasNext = true
+            queue = queue.trim
+
+          case Node2(_, children: Iterator[Tree[T]]) =>
+            queue = children ++: queue.trim
+            seekNext()
+        }
+      }
+    }
+  }
+
   /** Returns an iterator over all the nodes of the tree.
     * @param depthFirst if true, enumerates values depth-first,
     *                   if false, breadth-first.
@@ -59,7 +94,7 @@ object NodeTree {
   final def valuesIterator[T](node: NodeTree[T], depthFirst: Boolean): Iterator[T] = new Iterator[T] {
 
     type Queue = Iterator[Tree[T]]
-    var queue: Queue = Iterator(node)
+    private var queue: Queue = Iterator(node)
 
     override final def hasNext: Boolean = queue.nonEmpty
 
@@ -93,7 +128,7 @@ object NodeTree {
     new Iterator[(Int, T, Boolean)] {
 
       type Queue = Iterator[(Int, Tree[T])]
-      var queue: Queue =
+      private var queue: Queue =
         if (maxDepth > 0) Iterator((1, node))
         else Iterator.empty
 
@@ -137,12 +172,12 @@ object NodeTree {
     new Iterator[T] {
 
       type Queue = Iterator[(Int, Tree[T])]
-      var queue: Queue =
+      private var queue: Queue =
         if (maxDepth > 0) Iterator((1, node))
         else Iterator.empty
 
       var hasNext: Boolean = false
-      var nextItem: T = _
+      private var nextItem: T = _
 
       seekNext()
 
@@ -190,7 +225,7 @@ object NodeTree {
   final def treesIterator[T](node: NodeTree[T], depthFirst: Boolean): Iterator[Tree[T]] = new Iterator[Tree[T]] {
 
     type Queue = Iterator[Tree[T]]
-    var queue: Queue = Iterator(node)
+    private var queue: Queue = Iterator(node)
 
     override final def hasNext: Boolean = queue.nonEmpty
 
@@ -219,7 +254,7 @@ object NodeTree {
     new Iterator[(Int, Tree[T])] {
 
       type Queue = Iterator[(Int, Tree[T])]
-      var queue: Queue =
+      private var queue: Queue =
         if (maxDepth > 0) Iterator((1, node))
         else Iterator.empty
 
@@ -260,10 +295,10 @@ object NodeTree {
     new Iterator[Tree[T]] {
 
       type Queue = Iterator[(Int, Tree[T])]
-      var queue: Queue = if (maxDepth > 0) Iterator((1, node)) else Iterator.empty
+      private var queue: Queue = if (maxDepth > 0) Iterator((1, node)) else Iterator.empty
 
       var hasNext: Boolean = false
-      var nextItem: Tree[T] = _
+      private var nextItem: Tree[T] = _
 
       seekNext()
 
@@ -317,7 +352,7 @@ object NodeTree {
     new Iterator[Iterable[T]] {
 
       type Queue = Iterator[(Vector[T], Tree[T])]
-      var queue: Queue = Iterator((Vector.empty, node))
+      private var queue: Queue = Iterator((Vector.empty, node))
 
       override def hasNext: Boolean = queue.nonEmpty
 
@@ -336,7 +371,7 @@ object NodeTree {
     new Iterator[Iterable[T]] {
 
       type Queue = Vector[(Vector[T], NodeTree[T])]
-      var queue: Queue = seekNext(Vector((Vector.empty, node)))
+      private var queue: Queue = seekNext(Vector((Vector.empty, node)))
 
       override def hasNext: Boolean = queue.nonEmpty
 
@@ -367,7 +402,7 @@ object NodeTree {
     new Iterator[Iterable[T]] {
 
       type Queue = Vector[(Vector[T], NodeTree[T])]
-      var queue: Queue = seekNext(Vector((Vector.empty, node)))
+      private var queue: Queue = seekNext(Vector((Vector.empty, node)))
 
       override def hasNext: Boolean = queue.nonEmpty
 
@@ -402,7 +437,7 @@ object NodeTree {
     new Iterator[Iterable[T]] {
 
       type Queue = Vector[(Vector[T], NodeTree[T])]
-      var queue: Queue =
+      private var queue: Queue =
         if (maxDepth > 0) seekNext(Vector((Vector.empty, node)))
         else Vector.empty
 

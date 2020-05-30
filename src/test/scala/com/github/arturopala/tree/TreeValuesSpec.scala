@@ -18,6 +18,8 @@ package com.github.arturopala.tree
 
 import com.github.arturopala.tree.TreeOptions.TraversingMode.{TopDownBreadthFirst, TopDownDepthFirst}
 
+import scala.reflect.ClassTag
+
 class TreeValuesSpec extends FunSuite {
 
   test(Inflated, new Spec with InflatedTestTrees)
@@ -25,7 +27,21 @@ class TreeValuesSpec extends FunSuite {
 
   sealed trait Spec extends AnyWordSpecCompat with TestTrees {
 
-    "list all leaves"
+    def tree[T: ClassTag](t: Tree[T]): Tree[T]
+
+    "list all leaves" in {
+      tree0.leaves shouldBe List()
+      tree1.leaves shouldBe List("a")
+      tree2.leaves shouldBe List("b")
+      tree3_1.leaves shouldBe List("c")
+      tree3_2.leaves.toList shouldBe List("b", "c")
+      tree4_1.leaves shouldBe List("d")
+      tree4_2.leaves shouldBe List("c", "d")
+      tree4_3.leaves shouldBe List("b", "c", "d")
+      tree7.leaves shouldBe List("c", "f", "g")
+      tree9.leaves shouldBe List("d", "g", "i")
+      tree13.leaves shouldBe List("d", "f", "g", "h", "i", "l", "m")
+    }
 
     "list all nodes top-down and depth-first" in {
       tree0.values(TopDownDepthFirst) shouldBe Nil
@@ -38,6 +54,7 @@ class TreeValuesSpec extends FunSuite {
       tree4_3.values(TopDownDepthFirst) shouldBe List("a", "b", "c", "d")
       tree7.values(TopDownDepthFirst) shouldBe List("a", "b", "c", "d", "e", "f", "g")
       tree9.values(TopDownDepthFirst) shouldBe List("a", "b", "c", "d", "e", "f", "g", "h", "i")
+      tree13.values(TopDownDepthFirst) shouldBe List("a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m")
     }
 
     "list all nodes top-down and breadth-first" in {
@@ -51,6 +68,7 @@ class TreeValuesSpec extends FunSuite {
       tree4_3.values(TopDownBreadthFirst) shouldBe List("a", "b", "c", "d")
       tree7.values(TopDownBreadthFirst) shouldBe List("a", "b", "d", "g", "c", "e", "f")
       tree9.values(TopDownBreadthFirst) shouldBe List("a", "b", "e", "c", "f", "h", "d", "g", "i")
+      tree13.values(TopDownBreadthFirst) shouldBe List("a", "b", "i", "j", "c", "e", "h", "k", "m", "d", "f", "g", "l")
     }
 
     "iterate over nodes with filter top-down and depth-first" in {

@@ -46,6 +46,9 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
 
   final def valuesUnsafe: List[T] = node.head :: node.children.flatMap(_.valuesUnsafe)
 
+  final override def leaves: Iterable[T] =
+    iterableFrom(NodeTree.leavesIterator(node))
+
   final override def valuesWithFilter(
     pred: T => Boolean,
     mode: TraversingMode = TopDownDepthFirst,

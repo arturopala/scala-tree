@@ -30,7 +30,18 @@ import scala.reflect.ClassTag
   */
 object ArrayTree {
 
-  /** Iterates over all values of the tree.
+  /** Iterates right-to-left over all leaves of the tree rooted at startIndex. */
+  def leavesIterator[T](startIndex: Int, treeStructure: IntSlice, treeValues: Int => T): Iterator[T] = {
+    val treeSize =
+      if (startIndex == treeStructure.top) treeStructure.length
+      else ArrayTreeFunctions.treeSize(startIndex, treeStructure)
+    treeStructure
+      .slice(startIndex - treeSize + 1, startIndex + 1)
+      .reverseIndexIterator(_ == 0)
+      .map(treeValues)
+  }
+
+  /** Iterates over all values of the tree rooted at startIndex.
     * @param depthFirst if true, enumerates values depth-first,
     *                   if false, breadth-first. */
   final def valuesIterator[T: ClassTag](

@@ -47,6 +47,9 @@ abstract class ArrayTreeLike[T: ClassTag] extends TreeLike[T] {
         ArrayTree.valuesIterator(tree.structure.top, tree.structure, tree.content, depthFirst = false)
       )
 
+  final override def leaves: Iterable[T] =
+    iterableFrom(ArrayTree.leavesIterator(tree.structure.top, tree.structure, tree.content))
+
   final override def valuesWithFilter(
     pred: T => Boolean,
     mode: TraversingMode = TopDownDepthFirst,

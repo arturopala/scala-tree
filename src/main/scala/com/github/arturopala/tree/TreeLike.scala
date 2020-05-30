@@ -121,7 +121,7 @@ trait TreeLike[+T] {
   /** Iterates over all the leaves of this tree.
     * @note Leaf is a node without children.
     * @group values */
-  def leaves: Iterable[T] = ???
+  def leaves: Iterable[T]
 
   /** Iterates over filtered node's values, top-down, depth-first.
     * @param pred return true to include the value in the result, false otherwise.

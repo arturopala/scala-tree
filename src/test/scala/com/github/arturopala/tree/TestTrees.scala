@@ -61,6 +61,17 @@ trait TestTrees {
     * - [a,e,h,i] */
   val tree9: Tree[String]
 
+  /**
+    * - [a,b,c,d]
+    * - [a,b,e,f]
+    * - [a,b,e,g]
+    * - [a,b,h]
+    * - [a,i]
+    * - [a,j,k,l]
+    * - [a,j,m]
+    */
+  val tree13: Tree[String]
+
   val allTrees: Seq[Tree[String]]
 }
 
@@ -123,6 +134,23 @@ object TestTrees {
   val tree9: NodeTree[String] =
     Tree("a", Tree("b", Tree("c", Tree("d"))), Tree("e", Tree("f", Tree("g")), Tree("h", Tree("i"))))
 
+  /**
+    * [a,b,c,d]
+    * [a,b,e,f]
+    * [a,b,e,g]
+    * [a,b,h]
+    * [a,i]
+    * [a,j,k,l]
+    * [a,j,m]
+    */
+  val tree13: NodeTree[String] =
+    Tree(
+      "a",
+      Tree("b", Tree("c", Tree("d")), Tree("e", Tree("f"), Tree("g")), Tree("h")),
+      Tree("i"),
+      Tree("j", Tree("k", Tree("l")), Tree("m"))
+    )
+
   val allTrees: Seq[Tree[String]] =
     Seq(tree0, tree1, tree2, tree3_1, tree3_2, tree4_1, tree4_2, tree4_3, tree7, tree9)
 
@@ -140,6 +168,7 @@ trait InflatedTestTrees extends TestTrees {
   final override val tree4_3: Tree[String] = TestTrees.tree4_3
   final override val tree7: Tree[String] = TestTrees.tree7
   final override val tree9: Tree[String] = TestTrees.tree9
+  final override val tree13: Tree[String] = TestTrees.tree13
   final override val allTrees: Seq[Tree[String]] = TestTrees.allTrees
 
   final def tree[T: ClassTag](t: Tree[T]): Tree[T] = t.inflated
@@ -158,6 +187,7 @@ trait DeflatedTestTrees extends TestTrees {
   final override val tree4_3: Tree[String] = TestTrees.tree4_3.deflated
   final override val tree7: Tree[String] = TestTrees.tree7.deflated
   final override val tree9: Tree[String] = TestTrees.tree9.deflated
+  final override val tree13: Tree[String] = TestTrees.tree13.deflated
   final override val allTrees: Seq[Tree[String]] = TestTrees.allTrees.map(_.deflated)
 
   final def tree[T: ClassTag](t: Tree[T]): Tree[T] = t.deflated

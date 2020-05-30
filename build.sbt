@@ -13,7 +13,7 @@ lazy val root = (project in file("."))
     name := "tree",
     licenses += ("Apache-2.0", new URL("https://www.apache.org/licenses/LICENSE-2.0.txt")),
     libraryDependencies ++= Seq(
-      "com.github.arturopala" %% "buffer-and-slice" % "1.17.0",
+      "com.github.arturopala" %% "buffer-and-slice" % "1.18.0",
       "org.scalameta" %% "munit" % "0.7.3" % Test
     ),
     libraryDependencies ++= dependencies(scalaVersion.value),
