@@ -73,7 +73,7 @@ trait TreeLike[+T] {
     * @group properties */
   def size: Int
 
-  /** The number of leafs (concrete nodes without subtrees) in tree,
+  /** The number of leaves (concrete nodes without subtrees) in tree,
     * same as a number of distinct branches starting at the root.
     * @group properties */
   def width: Int
@@ -118,10 +118,10 @@ trait TreeLike[+T] {
     * @group values */
   def values(mode: TraversingMode = TopDownDepthFirst): Iterable[T]
 
-  /** Iterates over all the leaf's values in this tree.
-    * @note Leaf is the node without children.
+  /** Iterates over all the leaves of this tree.
+    * @note Leaf is a node without children.
     * @group values */
-  def leafs: Iterable[T] = ???
+  def leaves: Iterable[T] = ???
 
   /** Iterates over filtered node's values, top-down, depth-first.
     * @param pred return true to include the value in the result, false otherwise.
@@ -423,7 +423,7 @@ trait TreeLike[+T] {
   /** Inserts new leaf-type children and returns updated tree.
     * @note This method tries to keep children values unique by merging inserted tree (and only that) when needed.
     * @group insertion */
-  def insertLeafs[T1 >: T: ClassTag](values: Iterable[T1]): Tree[T1] = ???
+  def insertLeaves[T1 >: T: ClassTag](values: Iterable[T1]): Tree[T1] = ???
 
   /** Inserts, at the given path, a new leaf holding the value and returns a whole tree updated.
     * If path doesn't fully exist in the tree then remaining suffix will be created.

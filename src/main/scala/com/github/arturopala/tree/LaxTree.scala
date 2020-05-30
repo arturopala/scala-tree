@@ -58,7 +58,7 @@ trait LaxTree[T] {
   /** Inserts new leaf-type children and returns updated tree.
     * @note This is a lax method, it doesn't preserve children values uniqueness.
     * @group laxInsertion */
-  def insertLeafsLax[T1 >: T: ClassTag](values: Iterable[T1]): Tree[T1] = ???
+  def insertLeavesLax[T1 >: T: ClassTag](values: Iterable[T1]): Tree[T1] = ???
 
   /** Inserts, at the given path, a new child node holding the value and returns a whole tree updated.
     * If path doesn't fully exist in the tree then remaining suffix will be created.

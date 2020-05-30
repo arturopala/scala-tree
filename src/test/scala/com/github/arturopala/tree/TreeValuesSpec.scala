@@ -25,6 +25,8 @@ class TreeValuesSpec extends FunSuite {
 
   sealed trait Spec extends AnyWordSpecCompat with TestTrees {
 
+    "list all leaves"
+
     "list all nodes top-down and depth-first" in {
       tree0.values(TopDownDepthFirst) shouldBe Nil
       tree1.values(TopDownDepthFirst) shouldBe List("a")
