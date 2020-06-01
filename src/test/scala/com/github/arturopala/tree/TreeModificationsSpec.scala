@@ -657,6 +657,7 @@ class TreeModificationsSpec extends FunSuite {
     "modify distinct a subtree selected by the path" in {
       tree0.modifyTreeAt(List("a", "b"), _ => tree2) shouldBe Left(tree0)
       tree1.modifyTreeAt(List("a"), _ => tree2) shouldBe Right(Tree("a", Tree("b")))
+      tree1.modifyTreeAt(List("a"), _ => Tree("b")) shouldBe Right(Tree("b"))
       tree1.modifyTreeAt(List("b"), _ => tree2) shouldBe Left(tree1)
       tree2.modifyTreeAt(List("a"), _ => tree3_2) shouldBe Right(Tree("a", Tree("b"), Tree("c")))
       tree2.modifyTreeAt(List("a", "b"), _ => tree3_2) shouldBe Right(

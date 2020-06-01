@@ -46,6 +46,8 @@ import scala.reflect.ClassTag
   * @groupname search Search
   * @groupprio transformation 50
   * @groupname transformation Transform
+  * @groupprio filtering 55
+  * @groupname filtering Filter
   * @groupprio aggregation 60
   * @groupname aggregation Aggregate
   * @groupprio composition 65
@@ -306,24 +308,6 @@ trait TreeLike[+T] {
     * @group transformation */
   def mapChildren[K: ClassTag](f: Iterable[Tree[T]] => Iterable[Tree[K]]): Tree[K] = ???
 
-  /** Filters the tree node's values, any node which doesn't satisfy a predicate is removed,
-    * and its children merged with the remaining siblings of the parent,
-    * and eventually returns a whole tree updated.
-    * @param keepDistinct keep combined children distinct
-    * @group transformation */
-  def filterValues(f: T => Boolean, keepDistinct: Boolean): Tree[T] = ???
-
-  /** Filters all the sub-trees, this tree inclusive, any tree which doesn't satisfy a predicate is removed,
-    * and eventually returns a whole tree updated.
-    * @param keepDistinct keep combined children distinct
-    * @group transformation */
-  def filterTrees(f: Tree[T] => Boolean, keepDistinct: Boolean): Tree[T] = ???
-
-  /** Filters all the branches, any branch which doesn't satisfy a predicate is removed,
-    * and eventually returns a whole tree updated.
-    * @group transformation */
-  def filterBranches(f: Iterable[T] => Boolean): Tree[T] = ???
-
   /** Attempts to trim the branches of the tree to keep height at the given limit.
     * Trims only branches longer then the limit.
     * If the tree is already lower then the limit then returns the tree intact.
@@ -339,6 +323,51 @@ trait TreeLike[+T] {
     * Merges children holding the same value.
     * @group transformation */
   def distinct: Tree[T] = ???
+
+  // FILTER
+
+  /** Filters the tree node's values, any node which doesn't satisfy a predicate is removed,
+    * and its children merged with the remaining siblings of the parent,
+    * and eventually returns a whole tree updated.
+    * @param keepDistinct keep combined children distinct
+    * @group filtering */
+  def filterValues(f: T => Boolean, keepDistinct: Boolean): Tree[T] = ???
+
+  /** Filters all the sub-trees, this tree inclusive, any tree which doesn't satisfy a predicate is removed,
+    * and eventually returns a whole tree updated.
+    * @param keepDistinct keep combined children distinct
+    * @group filtering */
+  def filterTrees(f: Tree[T] => Boolean, keepDistinct: Boolean): Tree[T] = ???
+
+  /** Filters all the branches, any branch which doesn't satisfy a predicate is removed,
+    * and eventually returns a whole tree updated.
+    * @group filtering */
+  def filterBranches(f: Iterable[T] => Boolean): Tree[T] = ???
+
+  /** Filters children of this tree and returns a whole tree updated.
+    * @note This method tries to keep children values unique by merging modified tree (and only that) when needed.
+    * @param pred predicate returning true if child should remain, false otherwise.
+    * @return modified tree
+    * @group filtering */
+  def filterChildren[T1 >: T: ClassTag](pred: Tree[T] => Boolean): Tree[T] = ???
+
+  /** Filters children of the first tree selected by the given path, and returns a whole tree updated.
+    * @note This method tries to keep children values unique by merging modified tree (and only that) when needed.
+    * @param path list of node's values forming a path from the root to the parent node.
+    * @param pred predicate returning true if child should remain, false otherwise.
+    * @return either right of modified tree or left with the tree intact
+    * @group filtering */
+  def filterChildrenAt[T1 >: T: ClassTag](path: Iterable[T1], pred: Tree[T] => Boolean): Tree[T] = ???
+
+  /** Filters children of the first tree selected by the given path, and returns a whole tree updated.
+    * @note This method tries to keep children values unique by merging modified tree (and only that) when needed.
+    * @param path list K items forming a path from the root to the parent node.
+    * @param pred predicate returning true if child should remain, false otherwise.
+    * @param toPathItem extractor of the K path item from the tree's node value
+    * @return either right of modified tree or left with the tree intact
+    * @group modification */
+  def filterChildrenAt[K, T1 >: T: ClassTag](path: Iterable[K], pred: Tree[T] => Boolean, toPathItem: T => K): Tree[T] =
+    ???
 
   // AGGREGATE
 
@@ -452,24 +481,43 @@ trait TreeLike[+T] {
     * @group insertion */
   def insertChildren[T1 >: T: ClassTag](children: Iterable[Tree[T1]]): Tree[T1] = ???
 
-  /** Inserts, at the given path, a new sub-tree and returns a whole tree updated.
+  /** Inserts, at the given path, a new child and returns a whole tree updated.
     * If path doesn't fully exist in the tree then remaining suffix will be created.
     * @note This method tries to keep children values unique by merging inserted tree (and only that) when needed.
     * @param path list of node's values forming a path from the root to the parent node.
     * @group insertion */
-  def insertTreeAt[T1 >: T: ClassTag](path: Iterable[T1], subtree: Tree[T1]): Tree[T1]
+  def insertChildAt[T1 >: T: ClassTag](path: Iterable[T1], child: Tree[T1]): Tree[T1]
 
-  /** Attempts to insert, at the given path, a new sub-tree and return a whole tree updated.
+  /** Attempts to insert, at the given path, a new child and returns a whole tree updated.
     * If path doesn't fully exist in the tree then tree will remain NOT updated.
     * @note This method tries to keep children values unique by merging modified tree (and only that) when needed.
     * @param path list K items forming a path from the root to the parent node.
     * @return either right of modified tree or left with existing unmodified tree
     * @group insertion */
-  def insertTreeAt[K, T1 >: T: ClassTag](
+  def insertChildAt[K, T1 >: T: ClassTag](
     path: Iterable[K],
-    subtree: Tree[T1],
+    child: Tree[T1],
     toPathItem: T => K
   ): Either[Tree[T], Tree[T1]]
+
+  /** Inserts, at the given path, new children and returns a whole tree updated.
+    * If path doesn't fully exist in the tree then remaining suffix will be created.
+    * @note This method tries to keep children values unique by merging inserted tree (and only that) when needed.
+    * @param path list of node's values forming a path from the root to the parent node.
+    * @group insertion */
+  def insertChildrenAt[T1 >: T: ClassTag](path: Iterable[T1], children: Iterable[Tree[T1]]): Tree[T1] = ???
+
+  /** Attempts to insert, at the given path, new children and returns a whole tree updated.
+    * If path doesn't fully exist in the tree then tree will remain NOT updated.
+    * @note This method tries to keep children values unique by merging modified tree (and only that) when needed.
+    * @param path list K items forming a path from the root to the parent node.
+    * @return either right of modified tree or left with existing unmodified tree
+    * @group insertion */
+  def insertChildrenAt[K, T1 >: T: ClassTag](
+    path: Iterable[K],
+    children: Iterable[Tree[T1]],
+    toPathItem: T => K
+  ): Either[Tree[T], Tree[T1]] = ???
 
   /** Inserts a new branch of values and returns updated tree.
     * @note This method tries to keep children values unique by merging modified tree (and only that) when needed.
@@ -486,6 +534,11 @@ trait TreeLike[+T] {
   def insertBranches[T1 >: T: ClassTag](branches: Iterable[Iterable[T1]]): Tree[T1] = ???
 
   // DISTINCT UPDATES
+
+  /** Updates the head value of a this node.
+    * @param replacement replacement head
+    * @group update */
+  def updateHead[T1 >: T: ClassTag](replacement: T1): Tree[T1] = ???
 
   /** Updates the value of a first child node holding the given value.
     * @note This method tries to keep children values unique by merging modified tree (and only that) when needed.
@@ -550,6 +603,11 @@ trait TreeLike[+T] {
 
   // DISTINCT MODIFICATIONS
 
+  /** Modifies the head value of a this node.
+    * @param modify function to modify the head
+    * @group modification */
+  def modifyHead[T1 >: T: ClassTag](modify: T => T1): Tree[T1] = ???
+
   /** Modifies the value of a first child node holding the given value.
     * @note This method tries to keep children values unique by merging modified tree (and only that) when needed.
     * @param value value of the child node
@@ -611,6 +669,30 @@ trait TreeLike[+T] {
     toPathItem: T => K
   ): Either[Tree[T], Tree[T1]]
 
+  /** Modifies children of the first tree selected by the given path, and returns a whole tree updated.
+    * @note This method tries to keep children values unique by merging modified tree (and only that) when needed.
+    * @param path list of node's values forming a path from the root to the parent node.
+    * @param modify function transforming the tree
+    * @return either right of modified tree or left with the tree intact
+    * @group modification */
+  def modifyChildrenAt[T1 >: T: ClassTag](
+    path: Iterable[T1],
+    modify: Iterable[Tree[T]] => Iterable[Tree[T1]]
+  ): Either[Tree[T], Tree[T1]] = ???
+
+  /** Modifies children of the first tree selected by the given path, and returns a whole tree updated.
+    * @note This method tries to keep children values unique by merging modified tree (and only that) when needed.
+    * @param path list K items forming a path from the root to the parent node.
+    * @param modify function transforming the tree
+    * @param toPathItem extractor of the K path item from the tree's node value
+    * @return either right of modified tree or left with the tree intact
+    * @group modification */
+  def modifyChildrenAt[K, T1 >: T: ClassTag](
+    path: Iterable[K],
+    modify: Iterable[Tree[T]] => Iterable[Tree[T1]],
+    toPathItem: T => K
+  ): Either[Tree[T], Tree[T1]] = ???
+
   // DISTINCT REMOVALS
 
   /** Removes first direct child node holding a value, re-inserts nested children into this tree.
@@ -643,6 +725,11 @@ trait TreeLike[+T] {
     * @group removal */
   def removeChild[T1 >: T: ClassTag](value: T1): Tree[T]
 
+  /** Removes completely all children.
+    * @return modified tree
+    * @group removal */
+  def removeChildren[T1 >: T: ClassTag](): Tree[T] = ???
+
   /** Removes the first tree selected by the given path.
     * @param path list of node's values forming a path from the root to the parent node.
     * @return modified tree
@@ -655,6 +742,19 @@ trait TreeLike[+T] {
     * @return modified tree
     * @group removal */
   def removeTreeAt[K, T1 >: T: ClassTag](path: Iterable[K], toPathItem: T => K): Tree[T]
+
+  /** Removes children of the first tree selected by the given path.
+    * @param path list of node's values forming a path from the root to the parent node.
+    * @return modified tree
+    * @group removal */
+  def removeChildrenAt[T1 >: T: ClassTag](path: Iterable[T1]): Tree[T] = ???
+
+  /** Removes children of the first tree selected by the given path.
+    * @param path list K items forming a path from the root to the parent node.
+    * @param toPathItem extractor of the K path item from the tree's node value
+    * @return modified tree
+    * @group removal */
+  def removeChildrenAt[K, T1 >: T: ClassTag](path: Iterable[K], toPathItem: T => K): Tree[T] = ???
 
   // SERIALIZATION
 

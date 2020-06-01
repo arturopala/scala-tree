@@ -107,17 +107,17 @@ trait EmptyTreeLike extends TreeLike[Nothing] {
 
   final override def insertChild[T1: ClassTag](child: Tree[T1]): Tree[T1] = child
 
-  final override def insertTreeAt[T1 >: Nothing: ClassTag](path: Iterable[T1], subtree: Tree[T1]): Tree[T1] =
-    if (path.isEmpty) subtree
-    else if (subtree.isEmpty) empty
-    else TreeBuilder.linearTreeFromSequence(path.toList).insertTreeAt(path, subtree)
+  final override def insertChildAt[T1 >: Nothing: ClassTag](path: Iterable[T1], child: Tree[T1]): Tree[T1] =
+    if (path.isEmpty) child
+    else if (child.isEmpty) empty
+    else TreeBuilder.linearTreeFromSequence(path.toList).insertChildAt(path, child)
 
-  final override def insertTreeAt[K, T1 >: Nothing: ClassTag](
+  final override def insertChildAt[K, T1 >: Nothing: ClassTag](
     path: Iterable[K],
-    subtree: Tree[T1],
+    child: Tree[T1],
     toPathItem: Nothing => K
   ): Either[Tree[Nothing], Tree[T1]] =
-    if (path.isEmpty) Right(subtree) else Left(empty)
+    if (path.isEmpty) Right(child) else Left(empty)
 
   final override def insertBranch[T1: ClassTag](branch: Iterable[T1]): Tree[T1] =
     if (branch.isEmpty) Tree.empty

@@ -657,133 +657,133 @@ class TreeInsertionsSpec extends FunSuite {
     }
 
     "insert distinct new subtree to a tree at the specified path" in {
-      tree0.insertTreeAt(List(), Tree.empty) shouldBe Tree.empty
-      tree0.insertTreeAt(List("a"), Tree.empty) shouldBe Tree.empty
-      tree0.insertTreeAt(List(), Tree("b")) shouldBe Tree("b")
-      tree0.insertTreeAt(List("a"), Tree("b")) shouldBe Tree("a", Tree("b"))
-      tree1.insertTreeAt(List("a"), Tree("b")) shouldBe Tree("a", Tree("b"))
-      tree1.insertTreeAt(List("b"), Tree("b")) shouldBe tree1
-      tree1.insertTreeAt(List("a", "b"), tree1) shouldBe Tree("a", Tree("b", Tree("a")))
-      tree1.insertTreeAt(List("a", "b"), tree2) shouldBe Tree("a", Tree("b", Tree("a", Tree("b"))))
+      tree0.insertChildAt(List(), Tree.empty) shouldBe Tree.empty
+      tree0.insertChildAt(List("a"), Tree.empty) shouldBe Tree.empty
+      tree0.insertChildAt(List(), Tree("b")) shouldBe Tree("b")
+      tree0.insertChildAt(List("a"), Tree("b")) shouldBe Tree("a", Tree("b"))
+      tree1.insertChildAt(List("a"), Tree("b")) shouldBe Tree("a", Tree("b"))
+      tree1.insertChildAt(List("b"), Tree("b")) shouldBe tree1
+      tree1.insertChildAt(List("a", "b"), tree1) shouldBe Tree("a", Tree("b", Tree("a")))
+      tree1.insertChildAt(List("a", "b"), tree2) shouldBe Tree("a", Tree("b", Tree("a", Tree("b"))))
       tree1
-        .insertTreeAt(List("a", "b", "c"), tree2) shouldBe Tree("a", Tree("b", Tree("c", Tree("a", Tree("b")))))
-      tree1.insertTreeAt(List("a", "b", "c"), tree3_2) shouldBe Tree(
+        .insertChildAt(List("a", "b", "c"), tree2) shouldBe Tree("a", Tree("b", Tree("c", Tree("a", Tree("b")))))
+      tree1.insertChildAt(List("a", "b", "c"), tree3_2) shouldBe Tree(
         "a",
         Tree("b", Tree("c", Tree("a", Tree("b"), Tree("c"))))
       )
 
-      tree2.insertTreeAt(List("a"), Tree("b")) shouldBe Tree("a", Tree("b"))
-      tree2.insertTreeAt(List("b"), Tree("b")) shouldBe tree2
-      tree2.insertTreeAt(List("a", "b"), tree1) shouldBe Tree("a", Tree("b", Tree("a")))
-      tree2.insertTreeAt(List("a", "b"), tree2) shouldBe Tree("a", Tree("b", Tree("a", Tree("b"))))
+      tree2.insertChildAt(List("a"), Tree("b")) shouldBe Tree("a", Tree("b"))
+      tree2.insertChildAt(List("b"), Tree("b")) shouldBe tree2
+      tree2.insertChildAt(List("a", "b"), tree1) shouldBe Tree("a", Tree("b", Tree("a")))
+      tree2.insertChildAt(List("a", "b"), tree2) shouldBe Tree("a", Tree("b", Tree("a", Tree("b"))))
       tree2
-        .insertTreeAt(List("a", "b", "c"), tree2) shouldBe Tree("a", Tree("b", Tree("c", Tree("a", Tree("b")))))
-      tree2.insertTreeAt(List("a", "b", "c"), tree3_2) shouldBe Tree(
+        .insertChildAt(List("a", "b", "c"), tree2) shouldBe Tree("a", Tree("b", Tree("c", Tree("a", Tree("b")))))
+      tree2.insertChildAt(List("a", "b", "c"), tree3_2) shouldBe Tree(
         "a",
         Tree("b", Tree("c", Tree("a", Tree("b"), Tree("c"))))
       )
 
-      tree3_1.insertTreeAt(List("a"), Tree("b")) shouldBe Tree("a", Tree("b", Tree("c")))
-      tree3_1.insertTreeAt(List("b"), Tree("b")) shouldBe tree3_1
-      tree3_1.insertTreeAt(List("a", "b"), Tree("c")) shouldBe Tree("a", Tree("b", Tree("c")))
-      tree3_1.insertTreeAt(List("a", "b"), tree1) shouldBe Tree("a", Tree("b", Tree("a"), Tree("c")))
-      tree3_1.insertTreeAt(List("a", "b"), tree2) shouldBe Tree("a", Tree("b", Tree("a", Tree("b")), Tree("c")))
+      tree3_1.insertChildAt(List("a"), Tree("b")) shouldBe Tree("a", Tree("b", Tree("c")))
+      tree3_1.insertChildAt(List("b"), Tree("b")) shouldBe tree3_1
+      tree3_1.insertChildAt(List("a", "b"), Tree("c")) shouldBe Tree("a", Tree("b", Tree("c")))
+      tree3_1.insertChildAt(List("a", "b"), tree1) shouldBe Tree("a", Tree("b", Tree("a"), Tree("c")))
+      tree3_1.insertChildAt(List("a", "b"), tree2) shouldBe Tree("a", Tree("b", Tree("a", Tree("b")), Tree("c")))
       tree3_1
-        .insertTreeAt(List("a", "b", "c"), tree2) shouldBe Tree("a", Tree("b", Tree("c", Tree("a", Tree("b")))))
-      tree3_1.insertTreeAt(List("a", "b", "c"), tree3_2) shouldBe Tree(
+        .insertChildAt(List("a", "b", "c"), tree2) shouldBe Tree("a", Tree("b", Tree("c", Tree("a", Tree("b")))))
+      tree3_1.insertChildAt(List("a", "b", "c"), tree3_2) shouldBe Tree(
         "a",
         Tree("b", Tree("c", Tree("a", Tree("b"), Tree("c"))))
       )
 
-      tree3_2.insertTreeAt(List("a"), Tree("b")) shouldBe Tree("a", Tree("b"), Tree("c"))
-      tree3_2.insertTreeAt(List("a"), Tree("c")) shouldBe Tree("a", Tree("b"), Tree("c"))
+      tree3_2.insertChildAt(List("a"), Tree("b")) shouldBe Tree("a", Tree("b"), Tree("c"))
+      tree3_2.insertChildAt(List("a"), Tree("c")) shouldBe Tree("a", Tree("b"), Tree("c"))
       tree3_2
-        .insertTreeAt(List("a"), Tree("c", Tree("a"))) shouldBe Tree("a", Tree("b"), Tree("c", Tree("a")))
-      tree3_2.insertTreeAt(List("b"), Tree("b")) shouldBe tree3_2
-      tree3_2.insertTreeAt(List("a", "b"), tree1) shouldBe Tree("a", Tree("b", Tree("a")), Tree("c"))
-      tree3_2.insertTreeAt(List("a", "b"), tree2) shouldBe Tree("a", Tree("b", Tree("a", Tree("b"))), Tree("c"))
-      tree3_2.insertTreeAt(List("a", "b", "c"), tree2) shouldBe Tree(
+        .insertChildAt(List("a"), Tree("c", Tree("a"))) shouldBe Tree("a", Tree("b"), Tree("c", Tree("a")))
+      tree3_2.insertChildAt(List("b"), Tree("b")) shouldBe tree3_2
+      tree3_2.insertChildAt(List("a", "b"), tree1) shouldBe Tree("a", Tree("b", Tree("a")), Tree("c"))
+      tree3_2.insertChildAt(List("a", "b"), tree2) shouldBe Tree("a", Tree("b", Tree("a", Tree("b"))), Tree("c"))
+      tree3_2.insertChildAt(List("a", "b", "c"), tree2) shouldBe Tree(
         "a",
         Tree("b", Tree("c", Tree("a", Tree("b")))),
         Tree("c")
       )
-      tree3_2.insertTreeAt(List("a", "b", "c"), tree3_2) shouldBe Tree(
+      tree3_2.insertChildAt(List("a", "b", "c"), tree3_2) shouldBe Tree(
         "a",
         Tree("b", Tree("c", Tree("a", Tree("b"), Tree("c")))),
         Tree("c")
       )
 
-      tree4_2.insertTreeAt(List("a"), Tree("b")) shouldBe Tree("a", Tree("b", Tree("c")), Tree("d"))
-      tree4_2.insertTreeAt(List("b"), Tree("b")) shouldBe tree4_2
-      tree4_2.insertTreeAt(List("a", "b"), tree1) shouldBe Tree("a", Tree("b", Tree("a"), Tree("c")), Tree("d"))
+      tree4_2.insertChildAt(List("a"), Tree("b")) shouldBe Tree("a", Tree("b", Tree("c")), Tree("d"))
+      tree4_2.insertChildAt(List("b"), Tree("b")) shouldBe tree4_2
+      tree4_2.insertChildAt(List("a", "b"), tree1) shouldBe Tree("a", Tree("b", Tree("a"), Tree("c")), Tree("d"))
       tree4_2
-        .insertTreeAt(List("a", "b"), tree2) shouldBe Tree(
+        .insertChildAt(List("a", "b"), tree2) shouldBe Tree(
         "a",
         Tree("b", Tree("a", Tree("b")), Tree("c")),
         Tree("d")
       )
-      tree4_2.insertTreeAt(List("a", "b", "c"), tree2) shouldBe Tree(
+      tree4_2.insertChildAt(List("a", "b", "c"), tree2) shouldBe Tree(
         "a",
         Tree("b", Tree("c", Tree("a", Tree("b")))),
         Tree("d")
       )
-      tree4_2.insertTreeAt(List("a", "b", "c"), tree3_2) shouldBe Tree(
+      tree4_2.insertChildAt(List("a", "b", "c"), tree3_2) shouldBe Tree(
         "a",
         Tree("b", Tree("c", Tree("a", Tree("b"), Tree("c")))),
         Tree("d")
       )
 
-      tree7.insertTreeAt(List("a"), Tree("b")) shouldBe Tree(
+      tree7.insertChildAt(List("a"), Tree("b")) shouldBe Tree(
         "a",
         Tree("b", Tree("c")),
         Tree("d", Tree("e", Tree("f"))),
         Tree("g")
       )
-      tree7.insertTreeAt(List("b"), Tree("b")) shouldBe tree7
-      tree7.insertTreeAt(List("a", "b"), tree1) shouldBe Tree(
+      tree7.insertChildAt(List("b"), Tree("b")) shouldBe tree7
+      tree7.insertChildAt(List("a", "b"), tree1) shouldBe Tree(
         "a",
         Tree("b", Tree("a"), Tree("c")),
         Tree("d", Tree("e", Tree("f"))),
         Tree("g")
       )
       tree7
-        .insertTreeAt(List("a", "b"), tree2) shouldBe Tree(
+        .insertChildAt(List("a", "b"), tree2) shouldBe Tree(
         "a",
         Tree("b", Tree("a", Tree("b")), Tree("c")),
         Tree("d", Tree("e", Tree("f"))),
         Tree("g")
       )
-      tree7.insertTreeAt(List("a", "b", "c"), tree2) shouldBe Tree(
+      tree7.insertChildAt(List("a", "b", "c"), tree2) shouldBe Tree(
         "a",
         Tree("b", Tree("c", Tree("a", Tree("b")))),
         Tree("d", Tree("e", Tree("f"))),
         Tree("g")
       )
-      tree7.insertTreeAt(List("a", "b", "c"), tree3_2) shouldBe Tree(
+      tree7.insertChildAt(List("a", "b", "c"), tree3_2) shouldBe Tree(
         "a",
         Tree("b", Tree("c", Tree("a", Tree("b"), Tree("c")))),
         Tree("d", Tree("e", Tree("f"))),
         Tree("g")
       )
-      tree7.insertTreeAt(List("a", "b", "e"), tree3_2) shouldBe Tree(
+      tree7.insertChildAt(List("a", "b", "e"), tree3_2) shouldBe Tree(
         "a",
         Tree("b", Tree("e", Tree("a", Tree("b"), Tree("c"))), Tree("c")),
         Tree("d", Tree("e", Tree("f"))),
         Tree("g")
       )
-      tree7.insertTreeAt(List("a", "b", "e", "f"), tree3_2) shouldBe Tree(
+      tree7.insertChildAt(List("a", "b", "e", "f"), tree3_2) shouldBe Tree(
         "a",
         Tree("b", Tree("e", Tree("f", Tree("a", Tree("b"), Tree("c")))), Tree("c")),
         Tree("d", Tree("e", Tree("f"))),
         Tree("g")
       )
-      tree7.insertTreeAt(List("a", "g", "e", "f"), tree3_2) shouldBe Tree(
+      tree7.insertChildAt(List("a", "g", "e", "f"), tree3_2) shouldBe Tree(
         "a",
         Tree("b", Tree("c")),
         Tree("d", Tree("e", Tree("f"))),
         Tree("g", Tree("e", Tree("f", Tree("a", Tree("b"), Tree("c")))))
       )
-      tree7.insertTreeAt(List("a", "d", "e"), Tree("f", Tree("i"))) shouldBe Tree(
+      tree7.insertChildAt(List("a", "d", "e"), Tree("f", Tree("i"))) shouldBe Tree(
         "a",
         Tree("b", Tree("c")),
         Tree("d", Tree("e", Tree("f", Tree("i")))),
@@ -793,77 +793,77 @@ class TreeInsertionsSpec extends FunSuite {
 
     "insert distinct new subtree to a tree at the specified path using an extractor function" in {
       val codeF: String => Int = s => s.head.toInt
-      tree0.insertTreeAt(List(), Tree.empty, codeF) shouldBe Right(Tree.empty)
-      tree0.insertTreeAt(List(97), Tree.empty, codeF) shouldBe Left(Tree.empty)
-      tree0.insertTreeAt(List(), Tree("b"), codeF) shouldBe Right(Tree("b"))
-      tree0.insertTreeAt(List(97), Tree("b"), codeF) shouldBe Left(Tree.empty)
-      tree1.insertTreeAt(List(97), Tree("b"), codeF) shouldBe Right(Tree("a", Tree("b")))
-      tree1.insertTreeAt(List(98), Tree("b"), codeF) shouldBe Left(tree1)
-      tree1.insertTreeAt(List(97, 98), tree1, codeF) shouldBe Left(tree1)
-      tree1.insertTreeAt(List(97, 98), tree2, codeF) shouldBe Left(tree1)
-      tree1.insertTreeAt(List(97, 98, 99), tree2, codeF) shouldBe Left(tree1)
-      tree1.insertTreeAt(List(97, 98, 99), tree3_2, codeF) shouldBe Left(tree1)
+      tree0.insertChildAt(List(), Tree.empty, codeF) shouldBe Right(Tree.empty)
+      tree0.insertChildAt(List(97), Tree.empty, codeF) shouldBe Left(Tree.empty)
+      tree0.insertChildAt(List(), Tree("b"), codeF) shouldBe Right(Tree("b"))
+      tree0.insertChildAt(List(97), Tree("b"), codeF) shouldBe Left(Tree.empty)
+      tree1.insertChildAt(List(97), Tree("b"), codeF) shouldBe Right(Tree("a", Tree("b")))
+      tree1.insertChildAt(List(98), Tree("b"), codeF) shouldBe Left(tree1)
+      tree1.insertChildAt(List(97, 98), tree1, codeF) shouldBe Left(tree1)
+      tree1.insertChildAt(List(97, 98), tree2, codeF) shouldBe Left(tree1)
+      tree1.insertChildAt(List(97, 98, 99), tree2, codeF) shouldBe Left(tree1)
+      tree1.insertChildAt(List(97, 98, 99), tree3_2, codeF) shouldBe Left(tree1)
 
-      tree2.insertTreeAt(List(97), Tree("b"), codeF) shouldBe Right(Tree("a", Tree("b")))
-      tree2.insertTreeAt(List(98), Tree("b"), codeF) shouldBe Left(tree2)
-      tree2.insertTreeAt(List(97, 98), tree1, codeF) shouldBe Right(Tree("a", Tree("b", Tree("a"))))
-      tree2.insertTreeAt(List(97, 98), tree2, codeF) shouldBe Right(Tree("a", Tree("b", Tree("a", Tree("b")))))
-      tree2.insertTreeAt(List(97, 98, 99), tree2, codeF) shouldBe Left(tree2)
-      tree2.insertTreeAt(List(97, 98, 99), tree3_2, codeF) shouldBe Left(tree2)
+      tree2.insertChildAt(List(97), Tree("b"), codeF) shouldBe Right(Tree("a", Tree("b")))
+      tree2.insertChildAt(List(98), Tree("b"), codeF) shouldBe Left(tree2)
+      tree2.insertChildAt(List(97, 98), tree1, codeF) shouldBe Right(Tree("a", Tree("b", Tree("a"))))
+      tree2.insertChildAt(List(97, 98), tree2, codeF) shouldBe Right(Tree("a", Tree("b", Tree("a", Tree("b")))))
+      tree2.insertChildAt(List(97, 98, 99), tree2, codeF) shouldBe Left(tree2)
+      tree2.insertChildAt(List(97, 98, 99), tree3_2, codeF) shouldBe Left(tree2)
 
-      tree3_1.insertTreeAt(List(97), Tree("b"), codeF) shouldBe Right(Tree("a", Tree("b", Tree("c"))))
-      tree3_1.insertTreeAt(List(98), Tree("b"), codeF) shouldBe Left(tree3_1)
-      tree3_1.insertTreeAt(List(97, 98), tree1, codeF) shouldBe Right(
+      tree3_1.insertChildAt(List(97), Tree("b"), codeF) shouldBe Right(Tree("a", Tree("b", Tree("c"))))
+      tree3_1.insertChildAt(List(98), Tree("b"), codeF) shouldBe Left(tree3_1)
+      tree3_1.insertChildAt(List(97, 98), tree1, codeF) shouldBe Right(
         Tree("a", Tree("b", Tree("a"), Tree("c")))
       )
-      tree3_1.insertTreeAt(List(97, 98), tree2, codeF) shouldBe Right(
+      tree3_1.insertChildAt(List(97, 98), tree2, codeF) shouldBe Right(
         Tree("a", Tree("b", Tree("a", Tree("b")), Tree("c")))
       )
       tree3_1
-        .insertTreeAt(List(97, 98, 99), tree2, codeF) shouldBe Right(
+        .insertChildAt(List(97, 98, 99), tree2, codeF) shouldBe Right(
         Tree("a", Tree("b", Tree("c", Tree("a", Tree("b")))))
       )
-      tree3_1.insertTreeAt(List(97, 98, 99), tree3_2, codeF) shouldBe Right(
+      tree3_1.insertChildAt(List(97, 98, 99), tree3_2, codeF) shouldBe Right(
         Tree(
           "a",
           Tree("b", Tree("c", Tree("a", Tree("b"), Tree("c"))))
         )
       )
 
-      tree3_2.insertTreeAt(List(97), Tree("b"), codeF) shouldBe Right(Tree("a", Tree("b"), Tree("c")))
-      tree3_2.insertTreeAt(List(98), Tree("b"), codeF) shouldBe Left(tree3_2)
-      tree3_2.insertTreeAt(List(97, 98), tree1, codeF) shouldBe Right(
+      tree3_2.insertChildAt(List(97), Tree("b"), codeF) shouldBe Right(Tree("a", Tree("b"), Tree("c")))
+      tree3_2.insertChildAt(List(98), Tree("b"), codeF) shouldBe Left(tree3_2)
+      tree3_2.insertChildAt(List(97, 98), tree1, codeF) shouldBe Right(
         Tree("a", Tree("b", Tree("a")), Tree("c"))
       )
-      tree3_2.insertTreeAt(List(97, 98), tree2, codeF) shouldBe Right(
+      tree3_2.insertChildAt(List(97, 98), tree2, codeF) shouldBe Right(
         Tree("a", Tree("b", Tree("a", Tree("b"))), Tree("c"))
       )
-      tree3_2.insertTreeAt(List(97, 98, 99), tree2, codeF) shouldBe Left(tree3_2)
-      tree3_2.insertTreeAt(List(97, 98, 99), tree3_2, codeF) shouldBe Left(tree3_2)
+      tree3_2.insertChildAt(List(97, 98, 99), tree2, codeF) shouldBe Left(tree3_2)
+      tree3_2.insertChildAt(List(97, 98, 99), tree3_2, codeF) shouldBe Left(tree3_2)
 
-      tree4_2.insertTreeAt(List(97), Tree("b"), codeF) shouldBe Right(
+      tree4_2.insertChildAt(List(97), Tree("b"), codeF) shouldBe Right(
         Tree("a", Tree("b", Tree("c")), Tree("d"))
       )
-      tree4_2.insertTreeAt(List(98), Tree("b"), codeF) shouldBe Left(tree4_2)
-      tree4_2.insertTreeAt(List(97, 98), tree1, codeF) shouldBe Right(
+      tree4_2.insertChildAt(List(98), Tree("b"), codeF) shouldBe Left(tree4_2)
+      tree4_2.insertChildAt(List(97, 98), tree1, codeF) shouldBe Right(
         Tree("a", Tree("b", Tree("a"), Tree("c")), Tree("d"))
       )
       tree4_2
-        .insertTreeAt(List(97, 98), tree2, codeF) shouldBe Right(
+        .insertChildAt(List(97, 98), tree2, codeF) shouldBe Right(
         Tree(
           "a",
           Tree("b", Tree("a", Tree("b")), Tree("c")),
           Tree("d")
         )
       )
-      tree4_2.insertTreeAt(List(97, 98, 99), tree2, codeF) shouldBe Right(
+      tree4_2.insertChildAt(List(97, 98, 99), tree2, codeF) shouldBe Right(
         Tree(
           "a",
           Tree("b", Tree("c", Tree("a", Tree("b")))),
           Tree("d")
         )
       )
-      tree4_2.insertTreeAt(List(97, 98, 99), tree3_2, codeF) shouldBe Right(
+      tree4_2.insertChildAt(List(97, 98, 99), tree3_2, codeF) shouldBe Right(
         Tree(
           "a",
           Tree("b", Tree("c", Tree("a", Tree("b"), Tree("c")))),
@@ -871,7 +871,7 @@ class TreeInsertionsSpec extends FunSuite {
         )
       )
 
-      tree7.insertTreeAt(List(97), Tree("b"), codeF) shouldBe Right(
+      tree7.insertChildAt(List(97), Tree("b"), codeF) shouldBe Right(
         Tree(
           "a",
           Tree("b", Tree("c")),
@@ -879,8 +879,8 @@ class TreeInsertionsSpec extends FunSuite {
           Tree("g")
         )
       )
-      tree7.insertTreeAt(List(98), Tree("b"), codeF) shouldBe Left(tree7)
-      tree7.insertTreeAt(List(97, 98), tree1, codeF) shouldBe Right(
+      tree7.insertChildAt(List(98), Tree("b"), codeF) shouldBe Left(tree7)
+      tree7.insertChildAt(List(97, 98), tree1, codeF) shouldBe Right(
         Tree(
           "a",
           Tree("b", Tree("a"), Tree("c")),
@@ -889,7 +889,7 @@ class TreeInsertionsSpec extends FunSuite {
         )
       )
       tree7
-        .insertTreeAt(List(97, 98), tree2, codeF) shouldBe Right(
+        .insertChildAt(List(97, 98), tree2, codeF) shouldBe Right(
         Tree(
           "a",
           Tree("b", Tree("a", Tree("b")), Tree("c")),
@@ -897,7 +897,7 @@ class TreeInsertionsSpec extends FunSuite {
           Tree("g")
         )
       )
-      tree7.insertTreeAt(List(97, 98, 99), tree2, codeF) shouldBe Right(
+      tree7.insertChildAt(List(97, 98, 99), tree2, codeF) shouldBe Right(
         Tree(
           "a",
           Tree("b", Tree("c", Tree("a", Tree("b")))),
@@ -905,7 +905,7 @@ class TreeInsertionsSpec extends FunSuite {
           Tree("g")
         )
       )
-      tree7.insertTreeAt(List(97, 98, 99), tree3_2, codeF) shouldBe Right(
+      tree7.insertChildAt(List(97, 98, 99), tree3_2, codeF) shouldBe Right(
         Tree(
           "a",
           Tree("b", Tree("c", Tree("a", Tree("b"), Tree("c")))),
@@ -913,10 +913,10 @@ class TreeInsertionsSpec extends FunSuite {
           Tree("g")
         )
       )
-      tree7.insertTreeAt(List(97, 98, 101), tree3_2, codeF) shouldBe Left(tree7)
-      tree7.insertTreeAt(List(97, 98, 101, 102), tree3_2, codeF) shouldBe Left(tree7)
-      tree7.insertTreeAt(List(97, 103, 101, 102), tree3_2, codeF) shouldBe Left(tree7)
-      tree7.insertTreeAt(List(97, 98, 99), tree3_2, codeF) shouldBe Right(
+      tree7.insertChildAt(List(97, 98, 101), tree3_2, codeF) shouldBe Left(tree7)
+      tree7.insertChildAt(List(97, 98, 101, 102), tree3_2, codeF) shouldBe Left(tree7)
+      tree7.insertChildAt(List(97, 103, 101, 102), tree3_2, codeF) shouldBe Left(tree7)
+      tree7.insertChildAt(List(97, 98, 99), tree3_2, codeF) shouldBe Right(
         Tree(
           "a",
           Tree("b", Tree("c", Tree("a", Tree("b"), Tree("c")))),
@@ -924,7 +924,7 @@ class TreeInsertionsSpec extends FunSuite {
           Tree("g")
         )
       )
-      tree7.insertTreeAt(List(97, 100, 101), tree3_2, codeF) shouldBe Right(
+      tree7.insertChildAt(List(97, 100, 101), tree3_2, codeF) shouldBe Right(
         Tree(
           "a",
           Tree("b", Tree("c")),
@@ -932,7 +932,7 @@ class TreeInsertionsSpec extends FunSuite {
           Tree("g")
         )
       )
-      tree7.insertTreeAt(List(97, 103), tree3_2, codeF) shouldBe Right(
+      tree7.insertChildAt(List(97, 103), tree3_2, codeF) shouldBe Right(
         Tree(
           "a",
           Tree("b", Tree("c")),
