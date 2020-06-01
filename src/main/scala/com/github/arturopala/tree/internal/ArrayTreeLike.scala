@@ -189,6 +189,9 @@ abstract class ArrayTreeLike[T: ClassTag] extends TreeLike[T] {
 
   // MODIFICATIONS
 
+  final override def modifyHead[T1 >: T: ClassTag](modify: T => T1): Tree[T1] =
+    ArrayTree.modifyValue(tree.structure.top, modify, tree, keepDistinct = false)
+
   final override def modifyChildValue[T1 >: T: ClassTag](value: T1, modify: T => T1): Tree[T1] =
     ArrayTree.modifyChildValue(value, modify, tree, keepDistinct = true)
 

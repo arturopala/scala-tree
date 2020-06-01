@@ -606,7 +606,7 @@ trait TreeLike[+T] {
   /** Modifies the head value of a this node.
     * @param modify function to modify the head
     * @group modification */
-  def modifyHead[T1 >: T: ClassTag](modify: T => T1): Tree[T1] = ???
+  def modifyHead[T1 >: T: ClassTag](modify: T => T1): Tree[T1]
 
   /** Modifies the value of a first child node holding the given value.
     * @note This method tries to keep children values unique by merging modified tree (and only that) when needed.

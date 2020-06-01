@@ -29,6 +29,20 @@ class TreeModificationsSpec extends FunSuite {
 
     def tree[T: ClassTag](t: Tree[T]): Tree[T]
 
+    "modify head value" in {
+      val f = (x: String) => s"$x$x"
+      tree0.modifyHead(f) shouldBe tree0
+      tree1.modifyHead(f) shouldBe Tree("aa")
+      tree2.modifyHead(f) shouldBe Tree("aa", Tree("b"))
+      tree2.modifyHead(_ => "b") shouldBe Tree("b", Tree("b"))
+      tree3_1.modifyHead(f) shouldBe Tree("aa", Tree("b", Tree("c")))
+      tree3_1.modifyHead(_ => "b") shouldBe Tree("b", Tree("b", Tree("c")))
+      tree3_2.modifyHead(f) shouldBe Tree("aa", Tree("b"), Tree("c"))
+      tree3_2.modifyHead(_ => "b") shouldBe Tree("b", Tree("b"), Tree("c"))
+      tree4_2.modifyHead(f) shouldBe Tree("aa", Tree("b", Tree("c")), Tree("d"))
+      tree4_2.modifyHead(_ => "b") shouldBe Tree("b", Tree("b", Tree("c")), Tree("d"))
+    }
+
     "modify lax a child tree" in {
       val f: Tree[String] => Tree[String] = t => t.insertChild(Tree("x", Tree("y")))
       tree0.modifyChildLax("a", f) shouldBe tree0
