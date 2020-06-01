@@ -1207,6 +1207,24 @@ object NodeTree {
   /** Joins single treeSplit back into a tree node. */
   @`inline` final def join[T](split: TreeSplit[T]): NodeTree[T] = Tree(split._2, split._1 ++ split._3)
 
+  /** Updates value of the child holding the value. */
+  final def updateChildValue[T, T1 >: T: ClassTag](
+    tree: NodeTree[T],
+    value: T1,
+    replacement: T1,
+    keepDistinct: Boolean
+  ): Tree[T1] =
+    splitSequenceWhen[NodeTree[T]](_.head == value, tree.children) match {
+      case Some((left, node, right)) if node.head != replacement =>
+        val updatedNode = Tree(replacement, node.children)
+        if (keepDistinct) {
+          insertChildDistinct(tree.head, left, updatedNode, right, preserveExisting = false)
+        } else {
+          Tree(tree.head, left ++: updatedNode +: right)
+        }
+      case _ => tree
+    }
+
   /** Modifies a value of a child, and builds a tree back from the treeSplit. */
   final def modifyChildValueInSplit[T, T1 >: T: ClassTag](
     treeSplit: Vector[TreeSplit[T]],

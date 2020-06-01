@@ -170,7 +170,7 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
   // DISTINCT UPDATES
 
   final override def updateChildValue[T1 >: T: ClassTag](existingValue: T1, replacement: T1): Tree[T1] =
-    ???
+    NodeTree.updateChildValue(node, existingValue, replacement, keepDistinct = true)
 
   // DISTINCT MODIFICATIONS
 

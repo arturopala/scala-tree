@@ -182,7 +182,7 @@ abstract class ArrayTreeLike[T: ClassTag] extends TreeLike[T] {
   // DISTINCT UPDATES
 
   final override def updateChildValue[T1 >: T: ClassTag](existingValue: T1, replacement: T1): Tree[T1] =
-    ???
+    ArrayTree.updateChildValue(existingValue, replacement, tree, keepDistinct = true)
 
   // MODIFICATIONS
 

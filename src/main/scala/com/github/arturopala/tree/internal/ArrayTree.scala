@@ -707,6 +707,19 @@ object ArrayTree {
       }
     }
 
+  /** Updates value of the child node holding the given value. */
+  final def updateChildValue[T: ClassTag, T1 >: T: ClassTag](
+    value: T1,
+    replacement: T1,
+    target: ArrayTree[T],
+    keepDistinct: Boolean
+  ): Tree[T1] =
+    ArrayTreeFunctions
+      .leftmostChildHavingValue(value, target.size - 1, target.size, target.structure, target.content)
+      .filterNot(target.content(_) == replacement)
+      .map(updateValue(_, replacement, target, keepDistinct))
+      .getOrElse(target)
+
   /** Modifies value of the node at the index.
     * @return modified tree */
   final def modifyValue[T: ClassTag, T1 >: T: ClassTag](
