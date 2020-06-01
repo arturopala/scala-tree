@@ -355,7 +355,7 @@ trait TreeLike[+T] {
     * @note This method tries to keep children values unique by merging modified tree (and only that) when needed.
     * @param path list of node's values forming a path from the root to the parent node.
     * @param pred predicate returning true if child should remain, false otherwise.
-    * @return either right of modified tree or left with the tree intact
+    * @return modified tree
     * @group filtering */
   def filterChildrenAt[T1 >: T: ClassTag](path: Iterable[T1], pred: Tree[T] => Boolean): Tree[T] = ???
 
@@ -364,8 +364,8 @@ trait TreeLike[+T] {
     * @param path list K items forming a path from the root to the parent node.
     * @param pred predicate returning true if child should remain, false otherwise.
     * @param toPathItem extractor of the K path item from the tree's node value
-    * @return either right of modified tree or left with the tree intact
-    * @group modification */
+    * @return modified tree
+    * @group filtering */
   def filterChildrenAt[K, T1 >: T: ClassTag](path: Iterable[K], pred: Tree[T] => Boolean, toPathItem: T => K): Tree[T] =
     ???
 
