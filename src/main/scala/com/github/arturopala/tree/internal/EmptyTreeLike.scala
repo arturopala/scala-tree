@@ -125,6 +125,9 @@ trait EmptyTreeLike extends TreeLike[Nothing] {
 
   // UPDATES
 
+  final override def updateHead[T1 >: Nothing: ClassTag](replacement: T1): Tree[T1] =
+    Tree.empty
+
   final override def updateChildValue[T1 >: Nothing: ClassTag](existingValue: T1, replacement: T1): Tree[T1] =
     Tree.empty
 

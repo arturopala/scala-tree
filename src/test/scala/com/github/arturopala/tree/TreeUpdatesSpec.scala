@@ -29,6 +29,15 @@ class TreeUpdatesSpec extends FunSuite {
 
     def tree[T: ClassTag](t: Tree[T]): Tree[T]
 
+    "update head value" in {
+      tree0.updateHead("b") shouldBe tree0
+      tree1.updateHead("b") shouldBe Tree("b")
+      tree2.updateHead("b") shouldBe Tree("b", Tree("b"))
+      tree3_1.updateHead("b") shouldBe Tree("b", Tree("b", Tree("c")))
+      tree3_2.updateHead("b") shouldBe Tree("b", Tree("b"), Tree("c"))
+      tree4_2.updateHead("b") shouldBe Tree("b", Tree("b", Tree("c")), Tree("d"))
+    }
+
     "update distinct child value" in {
       tree0.updateChildValue("a", "b") shouldBe tree0
       tree1.updateChildValue("a", "aa") shouldBe tree1
