@@ -418,7 +418,7 @@ object ArrayTree {
     * @param target whole tree
     * @param keepDistinct if true keeps children distinct
     * @return modified tree */
-  final def insertValueAt[T, T1 >: T: ClassTag](
+  final def insertLeafAt[T, T1 >: T: ClassTag](
     path: Iterable[T1],
     value: T1,
     target: ArrayTree[T],
@@ -436,14 +436,14 @@ object ArrayTree {
             val newNode: Tree[T1] = TreeBuilder.linearTreeFromSequence(valueSequence)
             insertTree(index, newNode, target)
           case None =>
-            insertValue(index, value, target, keepDistinct)
+            insertLeaf(index, value, target, keepDistinct)
         }
     }
   }
 
   /** Inserts a value to a tree at a path using an extractor function.
     * @return modified tree */
-  final def insertValueAt[T, T1 >: T: ClassTag, K](
+  final def insertLeafAt[T, T1 >: T: ClassTag, K](
     path: Iterable[K],
     value: T1,
     target: ArrayTree[T],
@@ -459,7 +459,7 @@ object ArrayTree {
       case Some(index) =>
         if (unmatched.isDefined) Left(target)
         else {
-          Right(insertValue(index, value, target, keepDistinct))
+          Right(insertLeaf(index, value, target, keepDistinct))
         }
     }
   }
@@ -486,7 +486,7 @@ object ArrayTree {
     * @param keepDistinct if true keeps children distinct
     * @return modified tree
     */
-  final def insertValue[T: ClassTag](
+  final def insertLeaf[T: ClassTag](
     index: Int,
     value: T,
     target: Tree[T],
@@ -521,7 +521,7 @@ object ArrayTree {
             val newNode: Tree[T1] = TreeBuilder.fromTreeSequence(treeSequence)
             insertTree(index, newNode, target)
           case None =>
-            if (keepDistinct) insertTreeDistinct(index, subtree, target)
+            if (keepDistinct) insertChildDistinct(index, subtree, target)
             else insertTree(index, subtree, target)
         }
     }
@@ -542,7 +542,7 @@ object ArrayTree {
       case None => Left(target)
       case Some(index) =>
         if (unmatched.isDefined) Left(target)
-        else if (keepDistinct) Right(insertTreeDistinct(index, subtree, target))
+        else if (keepDistinct) Right(insertChildDistinct(index, subtree, target))
         else Right(insertTree(index, subtree, target))
     }
   }
@@ -567,7 +567,7 @@ object ArrayTree {
 
   /** Inserts a subtree to a tree at an index while keeping children values distinct.
     * @return modified tree */
-  final def insertTreeDistinct[T: ClassTag](
+  final def insertChildDistinct[T: ClassTag](
     index: Int,
     source: Tree[T],
     target: Tree[T]
@@ -719,7 +719,7 @@ object ArrayTree {
     else updateValue(index, modify(tree.content(index)), tree, keepDistinct)
 
   /** Modifies value of the child node holding the given value. */
-  final def modifyValue[T: ClassTag, T1 >: T: ClassTag](
+  final def modifyChildValue[T: ClassTag, T1 >: T: ClassTag](
     value: T1,
     modify: T => T1,
     target: ArrayTree[T],
@@ -778,7 +778,7 @@ object ArrayTree {
     }
 
   /** Modifies value of the child node holding the given value. */
-  final def modifyTree[T: ClassTag, T1 >: T: ClassTag](
+  final def modifyChild[T: ClassTag, T1 >: T: ClassTag](
     value: T1,
     modify: Tree[T] => Tree[T1],
     target: ArrayTree[T],
@@ -855,7 +855,7 @@ object ArrayTree {
     *       - otherwise if the tree has a single child, returns that child,
     *       - otherwise if the tree has more children, returns the tree unmodified.
     * @return modified tree */
-  final def removeValue[T: ClassTag, T1 >: T: ClassTag](
+  final def removeChildValue[T: ClassTag, T1 >: T: ClassTag](
     value: T1,
     target: ArrayTree[T],
     keepDistinct: Boolean
@@ -918,7 +918,7 @@ object ArrayTree {
 
   /** Removes the direct child of the node, holding the value.
     * @return modified tree */
-  final def removeTree[T: ClassTag, T1 >: T: ClassTag](
+  final def removeChild[T: ClassTag, T1 >: T: ClassTag](
     node: ArrayTree[T],
     value: T1
   ): Tree[T] =

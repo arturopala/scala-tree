@@ -871,7 +871,7 @@ object NodeTree {
     * @note distinct child is prepended on the lef side of existing children list,
     *       otherwise merged down with existing duplicate.
     */
-  final def insertTreeDistinct[T, T1 >: T](tree: NodeTree[T], newChild: NodeTree[T1]): Tree[T1] =
+  final def insertChildDistinct[T, T1 >: T](tree: NodeTree[T], newChild: NodeTree[T1]): Tree[T1] =
     insertChildDistinct(tree.head, Nil, newChild, tree.children, preserveExisting = true)
 
   /** Ensures that a child at an index position is distinct,
@@ -1249,7 +1249,7 @@ object NodeTree {
     }
 
   /** Modifies value of the node holding the value. */
-  final def modifyValue[T, T1 >: T: ClassTag](
+  final def modifyChildValue[T, T1 >: T: ClassTag](
     tree: NodeTree[T],
     value: T1,
     modify: T => T1,
@@ -1296,7 +1296,7 @@ object NodeTree {
       .getOrElse(Left(tree))
 
   /** Modifies the child tree holding the value at head. */
-  final def modifyTree[T, T1 >: T: ClassTag](
+  final def modifyChild[T, T1 >: T: ClassTag](
     tree: NodeTree[T],
     value: T1,
     modify: Tree[T] => Tree[T1],
@@ -1380,7 +1380,7 @@ object NodeTree {
     *       - otherwise if the tree has a single child, returns that child,
     *       - otherwise if the tree has more children, returns the tree unmodified.
     * */
-  final def removeValue[T, T1 >: T](
+  final def removeChildValue[T, T1 >: T](
     tree: NodeTree[T],
     value: T1,
     keepDistinct: Boolean
@@ -1433,7 +1433,7 @@ object NodeTree {
       .getOrElse(tree)
 
   /** Removes the direct child holding the value. */
-  final def removeTree[T, T1 >: T](
+  final def removeChild[T, T1 >: T](
     tree: NodeTree[T],
     value: T1
   ): Tree[T] =

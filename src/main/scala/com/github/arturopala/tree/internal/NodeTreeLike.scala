@@ -133,10 +133,10 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
 
   final override def insertChild[T1 >: T: ClassTag](child: Tree[T1]): Tree[T1] = child match {
     case Tree.empty         => node
-    case tree: NodeTree[T1] => NodeTree.insertTreeDistinct(node, tree)
+    case tree: NodeTree[T1] => NodeTree.insertChildDistinct(node, tree)
     case tree: ArrayTree[T1] =>
       if (Tree.preferInflated(node, tree))
-        NodeTree.insertTreeDistinct(node, tree.inflated.asInstanceOf[NodeTree[T1]])
+        NodeTree.insertChildDistinct(node, tree.inflated.asInstanceOf[NodeTree[T1]])
       else node.deflated[T1].insertChild(tree)
   }
 
@@ -167,10 +167,15 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
   final override def insertBranch[T1 >: T: ClassTag](branch: Iterable[T1]): Tree[T1] =
     NodeTree.insertBranch(node, branch.iterator).getOrElse(node)
 
+  // DISTINCT UPDATES
+
+  final override def updateChildValue[T1 >: T: ClassTag](existingValue: T1, replacement: T1): Tree[T1] =
+    ???
+
   // DISTINCT MODIFICATIONS
 
   final override def modifyChildValue[T1 >: T: ClassTag](value: T1, modify: T => T1): Tree[T1] =
-    NodeTree.modifyValue(node, value, modify, keepDistinct = true)
+    NodeTree.modifyChildValue(node, value, modify, keepDistinct = true)
 
   final override def modifyValueAt[T1 >: T: ClassTag](
     path: Iterable[T1],
@@ -186,7 +191,7 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
     NodeTree.modifyValueAt(node, path.iterator, toPathItem, modify, keepDistinct = true)
 
   final override def modifyChild[T1 >: T: ClassTag](value: T1, modify: Tree[T] => Tree[T1]): Tree[T1] =
-    NodeTree.modifyTree(node, value, modify, keepDistinct = true)
+    NodeTree.modifyChild(node, value, modify, keepDistinct = true)
 
   final override def modifyTreeAt[T1 >: T: ClassTag](
     path: Iterable[T1],
@@ -204,7 +209,7 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
   // DISTINCT REMOVALS
 
   final override def removeChildValue[T1 >: T: ClassTag](value: T1): Tree[T] =
-    NodeTree.removeValue(node, value, keepDistinct = true)
+    NodeTree.removeChildValue(node, value, keepDistinct = true)
 
   final override def removeValueAt[T1 >: T: ClassTag](path: Iterable[T1]): Tree[T] =
     NodeTree.removeValueAt(node, path.iterator, keepDistinct = true)
@@ -213,7 +218,7 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
     NodeTree.removeValueAt(node, path.iterator, toPathItem, keepDistinct = true)
 
   final override def removeChild[T1 >: T: ClassTag](value: T1): Tree[T] =
-    NodeTree.removeTree(node, value)
+    NodeTree.removeChild(node, value)
 
   final override def removeTreeAt[T1 >: T: ClassTag](path: Iterable[T1]): Tree[T] =
     NodeTree.removeTreeAt(node, path.iterator)

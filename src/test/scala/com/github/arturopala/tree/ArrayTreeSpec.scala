@@ -672,15 +672,15 @@ class ArrayTreeSpec extends AnyWordSpecCompat {
     }
 
     "insert a value" in {
-      insertValue(0, "a", Tree("a"), false) shouldBe Tree("a", Tree("a"))
-      insertValue(1, "a", Tree("a", Tree("b")), false) shouldBe Tree("a", Tree("a"), Tree("b"))
-      insertValue(0, "a", Tree("a", Tree("b")), false) shouldBe Tree("a", Tree("b", Tree("a")))
-      insertValue(2, "a", Tree("a", Tree("b"), Tree("c")), false) shouldBe Tree("a", Tree("a"), Tree("b"), Tree("c"))
-      insertValue(1, "a", Tree("a", Tree("b"), Tree("c")), false) shouldBe Tree("a", Tree("b", Tree("a")), Tree("c"))
-      insertValue(0, "a", Tree("a", Tree("b"), Tree("c")), false) shouldBe Tree("a", Tree("b"), Tree("c", Tree("a")))
-      insertValue(0, "a", Tree("a", Tree("b", Tree("c"))), false) shouldBe Tree("a", Tree("b", Tree("c", Tree("a"))))
-      insertValue(1, "a", Tree("a", Tree("b", Tree("c"))), false) shouldBe Tree("a", Tree("b", Tree("a"), Tree("c")))
-      insertValue(2, "a", Tree("a", Tree("b", Tree("c"))), false) shouldBe Tree("a", Tree("a"), Tree("b", Tree("c")))
+      insertLeaf(0, "a", Tree("a"), false) shouldBe Tree("a", Tree("a"))
+      insertLeaf(1, "a", Tree("a", Tree("b")), false) shouldBe Tree("a", Tree("a"), Tree("b"))
+      insertLeaf(0, "a", Tree("a", Tree("b")), false) shouldBe Tree("a", Tree("b", Tree("a")))
+      insertLeaf(2, "a", Tree("a", Tree("b"), Tree("c")), false) shouldBe Tree("a", Tree("a"), Tree("b"), Tree("c"))
+      insertLeaf(1, "a", Tree("a", Tree("b"), Tree("c")), false) shouldBe Tree("a", Tree("b", Tree("a")), Tree("c"))
+      insertLeaf(0, "a", Tree("a", Tree("b"), Tree("c")), false) shouldBe Tree("a", Tree("b"), Tree("c", Tree("a")))
+      insertLeaf(0, "a", Tree("a", Tree("b", Tree("c"))), false) shouldBe Tree("a", Tree("b", Tree("c", Tree("a"))))
+      insertLeaf(1, "a", Tree("a", Tree("b", Tree("c"))), false) shouldBe Tree("a", Tree("b", Tree("a"), Tree("c")))
+      insertLeaf(2, "a", Tree("a", Tree("b", Tree("c"))), false) shouldBe Tree("a", Tree("a"), Tree("b", Tree("c")))
     }
 
     "insert a subtree" in {
@@ -701,21 +701,21 @@ class ArrayTreeSpec extends AnyWordSpecCompat {
 
     "insert a subtree distinct" in {
       //insertSubtreeDistinct(0, Tree.empty, Tree.empty) shouldBe Tree.empty
-      insertTreeDistinct(0, Tree("a"), Tree.empty) shouldBe Tree("a")
-      insertTreeDistinct(0, Tree.empty, Tree("a")) shouldBe Tree("a")
-      insertTreeDistinct(0, Tree("a"), Tree("a")) shouldBe Tree("a", Tree("a"))
-      insertTreeDistinct(1, Tree("a"), Tree("a", Tree("b"))) shouldBe Tree("a", Tree("a"), Tree("b"))
-      insertTreeDistinct(0, Tree("a"), Tree("a", Tree("b"))) shouldBe Tree("a", Tree("b", Tree("a")))
-      insertTreeDistinct(1, Tree("b", Tree("a")), Tree("a", Tree("b"))) shouldBe Tree("a", Tree("b", Tree("a")))
-      insertTreeDistinct(0, Tree("b", Tree("a")), Tree("a", Tree("b"))) shouldBe Tree(
+      insertChildDistinct(0, Tree("a"), Tree.empty) shouldBe Tree("a")
+      insertChildDistinct(0, Tree.empty, Tree("a")) shouldBe Tree("a")
+      insertChildDistinct(0, Tree("a"), Tree("a")) shouldBe Tree("a", Tree("a"))
+      insertChildDistinct(1, Tree("a"), Tree("a", Tree("b"))) shouldBe Tree("a", Tree("a"), Tree("b"))
+      insertChildDistinct(0, Tree("a"), Tree("a", Tree("b"))) shouldBe Tree("a", Tree("b", Tree("a")))
+      insertChildDistinct(1, Tree("b", Tree("a")), Tree("a", Tree("b"))) shouldBe Tree("a", Tree("b", Tree("a")))
+      insertChildDistinct(0, Tree("b", Tree("a")), Tree("a", Tree("b"))) shouldBe Tree(
         "a",
         Tree("b", Tree("b", Tree("a")))
       )
-      insertTreeDistinct(2, Tree("a", Tree("b")), Tree("b", Tree("a", Tree("b")))) shouldBe Tree(
+      insertChildDistinct(2, Tree("a", Tree("b")), Tree("b", Tree("a", Tree("b")))) shouldBe Tree(
         "b",
         Tree("a", Tree("b"))
       )
-      insertTreeDistinct(2, Tree("b", Tree("d"), Tree("e")), Tree("a", Tree("b"), Tree("c"))) shouldBe Tree(
+      insertChildDistinct(2, Tree("b", Tree("d"), Tree("e")), Tree("a", Tree("b"), Tree("c"))) shouldBe Tree(
         "a",
         Tree("b", Tree("d"), Tree("e")),
         Tree("c")

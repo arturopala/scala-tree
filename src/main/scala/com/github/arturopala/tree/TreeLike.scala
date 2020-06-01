@@ -493,7 +493,7 @@ trait TreeLike[+T] {
     * @param replacement replacement value
     * @return modified tree if contains the value
     * @group update */
-  def updateChildValue[T1 >: T: ClassTag](existingValue: T1, replacement: T1): Tree[T1] = ???
+  def updateChildValue[T1 >: T: ClassTag](existingValue: T1, replacement: T1): Tree[T1]
 
   /** Updates the first child value selected by the given path, and returns a whole tree updated.
     * @note This method tries to keep children values unique by merging modified tree (and only that) when needed.

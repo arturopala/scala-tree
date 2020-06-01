@@ -90,7 +90,7 @@ trait EmptyTreeLike extends TreeLike[Nothing] {
 
   final override def countBranches(pred: Iterable[Nothing] => Boolean): Int = 0
 
-  // MODIFICATIONS
+  // INSERTIONS
 
   final override def prepend[T1 >: Nothing: ClassTag](value: T1): Tree[T1] = Tree(value)
 
@@ -122,6 +122,13 @@ trait EmptyTreeLike extends TreeLike[Nothing] {
   final override def insertBranch[T1: ClassTag](branch: Iterable[T1]): Tree[T1] =
     if (branch.isEmpty) Tree.empty
     else TreeBuilder.linearTreeFromSequence(branch.toList)
+
+  // UPDATES
+
+  final override def updateChildValue[T1 >: Nothing: ClassTag](existingValue: T1, replacement: T1): Tree[T1] =
+    Tree.empty
+
+  // MODIFICATIONS
 
   def modifyChildValue[T1 >: Nothing: ClassTag](value: T1, modify: Nothing => T1): Tree[T1] =
     Tree.empty
@@ -155,6 +162,8 @@ trait EmptyTreeLike extends TreeLike[Nothing] {
   ): Either[Tree[Nothing], Tree[T1]] =
     Left(empty)
 
+  // REMOVALS
+
   final override def removeChildValue[T1 >: Nothing: ClassTag](value: T1): Tree[Nothing] =
     Tree.empty
 
@@ -178,6 +187,8 @@ trait EmptyTreeLike extends TreeLike[Nothing] {
     toPathItem: Nothing => K
   ): Tree[Nothing] =
     Tree.empty
+
+  // SELECTIONS
 
   final override def selectValue[K](path: Iterable[K], toPathItem: Nothing => K): Option[Nothing] = None
   final override def selectTree[T1: ClassTag](path: Iterable[T1]): Option[Tree[Nothing]] = None
