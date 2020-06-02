@@ -183,7 +183,11 @@ trait TreeLike[+T] {
 
   // BRANCHES
 
-  /** Iterates over all the branches in this tree.
+  /** Iterates over all the possible paths in this tree.
+    * @group branches */
+  def paths: Iterable[Iterable[T]] = ???
+
+  /** Iterates over all the branches existing in this tree.
     * @group branches */
   def branches: Iterable[Iterable[T]]
 
