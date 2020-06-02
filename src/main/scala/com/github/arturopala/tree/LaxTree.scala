@@ -122,7 +122,7 @@ trait LaxTree[T] {
     * @param replacement replacement value
     * @return either right of modified tree or left with the tree intact
     * @group laxUpdate */
-  def updateValueLaxAt[T1 >: T: ClassTag](path: Iterable[T1], replacement: T1): Either[Tree[T], Tree[T1]] = ???
+  def updateValueLaxAt[T1 >: T: ClassTag](path: Iterable[T1], replacement: T1): Either[Tree[T], Tree[T1]]
 
   /** Updates the first value selected by the given path, and returns a whole tree updated.
     * @note This is a lax method, it doesn't preserve children values uniqueness.
@@ -135,7 +135,7 @@ trait LaxTree[T] {
     path: Iterable[K],
     replacement: T1,
     toPathItem: T => K
-  ): Either[Tree[T], Tree[T1]] = ???
+  ): Either[Tree[T], Tree[T1]]
 
   /** Updates the first child holding a given value.
     * @note This is a lax method, it doesn't preserve children values uniqueness.
@@ -390,6 +390,33 @@ object LaxTreeOps {
         case tree: ArrayTree[T] =>
           ArrayTree.updateChildValue(existingValue, replacement, tree, keepDistinct = false)
       }
+
+    final override def updateValueLaxAt[T1 >: T: ClassTag](
+      path: Iterable[T1],
+      replacement: T1
+    ): Either[Tree[T], Tree[T1]] = t match {
+      case Tree.empty => Left(empty)
+
+      case node: NodeTree[T] =>
+        NodeTree.updateValueAt(node, path.iterator, replacement, keepDistinct = false)
+
+      case tree: ArrayTree[T] =>
+        ArrayTree.updateValueAt(path, replacement, tree, keepDistinct = false)
+    }
+
+    final override def updateValueLaxAt[K, T1 >: T: ClassTag](
+      path: Iterable[K],
+      replacement: T1,
+      toPathItem: T => K
+    ): Either[Tree[T], Tree[T1]] = t match {
+      case Tree.empty => Left(empty)
+
+      case node: NodeTree[T] =>
+        NodeTree.updateValueAt(node, path.iterator, toPathItem, replacement, keepDistinct = false)
+
+      case tree: ArrayTree[T] =>
+        ArrayTree.updateValueAt(path, replacement, tree, toPathItem, keepDistinct = false)
+    }
 
     final override def modifyChildValueLax[T1 >: T: ClassTag](value: T1, modify: T => T1): Tree[T1] =
       t match {

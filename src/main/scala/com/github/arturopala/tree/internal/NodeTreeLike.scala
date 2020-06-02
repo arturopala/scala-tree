@@ -175,6 +175,16 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
   final override def updateChildValue[T1 >: T: ClassTag](existingValue: T1, replacement: T1): Tree[T1] =
     NodeTree.updateChildValue(node, existingValue, replacement, keepDistinct = true)
 
+  final override def updateValueAt[T1 >: T: ClassTag](path: Iterable[T1], replacement: T1): Either[Tree[T], Tree[T1]] =
+    NodeTree.updateValueAt(node, path.iterator, replacement, keepDistinct = true)
+
+  final override def updateValueAt[K, T1 >: T: ClassTag](
+    path: Iterable[K],
+    replacement: T1,
+    toPathItem: T => K
+  ): Either[Tree[T], Tree[T1]] =
+    NodeTree.updateValueAt(node, path.iterator, toPathItem, replacement, keepDistinct = true)
+
   // DISTINCT MODIFICATIONS
 
   final override def modifyHead[T1 >: T: ClassTag](modify: T => T1): Tree[T1] =

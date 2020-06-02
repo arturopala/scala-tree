@@ -1207,6 +1207,47 @@ object NodeTree {
   /** Joins single treeSplit back into a tree node. */
   @`inline` final def join[T](split: TreeSplit[T]): NodeTree[T] = Tree(split._2, split._1 ++ split._3)
 
+  /** Updates a value of a child, and builds a tree back from the treeSplit. */
+  final def updateChildValueInSplit[T, T1 >: T: ClassTag](
+    treeSplit: Vector[TreeSplit[T]],
+    child: NodeTree[T],
+    replacement: T1,
+    keepDistinct: Boolean
+  ): Tree[T1] = {
+    val modifiedChild = Tree(replacement, child.children)
+    if (keepDistinct && treeSplit.nonEmpty) {
+      val (left, head, right) = treeSplit.head
+      val newHead = insertChildDistinct(head, left, modifiedChild, right, preserveExisting = false)
+      TreeBuilder.fromChildAndTreeSplit(newHead, treeSplit.tail)
+    } else {
+      TreeBuilder.fromChildAndTreeSplit(modifiedChild, treeSplit)
+    }
+  }
+
+  /** Updates a child, and builds a tree back from the treeSplit. */
+  final def updateChildInSplit[T, T1 >: T: ClassTag](
+    treeSplit: Vector[TreeSplit[T]],
+    child: NodeTree[T],
+    replacement: Tree[T1],
+    keepDistinct: Boolean
+  ): Tree[T1] =
+    replacement match {
+      case Tree.empty =>
+        TreeBuilder.fromTreeSplit[T1](treeSplit)
+
+      case tree: NodeTree[T1] =>
+        if (keepDistinct && treeSplit.nonEmpty && tree.head != child.head) {
+          val (left, head, right) = treeSplit.head
+          val newHead = insertChildDistinct(head, left, tree, right, preserveExisting = false)
+          TreeBuilder.fromChildAndTreeSplit(newHead, treeSplit.tail)
+        } else {
+          TreeBuilder.fromChildAndTreeSplit(tree, treeSplit)
+        }
+
+      case tree: ArrayTree[T1] =>
+        ArrayTree.buildFromChildAndTreeSplit(tree, treeSplit.tail)
+    }
+
   /** Updates value of the child holding the value. */
   final def updateChildValue[T, T1 >: T: ClassTag](
     tree: NodeTree[T],
@@ -1225,46 +1266,38 @@ object NodeTree {
       case _ => tree
     }
 
-  /** Modifies a value of a child, and builds a tree back from the treeSplit. */
-  final def modifyChildValueInSplit[T, T1 >: T: ClassTag](
-    treeSplit: Vector[TreeSplit[T]],
-    child: NodeTree[T],
-    modify: T => T1,
+  /** Updates value of the node selected by the path. */
+  final def updateValueAt[T, T1 >: T: ClassTag](
+    tree: NodeTree[T],
+    pathIterator: Iterator[T1],
+    replacement: T1,
     keepDistinct: Boolean
-  ): Tree[T1] = {
-    val modifiedChild = Tree(modify(child.head), child.children)
-    if (keepDistinct && treeSplit.nonEmpty) {
-      val (left, head, right) = treeSplit.head
-      val newHead = insertChildDistinct(head, left, modifiedChild, right, preserveExisting = false)
-      TreeBuilder.fromChildAndTreeSplit(newHead, treeSplit.tail)
-    } else {
-      TreeBuilder.fromChildAndTreeSplit(modifiedChild, treeSplit)
-    }
-  }
+  ): Either[Tree[T], Tree[T1]] =
+    splitTreeFollowingEntirePath[T, T1](tree, pathIterator)
+      .map {
+        case (treeSplit, recipientTree) =>
+          if (replacement != recipientTree.head)
+            Right(updateChildValueInSplit(treeSplit, recipientTree, replacement, keepDistinct))
+          else Right(tree)
+      }
+      .getOrElse(Left(tree))
 
-  /** Modifies a child, and builds a tree back from the treeSplit. */
-  final def modifyChildInSplit[T, T1 >: T: ClassTag](
-    treeSplit: Vector[TreeSplit[T]],
-    child: NodeTree[T],
-    modify: Tree[T] => Tree[T1],
+  /** Updates value of the node selected by the path using a path item extractor. */
+  final def updateValueAt[K, T, T1 >: T: ClassTag](
+    tree: NodeTree[T],
+    pathIterator: Iterator[K],
+    toPathItem: T => K,
+    replacement: T1,
     keepDistinct: Boolean
-  ): Tree[T1] =
-    modify(child) match {
-      case Tree.empty =>
-        TreeBuilder.fromTreeSplit[T1](treeSplit)
-
-      case tree: NodeTree[T1] =>
-        if (keepDistinct && treeSplit.nonEmpty && tree.head != child.head) {
-          val (left, head, right) = treeSplit.head
-          val newHead = insertChildDistinct(head, left, tree, right, preserveExisting = false)
-          TreeBuilder.fromChildAndTreeSplit(newHead, treeSplit.tail)
-        } else {
-          TreeBuilder.fromChildAndTreeSplit(tree, treeSplit)
-        }
-
-      case tree: ArrayTree[T1] =>
-        ArrayTree.buildFromChildAndTreeSplit(tree, treeSplit.tail)
-    }
+  ): Either[Tree[T], Tree[T1]] =
+    splitTreeFollowingEntirePath(tree, pathIterator, toPathItem)
+      .map {
+        case (treeSplit, recipientTree) =>
+          if (replacement != recipientTree.head)
+            Right(updateChildValueInSplit(treeSplit, recipientTree, replacement, keepDistinct))
+          else Right(tree)
+      }
+      .getOrElse(Left(tree))
 
   /** Modifies value of the node holding the value. */
   final def modifyChildValue[T, T1 >: T: ClassTag](
@@ -1294,11 +1327,14 @@ object NodeTree {
     splitTreeFollowingEntirePath[T, T1](tree, pathIterator)
       .map {
         case (treeSplit, recipientTree) =>
-          Right(modifyChildValueInSplit(treeSplit, recipientTree, modify, keepDistinct))
+          val replacement = modify(recipientTree.head)
+          if (replacement != recipientTree.head)
+            Right(updateChildValueInSplit(treeSplit, recipientTree, replacement, keepDistinct))
+          else Right(tree)
       }
       .getOrElse(Left(tree))
 
-  /** Modifies value of the node selected by the path using a path item extractor. */
+  /** Modifies value of the node selected by the path using path item extractor. */
   final def modifyValueAt[K, T, T1 >: T: ClassTag](
     tree: NodeTree[T],
     pathIterator: Iterator[K],
@@ -1309,7 +1345,10 @@ object NodeTree {
     splitTreeFollowingEntirePath(tree, pathIterator, toPathItem)
       .map {
         case (treeSplit, recipientTree) =>
-          Right(modifyChildValueInSplit(treeSplit, recipientTree, modify, keepDistinct))
+          val replacement = modify(recipientTree.head)
+          if (replacement != recipientTree.head)
+            Right(updateChildValueInSplit(treeSplit, recipientTree, replacement, keepDistinct))
+          else Right(tree)
       }
       .getOrElse(Left(tree))
 
@@ -1350,11 +1389,14 @@ object NodeTree {
     splitTreeFollowingEntirePath[T, T1](tree, pathIterator)
       .map {
         case (treeSplit, recipientTree) =>
-          Right(modifyChildInSplit(treeSplit, recipientTree, modify, keepDistinct))
+          val replacement = modify(recipientTree)
+          if (replacement != recipientTree)
+            Right(updateChildInSplit(treeSplit, recipientTree, replacement, keepDistinct))
+          else Right(tree)
       }
       .getOrElse(Left(tree))
 
-  /** Modifies a subtree selected by the path. */
+  /** Modifies a subtree selected by the path using path item extractor. */
   final def modifyTreeAt[K, T, T1 >: T: ClassTag](
     tree: NodeTree[T],
     pathIterator: Iterator[K],
@@ -1365,7 +1407,10 @@ object NodeTree {
     splitTreeFollowingEntirePath(tree, pathIterator, toPathItem)
       .map {
         case (treeSplit, recipientTree) =>
-          Right(modifyChildInSplit(treeSplit, recipientTree, modify, keepDistinct))
+          val replacement = modify(recipientTree)
+          if (replacement != recipientTree)
+            Right(updateChildInSplit(treeSplit, recipientTree, replacement, keepDistinct))
+          else Right(tree)
       }
       .getOrElse(Left(tree))
 
