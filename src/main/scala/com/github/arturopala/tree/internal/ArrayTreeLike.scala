@@ -154,6 +154,9 @@ abstract class ArrayTreeLike[T: ClassTag] extends TreeLike[T] {
   final override def insertLeaf[T1 >: T: ClassTag](value: T1): Tree[T1] =
     ArrayTree.insertLeaf(tree.structure.top, value, tree, keepDistinct = true)
 
+  final override def insertLeaves[T1 >: T: ClassTag](values: Iterable[T1]): Tree[T1] =
+    ArrayTree.insertLeaves(tree.structure.top, values, tree, keepDistinct = true)
+
   final override def insertLeafAt[T1 >: T: ClassTag](path: Iterable[T1], value: T1): Tree[T1] =
     ArrayTree.insertLeafAt(path, value, tree, keepDistinct = true)
 
@@ -284,6 +287,9 @@ abstract class ArrayTreeLike[T: ClassTag] extends TreeLike[T] {
 
   final override def selectTree[K](path: Iterable[K], toPathItem: T => K): Option[Tree[T]] =
     ArrayTree.selectTree(path, tree.structure.top, tree.structure, tree.content, toPathItem)
+
+  final override def containsChild[T1 >: T](value: T1): Boolean =
+    ArrayTree.containsChild(value, tree.structure.top, tree.structure, tree.content)
 
   final override def containsBranch[T1 >: T](branch: Iterable[T1]): Boolean =
     ArrayTree.containsBranch(branch, tree.structure.top, tree.structure, tree.content)

@@ -121,6 +121,14 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
     if (node.children.exists(_.head == value)) node
     else Tree(node.head, Tree(value) +: node.children)
 
+  final override def insertLeaves[T1 >: T: ClassTag](values: Iterable[T1]): Tree[T1] =
+    if (values.isEmpty) node
+    else {
+      val distinctLeafs = values.filterNot(node.containsChild)
+      if (distinctLeafs.isEmpty) node
+      else Tree(node.head, distinctLeafs.map(Tree.apply[T1]) ++: node.children)
+    }
+
   final override def insertLeafAt[T1 >: T: ClassTag](path: Iterable[T1], value: T1): Tree[T1] =
     NodeTree.insertTreeAt(node, path.iterator, Tree(value), keepDistinct = true).getOrElse(node)
 
@@ -278,6 +286,8 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
 
   final override def selectTree[K](path: Iterable[K], toPathItem: T => K): Option[Tree[T]] =
     NodeTree.select(node, path, (n: NodeTree[T]) => n, toPathItem)
+
+  final override def containsChild[T1 >: T](value: T1): Boolean = node.children.exists(_.head == value)
 
   final override def containsBranch[T1 >: T](branch: Iterable[T1]): Boolean =
     NodeTree.containsBranch(node, branch)

@@ -213,7 +213,7 @@ trait TreeLike[+T] {
   /** Checks for the existence of the direct child holding the value.
     * @param value value to look for
     * @group checks */
-  def containsChild[T1 >: T](value: T1): Boolean = ???
+  def containsChild[T1 >: T](value: T1): Boolean
 
   /** Checks for the existence of the direct child fulfilling the predicate.
     * @param pred function returning true for the searched value
@@ -456,7 +456,7 @@ trait TreeLike[+T] {
   /** Inserts new leaf-type children and returns updated tree.
     * @note This method tries to keep children values unique by merging inserted tree (and only that) when needed.
     * @group insertion */
-  def insertLeaves[T1 >: T: ClassTag](values: Iterable[T1]): Tree[T1] = ???
+  def insertLeaves[T1 >: T: ClassTag](values: Iterable[T1]): Tree[T1]
 
   /** Inserts, at the given path, a new leaf holding the value and returns a whole tree updated.
     * If path doesn't fully exist in the tree then remaining suffix will be created.

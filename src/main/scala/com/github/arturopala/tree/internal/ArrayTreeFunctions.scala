@@ -22,6 +22,7 @@ import com.github.arturopala.bufferandslice.IndexTracker.{trackMoveRangeLeft, tr
 import com.github.arturopala.bufferandslice.{Buffer, IndexTracker, IntBuffer, IntSlice, Slice}
 
 import scala.annotation.tailrec
+import scala.collection.Iterator.continually
 import scala.collection.mutable
 
 /**
@@ -498,7 +499,7 @@ object ArrayTreeFunctions {
             if (numberOfChildren > 0) {
               queue.shiftRight(0, numberOfChildren)
               writeChildrenIndexesToBuffer(index, treeStructure, queue, 0)
-              levels.insertFromIterator(0, numberOfChildren, Iterator.continually(level + 1))
+              levels.insertFromIterator(0, numberOfChildren, continually(level + 1))
             }
           }
           index
@@ -533,7 +534,7 @@ object ArrayTreeFunctions {
             if (numberOfChildren > 0) {
               queue.shiftRight(0, numberOfChildren)
               writeChildrenIndexesToBuffer(index, treeStructure, queue, 0)
-              levels.insertFromIterator(0, numberOfChildren, Iterator.continually(level + 1))
+              levels.insertFromIterator(0, numberOfChildren, continually(level + 1))
             }
           }
           (level, index)
@@ -926,6 +927,22 @@ object ArrayTreeFunctions {
     length
   }
 
+  /** Inserts in the reverse order content provided by iterators to the buffers at an index.
+    * Shifts existing buffer content right, starting from an index, at length.
+    * @return buffer length change */
+  final def insertFromIteratorReverse[T](
+    index: Int,
+    length: Int,
+    structure: Iterator[Int],
+    values: Iterator[T],
+    structureBuffer: IntBuffer,
+    valuesBuffer: Buffer[T]
+  ): Int = {
+    structureBuffer.insertFromIteratorReverse(Math.max(index, 0), length, structure)
+    valuesBuffer.insertFromIteratorReverse(Math.max(index, 0), length, values)
+    length
+  }
+
   /** Removes value at index and joins its subtrees to the parent node,
     * @param keepDistinct if true, checks newly added orphans are distinct.
     */
@@ -1011,7 +1028,7 @@ object ArrayTreeFunctions {
           valuesBuffer.insertFromIteratorReverse(insertIndex, branchIterator)
           val delta = valuesBuffer.length - l0
           structureBuffer.insert(insertIndex, 0)
-          structureBuffer.insertFromIterator(insertIndex + 1, delta - 1, Iterator.continually(1))
+          structureBuffer.insertFromIterator(insertIndex + 1, delta - 1, continually(1))
           delta
       }
     } else offset

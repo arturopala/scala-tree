@@ -21,6 +21,7 @@ import com.github.arturopala.tree.Tree.ArrayTree
 import com.github.arturopala.tree.{Tree, TreeBuilder}
 import com.github.arturopala.tree.internal.IntOps._
 
+import scala.collection.Iterator.continually
 import scala.reflect.ClassTag
 
 /**
@@ -214,6 +215,18 @@ object ArrayTree {
       { case (level: Int, index: Int) => (level, treeAt(index, treeStructure, treeValues)) },
       (t: (Int, Tree[T])) => pred(t._2)
     )
+
+  /** Checks if the tree contains given direct child value. */
+  @`inline` final def containsChild[T, T1 >: T](
+    value: T1,
+    parentIndex: Int,
+    treeStructure: Int => Int,
+    treeValues: Int => T
+  ): Boolean =
+    ArrayTreeFunctions
+      .childrenIndexes(parentIndex, treeStructure)
+      .iterator
+      .exists(i => treeValues(i) == value)
 
   /** Checks if the tree contains given branch. */
   @`inline` final def containsBranch[T, T1 >: T](
@@ -479,7 +492,7 @@ object ArrayTree {
       Some(1)
     }.asInstanceOf[ArrayTree[T1]]
 
-  /** Inserts a value to a tree at an index.
+  /** Inserts new leaf to a tree at an index.
     * @param index index of the root of a target sub-tree
     * @param value value to insert
     * @param target whole tree
@@ -501,6 +514,33 @@ object ArrayTree {
           ArrayTreeFunctions.insertValue(index, value, structureBuffer, valuesBuffer).intAsSome
         }
     }
+
+  /** Inserts new leaves to a tree at an index.
+    * @param index index of the root of a target sub-tree
+    * @param values leaves to insert
+    * @param target whole tree
+    * @param keepDistinct if true keeps children distinct
+    * @return modified tree
+    */
+  final def insertLeaves[T: ClassTag](
+    index: Int,
+    values: Iterable[T],
+    target: Tree[T],
+    keepDistinct: Boolean
+  ): Tree[T] =
+    if (target.isEmpty || values.isEmpty) if (values.size == 1) Tree(values.head) else Tree.empty
+    else
+      transform(target) { (structureBuffer, valuesBuffer) =>
+        val toInsert = if (keepDistinct) {
+          val existing = ArrayTreeFunctions.childrenIndexes(index, structureBuffer).map(valuesBuffer)
+          values.filterNot(value => existing.exists(_ == value))
+        } else values
+        val size = toInsert.size
+        structureBuffer.modify(index, _ + size)
+        ArrayTreeFunctions
+          .insertFromIteratorReverse(index, size, continually(0), toInsert.iterator, structureBuffer, valuesBuffer)
+          .nonZeroIntAsSome
+      }
 
   /** Inserts a subtree to a tree at a path.
     * @return modified tree */

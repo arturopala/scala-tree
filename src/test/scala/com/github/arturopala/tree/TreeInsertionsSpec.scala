@@ -29,7 +29,7 @@ class TreeInsertionsSpec extends FunSuite {
 
     def tree[T: ClassTag](t: Tree[T]): Tree[T]
 
-    "insert distinct new value to a tree" in {
+    "insert distinct new leaf to a tree" in {
       tree0.insertLeaf("a") shouldBe Tree("a")
       tree1.insertLeaf("b") shouldBe Tree("a", Tree("b"))
       tree2.insertLeaf("c") shouldBe Tree("a", Tree("c"), Tree("b"))
@@ -61,7 +61,7 @@ class TreeInsertionsSpec extends FunSuite {
       tree9.insertLeaf("e") shouldBe tree9
     }
 
-    "insert lax new value to a tree" in {
+    "insert lax new leaf to a tree" in {
       tree0.insertLeafLax("a") shouldBe Tree("a")
       tree1.insertLeafLax("b") shouldBe Tree("a", Tree("b"))
       tree2.insertLeafLax("c") shouldBe Tree("a", Tree("c"), Tree("b"))
@@ -86,7 +86,33 @@ class TreeInsertionsSpec extends FunSuite {
       )
     }
 
-    "insert distinct new value to a tree at the specified path" in {
+    "insert distinct new leaves to a tree" in {
+      tree0.insertLeaves(List("a", "b", "c")) shouldBe tree0
+      tree1.insertLeaves(List("a", "b", "c")) shouldBe Tree("a", Tree("a"), Tree("b"), Tree("c"))
+      tree2.insertLeaves(List("a", "b", "c")) shouldBe Tree("a", Tree("a"), Tree("c"), Tree("b"))
+      tree3_1.insertLeaves(List("a", "b", "c")) shouldBe Tree("a", Tree("a"), Tree("c"), Tree("b", Tree("c")))
+      tree3_2.insertLeaves(List("a", "b", "c")) shouldBe Tree("a", Tree("a"), Tree("b"), Tree("c"))
+      tree4_1.insertLeaves(List("a", "b", "c")) shouldBe
+        Tree("a", Tree("a"), Tree("c"), Tree("b", Tree("c", Tree("d"))))
+      tree4_2.insertLeaves(List("a", "b", "c")) shouldBe
+        Tree("a", Tree("a"), Tree("c"), Tree("b", Tree("c")), Tree("d"))
+    }
+
+    "insert lax new leaves to a tree" in {
+      tree0.insertLeavesLax(List("a", "b", "c")) shouldBe tree0
+      tree1.insertLeavesLax(List("a", "b", "c")) shouldBe Tree("a", Tree("a"), Tree("b"), Tree("c"))
+      tree2.insertLeavesLax(List("a", "b", "c")) shouldBe Tree("a", Tree("a"), Tree("b"), Tree("c"), Tree("b"))
+      tree3_1.insertLeavesLax(List("a", "b", "c")) shouldBe
+        Tree("a", Tree("a"), Tree("b"), Tree("c"), Tree("b", Tree("c")))
+      tree3_2.insertLeavesLax(List("a", "b", "c")) shouldBe
+        Tree("a", Tree("a"), Tree("b"), Tree("c"), Tree("b"), Tree("c"))
+      tree4_1.insertLeavesLax(List("a", "b", "c")) shouldBe
+        Tree("a", Tree("a"), Tree("b"), Tree("c"), Tree("b", Tree("c", Tree("d"))))
+      tree4_2.insertLeavesLax(List("a", "b", "c")) shouldBe
+        Tree("a", Tree("a"), Tree("b"), Tree("c"), Tree("b", Tree("c")), Tree("d"))
+    }
+
+    "insert distinct new leaf to a tree at the specified path" in {
       tree0.insertLeafAt(List(), "a") shouldBe Tree("a")
       tree0.insertLeafAt(List("a", "b"), "a") shouldBe Tree("a", Tree("b", Tree("a")))
       tree1.insertLeafAt(List("a"), "b") shouldBe Tree("a", Tree("b"))
@@ -131,7 +157,7 @@ class TreeInsertionsSpec extends FunSuite {
       )
     }
 
-    "insert lax new value to a tree at the specified path" in {
+    "insert lax new leaf to a tree at the specified path" in {
       tree0.insertLeafLaxAt(List("a", "b"), "a") shouldBe Tree("a", Tree("b", Tree("a")))
       tree1.insertLeafLaxAt(List("a", "b"), "a") shouldBe Tree("a", Tree("b", Tree("a")))
       tree1.insertLeafLaxAt(List("a", "c", "c"), "a") shouldBe Tree("a", Tree("c", Tree("c", Tree("a"))))
@@ -153,7 +179,7 @@ class TreeInsertionsSpec extends FunSuite {
       tree3_2.insertLeafLaxAt(List("a", "c", "d"), "c") shouldBe Tree("a", Tree("b"), Tree("c", Tree("d", Tree("c"))))
     }
 
-    "insert distinct new value to a tree at the specified path with path item extractor" in {
+    "insert distinct new leaf to a tree at the specified path with path item extractor" in {
       val codeF: String => Int = s => s.head.toInt
       tree0.insertLeafAt(List(), "a", codeF) shouldBe Left(tree0)
       tree0.insertLeafAt(List(97, 98), "a", codeF) shouldBe Left(tree0)
@@ -202,7 +228,7 @@ class TreeInsertionsSpec extends FunSuite {
       tree7.insertLeafAt(List(97, 103, 101), "d", codeF) shouldBe Left(tree7)
     }
 
-    "insert lax new value to a tree at the specified path with path item extractor" in {
+    "insert lax new leaf to a tree at the specified path with path item extractor" in {
       val codeF: String => Int = s => s.head.toInt
       tree0.insertLeafLaxAt(List(97), "a", codeF) shouldBe Left(tree0)
       tree1.insertLeafLaxAt(List(97), "b", codeF) shouldBe Right(Tree("a", Tree("b")))
