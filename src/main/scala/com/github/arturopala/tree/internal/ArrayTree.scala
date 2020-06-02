@@ -753,6 +753,39 @@ object ArrayTree {
       )
       .getOrElse(Left(target))
 
+  /** Updates a subtree selected by the path.
+    * @return either modified tree or an existing */
+  final def updateTreeAt[T: ClassTag, T1 >: T: ClassTag](
+    path: Iterable[T1],
+    replacement: Tree[T1],
+    target: ArrayTree[T],
+    keepDistinct: Boolean
+  ): Either[Tree[T], Tree[T1]] =
+    ArrayTreeFunctions
+      .followEntirePath(path, target.size - 1, target.structure, target.content)
+      .map(indexes =>
+        if (indexes.isEmpty) Left(target)
+        else Right(updateTree(indexes.last, replacement, target, keepDistinct))
+      )
+      .getOrElse(Left(target))
+
+  /** Updates a subtree selected by the path.
+    * @return either modified tree or an existing */
+  final def updateTreeAt[K, T: ClassTag, T1 >: T: ClassTag](
+    path: Iterable[K],
+    replacement: Tree[T1],
+    target: ArrayTree[T],
+    toPathItem: T => K,
+    keepDistinct: Boolean
+  ): Either[Tree[T], Tree[T1]] =
+    ArrayTreeFunctions
+      .followEntirePath(path, target.size - 1, target.structure, target.content, toPathItem)
+      .map(indexes =>
+        if (indexes.isEmpty) Left(target)
+        else Right(updateTree(indexes.last, replacement, target, keepDistinct))
+      )
+      .getOrElse(Left(target))
+
   /** Modifies value of the node at the index.
     * @return modified tree */
   final def modifyValue[T: ClassTag, T1 >: T: ClassTag](

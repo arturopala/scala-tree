@@ -1299,6 +1299,39 @@ object NodeTree {
       }
       .getOrElse(Left(tree))
 
+  /** Updates a subtree selected by the path. */
+  final def updateTreeAt[T, T1 >: T: ClassTag](
+    tree: NodeTree[T],
+    pathIterator: Iterator[T1],
+    replacement: Tree[T1],
+    keepDistinct: Boolean
+  ): Either[Tree[T], Tree[T1]] =
+    splitTreeFollowingEntirePath[T, T1](tree, pathIterator)
+      .map {
+        case (treeSplit, recipientTree) =>
+          if (replacement != recipientTree)
+            Right(updateChildInSplit(treeSplit, recipientTree, replacement, keepDistinct))
+          else Right(tree)
+      }
+      .getOrElse(Left(tree))
+
+  /** Updates a subtree selected by the path using path item extractor. */
+  final def updateTreeAt[K, T, T1 >: T: ClassTag](
+    tree: NodeTree[T],
+    pathIterator: Iterator[K],
+    toPathItem: T => K,
+    replacement: Tree[T1],
+    keepDistinct: Boolean
+  ): Either[Tree[T], Tree[T1]] =
+    splitTreeFollowingEntirePath(tree, pathIterator, toPathItem)
+      .map {
+        case (treeSplit, recipientTree) =>
+          if (replacement != recipientTree)
+            Right(updateChildInSplit(treeSplit, recipientTree, replacement, keepDistinct))
+          else Right(tree)
+      }
+      .getOrElse(Left(tree))
+
   /** Modifies value of the node holding the value. */
   final def modifyChildValue[T, T1 >: T: ClassTag](
     tree: NodeTree[T],

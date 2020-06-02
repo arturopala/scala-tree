@@ -342,7 +342,6 @@ class TreeUpdatesSpec extends FunSuite {
     }
 
     "update distinct a value of a node selected by the path in the tree" in {
-      def fi(s: String): String => String = _ => s
       tree0.updateValueAt(List(), "x") shouldBe Left(tree0)
       tree0.updateValueAt(List("a"), "x") shouldBe Left(tree0)
       tree0.updateValueAt(List("b"), "x") shouldBe Left(tree0)
@@ -502,6 +501,188 @@ class TreeUpdatesSpec extends FunSuite {
       tree7.updateValueAt(List(97, 98, 101), "x", e) shouldBe Left(tree7)
     }
 
+    "update lax a subtree selected by the path" in {
+      tree0.updateTreeLaxAt(List("a", "b"), tree2) shouldBe Left(tree0)
+      tree1.updateTreeLaxAt(List("a"), tree2) shouldBe Right(Tree("a", Tree("b")))
+      tree1.updateTreeLaxAt(List("b"), tree2) shouldBe Left(tree1)
+      tree2.updateTreeLaxAt(List("a"), tree3_2) shouldBe Right(Tree("a", Tree("b"), Tree("c")))
+      tree2.updateTreeLaxAt(List("a", "b"), tree3_2) shouldBe Right(Tree("a", Tree("a", Tree("b"), Tree("c"))))
+      tree2.updateTreeLaxAt(List("a", "c"), tree3_2) shouldBe Left(tree2)
+      tree3_2.updateTreeLaxAt(List("a", "b"), tree2) shouldBe Right(Tree("a", Tree("a", Tree("b")), Tree("c")))
+      tree3_2.updateTreeLaxAt(List("a", "b"), tree3_2) shouldBe Right(
+        Tree("a", Tree("a", Tree("b"), Tree("c")), Tree("c"))
+      )
+      tree3_2.updateTreeLaxAt(List("a", "c"), tree2) shouldBe Right(Tree("a", Tree("b"), Tree("a", Tree("b"))))
+      tree3_2.updateTreeLaxAt(List("a", "c"), tree3_2) shouldBe Right(
+        Tree("a", Tree("b"), Tree("a", Tree("b"), Tree("c")))
+      )
+      tree3_2.updateTreeLaxAt(List("a"), tree2) shouldBe Right(tree2)
+      tree3_2.updateTreeLaxAt(List("a"), tree9) shouldBe Right(tree9)
+      tree3_2.updateTreeLaxAt(List("a", "a"), tree2) shouldBe Left(tree3_2)
+      tree3_2.updateTreeLaxAt(List("b", "a"), tree2) shouldBe Left(tree3_2)
+      tree3_2.updateTreeLaxAt(List("b"), tree2) shouldBe Left(tree3_2)
+      tree3_2.updateTreeLaxAt(List("b", "b"), tree2) shouldBe Left(tree3_2)
+      tree3_2.updateTreeLaxAt(List("a", "c"), Tree("b", Tree("d"))) shouldBe Right(
+        Tree("a", Tree("b"), Tree("b", Tree("d")))
+      )
+      tree4_2.updateTreeLaxAt(List("a", "d"), Tree("b", Tree("c", Tree("e")))) shouldBe Right(
+        Tree("a", Tree("b", Tree("c")), Tree("b", Tree("c", Tree("e"))))
+      )
+      tree4_2.updateTreeLaxAt(List("a", "b", "c"), Tree("b", Tree("c", Tree("e")))) shouldBe Right(
+        Tree("a", Tree("b", Tree("b", Tree("c", Tree("e")))), Tree("d"))
+      )
+      tree4_2.updateTreeLaxAt(List("a", "b", "d"), Tree("b", Tree("c", Tree("e")))) shouldBe Left(tree4_2)
+      tree4_2.updateTreeLaxAt(List("a", "d", "c"), Tree("b", Tree("c", Tree("e")))) shouldBe Left(tree4_2)
+      tree4_2.updateTreeLaxAt(List("a", "e"), Tree("b", Tree("c", Tree("e")))) shouldBe Left(tree4_2)
+      tree4_2.updateTreeLaxAt(List("a", "c"), Tree("b", Tree("c", Tree("e")))) shouldBe Left(tree4_2)
+      tree4_2.updateTreeLaxAt(List("b"), Tree("b", Tree("c", Tree("e")))) shouldBe Left(tree4_2)
+      tree4_2.updateTreeLaxAt(List("d"), Tree("b", Tree("c", Tree("e")))) shouldBe Left(tree4_2)
+      tree4_2.updateTreeLaxAt(List("b", "c"), Tree("b", Tree("c", Tree("e")))) shouldBe Left(tree4_2)
+    }
+
+    "update lax a subtree selected by the path using an extractor function" in {
+      val codeF: String => Int = s => s.head.toInt
+      tree0.updateTreeLaxAt(List(97, 98), tree2, codeF) shouldBe Left(tree0)
+      tree1.updateTreeLaxAt(List(97), tree2, codeF) shouldBe Right(Tree("a", Tree("b")))
+      tree1.updateTreeLaxAt(List(98), tree2, codeF) shouldBe Left(tree1)
+      tree2.updateTreeLaxAt(List(97), tree3_2, codeF) shouldBe Right(Tree("a", Tree("b"), Tree("c")))
+      tree2.updateTreeLaxAt(List(97, 98), tree3_2, codeF) shouldBe Right(
+        Tree("a", Tree("a", Tree("b"), Tree("c")))
+      )
+      tree2.updateTreeLaxAt(List(97, 99), tree3_2, codeF) shouldBe Left(tree2)
+      tree3_2.updateTreeLaxAt(List(97, 98), tree2, codeF) shouldBe Right(
+        Tree("a", Tree("a", Tree("b")), Tree("c"))
+      )
+      tree3_2.updateTreeLaxAt(List(97, 98), tree3_2, codeF) shouldBe Right(
+        Tree("a", Tree("a", Tree("b"), Tree("c")), Tree("c"))
+      )
+      tree3_2.updateTreeLaxAt(List(97, 99), tree2, codeF) shouldBe Right(
+        Tree("a", Tree("b"), Tree("a", Tree("b")))
+      )
+      tree3_2.updateTreeLaxAt(List(97, 99), tree3_2, codeF) shouldBe Right(
+        Tree("a", Tree("b"), Tree("a", Tree("b"), Tree("c")))
+      )
+      tree3_2.updateTreeLaxAt(List(97), tree2, codeF) shouldBe Right(tree2)
+      tree3_2.updateTreeLaxAt(List(97), tree9, codeF) shouldBe Right(tree9)
+      tree3_2.updateTreeLaxAt(List(97, 97), tree2, codeF) shouldBe Left(tree3_2)
+      tree3_2.updateTreeLaxAt(List(98, 97), tree2, codeF) shouldBe Left(tree3_2)
+      tree3_2.updateTreeLaxAt(List(98), tree2, codeF) shouldBe Left(tree3_2)
+      tree3_2.updateTreeLaxAt(List(98, 98), tree2, codeF) shouldBe Left(tree3_2)
+      tree3_2.updateTreeLaxAt(List(97, 99), Tree("b", Tree("d")), codeF) shouldBe Right(
+        Tree("a", Tree("b"), Tree("b", Tree("d")))
+      )
+      tree4_2.updateTreeLaxAt(List(97, 100), Tree("b", Tree("c", Tree("e"))), codeF) shouldBe Right(
+        Tree("a", Tree("b", Tree("c")), Tree("b", Tree("c", Tree("e"))))
+      )
+      tree4_2.updateTreeLaxAt(List(97, 98, 99), Tree("b", Tree("c", Tree("e"))), codeF) shouldBe Right(
+        Tree("a", Tree("b", Tree("b", Tree("c", Tree("e")))), Tree("d"))
+      )
+      tree4_2.updateTreeLaxAt(List(97, 98, 100), Tree("b", Tree("c", Tree("e"))), codeF) shouldBe Left(tree4_2)
+      tree4_2.updateTreeLaxAt(List(97, 100, 99), Tree("b", Tree("c", Tree("e"))), codeF) shouldBe Left(tree4_2)
+      tree4_2.updateTreeLaxAt(List(97, 101), Tree("b", Tree("c", Tree("e"))), codeF) shouldBe Left(tree4_2)
+      tree4_2.updateTreeLaxAt(List(97, 99), Tree("b", Tree("c", Tree("e"))), codeF) shouldBe Left(tree4_2)
+      tree4_2.updateTreeLaxAt(List(98), Tree("b", Tree("c", Tree("e"))), codeF) shouldBe Left(tree4_2)
+      tree4_2.updateTreeLaxAt(List(100), Tree("b", Tree("c", Tree("e"))), codeF) shouldBe Left(tree4_2)
+      tree4_2.updateTreeLaxAt(List(98, 99), Tree("b", Tree("c", Tree("e"))), codeF) shouldBe Left(tree4_2)
+    }
+
+    "update distinct a subtree selected by the path" in {
+      tree0.updateTreeAt(List("a", "b"), tree2) shouldBe Left(tree0)
+      tree1.updateTreeAt(List("a"), tree2) shouldBe Right(Tree("a", Tree("b")))
+      tree1.updateTreeAt(List("a"), Tree("b")) shouldBe Right(Tree("b"))
+      tree1.updateTreeAt(List("b"), tree2) shouldBe Left(tree1)
+      tree2.updateTreeAt(List("a"), tree3_2) shouldBe Right(Tree("a", Tree("b"), Tree("c")))
+      tree2.updateTreeAt(List("a", "b"), tree3_2) shouldBe Right(
+        Tree("a", Tree("a", Tree("b"), Tree("c")))
+      )
+      tree2.updateTreeAt(List("a", "c"), tree3_2) shouldBe Left(tree2)
+      tree3_2.updateTreeAt(List("a", "b"), tree2) shouldBe Right(
+        Tree("a", Tree("a", Tree("b")), Tree("c"))
+      )
+      tree3_2.updateTreeAt(List("a", "b"), tree3_2) shouldBe Right(
+        Tree("a", Tree("a", Tree("b"), Tree("c")), Tree("c"))
+      )
+      tree3_2.updateTreeAt(List("a", "c"), tree2) shouldBe Right(
+        Tree("a", Tree("b"), Tree("a", Tree("b")))
+      )
+      tree3_2.updateTreeAt(List("a", "c"), tree3_2) shouldBe Right(
+        Tree("a", Tree("b"), Tree("a", Tree("b"), Tree("c")))
+      )
+      tree3_2.updateTreeAt(List("a"), tree2) shouldBe Right(tree2)
+      tree3_2.updateTreeAt(List("a"), tree9) shouldBe Right(tree9)
+      tree3_2.updateTreeAt(List("a", "a"), tree2) shouldBe Left(tree3_2)
+      tree3_2.updateTreeAt(List("b", "a"), tree2) shouldBe Left(tree3_2)
+      tree3_2.updateTreeAt(List("b"), tree2) shouldBe Left(tree3_2)
+      tree3_2.updateTreeAt(List("b", "b"), tree2) shouldBe Left(tree3_2)
+      tree3_2.updateTreeAt(List("a", "c"), Tree("b", Tree("d"))) shouldBe Right(
+        Tree("a", Tree("b", Tree("d")))
+      )
+      tree4_2.updateTreeAt(List("a", "d"), Tree("b", Tree("c", Tree("e")))) shouldBe Right(
+        Tree("a", Tree("b", Tree("c", Tree("e"))))
+      )
+      tree4_2.updateTreeAt(List("a", "b", "c"), Tree("b", Tree("c", Tree("e")))) shouldBe Right(
+        Tree("a", Tree("b", Tree("b", Tree("c", Tree("e")))), Tree("d"))
+      )
+      tree4_2.updateTreeAt(List("a", "b", "d"), Tree("b", Tree("c", Tree("e")))) shouldBe Left(tree4_2)
+      tree4_2.updateTreeAt(List("a", "d", "c"), Tree("b", Tree("c", Tree("e")))) shouldBe Left(tree4_2)
+      tree4_2.updateTreeAt(List("a", "e"), Tree("b", Tree("c", Tree("e")))) shouldBe Left(tree4_2)
+      tree4_2.updateTreeAt(List("a", "c"), Tree("b", Tree("c", Tree("e")))) shouldBe Left(tree4_2)
+      tree4_2.updateTreeAt(List("b"), Tree("b", Tree("c", Tree("e")))) shouldBe Left(tree4_2)
+      tree4_2.updateTreeAt(List("d"), Tree("b", Tree("c", Tree("e")))) shouldBe Left(tree4_2)
+      tree4_2.updateTreeAt(List("b", "c"), Tree("b", Tree("c", Tree("e")))) shouldBe Left(tree4_2)
+      // check if de-duplicates only the modified node
+      tree3_2
+        .insertLeafLax("b")
+        .updateTreeAt(List("a", "c"), Tree("b", Tree("c"))) shouldBe Right(
+        Tree("a", Tree("b"), Tree("b", Tree("c")))
+      )
+    }
+
+    "update distinct a subtree selected by the path using an extractor function" in {
+      val codeF: String => Int = s => s.head.toInt
+      tree0.updateTreeAt(List(97, 98), tree2, codeF) shouldBe Left(tree0)
+      tree1.updateTreeAt(List(97), tree2, codeF) shouldBe Right(Tree("a", Tree("b")))
+      tree1.updateTreeAt(List(98), tree2, codeF) shouldBe Left(tree1)
+      tree2.updateTreeAt(List(97), tree3_2, codeF) shouldBe Right(Tree("a", Tree("b"), Tree("c")))
+      tree2.updateTreeAt(List(97, 98), tree3_2, codeF) shouldBe Right(
+        Tree("a", Tree("a", Tree("b"), Tree("c")))
+      )
+      tree2.updateTreeAt(List(97, 99), tree3_2, codeF) shouldBe Left(tree2)
+      tree3_2.updateTreeAt(List(97, 98), tree2, codeF) shouldBe Right(
+        Tree("a", Tree("a", Tree("b")), Tree("c"))
+      )
+      tree3_2.updateTreeAt(List(97, 98), tree3_2, codeF) shouldBe Right(
+        Tree("a", Tree("a", Tree("b"), Tree("c")), Tree("c"))
+      )
+      tree3_2.updateTreeAt(List(97, 99), tree2, codeF) shouldBe Right(
+        Tree("a", Tree("b"), Tree("a", Tree("b")))
+      )
+      tree3_2.updateTreeAt(List(97, 99), tree3_2, codeF) shouldBe Right(
+        Tree("a", Tree("b"), Tree("a", Tree("b"), Tree("c")))
+      )
+      tree3_2.updateTreeAt(List(97), tree2, codeF) shouldBe Right(tree2)
+      tree3_2.updateTreeAt(List(97), tree9, codeF) shouldBe Right(tree9)
+      tree3_2.updateTreeAt(List(97, 97), tree2, codeF) shouldBe Left(tree3_2)
+      tree3_2.updateTreeAt(List(98, 97), tree2, codeF) shouldBe Left(tree3_2)
+      tree3_2.updateTreeAt(List(98), tree2, codeF) shouldBe Left(tree3_2)
+      tree3_2.updateTreeAt(List(98, 98), tree2, codeF) shouldBe Left(tree3_2)
+      tree3_2.updateTreeAt(List(97, 99), Tree("b", Tree("d")), codeF) shouldBe Right(
+        Tree("a", Tree("b", Tree("d")))
+      )
+      tree4_2.updateTreeAt(List(97, 100), Tree("b", Tree("c", Tree("e"))), codeF) shouldBe Right(
+        Tree("a", Tree("b", Tree("c", Tree("e"))))
+      )
+      tree4_2.updateTreeAt(List(97, 98, 99), Tree("b", Tree("c", Tree("e"))), codeF) shouldBe Right(
+        Tree("a", Tree("b", Tree("b", Tree("c", Tree("e")))), Tree("d"))
+      )
+      tree4_2.updateTreeAt(List(97, 98, 100), Tree("b", Tree("c", Tree("e"))), codeF) shouldBe Left(tree4_2)
+      tree4_2.updateTreeAt(List(97, 100, 99), Tree("b", Tree("c", Tree("e"))), codeF) shouldBe Left(tree4_2)
+      tree4_2.updateTreeAt(List(97, 101), Tree("b", Tree("c", Tree("e"))), codeF) shouldBe Left(tree4_2)
+      tree4_2.updateTreeAt(List(97, 99), Tree("b", Tree("c", Tree("e"))), codeF) shouldBe Left(tree4_2)
+      tree4_2.updateTreeAt(List(98), Tree("b", Tree("c", Tree("e"))), codeF) shouldBe Left(tree4_2)
+      tree4_2.updateTreeAt(List(100), Tree("b", Tree("c", Tree("e"))), codeF) shouldBe Left(tree4_2)
+      tree4_2.updateTreeAt(List(98, 99), Tree("b", Tree("c", Tree("e"))), codeF) shouldBe Left(tree4_2)
+    }
   }
 
 }

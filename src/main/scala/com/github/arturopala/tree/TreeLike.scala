@@ -586,7 +586,7 @@ trait TreeLike[+T] {
   def updateTreeAt[T1 >: T: ClassTag](
     path: Iterable[T1],
     replacement: Tree[T1]
-  ): Either[Tree[T], Tree[T1]] = ???
+  ): Either[Tree[T], Tree[T1]]
 
   /** Updates the first tree selected by the given path, and returns a whole tree updated.
     * @note This method tries to keep children values unique by merging modified tree (and only that) when needed.
@@ -599,7 +599,7 @@ trait TreeLike[+T] {
     path: Iterable[K],
     replacement: Tree[T1],
     toPathItem: T => K
-  ): Either[Tree[T], Tree[T1]] = ???
+  ): Either[Tree[T], Tree[T1]]
 
   // DISTINCT MODIFICATIONS
 

@@ -154,7 +154,7 @@ trait LaxTree[T] {
   def updateTreeLaxAt[T1 >: T: ClassTag](
     path: Iterable[T1],
     replacement: Tree[T1]
-  ): Either[Tree[T], Tree[T1]] = ???
+  ): Either[Tree[T], Tree[T1]]
 
   /** Updates the first tree selected by the given path, and returns a whole tree updated.
     * @note This is a lax method, it doesn't preserve children values uniqueness.
@@ -167,7 +167,7 @@ trait LaxTree[T] {
     path: Iterable[K],
     replacement: Tree[T1],
     toPathItem: T => K
-  ): Either[Tree[T], Tree[T1]] = ???
+  ): Either[Tree[T], Tree[T1]]
 
   // LAX MODIFICATIONS
 
@@ -416,6 +416,35 @@ object LaxTreeOps {
 
       case tree: ArrayTree[T] =>
         ArrayTree.updateValueAt(path, replacement, tree, toPathItem, keepDistinct = false)
+    }
+
+    final override def updateTreeLaxAt[T1 >: T: ClassTag](
+      path: Iterable[T1],
+      replacement: Tree[T1]
+    ): Either[Tree[T], Tree[T1]] = t match {
+      case Tree.empty => Left(empty)
+
+      case node: NodeTree[T] =>
+        NodeTree.updateTreeAt(node, path.iterator, replacement, keepDistinct = false)
+
+      case tree: ArrayTree[T] =>
+        ArrayTree.updateTreeAt(path, replacement, tree, keepDistinct = false)
+
+    }
+
+    final override def updateTreeLaxAt[K, T1 >: T: ClassTag](
+      path: Iterable[K],
+      replacement: Tree[T1],
+      toPathItem: T => K
+    ): Either[Tree[T], Tree[T1]] = t match {
+      case Tree.empty => Left(empty)
+
+      case node: NodeTree[T] =>
+        NodeTree.updateTreeAt(node, path.iterator, toPathItem, replacement, keepDistinct = false)
+
+      case tree: ArrayTree[T] =>
+        ArrayTree.updateTreeAt(path, replacement, tree, toPathItem, keepDistinct = false)
+
     }
 
     final override def modifyChildValueLax[T1 >: T: ClassTag](value: T1, modify: T => T1): Tree[T1] =

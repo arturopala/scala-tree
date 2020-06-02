@@ -143,6 +143,17 @@ trait EmptyTreeLike extends TreeLike[Nothing] {
     toPathItem: Nothing => K
   ): Either[Tree[Nothing], Tree[T1]] = Left(empty)
 
+  def updateTreeAt[T1 >: Nothing: ClassTag](
+    path: Iterable[T1],
+    replacement: Tree[T1]
+  ): Either[Tree[Nothing], Tree[T1]] = Left(empty)
+
+  def updateTreeAt[K, T1 >: Nothing: ClassTag](
+    path: Iterable[K],
+    replacement: Tree[T1],
+    toPathItem: Nothing => K
+  ): Either[Tree[Nothing], Tree[T1]] = Left(empty)
+
   // MODIFICATIONS
 
   final override def modifyHead[T1 >: Nothing: ClassTag](modify: Nothing => T1): Tree[T1] =
