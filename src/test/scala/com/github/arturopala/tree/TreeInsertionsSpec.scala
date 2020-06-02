@@ -86,28 +86,6 @@ class TreeInsertionsSpec extends FunSuite {
       )
     }
 
-    "insert lax new value to a tree at the specified path" in {
-      tree0.insertLeafLaxAt(List("a", "b"), "a") shouldBe Tree("a", Tree("b", Tree("a")))
-      tree1.insertLeafLaxAt(List("a", "b"), "a") shouldBe Tree("a", Tree("b", Tree("a")))
-      tree1.insertLeafLaxAt(List("a", "c", "c"), "a") shouldBe Tree("a", Tree("c", Tree("c", Tree("a"))))
-      tree2.insertLeafLaxAt(List("a", "b"), "a") shouldBe Tree("a", Tree("b", Tree("a")))
-      tree2.insertLeafLaxAt(List("a", "c"), "a") shouldBe Tree("a", Tree("c", Tree("a")), Tree("b"))
-      tree2.insertLeafLaxAt(List("a", "b", "c"), "a") shouldBe Tree("a", Tree("b", Tree("c", Tree("a"))))
-      tree2.insertLeafLaxAt(List("a", "c", "c"), "a") shouldBe Tree("a", Tree("c", Tree("c", Tree("a"))), Tree("b"))
-      tree3_1
-        .insertLeafLaxAt(List("a", "b", "c", "d"), "a") shouldBe Tree("a", Tree("b", Tree("c", Tree("d", Tree("a")))))
-      tree3_1.insertLeafLaxAt(List("a", "b", "c"), "a") shouldBe Tree("a", Tree("b", Tree("c", Tree("a"))))
-      tree3_1.insertLeafLaxAt(List("a", "b"), "a") shouldBe Tree("a", Tree("b", Tree("a"), Tree("c")))
-      tree3_1.insertLeafLaxAt(List("a", "b"), "c") shouldBe Tree("a", Tree("b", Tree("c"), Tree("c")))
-      tree3_1.insertLeafLaxAt(List("a"), "b") shouldBe Tree("a", Tree("b"), Tree("b", Tree("c")))
-      tree3_1.insertLeafLaxAt(List("a"), "c") shouldBe Tree("a", Tree("c"), Tree("b", Tree("c")))
-      tree3_2.insertLeafLaxAt(List("a"), "c") shouldBe Tree("a", Tree("c"), Tree("b"), Tree("c"))
-      tree3_2.insertLeafLaxAt(List("a"), "a") shouldBe Tree("a", Tree("a"), Tree("b"), Tree("c"))
-      tree3_2.insertLeafLaxAt(List("a", "b"), "c") shouldBe Tree("a", Tree("b", Tree("c")), Tree("c"))
-      tree3_2.insertLeafLaxAt(List("a", "c"), "c") shouldBe Tree("a", Tree("b"), Tree("c", Tree("c")))
-      tree3_2.insertLeafLaxAt(List("a", "c", "d"), "c") shouldBe Tree("a", Tree("b"), Tree("c", Tree("d", Tree("c"))))
-    }
-
     "insert distinct new value to a tree at the specified path" in {
       tree0.insertLeafAt(List(), "a") shouldBe Tree("a")
       tree0.insertLeafAt(List("a", "b"), "a") shouldBe Tree("a", Tree("b", Tree("a")))
@@ -153,20 +131,26 @@ class TreeInsertionsSpec extends FunSuite {
       )
     }
 
-    "insert lax new value to a tree at the specified path with path item extractor" in {
-      val codeF: String => Int = s => s.head.toInt
-      tree0.insertLeafLaxAt(List(97), "a", codeF) shouldBe Left(tree0)
-      tree1.insertLeafLaxAt(List(97), "b", codeF) shouldBe Right(Tree("a", Tree("b")))
-      tree1.insertLeafLaxAt(List(98), "b", codeF) shouldBe Left(tree1)
-      tree1.insertLeafLaxAt(List(97), "a", codeF) shouldBe Right(Tree("a", Tree("a")))
-      tree2.insertLeafLaxAt(List(97), "b", codeF) shouldBe Right(Tree("a", Tree("b"), Tree("b")))
-      tree2.insertLeafLaxAt(List(97), "a", codeF) shouldBe Right(Tree("a", Tree("a"), Tree("b")))
-      tree2.insertLeafLaxAt(List(98), "a", codeF) shouldBe Left(tree2)
-      tree2.insertLeafLaxAt(List(97, 98), "a", codeF) shouldBe Right(Tree("a", Tree("b", Tree("a"))))
-      tree2.insertLeafLaxAt(List(97, 98), "b", codeF) shouldBe Right(Tree("a", Tree("b", Tree("b"))))
-      tree2.insertLeafLaxAt(List(97, 98), "c", codeF) shouldBe Right(Tree("a", Tree("b", Tree("c"))))
-      tree2.insertLeafLaxAt(List(97, 97), "c", codeF) shouldBe Left(tree2)
-      tree2.insertLeafLaxAt(List(98, 97), "c", codeF) shouldBe Left(tree2)
+    "insert lax new value to a tree at the specified path" in {
+      tree0.insertLeafLaxAt(List("a", "b"), "a") shouldBe Tree("a", Tree("b", Tree("a")))
+      tree1.insertLeafLaxAt(List("a", "b"), "a") shouldBe Tree("a", Tree("b", Tree("a")))
+      tree1.insertLeafLaxAt(List("a", "c", "c"), "a") shouldBe Tree("a", Tree("c", Tree("c", Tree("a"))))
+      tree2.insertLeafLaxAt(List("a", "b"), "a") shouldBe Tree("a", Tree("b", Tree("a")))
+      tree2.insertLeafLaxAt(List("a", "c"), "a") shouldBe Tree("a", Tree("c", Tree("a")), Tree("b"))
+      tree2.insertLeafLaxAt(List("a", "b", "c"), "a") shouldBe Tree("a", Tree("b", Tree("c", Tree("a"))))
+      tree2.insertLeafLaxAt(List("a", "c", "c"), "a") shouldBe Tree("a", Tree("c", Tree("c", Tree("a"))), Tree("b"))
+      tree3_1
+        .insertLeafLaxAt(List("a", "b", "c", "d"), "a") shouldBe Tree("a", Tree("b", Tree("c", Tree("d", Tree("a")))))
+      tree3_1.insertLeafLaxAt(List("a", "b", "c"), "a") shouldBe Tree("a", Tree("b", Tree("c", Tree("a"))))
+      tree3_1.insertLeafLaxAt(List("a", "b"), "a") shouldBe Tree("a", Tree("b", Tree("a"), Tree("c")))
+      tree3_1.insertLeafLaxAt(List("a", "b"), "c") shouldBe Tree("a", Tree("b", Tree("c"), Tree("c")))
+      tree3_1.insertLeafLaxAt(List("a"), "b") shouldBe Tree("a", Tree("b"), Tree("b", Tree("c")))
+      tree3_1.insertLeafLaxAt(List("a"), "c") shouldBe Tree("a", Tree("c"), Tree("b", Tree("c")))
+      tree3_2.insertLeafLaxAt(List("a"), "c") shouldBe Tree("a", Tree("c"), Tree("b"), Tree("c"))
+      tree3_2.insertLeafLaxAt(List("a"), "a") shouldBe Tree("a", Tree("a"), Tree("b"), Tree("c"))
+      tree3_2.insertLeafLaxAt(List("a", "b"), "c") shouldBe Tree("a", Tree("b", Tree("c")), Tree("c"))
+      tree3_2.insertLeafLaxAt(List("a", "c"), "c") shouldBe Tree("a", Tree("b"), Tree("c", Tree("c")))
+      tree3_2.insertLeafLaxAt(List("a", "c", "d"), "c") shouldBe Tree("a", Tree("b"), Tree("c", Tree("d", Tree("c"))))
     }
 
     "insert distinct new value to a tree at the specified path with path item extractor" in {
@@ -216,6 +200,81 @@ class TreeInsertionsSpec extends FunSuite {
         )
       )
       tree7.insertLeafAt(List(97, 103, 101), "d", codeF) shouldBe Left(tree7)
+    }
+
+    "insert lax new value to a tree at the specified path with path item extractor" in {
+      val codeF: String => Int = s => s.head.toInt
+      tree0.insertLeafLaxAt(List(97), "a", codeF) shouldBe Left(tree0)
+      tree1.insertLeafLaxAt(List(97), "b", codeF) shouldBe Right(Tree("a", Tree("b")))
+      tree1.insertLeafLaxAt(List(98), "b", codeF) shouldBe Left(tree1)
+      tree1.insertLeafLaxAt(List(97), "a", codeF) shouldBe Right(Tree("a", Tree("a")))
+      tree2.insertLeafLaxAt(List(97), "b", codeF) shouldBe Right(Tree("a", Tree("b"), Tree("b")))
+      tree2.insertLeafLaxAt(List(97), "a", codeF) shouldBe Right(Tree("a", Tree("a"), Tree("b")))
+      tree2.insertLeafLaxAt(List(98), "a", codeF) shouldBe Left(tree2)
+      tree2.insertLeafLaxAt(List(97, 98), "a", codeF) shouldBe Right(Tree("a", Tree("b", Tree("a"))))
+      tree2.insertLeafLaxAt(List(97, 98), "b", codeF) shouldBe Right(Tree("a", Tree("b", Tree("b"))))
+      tree2.insertLeafLaxAt(List(97, 98), "c", codeF) shouldBe Right(Tree("a", Tree("b", Tree("c"))))
+      tree2.insertLeafLaxAt(List(97, 97), "c", codeF) shouldBe Left(tree2)
+      tree2.insertLeafLaxAt(List(98, 97), "c", codeF) shouldBe Left(tree2)
+    }
+
+    "insert distinct new subtree to a tree" in {
+      tree0.insertChild(Tree.empty) shouldBe Tree.empty
+      tree0.insertChild(Tree("a")) shouldBe Tree("a")
+      tree0.insertChild(tree9) shouldBe tree9
+      tree1.insertChild(Tree("a")) shouldBe Tree("a", Tree("a"))
+      tree1.insertChild(Tree("b")) shouldBe Tree("a", Tree("b"))
+      tree1.insertChild(Tree.empty) shouldBe tree1
+      tree2.insertChild(Tree("a")) shouldBe Tree("a", Tree("a"), Tree("b"))
+      tree2.insertChild(Tree("a", Tree("b"))) shouldBe Tree("a", Tree("a", Tree("b")), Tree("b"))
+      tree2.insertChild(Tree("b")) shouldBe Tree("a", Tree("b"))
+      tree2.insertChild(Tree("b", Tree("c"))) shouldBe Tree("a", Tree("b", Tree("c")))
+      tree3_1.insertChild(Tree("b", Tree("d"))) shouldBe Tree("a", Tree("b", Tree("d"), Tree("c")))
+      tree3_1.insertChild(Tree("b", Tree("d"), Tree("e"))) shouldBe Tree(
+        "a",
+        Tree("b", Tree("d"), Tree("e"), Tree("c"))
+      )
+      tree3_2.insertChild(Tree("b", Tree("d"))) shouldBe Tree("a", Tree("b", Tree("d")), Tree("c"))
+      tree3_2.insertChild(Tree("b", Tree("d"), Tree("e"))) shouldBe Tree(
+        "a",
+        Tree("b", Tree("d"), Tree("e")),
+        Tree("c")
+      )
+      tree4_2.insertChild(Tree("b", Tree("c", Tree("d")))) shouldBe Tree(
+        "a",
+        Tree("b", Tree("c", Tree("d"))),
+        Tree("d")
+      )
+      tree4_2.insertChild(Tree("d", Tree("c", Tree("d")))) shouldBe Tree(
+        "a",
+        Tree("b", Tree("c")),
+        Tree("d", Tree("c", Tree("d")))
+      )
+      tree7.insertChild(Tree("d", Tree("c", Tree("d"), Tree("e"), Tree("f")))) shouldBe Tree(
+        "a",
+        Tree("b", Tree("c")),
+        Tree("d", Tree("c", Tree("d"), Tree("e"), Tree("f")), Tree("e", Tree("f"))),
+        Tree("g")
+      )
+      tree7.insertChild(tree7) shouldBe Tree(
+        "a",
+        Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e", Tree("f"))), Tree("g")),
+        Tree("b", Tree("c")),
+        Tree("d", Tree("e", Tree("f"))),
+        Tree("g")
+      )
+      tree7
+        .insertChild(tree7)
+        .insertChild(tree7) shouldBe Tree(
+        "a",
+        Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e", Tree("f"))), Tree("g")),
+        Tree("b", Tree("c")),
+        Tree("d", Tree("e", Tree("f"))),
+        Tree("g")
+      )
+      tree(Tree("a", Tree("b", Tree("c")), Tree("b", Tree("d")), Tree("b", Tree("e"))))
+        .insertChild(Tree("b", Tree("x"))) shouldBe
+        Tree("a", Tree("b", Tree("x"), Tree("c")), Tree("b", Tree("d")), Tree("b", Tree("e")))
     }
 
     "insert lax new subtree to a tree" in {
@@ -314,346 +373,6 @@ class TreeInsertionsSpec extends FunSuite {
       tree(Tree("a", Tree("b", Tree("c")), Tree("b", Tree("d")), Tree("b", Tree("e"))))
         .insertChildLax(Tree("b", Tree("x"))) shouldBe
         Tree("a", Tree("b", Tree("x")), Tree("b", Tree("c")), Tree("b", Tree("d")), Tree("b", Tree("e")))
-    }
-
-    "insert distinct new subtree to a tree" in {
-      tree0.insertChild(Tree.empty) shouldBe Tree.empty
-      tree0.insertChild(Tree("a")) shouldBe Tree("a")
-      tree0.insertChild(tree9) shouldBe tree9
-      tree1.insertChild(Tree("a")) shouldBe Tree("a", Tree("a"))
-      tree1.insertChild(Tree("b")) shouldBe Tree("a", Tree("b"))
-      tree1.insertChild(Tree.empty) shouldBe tree1
-      tree2.insertChild(Tree("a")) shouldBe Tree("a", Tree("a"), Tree("b"))
-      tree2.insertChild(Tree("a", Tree("b"))) shouldBe Tree("a", Tree("a", Tree("b")), Tree("b"))
-      tree2.insertChild(Tree("b")) shouldBe Tree("a", Tree("b"))
-      tree2.insertChild(Tree("b", Tree("c"))) shouldBe Tree("a", Tree("b", Tree("c")))
-      tree3_1.insertChild(Tree("b", Tree("d"))) shouldBe Tree("a", Tree("b", Tree("d"), Tree("c")))
-      tree3_1.insertChild(Tree("b", Tree("d"), Tree("e"))) shouldBe Tree(
-        "a",
-        Tree("b", Tree("d"), Tree("e"), Tree("c"))
-      )
-      tree3_2.insertChild(Tree("b", Tree("d"))) shouldBe Tree("a", Tree("b", Tree("d")), Tree("c"))
-      tree3_2.insertChild(Tree("b", Tree("d"), Tree("e"))) shouldBe Tree(
-        "a",
-        Tree("b", Tree("d"), Tree("e")),
-        Tree("c")
-      )
-      tree4_2.insertChild(Tree("b", Tree("c", Tree("d")))) shouldBe Tree(
-        "a",
-        Tree("b", Tree("c", Tree("d"))),
-        Tree("d")
-      )
-      tree4_2.insertChild(Tree("d", Tree("c", Tree("d")))) shouldBe Tree(
-        "a",
-        Tree("b", Tree("c")),
-        Tree("d", Tree("c", Tree("d")))
-      )
-      tree7.insertChild(Tree("d", Tree("c", Tree("d"), Tree("e"), Tree("f")))) shouldBe Tree(
-        "a",
-        Tree("b", Tree("c")),
-        Tree("d", Tree("c", Tree("d"), Tree("e"), Tree("f")), Tree("e", Tree("f"))),
-        Tree("g")
-      )
-      tree7.insertChild(tree7) shouldBe Tree(
-        "a",
-        Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e", Tree("f"))), Tree("g")),
-        Tree("b", Tree("c")),
-        Tree("d", Tree("e", Tree("f"))),
-        Tree("g")
-      )
-      tree7
-        .insertChild(tree7)
-        .insertChild(tree7) shouldBe Tree(
-        "a",
-        Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e", Tree("f"))), Tree("g")),
-        Tree("b", Tree("c")),
-        Tree("d", Tree("e", Tree("f"))),
-        Tree("g")
-      )
-      tree(Tree("a", Tree("b", Tree("c")), Tree("b", Tree("d")), Tree("b", Tree("e"))))
-        .insertChild(Tree("b", Tree("x"))) shouldBe
-        Tree("a", Tree("b", Tree("x"), Tree("c")), Tree("b", Tree("d")), Tree("b", Tree("e")))
-    }
-
-    "insert lax new subtree to a tree at the specified path" in {
-      tree0.insertTreeLaxAt(List(), Tree.empty) shouldBe Tree.empty
-      tree0.insertTreeLaxAt(List("a"), Tree.empty) shouldBe Tree.empty
-      tree0.insertTreeLaxAt(List(), Tree("b")) shouldBe Tree("b")
-      tree0.insertTreeLaxAt(List("a"), Tree("b")) shouldBe Tree("a", Tree("b"))
-      tree1.insertTreeLaxAt(List("a"), Tree("b")) shouldBe Tree("a", Tree("b"))
-      tree1.insertTreeLaxAt(List("b"), Tree("b")) shouldBe tree1
-      tree1.insertTreeLaxAt(List("a", "b"), tree1) shouldBe Tree("a", Tree("b", Tree("a")))
-      tree1.insertTreeLaxAt(List("a", "b"), tree2) shouldBe Tree("a", Tree("b", Tree("a", Tree("b"))))
-      tree1.insertTreeLaxAt(List("a", "b", "c"), tree2) shouldBe Tree("a", Tree("b", Tree("c", Tree("a", Tree("b")))))
-      tree1.insertTreeLaxAt(List("a", "b", "c"), tree3_2) shouldBe Tree(
-        "a",
-        Tree("b", Tree("c", Tree("a", Tree("b"), Tree("c"))))
-      )
-
-      tree2.insertTreeLaxAt(List("a"), Tree("b")) shouldBe Tree("a", Tree("b"), Tree("b"))
-      tree2.insertTreeLaxAt(List("b"), Tree("b")) shouldBe tree2
-      tree2.insertTreeLaxAt(List("a", "b"), tree1) shouldBe Tree("a", Tree("b", Tree("a")))
-      tree2.insertTreeLaxAt(List("a", "b"), tree2) shouldBe Tree("a", Tree("b", Tree("a", Tree("b"))))
-      tree2.insertTreeLaxAt(List("a", "b", "c"), tree2) shouldBe Tree("a", Tree("b", Tree("c", Tree("a", Tree("b")))))
-      tree2.insertTreeLaxAt(List("a", "b", "c"), tree3_2) shouldBe Tree(
-        "a",
-        Tree("b", Tree("c", Tree("a", Tree("b"), Tree("c"))))
-      )
-
-      tree3_1.insertTreeLaxAt(List("a"), Tree("b")) shouldBe Tree("a", Tree("b"), Tree("b", Tree("c")))
-      tree3_1.insertTreeLaxAt(List("b"), Tree("b")) shouldBe tree3_1
-      tree3_1.insertTreeLaxAt(List("a", "b"), Tree("c")) shouldBe Tree("a", Tree("b", Tree("c"), Tree("c")))
-      tree3_1.insertTreeLaxAt(List("a", "b"), tree1) shouldBe Tree("a", Tree("b", Tree("a"), Tree("c")))
-      tree3_1.insertTreeLaxAt(List("a", "b"), tree2) shouldBe Tree("a", Tree("b", Tree("a", Tree("b")), Tree("c")))
-      tree3_1.insertTreeLaxAt(List("a", "b", "c"), tree2) shouldBe Tree("a", Tree("b", Tree("c", Tree("a", Tree("b")))))
-      tree3_1.insertTreeLaxAt(List("a", "b", "c"), tree3_2) shouldBe Tree(
-        "a",
-        Tree("b", Tree("c", Tree("a", Tree("b"), Tree("c"))))
-      )
-
-      tree3_2.insertTreeLaxAt(List("a"), Tree("b")) shouldBe Tree("a", Tree("b"), Tree("b"), Tree("c"))
-      tree3_2.insertTreeLaxAt(List("a"), Tree("c")) shouldBe Tree("a", Tree("c"), Tree("b"), Tree("c"))
-      tree3_2
-        .insertTreeLaxAt(List("a"), Tree("c", Tree("a"))) shouldBe Tree("a", Tree("c", Tree("a")), Tree("b"), Tree("c"))
-      tree3_2.insertTreeLaxAt(List("b"), Tree("b")) shouldBe tree3_2
-      tree3_2.insertTreeLaxAt(List("a", "b"), tree1) shouldBe Tree("a", Tree("b", Tree("a")), Tree("c"))
-      tree3_2.insertTreeLaxAt(List("a", "b"), tree2) shouldBe Tree("a", Tree("b", Tree("a", Tree("b"))), Tree("c"))
-      tree3_2.insertTreeLaxAt(List("a", "b", "c"), tree2) shouldBe Tree(
-        "a",
-        Tree("b", Tree("c", Tree("a", Tree("b")))),
-        Tree("c")
-      )
-      tree3_2.insertTreeLaxAt(List("a", "b", "c"), tree3_2) shouldBe Tree(
-        "a",
-        Tree("b", Tree("c", Tree("a", Tree("b"), Tree("c")))),
-        Tree("c")
-      )
-
-      tree4_2.insertTreeLaxAt(List("a"), Tree("b")) shouldBe Tree("a", Tree("b"), Tree("b", Tree("c")), Tree("d"))
-      tree4_2.insertTreeLaxAt(List("b"), Tree("b")) shouldBe tree4_2
-      tree4_2.insertTreeLaxAt(List("a", "b"), tree1) shouldBe Tree("a", Tree("b", Tree("a"), Tree("c")), Tree("d"))
-      tree4_2
-        .insertTreeLaxAt(List("a", "b"), tree2) shouldBe Tree(
-        "a",
-        Tree("b", Tree("a", Tree("b")), Tree("c")),
-        Tree("d")
-      )
-      tree4_2.insertTreeLaxAt(List("a", "b", "c"), tree2) shouldBe Tree(
-        "a",
-        Tree("b", Tree("c", Tree("a", Tree("b")))),
-        Tree("d")
-      )
-      tree4_2.insertTreeLaxAt(List("a", "b", "c"), tree3_2) shouldBe Tree(
-        "a",
-        Tree("b", Tree("c", Tree("a", Tree("b"), Tree("c")))),
-        Tree("d")
-      )
-
-      tree7.insertTreeLaxAt(List("a"), Tree("b")) shouldBe Tree(
-        "a",
-        Tree("b"),
-        Tree("b", Tree("c")),
-        Tree("d", Tree("e", Tree("f"))),
-        Tree("g")
-      )
-      tree7.insertTreeLaxAt(List("b"), Tree("b")) shouldBe tree7
-      tree7.insertTreeLaxAt(List("a", "b"), tree1) shouldBe Tree(
-        "a",
-        Tree("b", Tree("a"), Tree("c")),
-        Tree("d", Tree("e", Tree("f"))),
-        Tree("g")
-      )
-      tree7
-        .insertTreeLaxAt(List("a", "b"), tree2) shouldBe Tree(
-        "a",
-        Tree("b", Tree("a", Tree("b")), Tree("c")),
-        Tree("d", Tree("e", Tree("f"))),
-        Tree("g")
-      )
-      tree7.insertTreeLaxAt(List("a", "b", "c"), tree2) shouldBe Tree(
-        "a",
-        Tree("b", Tree("c", Tree("a", Tree("b")))),
-        Tree("d", Tree("e", Tree("f"))),
-        Tree("g")
-      )
-      tree7.insertTreeLaxAt(List("a", "b", "c"), tree3_2) shouldBe Tree(
-        "a",
-        Tree("b", Tree("c", Tree("a", Tree("b"), Tree("c")))),
-        Tree("d", Tree("e", Tree("f"))),
-        Tree("g")
-      )
-      tree7.insertTreeLaxAt(List("a", "b", "e"), tree3_2) shouldBe Tree(
-        "a",
-        Tree("b", Tree("e", Tree("a", Tree("b"), Tree("c"))), Tree("c")),
-        Tree("d", Tree("e", Tree("f"))),
-        Tree("g")
-      )
-      tree7.insertTreeLaxAt(List("a", "b", "e", "f"), tree3_2) shouldBe Tree(
-        "a",
-        Tree("b", Tree("e", Tree("f", Tree("a", Tree("b"), Tree("c")))), Tree("c")),
-        Tree("d", Tree("e", Tree("f"))),
-        Tree("g")
-      )
-      tree7.insertTreeLaxAt(List("a", "g", "e", "f"), tree3_2) shouldBe Tree(
-        "a",
-        Tree("b", Tree("c")),
-        Tree("d", Tree("e", Tree("f"))),
-        Tree("g", Tree("e", Tree("f", Tree("a", Tree("b"), Tree("c")))))
-      )
-      tree7.insertTreeLaxAt(List("a", "d", "e"), Tree("f", Tree("i"))) shouldBe Tree(
-        "a",
-        Tree("b", Tree("c")),
-        Tree("d", Tree("e", Tree("f", Tree("i")), Tree("f"))),
-        Tree("g")
-      )
-    }
-
-    "insert lax new subtree to a tree at the specified path using an extractor function" in {
-      val codeF: String => Int = s => s.head.toInt
-      tree0.insertTreeLaxAt(List(), Tree.empty, codeF) shouldBe Right(Tree.empty)
-      tree0.insertTreeLaxAt(List(97), Tree.empty, codeF) shouldBe Left(Tree.empty)
-      tree0.insertTreeLaxAt(List(), Tree("b"), codeF) shouldBe Right(Tree("b"))
-      tree0.insertTreeLaxAt(List(97), Tree("b"), codeF) shouldBe Left(Tree.empty)
-      tree1.insertTreeLaxAt(List(97), Tree("b"), codeF) shouldBe Right(Tree("a", Tree("b")))
-      tree1.insertTreeLaxAt(List(98), Tree("b"), codeF) shouldBe Left(tree1)
-      tree1.insertTreeLaxAt(List(97, 98), tree1, codeF) shouldBe Left(tree1)
-      tree1.insertTreeLaxAt(List(97, 98), tree2, codeF) shouldBe Left(tree1)
-      tree1.insertTreeLaxAt(List(97, 98, 99), tree2, codeF) shouldBe Left(tree1)
-      tree1.insertTreeLaxAt(List(97, 98, 99), tree3_2, codeF) shouldBe Left(tree1)
-
-      tree2.insertTreeLaxAt(List(97), Tree("b"), codeF) shouldBe Right(Tree("a", Tree("b"), Tree("b")))
-      tree2.insertTreeLaxAt(List(98), Tree("b"), codeF) shouldBe Left(tree2)
-      tree2.insertTreeLaxAt(List(97, 98), tree1, codeF) shouldBe Right(Tree("a", Tree("b", Tree("a"))))
-      tree2.insertTreeLaxAt(List(97, 98), tree2, codeF) shouldBe Right(Tree("a", Tree("b", Tree("a", Tree("b")))))
-      tree2.insertTreeLaxAt(List(97, 98, 99), tree2, codeF) shouldBe Left(tree2)
-      tree2.insertTreeLaxAt(List(97, 98, 99), tree3_2, codeF) shouldBe Left(tree2)
-
-      tree3_1.insertTreeLaxAt(List(97), Tree("b"), codeF) shouldBe Right(Tree("a", Tree("b"), Tree("b", Tree("c"))))
-      tree3_1.insertTreeLaxAt(List(98), Tree("b"), codeF) shouldBe Left(tree3_1)
-      tree3_1.insertTreeLaxAt(List(97, 98), tree1, codeF) shouldBe Right(Tree("a", Tree("b", Tree("a"), Tree("c"))))
-      tree3_1.insertTreeLaxAt(List(97, 98), tree2, codeF) shouldBe Right(
-        Tree("a", Tree("b", Tree("a", Tree("b")), Tree("c")))
-      )
-      tree3_1
-        .insertTreeLaxAt(List(97, 98, 99), tree2, codeF) shouldBe Right(
-        Tree("a", Tree("b", Tree("c", Tree("a", Tree("b")))))
-      )
-      tree3_1.insertTreeLaxAt(List(97, 98, 99), tree3_2, codeF) shouldBe Right(
-        Tree(
-          "a",
-          Tree("b", Tree("c", Tree("a", Tree("b"), Tree("c"))))
-        )
-      )
-
-      tree3_2.insertTreeLaxAt(List(97), Tree("b"), codeF) shouldBe Right(Tree("a", Tree("b"), Tree("b"), Tree("c")))
-      tree3_2.insertTreeLaxAt(List(98), Tree("b"), codeF) shouldBe Left(tree3_2)
-      tree3_2.insertTreeLaxAt(List(97, 98), tree1, codeF) shouldBe Right(Tree("a", Tree("b", Tree("a")), Tree("c")))
-      tree3_2.insertTreeLaxAt(List(97, 98), tree2, codeF) shouldBe Right(
-        Tree("a", Tree("b", Tree("a", Tree("b"))), Tree("c"))
-      )
-      tree3_2.insertTreeLaxAt(List(97, 98, 99), tree2, codeF) shouldBe Left(tree3_2)
-      tree3_2.insertTreeLaxAt(List(97, 98, 99), tree3_2, codeF) shouldBe Left(tree3_2)
-
-      tree4_2.insertTreeLaxAt(List(97), Tree("b"), codeF) shouldBe Right(
-        Tree("a", Tree("b"), Tree("b", Tree("c")), Tree("d"))
-      )
-      tree4_2.insertTreeLaxAt(List(98), Tree("b"), codeF) shouldBe Left(tree4_2)
-      tree4_2.insertTreeLaxAt(List(97, 98), tree1, codeF) shouldBe Right(
-        Tree("a", Tree("b", Tree("a"), Tree("c")), Tree("d"))
-      )
-      tree4_2
-        .insertTreeLaxAt(List(97, 98), tree2, codeF) shouldBe Right(
-        Tree(
-          "a",
-          Tree("b", Tree("a", Tree("b")), Tree("c")),
-          Tree("d")
-        )
-      )
-      tree4_2.insertTreeLaxAt(List(97, 98, 99), tree2, codeF) shouldBe Right(
-        Tree(
-          "a",
-          Tree("b", Tree("c", Tree("a", Tree("b")))),
-          Tree("d")
-        )
-      )
-      tree4_2.insertTreeLaxAt(List(97, 98, 99), tree3_2, codeF) shouldBe Right(
-        Tree(
-          "a",
-          Tree("b", Tree("c", Tree("a", Tree("b"), Tree("c")))),
-          Tree("d")
-        )
-      )
-
-      tree7.insertTreeLaxAt(List(97), Tree("b"), codeF) shouldBe Right(
-        Tree(
-          "a",
-          Tree("b"),
-          Tree("b", Tree("c")),
-          Tree("d", Tree("e", Tree("f"))),
-          Tree("g")
-        )
-      )
-      tree7.insertTreeLaxAt(List(98), Tree("b"), codeF) shouldBe Left(tree7)
-      tree7.insertTreeLaxAt(List(97, 98), tree1, codeF) shouldBe Right(
-        Tree(
-          "a",
-          Tree("b", Tree("a"), Tree("c")),
-          Tree("d", Tree("e", Tree("f"))),
-          Tree("g")
-        )
-      )
-      tree7
-        .insertTreeLaxAt(List(97, 98), tree2, codeF) shouldBe Right(
-        Tree(
-          "a",
-          Tree("b", Tree("a", Tree("b")), Tree("c")),
-          Tree("d", Tree("e", Tree("f"))),
-          Tree("g")
-        )
-      )
-      tree7.insertTreeLaxAt(List(97, 98, 99), tree2, codeF) shouldBe Right(
-        Tree(
-          "a",
-          Tree("b", Tree("c", Tree("a", Tree("b")))),
-          Tree("d", Tree("e", Tree("f"))),
-          Tree("g")
-        )
-      )
-      tree7.insertTreeLaxAt(List(97, 98, 99), tree3_2, codeF) shouldBe Right(
-        Tree(
-          "a",
-          Tree("b", Tree("c", Tree("a", Tree("b"), Tree("c")))),
-          Tree("d", Tree("e", Tree("f"))),
-          Tree("g")
-        )
-      )
-      tree7.insertTreeLaxAt(List(97, 98, 101), tree3_2, codeF) shouldBe Left(tree7)
-      tree7.insertTreeLaxAt(List(97, 98, 101, 102), tree3_2, codeF) shouldBe Left(tree7)
-      tree7.insertTreeLaxAt(List(97, 103, 101, 102), tree3_2, codeF) shouldBe Left(tree7)
-      tree7.insertTreeLaxAt(List(97, 98, 99), tree3_2, codeF) shouldBe Right(
-        Tree(
-          "a",
-          Tree("b", Tree("c", Tree("a", Tree("b"), Tree("c")))),
-          Tree("d", Tree("e", Tree("f"))),
-          Tree("g")
-        )
-      )
-      tree7.insertTreeLaxAt(List(97, 100, 101), tree3_2, codeF) shouldBe Right(
-        Tree(
-          "a",
-          Tree("b", Tree("c")),
-          Tree("d", Tree("e", Tree("a", Tree("b"), Tree("c")), Tree("f"))),
-          Tree("g")
-        )
-      )
-      tree7.insertTreeLaxAt(List(97, 103), tree3_2, codeF) shouldBe Right(
-        Tree(
-          "a",
-          Tree("b", Tree("c")),
-          Tree("d", Tree("e", Tree("f"))),
-          Tree("g", Tree("a", Tree("b"), Tree("c")))
-        )
-      )
     }
 
     "insert distinct new subtree to a tree at the specified path" in {
@@ -787,6 +506,139 @@ class TreeInsertionsSpec extends FunSuite {
         "a",
         Tree("b", Tree("c")),
         Tree("d", Tree("e", Tree("f", Tree("i")))),
+        Tree("g")
+      )
+    }
+
+    "insert lax new subtree to a tree at the specified path" in {
+      tree0.insertTreeLaxAt(List(), Tree.empty) shouldBe Tree.empty
+      tree0.insertTreeLaxAt(List("a"), Tree.empty) shouldBe Tree.empty
+      tree0.insertTreeLaxAt(List(), Tree("b")) shouldBe Tree("b")
+      tree0.insertTreeLaxAt(List("a"), Tree("b")) shouldBe Tree("a", Tree("b"))
+      tree1.insertTreeLaxAt(List("a"), Tree("b")) shouldBe Tree("a", Tree("b"))
+      tree1.insertTreeLaxAt(List("b"), Tree("b")) shouldBe tree1
+      tree1.insertTreeLaxAt(List("a", "b"), tree1) shouldBe Tree("a", Tree("b", Tree("a")))
+      tree1.insertTreeLaxAt(List("a", "b"), tree2) shouldBe Tree("a", Tree("b", Tree("a", Tree("b"))))
+      tree1.insertTreeLaxAt(List("a", "b", "c"), tree2) shouldBe Tree("a", Tree("b", Tree("c", Tree("a", Tree("b")))))
+      tree1.insertTreeLaxAt(List("a", "b", "c"), tree3_2) shouldBe Tree(
+        "a",
+        Tree("b", Tree("c", Tree("a", Tree("b"), Tree("c"))))
+      )
+
+      tree2.insertTreeLaxAt(List("a"), Tree("b")) shouldBe Tree("a", Tree("b"), Tree("b"))
+      tree2.insertTreeLaxAt(List("b"), Tree("b")) shouldBe tree2
+      tree2.insertTreeLaxAt(List("a", "b"), tree1) shouldBe Tree("a", Tree("b", Tree("a")))
+      tree2.insertTreeLaxAt(List("a", "b"), tree2) shouldBe Tree("a", Tree("b", Tree("a", Tree("b"))))
+      tree2.insertTreeLaxAt(List("a", "b", "c"), tree2) shouldBe Tree("a", Tree("b", Tree("c", Tree("a", Tree("b")))))
+      tree2.insertTreeLaxAt(List("a", "b", "c"), tree3_2) shouldBe Tree(
+        "a",
+        Tree("b", Tree("c", Tree("a", Tree("b"), Tree("c"))))
+      )
+
+      tree3_1.insertTreeLaxAt(List("a"), Tree("b")) shouldBe Tree("a", Tree("b"), Tree("b", Tree("c")))
+      tree3_1.insertTreeLaxAt(List("b"), Tree("b")) shouldBe tree3_1
+      tree3_1.insertTreeLaxAt(List("a", "b"), Tree("c")) shouldBe Tree("a", Tree("b", Tree("c"), Tree("c")))
+      tree3_1.insertTreeLaxAt(List("a", "b"), tree1) shouldBe Tree("a", Tree("b", Tree("a"), Tree("c")))
+      tree3_1.insertTreeLaxAt(List("a", "b"), tree2) shouldBe Tree("a", Tree("b", Tree("a", Tree("b")), Tree("c")))
+      tree3_1.insertTreeLaxAt(List("a", "b", "c"), tree2) shouldBe Tree("a", Tree("b", Tree("c", Tree("a", Tree("b")))))
+      tree3_1.insertTreeLaxAt(List("a", "b", "c"), tree3_2) shouldBe Tree(
+        "a",
+        Tree("b", Tree("c", Tree("a", Tree("b"), Tree("c"))))
+      )
+
+      tree3_2.insertTreeLaxAt(List("a"), Tree("b")) shouldBe Tree("a", Tree("b"), Tree("b"), Tree("c"))
+      tree3_2.insertTreeLaxAt(List("a"), Tree("c")) shouldBe Tree("a", Tree("c"), Tree("b"), Tree("c"))
+      tree3_2
+        .insertTreeLaxAt(List("a"), Tree("c", Tree("a"))) shouldBe Tree("a", Tree("c", Tree("a")), Tree("b"), Tree("c"))
+      tree3_2.insertTreeLaxAt(List("b"), Tree("b")) shouldBe tree3_2
+      tree3_2.insertTreeLaxAt(List("a", "b"), tree1) shouldBe Tree("a", Tree("b", Tree("a")), Tree("c"))
+      tree3_2.insertTreeLaxAt(List("a", "b"), tree2) shouldBe Tree("a", Tree("b", Tree("a", Tree("b"))), Tree("c"))
+      tree3_2.insertTreeLaxAt(List("a", "b", "c"), tree2) shouldBe Tree(
+        "a",
+        Tree("b", Tree("c", Tree("a", Tree("b")))),
+        Tree("c")
+      )
+      tree3_2.insertTreeLaxAt(List("a", "b", "c"), tree3_2) shouldBe Tree(
+        "a",
+        Tree("b", Tree("c", Tree("a", Tree("b"), Tree("c")))),
+        Tree("c")
+      )
+
+      tree4_2.insertTreeLaxAt(List("a"), Tree("b")) shouldBe Tree("a", Tree("b"), Tree("b", Tree("c")), Tree("d"))
+      tree4_2.insertTreeLaxAt(List("b"), Tree("b")) shouldBe tree4_2
+      tree4_2.insertTreeLaxAt(List("a", "b"), tree1) shouldBe Tree("a", Tree("b", Tree("a"), Tree("c")), Tree("d"))
+      tree4_2
+        .insertTreeLaxAt(List("a", "b"), tree2) shouldBe Tree(
+        "a",
+        Tree("b", Tree("a", Tree("b")), Tree("c")),
+        Tree("d")
+      )
+      tree4_2.insertTreeLaxAt(List("a", "b", "c"), tree2) shouldBe Tree(
+        "a",
+        Tree("b", Tree("c", Tree("a", Tree("b")))),
+        Tree("d")
+      )
+      tree4_2.insertTreeLaxAt(List("a", "b", "c"), tree3_2) shouldBe Tree(
+        "a",
+        Tree("b", Tree("c", Tree("a", Tree("b"), Tree("c")))),
+        Tree("d")
+      )
+
+      tree7.insertTreeLaxAt(List("a"), Tree("b")) shouldBe Tree(
+        "a",
+        Tree("b"),
+        Tree("b", Tree("c")),
+        Tree("d", Tree("e", Tree("f"))),
+        Tree("g")
+      )
+      tree7.insertTreeLaxAt(List("b"), Tree("b")) shouldBe tree7
+      tree7.insertTreeLaxAt(List("a", "b"), tree1) shouldBe Tree(
+        "a",
+        Tree("b", Tree("a"), Tree("c")),
+        Tree("d", Tree("e", Tree("f"))),
+        Tree("g")
+      )
+      tree7
+        .insertTreeLaxAt(List("a", "b"), tree2) shouldBe Tree(
+        "a",
+        Tree("b", Tree("a", Tree("b")), Tree("c")),
+        Tree("d", Tree("e", Tree("f"))),
+        Tree("g")
+      )
+      tree7.insertTreeLaxAt(List("a", "b", "c"), tree2) shouldBe Tree(
+        "a",
+        Tree("b", Tree("c", Tree("a", Tree("b")))),
+        Tree("d", Tree("e", Tree("f"))),
+        Tree("g")
+      )
+      tree7.insertTreeLaxAt(List("a", "b", "c"), tree3_2) shouldBe Tree(
+        "a",
+        Tree("b", Tree("c", Tree("a", Tree("b"), Tree("c")))),
+        Tree("d", Tree("e", Tree("f"))),
+        Tree("g")
+      )
+      tree7.insertTreeLaxAt(List("a", "b", "e"), tree3_2) shouldBe Tree(
+        "a",
+        Tree("b", Tree("e", Tree("a", Tree("b"), Tree("c"))), Tree("c")),
+        Tree("d", Tree("e", Tree("f"))),
+        Tree("g")
+      )
+      tree7.insertTreeLaxAt(List("a", "b", "e", "f"), tree3_2) shouldBe Tree(
+        "a",
+        Tree("b", Tree("e", Tree("f", Tree("a", Tree("b"), Tree("c")))), Tree("c")),
+        Tree("d", Tree("e", Tree("f"))),
+        Tree("g")
+      )
+      tree7.insertTreeLaxAt(List("a", "g", "e", "f"), tree3_2) shouldBe Tree(
+        "a",
+        Tree("b", Tree("c")),
+        Tree("d", Tree("e", Tree("f"))),
+        Tree("g", Tree("e", Tree("f", Tree("a", Tree("b"), Tree("c")))))
+      )
+      tree7.insertTreeLaxAt(List("a", "d", "e"), Tree("f", Tree("i"))) shouldBe Tree(
+        "a",
+        Tree("b", Tree("c")),
+        Tree("d", Tree("e", Tree("f", Tree("i")), Tree("f"))),
         Tree("g")
       )
     }
@@ -933,6 +785,154 @@ class TreeInsertionsSpec extends FunSuite {
         )
       )
       tree7.insertChildAt(List(97, 103), tree3_2, codeF) shouldBe Right(
+        Tree(
+          "a",
+          Tree("b", Tree("c")),
+          Tree("d", Tree("e", Tree("f"))),
+          Tree("g", Tree("a", Tree("b"), Tree("c")))
+        )
+      )
+    }
+
+    "insert lax new subtree to a tree at the specified path using an extractor function" in {
+      val codeF: String => Int = s => s.head.toInt
+      tree0.insertTreeLaxAt(List(), Tree.empty, codeF) shouldBe Right(Tree.empty)
+      tree0.insertTreeLaxAt(List(97), Tree.empty, codeF) shouldBe Left(Tree.empty)
+      tree0.insertTreeLaxAt(List(), Tree("b"), codeF) shouldBe Right(Tree("b"))
+      tree0.insertTreeLaxAt(List(97), Tree("b"), codeF) shouldBe Left(Tree.empty)
+      tree1.insertTreeLaxAt(List(97), Tree("b"), codeF) shouldBe Right(Tree("a", Tree("b")))
+      tree1.insertTreeLaxAt(List(98), Tree("b"), codeF) shouldBe Left(tree1)
+      tree1.insertTreeLaxAt(List(97, 98), tree1, codeF) shouldBe Left(tree1)
+      tree1.insertTreeLaxAt(List(97, 98), tree2, codeF) shouldBe Left(tree1)
+      tree1.insertTreeLaxAt(List(97, 98, 99), tree2, codeF) shouldBe Left(tree1)
+      tree1.insertTreeLaxAt(List(97, 98, 99), tree3_2, codeF) shouldBe Left(tree1)
+
+      tree2.insertTreeLaxAt(List(97), Tree("b"), codeF) shouldBe Right(Tree("a", Tree("b"), Tree("b")))
+      tree2.insertTreeLaxAt(List(98), Tree("b"), codeF) shouldBe Left(tree2)
+      tree2.insertTreeLaxAt(List(97, 98), tree1, codeF) shouldBe Right(Tree("a", Tree("b", Tree("a"))))
+      tree2.insertTreeLaxAt(List(97, 98), tree2, codeF) shouldBe Right(Tree("a", Tree("b", Tree("a", Tree("b")))))
+      tree2.insertTreeLaxAt(List(97, 98, 99), tree2, codeF) shouldBe Left(tree2)
+      tree2.insertTreeLaxAt(List(97, 98, 99), tree3_2, codeF) shouldBe Left(tree2)
+
+      tree3_1.insertTreeLaxAt(List(97), Tree("b"), codeF) shouldBe Right(Tree("a", Tree("b"), Tree("b", Tree("c"))))
+      tree3_1.insertTreeLaxAt(List(98), Tree("b"), codeF) shouldBe Left(tree3_1)
+      tree3_1.insertTreeLaxAt(List(97, 98), tree1, codeF) shouldBe Right(Tree("a", Tree("b", Tree("a"), Tree("c"))))
+      tree3_1.insertTreeLaxAt(List(97, 98), tree2, codeF) shouldBe Right(
+        Tree("a", Tree("b", Tree("a", Tree("b")), Tree("c")))
+      )
+      tree3_1
+        .insertTreeLaxAt(List(97, 98, 99), tree2, codeF) shouldBe Right(
+        Tree("a", Tree("b", Tree("c", Tree("a", Tree("b")))))
+      )
+      tree3_1.insertTreeLaxAt(List(97, 98, 99), tree3_2, codeF) shouldBe Right(
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("a", Tree("b"), Tree("c"))))
+        )
+      )
+
+      tree3_2.insertTreeLaxAt(List(97), Tree("b"), codeF) shouldBe Right(Tree("a", Tree("b"), Tree("b"), Tree("c")))
+      tree3_2.insertTreeLaxAt(List(98), Tree("b"), codeF) shouldBe Left(tree3_2)
+      tree3_2.insertTreeLaxAt(List(97, 98), tree1, codeF) shouldBe Right(Tree("a", Tree("b", Tree("a")), Tree("c")))
+      tree3_2.insertTreeLaxAt(List(97, 98), tree2, codeF) shouldBe Right(
+        Tree("a", Tree("b", Tree("a", Tree("b"))), Tree("c"))
+      )
+      tree3_2.insertTreeLaxAt(List(97, 98, 99), tree2, codeF) shouldBe Left(tree3_2)
+      tree3_2.insertTreeLaxAt(List(97, 98, 99), tree3_2, codeF) shouldBe Left(tree3_2)
+
+      tree4_2.insertTreeLaxAt(List(97), Tree("b"), codeF) shouldBe Right(
+        Tree("a", Tree("b"), Tree("b", Tree("c")), Tree("d"))
+      )
+      tree4_2.insertTreeLaxAt(List(98), Tree("b"), codeF) shouldBe Left(tree4_2)
+      tree4_2.insertTreeLaxAt(List(97, 98), tree1, codeF) shouldBe Right(
+        Tree("a", Tree("b", Tree("a"), Tree("c")), Tree("d"))
+      )
+      tree4_2
+        .insertTreeLaxAt(List(97, 98), tree2, codeF) shouldBe Right(
+        Tree(
+          "a",
+          Tree("b", Tree("a", Tree("b")), Tree("c")),
+          Tree("d")
+        )
+      )
+      tree4_2.insertTreeLaxAt(List(97, 98, 99), tree2, codeF) shouldBe Right(
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("a", Tree("b")))),
+          Tree("d")
+        )
+      )
+      tree4_2.insertTreeLaxAt(List(97, 98, 99), tree3_2, codeF) shouldBe Right(
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("a", Tree("b"), Tree("c")))),
+          Tree("d")
+        )
+      )
+
+      tree7.insertTreeLaxAt(List(97), Tree("b"), codeF) shouldBe Right(
+        Tree(
+          "a",
+          Tree("b"),
+          Tree("b", Tree("c")),
+          Tree("d", Tree("e", Tree("f"))),
+          Tree("g")
+        )
+      )
+      tree7.insertTreeLaxAt(List(98), Tree("b"), codeF) shouldBe Left(tree7)
+      tree7.insertTreeLaxAt(List(97, 98), tree1, codeF) shouldBe Right(
+        Tree(
+          "a",
+          Tree("b", Tree("a"), Tree("c")),
+          Tree("d", Tree("e", Tree("f"))),
+          Tree("g")
+        )
+      )
+      tree7
+        .insertTreeLaxAt(List(97, 98), tree2, codeF) shouldBe Right(
+        Tree(
+          "a",
+          Tree("b", Tree("a", Tree("b")), Tree("c")),
+          Tree("d", Tree("e", Tree("f"))),
+          Tree("g")
+        )
+      )
+      tree7.insertTreeLaxAt(List(97, 98, 99), tree2, codeF) shouldBe Right(
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("a", Tree("b")))),
+          Tree("d", Tree("e", Tree("f"))),
+          Tree("g")
+        )
+      )
+      tree7.insertTreeLaxAt(List(97, 98, 99), tree3_2, codeF) shouldBe Right(
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("a", Tree("b"), Tree("c")))),
+          Tree("d", Tree("e", Tree("f"))),
+          Tree("g")
+        )
+      )
+      tree7.insertTreeLaxAt(List(97, 98, 101), tree3_2, codeF) shouldBe Left(tree7)
+      tree7.insertTreeLaxAt(List(97, 98, 101, 102), tree3_2, codeF) shouldBe Left(tree7)
+      tree7.insertTreeLaxAt(List(97, 103, 101, 102), tree3_2, codeF) shouldBe Left(tree7)
+      tree7.insertTreeLaxAt(List(97, 98, 99), tree3_2, codeF) shouldBe Right(
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("a", Tree("b"), Tree("c")))),
+          Tree("d", Tree("e", Tree("f"))),
+          Tree("g")
+        )
+      )
+      tree7.insertTreeLaxAt(List(97, 100, 101), tree3_2, codeF) shouldBe Right(
+        Tree(
+          "a",
+          Tree("b", Tree("c")),
+          Tree("d", Tree("e", Tree("a", Tree("b"), Tree("c")), Tree("f"))),
+          Tree("g")
+        )
+      )
+      tree7.insertTreeLaxAt(List(97, 103), tree3_2, codeF) shouldBe Right(
         Tree(
           "a",
           Tree("b", Tree("c")),
