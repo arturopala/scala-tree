@@ -1258,7 +1258,8 @@ object NodeTree {
     splitSequenceWhen[NodeTree[T]](_.head == value, tree.children) match {
       case Some((left, node, right)) if node.head != replacement =>
         val updatedNode = Tree(replacement, node.children)
-        if (keepDistinct) {
+        if (updatedNode == node) tree
+        else if (keepDistinct) {
           insertChildDistinct(tree.head, left, updatedNode, right, preserveExisting = false)
         } else {
           Tree(tree.head, left ++: updatedNode +: right)
@@ -1298,6 +1299,34 @@ object NodeTree {
           else Right(tree)
       }
       .getOrElse(Left(tree))
+
+  /** Updates the child tree holding the value at head. */
+  final def updateChild[T, T1 >: T: ClassTag](
+    tree: NodeTree[T],
+    value: T1,
+    replacement: Tree[T1],
+    keepDistinct: Boolean
+  ): Tree[T1] =
+    splitSequenceWhen[NodeTree[T]](_.head == value, tree.children) match {
+      case Some((left, node, right)) if replacement != node =>
+        replacement match {
+          case Tree.empty =>
+            Tree(tree.head, left ++ right)
+
+          case t: NodeTree[T1] =>
+            if (keepDistinct && t.head != node.head) {
+              insertChildDistinct(tree.head, left, t, right, preserveExisting = false)
+            } else {
+              Tree(tree.head, left ++: t +: right)
+            }
+
+          case t: ArrayTree[T1] =>
+            ArrayTree
+              .insertChildren(ArrayTree.prepend(tree.head, t), left, right, keepDistinct && t.head != node.head)
+        }
+
+      case _ => tree
+    }
 
   /** Updates a subtree selected by the path. */
   final def updateTreeAt[T, T1 >: T: ClassTag](
@@ -1342,11 +1371,12 @@ object NodeTree {
     splitSequenceWhen[NodeTree[T]](_.head == value, tree.children) match {
       case None => tree
       case Some((left, node, right)) =>
-        val modifiedNode = Tree(modify(node.head), node.children)
-        if (keepDistinct) {
-          insertChildDistinct(tree.head, left, modifiedNode, right, preserveExisting = false)
+        val replacement = Tree(modify(node.head), node.children)
+        if (replacement == node) tree
+        else if (keepDistinct) {
+          insertChildDistinct(tree.head, left, replacement, right, preserveExisting = false)
         } else {
-          Tree(tree.head, left ++: modifiedNode +: right)
+          Tree(tree.head, left ++: replacement +: right)
         }
     }
 
@@ -1395,21 +1425,24 @@ object NodeTree {
     splitSequenceWhen[NodeTree[T]](_.head == value, tree.children) match {
       case None => tree
       case Some((left, node, right)) =>
-        modify(node) match {
-          case Tree.empty =>
-            Tree(tree.head, left ++ right)
+        val replacement = modify(node)
+        if (replacement == node) tree
+        else
+          replacement match {
+            case Tree.empty =>
+              Tree(tree.head, left ++ right)
 
-          case t: NodeTree[T1] =>
-            if (keepDistinct && t.head != node.head) {
-              insertChildDistinct(tree.head, left, t, right, preserveExisting = false)
-            } else {
-              Tree(tree.head, left ++: t +: right)
-            }
+            case t: NodeTree[T1] =>
+              if (keepDistinct && t.head != node.head) {
+                insertChildDistinct(tree.head, left, t, right, preserveExisting = false)
+              } else {
+                Tree(tree.head, left ++: t +: right)
+              }
 
-          case t: ArrayTree[T1] =>
-            ArrayTree
-              .insertChildren(ArrayTree.prepend(tree.head, t), left, right, keepDistinct && t.head != node.head)
-        }
+            case t: ArrayTree[T1] =>
+              ArrayTree
+                .insertChildren(ArrayTree.prepend(tree.head, t), left, right, keepDistinct && t.head != node.head)
+          }
     }
 
   /** Modifies a subtree selected by the path. */

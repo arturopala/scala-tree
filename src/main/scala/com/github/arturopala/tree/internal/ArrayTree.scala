@@ -753,6 +753,18 @@ object ArrayTree {
       )
       .getOrElse(Left(target))
 
+  /** Updates the child node holding the given value. */
+  final def updateChild[T: ClassTag, T1 >: T: ClassTag](
+    value: T1,
+    replacement: Tree[T1],
+    target: ArrayTree[T],
+    keepDistinct: Boolean
+  ): Tree[T1] =
+    ArrayTreeFunctions
+      .leftmostChildHavingValue(value, target.size - 1, target.size, target.structure, target.content)
+      .map(updateTree(_, replacement, target, keepDistinct))
+      .getOrElse(target)
+
   /** Updates a subtree selected by the path.
     * @return either modified tree or an existing */
   final def updateTreeAt[T: ClassTag, T1 >: T: ClassTag](
@@ -856,7 +868,7 @@ object ArrayTree {
       updateTree(index, modify(newTree), tree, keepDistinct)
     }
 
-  /** Modifies value of the child node holding the given value. */
+  /** Modifies the child node holding the given value. */
   final def modifyChild[T: ClassTag, T1 >: T: ClassTag](
     value: T1,
     modify: Tree[T] => Tree[T1],

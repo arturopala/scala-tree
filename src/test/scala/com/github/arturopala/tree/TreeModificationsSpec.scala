@@ -43,32 +43,76 @@ class TreeModificationsSpec extends FunSuite {
       tree4_2.modifyHead(_ => "b") shouldBe Tree("b", Tree("b", Tree("c")), Tree("d"))
     }
 
-    "modify lax a child tree" in {
-      val f: Tree[String] => Tree[String] = t => t.insertChild(Tree("x", Tree("y")))
-      tree0.modifyChildLax("a", f) shouldBe tree0
-      tree1.modifyChildLax("a", f) shouldBe tree1
-      tree2.modifyChildLax("a", f) shouldBe tree2
-      tree2.modifyChildLax("b", f) shouldBe Tree("a", Tree("b", Tree("x", Tree("y"))))
-      tree3_1.modifyChildLax("b", f) shouldBe Tree("a", Tree("b", Tree("x", Tree("y")), Tree("c")))
-      tree3_2.modifyChildLax("b", f) shouldBe Tree("a", Tree("b", Tree("x", Tree("y"))), Tree("c"))
-      tree3_2.modifyChildLax("c", f) shouldBe Tree("a", Tree("b"), Tree("c", Tree("x", Tree("y"))))
-      val f2: Tree[String] => Tree[String] = t => Tree("c", Tree("d"))
-      tree3_1.modifyChildLax("b", f2) shouldBe Tree("a", Tree("c", Tree("d")))
-      tree3_2.modifyChildLax("b", f2) shouldBe Tree("a", Tree("c", Tree("d")), Tree("c"))
-      tree3_2.modifyChildLax("c", f2) shouldBe Tree("a", Tree("b"), Tree("c", Tree("d")))
-      tree4_1.modifyChildLax("b", f2) shouldBe Tree("a", Tree("c", Tree("d")))
-      tree4_2.modifyChildLax("b", f2) shouldBe Tree("a", Tree("c", Tree("d")), Tree("d"))
-      tree4_2.modifyChildLax("d", f2) shouldBe Tree("a", Tree("b", Tree("c")), Tree("c", Tree("d")))
-      tree7.modifyChildLax("b", _ => Tree("d", Tree("e", Tree("g")))) shouldBe
-        Tree("a", Tree("d", Tree("e", Tree("g"))), Tree("d", Tree("e", Tree("f"))), Tree("g"))
-      tree7.modifyChildLax("d", _ => Tree("b", Tree("c", Tree("e")), Tree("d"))) shouldBe
-        Tree("a", Tree("b", Tree("c")), Tree("b", Tree("c", Tree("e")), Tree("d")), Tree("g"))
-      tree7.modifyChildLax("g", _ => Tree("b", Tree("c", Tree("e")), Tree("d"))) shouldBe
-        Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e", Tree("f"))), Tree("b", Tree("c", Tree("e")), Tree("d")))
-      // test case when tree modification doesn't change head which already have duplicate siblings
-      tree(Tree("a", Tree("b", Tree("c")), Tree("b", Tree("d")), Tree("b", Tree("e"))))
-        .modifyChildLax("b", _ => Tree("b", Tree("x"))) shouldBe
-        Tree("a", Tree("b", Tree("x")), Tree("b", Tree("d")), Tree("b", Tree("e")))
+    "modify distinct a child value" in {
+      val f: String => String = s => s + s
+      tree0.modifyChildValue("a", f) shouldBe tree0
+      tree0.modifyChildValue("b", f) shouldBe tree0
+      tree1.modifyChildValue("a", f) shouldBe tree1
+      tree1.modifyChildValue("b", f) shouldBe tree1
+      tree2.modifyChildValue("a", f) shouldBe tree2
+      tree2.modifyChildValue("b", f) shouldBe Tree("a", Tree("bb"))
+      tree3_1.modifyChildValue("a", f) shouldBe tree3_1
+      tree3_1.modifyChildValue("b", f) shouldBe Tree("a", Tree("bb", Tree("c")))
+      tree3_2.modifyChildValue("a", f) shouldBe tree3_2
+      tree3_2.modifyChildValue("b", f) shouldBe Tree("a", Tree("bb"), Tree("c"))
+      tree3_2.modifyChildValue("c", f) shouldBe Tree("a", Tree("b"), Tree("cc"))
+      tree4_2.modifyChildValue("a", f) shouldBe tree4_2
+      tree4_2.modifyChildValue("b", f) shouldBe Tree("a", Tree("bb", Tree("c")), Tree("d"))
+      tree4_2.modifyChildValue("c", f) shouldBe tree4_2
+      tree4_2.modifyChildValue("d", f) shouldBe Tree("a", Tree("b", Tree("c")), Tree("dd"))
+      tree7.modifyChildValue("d", f) shouldBe
+        Tree("a", Tree("b", Tree("c")), Tree("dd", Tree("e", Tree("f"))), Tree("g"))
+      tree7.modifyChildValue("b", f) shouldBe
+        Tree("a", Tree("bb", Tree("c")), Tree("d", Tree("e", Tree("f"))), Tree("g"))
+      tree7.modifyChildValue("g", f) shouldBe
+        Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e", Tree("f"))), Tree("gg"))
+      // test merging down
+      tree3_2.modifyChildValue("c", _ => "b") shouldBe Tree("a", Tree("b"))
+      tree4_2.modifyChildValue("b", _ => "d") shouldBe Tree("a", Tree("d", Tree("c")))
+      tree4_2.modifyChildValue("d", _ => "b") shouldBe Tree("a", Tree("b", Tree("c")))
+      tree7.modifyChildValue("d", _ => "b") shouldBe
+        Tree("a", Tree("b", Tree("c"), Tree("e", Tree("f"))), Tree("g"))
+      tree7.modifyChildValue("b", _ => "d") shouldBe
+        Tree("a", Tree("d", Tree("c"), Tree("e", Tree("f"))), Tree("g"))
+      tree7.modifyChildValue("g", _ => "b") shouldBe
+        Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e", Tree("f"))))
+      tree7.modifyChildValue("b", _ => "g") shouldBe
+        Tree("a", Tree("g", Tree("c")), Tree("d", Tree("e", Tree("f"))))
+      tree7.modifyChildValue("d", _ => "g") shouldBe
+        Tree("a", Tree("b", Tree("c")), Tree("g", Tree("e", Tree("f"))))
+      tree7.modifyChildValue("g", _ => "d") shouldBe
+        Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e", Tree("f"))))
+      tree(
+        Tree(
+          "a",
+          Tree("c", Tree("e")),
+          Tree("c", Tree("f")),
+          Tree("b"),
+          Tree("x", Tree("g")),
+          Tree("d"),
+          Tree("c", Tree("h"))
+        )
+      ).modifyChildValue("x", _ => "c") shouldBe
+        Tree("a", Tree("c", Tree("e")), Tree("c", Tree("f"), Tree("g")), Tree("b"), Tree("d"), Tree("c", Tree("h")))
+      tree(
+        Tree(
+          "a",
+          Tree("c", Tree("e")),
+          Tree("c", Tree("f", Tree("i"))),
+          Tree("b"),
+          Tree("x", Tree("f", Tree("j"))),
+          Tree("d"),
+          Tree("c", Tree("h"))
+        )
+      ).modifyChildValue("x", _ => "c") shouldBe
+        Tree(
+          "a",
+          Tree("c", Tree("e")),
+          Tree("c", Tree("f", Tree("i"), Tree("j"))),
+          Tree("b"),
+          Tree("d"),
+          Tree("c", Tree("h"))
+        )
     }
 
     "modify lax a child value" in {
@@ -184,239 +228,32 @@ class TreeModificationsSpec extends FunSuite {
         Tree("a", Tree("b", Tree("x")), Tree("b", Tree("d")), Tree("b", Tree("e")))
     }
 
-    "modify distinct a child value" in {
-      val f: String => String = s => s + s
-      tree0.modifyChildValue("a", f) shouldBe tree0
-      tree0.modifyChildValue("b", f) shouldBe tree0
-      tree1.modifyChildValue("a", f) shouldBe tree1
-      tree1.modifyChildValue("b", f) shouldBe tree1
-      tree2.modifyChildValue("a", f) shouldBe tree2
-      tree2.modifyChildValue("b", f) shouldBe Tree("a", Tree("bb"))
-      tree3_1.modifyChildValue("a", f) shouldBe tree3_1
-      tree3_1.modifyChildValue("b", f) shouldBe Tree("a", Tree("bb", Tree("c")))
-      tree3_2.modifyChildValue("a", f) shouldBe tree3_2
-      tree3_2.modifyChildValue("b", f) shouldBe Tree("a", Tree("bb"), Tree("c"))
-      tree3_2.modifyChildValue("c", f) shouldBe Tree("a", Tree("b"), Tree("cc"))
-      tree4_2.modifyChildValue("a", f) shouldBe tree4_2
-      tree4_2.modifyChildValue("b", f) shouldBe Tree("a", Tree("bb", Tree("c")), Tree("d"))
-      tree4_2.modifyChildValue("c", f) shouldBe tree4_2
-      tree4_2.modifyChildValue("d", f) shouldBe Tree("a", Tree("b", Tree("c")), Tree("dd"))
-      tree7.modifyChildValue("d", f) shouldBe
-        Tree("a", Tree("b", Tree("c")), Tree("dd", Tree("e", Tree("f"))), Tree("g"))
-      tree7.modifyChildValue("b", f) shouldBe
-        Tree("a", Tree("bb", Tree("c")), Tree("d", Tree("e", Tree("f"))), Tree("g"))
-      tree7.modifyChildValue("g", f) shouldBe
-        Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e", Tree("f"))), Tree("gg"))
-      // test merging down
-      tree3_2.modifyChildValue("c", _ => "b") shouldBe Tree("a", Tree("b"))
-      tree4_2.modifyChildValue("b", _ => "d") shouldBe Tree("a", Tree("d", Tree("c")))
-      tree4_2.modifyChildValue("d", _ => "b") shouldBe Tree("a", Tree("b", Tree("c")))
-      tree7.modifyChildValue("d", _ => "b") shouldBe
-        Tree("a", Tree("b", Tree("c"), Tree("e", Tree("f"))), Tree("g"))
-      tree7.modifyChildValue("b", _ => "d") shouldBe
-        Tree("a", Tree("d", Tree("c"), Tree("e", Tree("f"))), Tree("g"))
-      tree7.modifyChildValue("g", _ => "b") shouldBe
-        Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e", Tree("f"))))
-      tree7.modifyChildValue("b", _ => "g") shouldBe
-        Tree("a", Tree("g", Tree("c")), Tree("d", Tree("e", Tree("f"))))
-      tree7.modifyChildValue("d", _ => "g") shouldBe
-        Tree("a", Tree("b", Tree("c")), Tree("g", Tree("e", Tree("f"))))
-      tree7.modifyChildValue("g", _ => "d") shouldBe
-        Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e", Tree("f"))))
-      tree(
-        Tree(
-          "a",
-          Tree("c", Tree("e")),
-          Tree("c", Tree("f")),
-          Tree("b"),
-          Tree("x", Tree("g")),
-          Tree("d"),
-          Tree("c", Tree("h"))
-        )
-      ).modifyChildValue("x", _ => "c") shouldBe
-        Tree("a", Tree("c", Tree("e")), Tree("c", Tree("f"), Tree("g")), Tree("b"), Tree("d"), Tree("c", Tree("h")))
-      tree(
-        Tree(
-          "a",
-          Tree("c", Tree("e")),
-          Tree("c", Tree("f", Tree("i"))),
-          Tree("b"),
-          Tree("x", Tree("f", Tree("j"))),
-          Tree("d"),
-          Tree("c", Tree("h"))
-        )
-      ).modifyChildValue("x", _ => "c") shouldBe
-        Tree(
-          "a",
-          Tree("c", Tree("e")),
-          Tree("c", Tree("f", Tree("i"), Tree("j"))),
-          Tree("b"),
-          Tree("d"),
-          Tree("c", Tree("h"))
-        )
-    }
-
-    "modify lax a value of a node selected by the path in the tree" in {
-      val f: String => String = s => s + s
-      def fi(s: String): String => String = _ => s
-      tree0.modifyValueLaxAt(List(), f) shouldBe Left(tree0)
-      tree0.modifyValueLaxAt(List("a"), f) shouldBe Left(tree0)
-      tree0.modifyValueLaxAt(List("b"), f) shouldBe Left(tree0)
-      tree0.modifyValueLaxAt(List("a", "b"), f) shouldBe Left(tree0)
-      tree1.modifyValueLaxAt(List(), f) shouldBe Left(tree1)
-      tree1.modifyValueLaxAt(List("a"), f) shouldBe Right(Tree("aa"))
-      tree1.modifyValueLaxAt(List("b"), f) shouldBe Left(tree1)
-      tree1.modifyValueLaxAt(List("a", "b"), f) shouldBe Left(tree1)
-      tree2.modifyValueLaxAt(List(), f) shouldBe Left(tree2)
-      tree2.modifyValueLaxAt(List("a"), f) shouldBe Right(Tree("aa", Tree("b")))
-      tree2.modifyValueLaxAt(List("b"), f) shouldBe Left(tree2)
-      tree2.modifyValueLaxAt(List("a", "b"), f) shouldBe Right(Tree("a", Tree("bb")))
-      tree2.modifyValueLaxAt(List("a", "c"), f) shouldBe Left(tree2)
-      tree3_1.modifyValueLaxAt(List(), f) shouldBe Left(tree3_1)
-      tree3_1.modifyValueLaxAt(List("a"), f) shouldBe Right(Tree("aa", Tree("b", Tree("c"))))
-      tree3_1.modifyValueLaxAt(List("b"), f) shouldBe Left(tree3_1)
-      tree3_1.modifyValueLaxAt(List("a", "b"), f) shouldBe Right(Tree("a", Tree("bb", Tree("c"))))
-      tree3_1.modifyValueLaxAt(List("a", "b"), fi("c")) shouldBe Right(Tree("a", Tree("c", Tree("c"))))
-      tree3_1.modifyValueLaxAt(List("a", "c"), f) shouldBe Left(tree3_1)
-      tree3_1.modifyValueLaxAt(List("a", "b", "c"), f) shouldBe Right(Tree("a", Tree("b", Tree("cc"))))
-      tree3_1.modifyValueLaxAt(List("a", "b", "d"), f) shouldBe Left(tree3_1)
-      tree3_2.modifyValueLaxAt(List(), f) shouldBe Left(tree3_2)
-      tree3_2.modifyValueLaxAt(List("a"), f) shouldBe Right(Tree("aa", Tree("b"), Tree("c")))
-      tree3_2.modifyValueLaxAt(List("a"), fi("c")) shouldBe Right(Tree("c", Tree("b"), Tree("c")))
-      tree3_2.modifyValueLaxAt(List("b"), f) shouldBe Left(tree3_2)
-      tree3_2.modifyValueLaxAt(List("a", "b"), f) shouldBe Right(Tree("a", Tree("bb"), Tree("c")))
-      tree3_2.modifyValueLaxAt(List("a", "b"), fi("c")) shouldBe Right(Tree("a", Tree("c"), Tree("c")))
-      tree3_2.modifyValueLaxAt(List("a", "c"), f) shouldBe Right(Tree("a", Tree("b"), Tree("cc")))
-      tree3_2.modifyValueLaxAt(List("a", "c"), fi("b")) shouldBe Right(Tree("a", Tree("b"), Tree("b")))
-      tree3_2.modifyValueLaxAt(List("a", "d"), f) shouldBe Left(tree3_2)
-      tree3_2.modifyValueLaxAt(List("a", "b", "c"), f) shouldBe Left(tree3_2)
-      tree3_2.modifyValueLaxAt(List("a", "b", "d"), f) shouldBe Left(tree3_2)
-      tree4_2.modifyValueLaxAt(List(), f) shouldBe Left(tree4_2)
-      tree4_2.modifyValueLaxAt(List("a"), f) shouldBe Right(Tree("aa", Tree("b", Tree("c")), Tree("d")))
-      tree4_2.modifyValueLaxAt(List("b"), f) shouldBe Left(tree4_2)
-      tree4_2.modifyValueLaxAt(List("a", "b"), f) shouldBe Right(Tree("a", Tree("bb", Tree("c")), Tree("d")))
-      tree4_2.modifyValueLaxAt(List("a", "c"), f) shouldBe Left(tree4_2)
-      tree4_2.modifyValueLaxAt(List("a", "d"), f) shouldBe Right(Tree("a", Tree("b", Tree("c")), Tree("dd")))
-      tree4_2.modifyValueLaxAt(List("a", "b", "c"), f) shouldBe Right(Tree("a", Tree("b", Tree("cc")), Tree("d")))
-      tree4_2.modifyValueLaxAt(List("a", "b", "c"), f) shouldBe Right(Tree("a", Tree("b", Tree("cc")), Tree("d")))
-      tree4_2.modifyValueLaxAt(List("a", "b", "d"), f) shouldBe Left(tree4_2)
-      tree7.modifyValueLaxAt(List(), f) shouldBe Left(tree7)
-      tree7.modifyValueLaxAt(List("a"), f) shouldBe Right(
-        Tree("aa", Tree("b", Tree("c")), Tree("d", Tree("e", Tree("f"))), Tree("g"))
-      )
-      tree7.modifyValueLaxAt(List("a", "b"), f) shouldBe Right(
-        Tree("a", Tree("bb", Tree("c")), Tree("d", Tree("e", Tree("f"))), Tree("g"))
-      )
-      tree7.modifyValueLaxAt(List("a", "b"), fi("d")) shouldBe Right(
-        Tree("a", Tree("d", Tree("c")), Tree("d", Tree("e", Tree("f"))), Tree("g"))
-      )
-      tree7.modifyValueLaxAt(List("a", "b", "c"), f) shouldBe Right(
-        Tree("a", Tree("b", Tree("cc")), Tree("d", Tree("e", Tree("f"))), Tree("g"))
-      )
-      tree7.modifyValueLaxAt(List("a", "d"), f) shouldBe Right(
-        Tree("a", Tree("b", Tree("c")), Tree("dd", Tree("e", Tree("f"))), Tree("g"))
-      )
-      tree7.modifyValueLaxAt(List("a", "d"), fi("b")) shouldBe Right(
-        Tree("a", Tree("b", Tree("c")), Tree("b", Tree("e", Tree("f"))), Tree("g"))
-      )
-      tree7.modifyValueLaxAt(List("a", "d", "e"), f) shouldBe Right(
-        Tree("a", Tree("b", Tree("c")), Tree("d", Tree("ee", Tree("f"))), Tree("g"))
-      )
-      tree7.modifyValueLaxAt(List("a", "d", "e", "f"), f) shouldBe Right(
-        Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e", Tree("ff"))), Tree("g"))
-      )
-      tree7.modifyValueLaxAt(List("a", "g"), f) shouldBe Right(
-        Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e", Tree("f"))), Tree("gg"))
-      )
-      tree7.modifyValueLaxAt(List("a", "g"), fi("b")) shouldBe Right(
-        Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e", Tree("f"))), Tree("b"))
-      )
-      tree7.modifyValueLaxAt(List("a", "g"), fi("d")) shouldBe Right(
-        Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e", Tree("f"))), Tree("d"))
-      )
-      tree7.modifyValueLaxAt(List("b"), f) shouldBe Left(tree7)
-      tree7.modifyValueLaxAt(List("a", "c"), f) shouldBe Left(tree7)
-      tree7.modifyValueLaxAt(List("a", "g", "g"), f) shouldBe Left(tree7)
-      tree7.modifyValueLaxAt(List("a", "d", "g"), f) shouldBe Left(tree7)
-      tree7.modifyValueLaxAt(List("a", "b", "c", "d"), f) shouldBe Left(tree7)
-      tree7.modifyValueLaxAt(List("a", "b", "e"), f) shouldBe Left(tree7)
-    }
-
-    "modify lax a value of a node selected by the path in the tree using an extractor function" in {
-      val f: String => String = s => s + s
-      def fi(s: String): String => String = _ => s
-      val e: String => Int = _.head.toInt
-      tree0.modifyValueLaxAt(List(), f, e) shouldBe Left(tree0)
-      tree0.modifyValueLaxAt(List(97), f, e) shouldBe Left(tree0)
-      tree0.modifyValueLaxAt(List(98), f, e) shouldBe Left(tree0)
-      tree0.modifyValueLaxAt(List(97, 98), f, e) shouldBe Left(tree0)
-      tree1.modifyValueLaxAt(List(), f, e) shouldBe Left(tree1)
-      tree1.modifyValueLaxAt(List(97), f, e) shouldBe Right(Tree("aa"))
-      tree1.modifyValueLaxAt(List(98), f, e) shouldBe Left(tree1)
-      tree1.modifyValueLaxAt(List(97, 98), f, e) shouldBe Left(tree1)
-      tree2.modifyValueLaxAt(List(), f, e) shouldBe Left(tree2)
-      tree2.modifyValueLaxAt(List(97), f, e) shouldBe Right(Tree("aa", Tree("b")))
-      tree2.modifyValueLaxAt(List(98), f, e) shouldBe Left(tree2)
-      tree2.modifyValueLaxAt(List(97, 98), f, e) shouldBe Right(Tree("a", Tree("bb")))
-      tree2.modifyValueLaxAt(List(97, 99), f, e) shouldBe Left(tree2)
-      tree3_1.modifyValueLaxAt(List(), f, e) shouldBe Left(tree3_1)
-      tree3_1.modifyValueLaxAt(List(97), f, e) shouldBe Right(Tree("aa", Tree("b", Tree("c"))))
-      tree3_1.modifyValueLaxAt(List(98), f, e) shouldBe Left(tree3_1)
-      tree3_1.modifyValueLaxAt(List(97, 98), f, e) shouldBe Right(Tree("a", Tree("bb", Tree("c"))))
-      tree3_1.modifyValueLaxAt(List(97, 99), f, e) shouldBe Left(tree3_1)
-      tree3_1.modifyValueLaxAt(List(97, 98, 99), f, e) shouldBe Right(Tree("a", Tree("b", Tree("cc"))))
-      tree3_1.modifyValueLaxAt(List(97, 98, 100), f, e) shouldBe Left(tree3_1)
-      tree3_2.modifyValueLaxAt(List(), f, e) shouldBe Left(tree3_2)
-      tree3_2.modifyValueLaxAt(List(97), f, e) shouldBe Right(Tree("aa", Tree("b"), Tree("c")))
-      tree3_2.modifyValueLaxAt(List(98), f, e) shouldBe Left(tree3_2)
-      tree3_2.modifyValueLaxAt(List(97, 98), f, e) shouldBe Right(Tree("a", Tree("bb"), Tree("c")))
-      tree3_2.modifyValueLaxAt(List(97, 99), f, e) shouldBe Right(Tree("a", Tree("b"), Tree("cc")))
-      tree3_2.modifyValueLaxAt(List(97, 100), f, e) shouldBe Left(tree3_2)
-      tree3_2.modifyValueLaxAt(List(97, 98, 99), f, e) shouldBe Left(tree3_2)
-      tree3_2.modifyValueLaxAt(List(97, 98, 100), f, e) shouldBe Left(tree3_2)
-      tree4_2.modifyValueLaxAt(List(), f, e) shouldBe Left(tree4_2)
-      tree4_2.modifyValueLaxAt(List(97), f, e) shouldBe Right(Tree("aa", Tree("b", Tree("c")), Tree("d")))
-      tree4_2.modifyValueLaxAt(List(98), f, e) shouldBe Left(tree4_2)
-      tree4_2.modifyValueLaxAt(List(97, 98), f, e) shouldBe Right(Tree("a", Tree("bb", Tree("c")), Tree("d")))
-      tree4_2.modifyValueLaxAt(List(97, 99), f, e) shouldBe Left(tree4_2)
-      tree4_2.modifyValueLaxAt(List(97, 100), f, e) shouldBe Right(Tree("a", Tree("b", Tree("c")), Tree("dd")))
-      tree4_2.modifyValueLaxAt(List(97, 98, 99), f, e) shouldBe Right(Tree("a", Tree("b", Tree("cc")), Tree("d")))
-      tree4_2.modifyValueLaxAt(List(97, 98, 99), f, e) shouldBe Right(Tree("a", Tree("b", Tree("cc")), Tree("d")))
-      tree4_2.modifyValueLaxAt(List(97, 98, 100), f, e) shouldBe Left(tree4_2)
-      tree7.modifyValueLaxAt(List(), f, e) shouldBe Left(tree7)
-      tree7.modifyValueLaxAt(List(97), f, e) shouldBe Right(
-        Tree("aa", Tree("b", Tree("c")), Tree("d", Tree("e", Tree("f"))), Tree("g"))
-      )
-      tree7.modifyValueLaxAt(List(97, 98), f, e) shouldBe Right(
-        Tree("a", Tree("bb", Tree("c")), Tree("d", Tree("e", Tree("f"))), Tree("g"))
-      )
-      tree7.modifyValueLaxAt(List(97, 98), fi("d"), e) shouldBe Right(
-        Tree("a", Tree("d", Tree("c")), Tree("d", Tree("e", Tree("f"))), Tree("g"))
-      )
-      tree7.modifyValueLaxAt(List(97, 98, 99), f, e) shouldBe Right(
-        Tree("a", Tree("b", Tree("cc")), Tree("d", Tree("e", Tree("f"))), Tree("g"))
-      )
-      tree7.modifyValueLaxAt(List(97, 100), f, e) shouldBe Right(
-        Tree("a", Tree("b", Tree("c")), Tree("dd", Tree("e", Tree("f"))), Tree("g"))
-      )
-      tree7.modifyValueLaxAt(List(97, 100), fi("b"), e) shouldBe Right(
-        Tree("a", Tree("b", Tree("c")), Tree("b", Tree("e", Tree("f"))), Tree("g"))
-      )
-      tree7.modifyValueLaxAt(List(97, 100, 101), f, e) shouldBe Right(
-        Tree("a", Tree("b", Tree("c")), Tree("d", Tree("ee", Tree("f"))), Tree("g"))
-      )
-      tree7.modifyValueLaxAt(List(97, 100, 101, 102), f, e) shouldBe Right(
-        Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e", Tree("ff"))), Tree("g"))
-      )
-      tree7.modifyValueLaxAt(List(97, 103), f, e) shouldBe Right(
-        Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e", Tree("f"))), Tree("gg"))
-      )
-      tree7.modifyValueLaxAt(List(98), f, e) shouldBe Left(tree7)
-      tree7.modifyValueLaxAt(List(97, 99), f, e) shouldBe Left(tree7)
-      tree7.modifyValueLaxAt(List(97, 103, 103), f, e) shouldBe Left(tree7)
-      tree7.modifyValueLaxAt(List(97, 100, 103), f, e) shouldBe Left(tree7)
-      tree7.modifyValueLaxAt(List(97, 98, 99, 100), f, e) shouldBe Left(tree7)
-      tree7.modifyValueLaxAt(List(97, 98, 101), f, e) shouldBe Left(tree7)
+    "modify lax a child tree" in {
+      val f: Tree[String] => Tree[String] = t => t.insertChild(Tree("x", Tree("y")))
+      tree0.modifyChildLax("a", f) shouldBe tree0
+      tree1.modifyChildLax("a", f) shouldBe tree1
+      tree2.modifyChildLax("a", f) shouldBe tree2
+      tree2.modifyChildLax("b", f) shouldBe Tree("a", Tree("b", Tree("x", Tree("y"))))
+      tree3_1.modifyChildLax("b", f) shouldBe Tree("a", Tree("b", Tree("x", Tree("y")), Tree("c")))
+      tree3_2.modifyChildLax("b", f) shouldBe Tree("a", Tree("b", Tree("x", Tree("y"))), Tree("c"))
+      tree3_2.modifyChildLax("c", f) shouldBe Tree("a", Tree("b"), Tree("c", Tree("x", Tree("y"))))
+      val f2: Tree[String] => Tree[String] = t => Tree("c", Tree("d"))
+      tree3_1.modifyChildLax("b", f2) shouldBe Tree("a", Tree("c", Tree("d")))
+      tree3_2.modifyChildLax("b", f2) shouldBe Tree("a", Tree("c", Tree("d")), Tree("c"))
+      tree3_2.modifyChildLax("c", f2) shouldBe Tree("a", Tree("b"), Tree("c", Tree("d")))
+      tree4_1.modifyChildLax("b", f2) shouldBe Tree("a", Tree("c", Tree("d")))
+      tree4_2.modifyChildLax("b", f2) shouldBe Tree("a", Tree("c", Tree("d")), Tree("d"))
+      tree4_2.modifyChildLax("d", f2) shouldBe Tree("a", Tree("b", Tree("c")), Tree("c", Tree("d")))
+      tree7.modifyChildLax("b", _ => Tree("d", Tree("e", Tree("g")))) shouldBe
+        Tree("a", Tree("d", Tree("e", Tree("g"))), Tree("d", Tree("e", Tree("f"))), Tree("g"))
+      tree7.modifyChildLax("d", _ => Tree("b", Tree("c", Tree("e")), Tree("d"))) shouldBe
+        Tree("a", Tree("b", Tree("c")), Tree("b", Tree("c", Tree("e")), Tree("d")), Tree("g"))
+      tree7.modifyChildLax("g", _ => Tree("b", Tree("c", Tree("e")), Tree("d"))) shouldBe
+        Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e", Tree("f"))), Tree("b", Tree("c", Tree("e")), Tree("d")))
+      // test case when tree modification doesn't change head which already have duplicate siblings
+      tree(Tree("a", Tree("b", Tree("c")), Tree("b", Tree("d")), Tree("b", Tree("e"))))
+        .modifyChildLax("b", _ => Tree("b", Tree("x"))) shouldBe
+        Tree("a", Tree("b", Tree("x")), Tree("b", Tree("d")), Tree("b", Tree("e")))
     }
 
     "modify distinct a value of a node selected by the path in the tree" in {
@@ -506,6 +343,92 @@ class TreeModificationsSpec extends FunSuite {
         .modifyValueAt(List("a", "c"), _ => "b") shouldBe Right(Tree("a", Tree("b"), Tree("b")))
     }
 
+    "modify lax a value of a node selected by the path in the tree" in {
+      val f: String => String = s => s + s
+      def fi(s: String): String => String = _ => s
+      tree0.modifyValueLaxAt(List(), f) shouldBe Left(tree0)
+      tree0.modifyValueLaxAt(List("a"), f) shouldBe Left(tree0)
+      tree0.modifyValueLaxAt(List("b"), f) shouldBe Left(tree0)
+      tree0.modifyValueLaxAt(List("a", "b"), f) shouldBe Left(tree0)
+      tree1.modifyValueLaxAt(List(), f) shouldBe Left(tree1)
+      tree1.modifyValueLaxAt(List("a"), f) shouldBe Right(Tree("aa"))
+      tree1.modifyValueLaxAt(List("b"), f) shouldBe Left(tree1)
+      tree1.modifyValueLaxAt(List("a", "b"), f) shouldBe Left(tree1)
+      tree2.modifyValueLaxAt(List(), f) shouldBe Left(tree2)
+      tree2.modifyValueLaxAt(List("a"), f) shouldBe Right(Tree("aa", Tree("b")))
+      tree2.modifyValueLaxAt(List("b"), f) shouldBe Left(tree2)
+      tree2.modifyValueLaxAt(List("a", "b"), f) shouldBe Right(Tree("a", Tree("bb")))
+      tree2.modifyValueLaxAt(List("a", "c"), f) shouldBe Left(tree2)
+      tree3_1.modifyValueLaxAt(List(), f) shouldBe Left(tree3_1)
+      tree3_1.modifyValueLaxAt(List("a"), f) shouldBe Right(Tree("aa", Tree("b", Tree("c"))))
+      tree3_1.modifyValueLaxAt(List("b"), f) shouldBe Left(tree3_1)
+      tree3_1.modifyValueLaxAt(List("a", "b"), f) shouldBe Right(Tree("a", Tree("bb", Tree("c"))))
+      tree3_1.modifyValueLaxAt(List("a", "b"), fi("c")) shouldBe Right(Tree("a", Tree("c", Tree("c"))))
+      tree3_1.modifyValueLaxAt(List("a", "c"), f) shouldBe Left(tree3_1)
+      tree3_1.modifyValueLaxAt(List("a", "b", "c"), f) shouldBe Right(Tree("a", Tree("b", Tree("cc"))))
+      tree3_1.modifyValueLaxAt(List("a", "b", "d"), f) shouldBe Left(tree3_1)
+      tree3_2.modifyValueLaxAt(List(), f) shouldBe Left(tree3_2)
+      tree3_2.modifyValueLaxAt(List("a"), f) shouldBe Right(Tree("aa", Tree("b"), Tree("c")))
+      tree3_2.modifyValueLaxAt(List("a"), fi("c")) shouldBe Right(Tree("c", Tree("b"), Tree("c")))
+      tree3_2.modifyValueLaxAt(List("b"), f) shouldBe Left(tree3_2)
+      tree3_2.modifyValueLaxAt(List("a", "b"), f) shouldBe Right(Tree("a", Tree("bb"), Tree("c")))
+      tree3_2.modifyValueLaxAt(List("a", "b"), fi("c")) shouldBe Right(Tree("a", Tree("c"), Tree("c")))
+      tree3_2.modifyValueLaxAt(List("a", "c"), f) shouldBe Right(Tree("a", Tree("b"), Tree("cc")))
+      tree3_2.modifyValueLaxAt(List("a", "c"), fi("b")) shouldBe Right(Tree("a", Tree("b"), Tree("b")))
+      tree3_2.modifyValueLaxAt(List("a", "d"), f) shouldBe Left(tree3_2)
+      tree3_2.modifyValueLaxAt(List("a", "b", "c"), f) shouldBe Left(tree3_2)
+      tree3_2.modifyValueLaxAt(List("a", "b", "d"), f) shouldBe Left(tree3_2)
+      tree4_2.modifyValueLaxAt(List(), f) shouldBe Left(tree4_2)
+      tree4_2.modifyValueLaxAt(List("a"), f) shouldBe Right(Tree("aa", Tree("b", Tree("c")), Tree("d")))
+      tree4_2.modifyValueLaxAt(List("b"), f) shouldBe Left(tree4_2)
+      tree4_2.modifyValueLaxAt(List("a", "b"), f) shouldBe Right(Tree("a", Tree("bb", Tree("c")), Tree("d")))
+      tree4_2.modifyValueLaxAt(List("a", "c"), f) shouldBe Left(tree4_2)
+      tree4_2.modifyValueLaxAt(List("a", "d"), f) shouldBe Right(Tree("a", Tree("b", Tree("c")), Tree("dd")))
+      tree4_2.modifyValueLaxAt(List("a", "b", "c"), f) shouldBe Right(Tree("a", Tree("b", Tree("cc")), Tree("d")))
+      tree4_2.modifyValueLaxAt(List("a", "b", "c"), f) shouldBe Right(Tree("a", Tree("b", Tree("cc")), Tree("d")))
+      tree4_2.modifyValueLaxAt(List("a", "b", "d"), f) shouldBe Left(tree4_2)
+      tree7.modifyValueLaxAt(List(), f) shouldBe Left(tree7)
+      tree7.modifyValueLaxAt(List("a"), f) shouldBe Right(
+        Tree("aa", Tree("b", Tree("c")), Tree("d", Tree("e", Tree("f"))), Tree("g"))
+      )
+      tree7.modifyValueLaxAt(List("a", "b"), f) shouldBe Right(
+        Tree("a", Tree("bb", Tree("c")), Tree("d", Tree("e", Tree("f"))), Tree("g"))
+      )
+      tree7.modifyValueLaxAt(List("a", "b"), fi("d")) shouldBe Right(
+        Tree("a", Tree("d", Tree("c")), Tree("d", Tree("e", Tree("f"))), Tree("g"))
+      )
+      tree7.modifyValueLaxAt(List("a", "b", "c"), f) shouldBe Right(
+        Tree("a", Tree("b", Tree("cc")), Tree("d", Tree("e", Tree("f"))), Tree("g"))
+      )
+      tree7.modifyValueLaxAt(List("a", "d"), f) shouldBe Right(
+        Tree("a", Tree("b", Tree("c")), Tree("dd", Tree("e", Tree("f"))), Tree("g"))
+      )
+      tree7.modifyValueLaxAt(List("a", "d"), fi("b")) shouldBe Right(
+        Tree("a", Tree("b", Tree("c")), Tree("b", Tree("e", Tree("f"))), Tree("g"))
+      )
+      tree7.modifyValueLaxAt(List("a", "d", "e"), f) shouldBe Right(
+        Tree("a", Tree("b", Tree("c")), Tree("d", Tree("ee", Tree("f"))), Tree("g"))
+      )
+      tree7.modifyValueLaxAt(List("a", "d", "e", "f"), f) shouldBe Right(
+        Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e", Tree("ff"))), Tree("g"))
+      )
+      tree7.modifyValueLaxAt(List("a", "g"), f) shouldBe Right(
+        Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e", Tree("f"))), Tree("gg"))
+      )
+      tree7.modifyValueLaxAt(List("a", "g"), fi("b")) shouldBe Right(
+        Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e", Tree("f"))), Tree("b"))
+      )
+      tree7.modifyValueLaxAt(List("a", "g"), fi("d")) shouldBe Right(
+        Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e", Tree("f"))), Tree("d"))
+      )
+      tree7.modifyValueLaxAt(List("b"), f) shouldBe Left(tree7)
+      tree7.modifyValueLaxAt(List("a", "c"), f) shouldBe Left(tree7)
+      tree7.modifyValueLaxAt(List("a", "g", "g"), f) shouldBe Left(tree7)
+      tree7.modifyValueLaxAt(List("a", "d", "g"), f) shouldBe Left(tree7)
+      tree7.modifyValueLaxAt(List("a", "b", "c", "d"), f) shouldBe Left(tree7)
+      tree7.modifyValueLaxAt(List("a", "b", "e"), f) shouldBe Left(tree7)
+    }
+
     "modify distinct a value of a node selected by the path in the tree using an extractor function" in {
       val f: String => String = s => s + s
       def fi(s: String): String => String = _ => s
@@ -583,6 +506,83 @@ class TreeModificationsSpec extends FunSuite {
       tree7.modifyValueAt(List(97, 98, 101), f, e) shouldBe Left(tree7)
     }
 
+    "modify lax a value of a node selected by the path in the tree using an extractor function" in {
+      val f: String => String = s => s + s
+      def fi(s: String): String => String = _ => s
+      val e: String => Int = _.head.toInt
+      tree0.modifyValueLaxAt(List(), f, e) shouldBe Left(tree0)
+      tree0.modifyValueLaxAt(List(97), f, e) shouldBe Left(tree0)
+      tree0.modifyValueLaxAt(List(98), f, e) shouldBe Left(tree0)
+      tree0.modifyValueLaxAt(List(97, 98), f, e) shouldBe Left(tree0)
+      tree1.modifyValueLaxAt(List(), f, e) shouldBe Left(tree1)
+      tree1.modifyValueLaxAt(List(97), f, e) shouldBe Right(Tree("aa"))
+      tree1.modifyValueLaxAt(List(98), f, e) shouldBe Left(tree1)
+      tree1.modifyValueLaxAt(List(97, 98), f, e) shouldBe Left(tree1)
+      tree2.modifyValueLaxAt(List(), f, e) shouldBe Left(tree2)
+      tree2.modifyValueLaxAt(List(97), f, e) shouldBe Right(Tree("aa", Tree("b")))
+      tree2.modifyValueLaxAt(List(98), f, e) shouldBe Left(tree2)
+      tree2.modifyValueLaxAt(List(97, 98), f, e) shouldBe Right(Tree("a", Tree("bb")))
+      tree2.modifyValueLaxAt(List(97, 99), f, e) shouldBe Left(tree2)
+      tree3_1.modifyValueLaxAt(List(), f, e) shouldBe Left(tree3_1)
+      tree3_1.modifyValueLaxAt(List(97), f, e) shouldBe Right(Tree("aa", Tree("b", Tree("c"))))
+      tree3_1.modifyValueLaxAt(List(98), f, e) shouldBe Left(tree3_1)
+      tree3_1.modifyValueLaxAt(List(97, 98), f, e) shouldBe Right(Tree("a", Tree("bb", Tree("c"))))
+      tree3_1.modifyValueLaxAt(List(97, 99), f, e) shouldBe Left(tree3_1)
+      tree3_1.modifyValueLaxAt(List(97, 98, 99), f, e) shouldBe Right(Tree("a", Tree("b", Tree("cc"))))
+      tree3_1.modifyValueLaxAt(List(97, 98, 100), f, e) shouldBe Left(tree3_1)
+      tree3_2.modifyValueLaxAt(List(), f, e) shouldBe Left(tree3_2)
+      tree3_2.modifyValueLaxAt(List(97), f, e) shouldBe Right(Tree("aa", Tree("b"), Tree("c")))
+      tree3_2.modifyValueLaxAt(List(98), f, e) shouldBe Left(tree3_2)
+      tree3_2.modifyValueLaxAt(List(97, 98), f, e) shouldBe Right(Tree("a", Tree("bb"), Tree("c")))
+      tree3_2.modifyValueLaxAt(List(97, 99), f, e) shouldBe Right(Tree("a", Tree("b"), Tree("cc")))
+      tree3_2.modifyValueLaxAt(List(97, 100), f, e) shouldBe Left(tree3_2)
+      tree3_2.modifyValueLaxAt(List(97, 98, 99), f, e) shouldBe Left(tree3_2)
+      tree3_2.modifyValueLaxAt(List(97, 98, 100), f, e) shouldBe Left(tree3_2)
+      tree4_2.modifyValueLaxAt(List(), f, e) shouldBe Left(tree4_2)
+      tree4_2.modifyValueLaxAt(List(97), f, e) shouldBe Right(Tree("aa", Tree("b", Tree("c")), Tree("d")))
+      tree4_2.modifyValueLaxAt(List(98), f, e) shouldBe Left(tree4_2)
+      tree4_2.modifyValueLaxAt(List(97, 98), f, e) shouldBe Right(Tree("a", Tree("bb", Tree("c")), Tree("d")))
+      tree4_2.modifyValueLaxAt(List(97, 99), f, e) shouldBe Left(tree4_2)
+      tree4_2.modifyValueLaxAt(List(97, 100), f, e) shouldBe Right(Tree("a", Tree("b", Tree("c")), Tree("dd")))
+      tree4_2.modifyValueLaxAt(List(97, 98, 99), f, e) shouldBe Right(Tree("a", Tree("b", Tree("cc")), Tree("d")))
+      tree4_2.modifyValueLaxAt(List(97, 98, 99), f, e) shouldBe Right(Tree("a", Tree("b", Tree("cc")), Tree("d")))
+      tree4_2.modifyValueLaxAt(List(97, 98, 100), f, e) shouldBe Left(tree4_2)
+      tree7.modifyValueLaxAt(List(), f, e) shouldBe Left(tree7)
+      tree7.modifyValueLaxAt(List(97), f, e) shouldBe Right(
+        Tree("aa", Tree("b", Tree("c")), Tree("d", Tree("e", Tree("f"))), Tree("g"))
+      )
+      tree7.modifyValueLaxAt(List(97, 98), f, e) shouldBe Right(
+        Tree("a", Tree("bb", Tree("c")), Tree("d", Tree("e", Tree("f"))), Tree("g"))
+      )
+      tree7.modifyValueLaxAt(List(97, 98), fi("d"), e) shouldBe Right(
+        Tree("a", Tree("d", Tree("c")), Tree("d", Tree("e", Tree("f"))), Tree("g"))
+      )
+      tree7.modifyValueLaxAt(List(97, 98, 99), f, e) shouldBe Right(
+        Tree("a", Tree("b", Tree("cc")), Tree("d", Tree("e", Tree("f"))), Tree("g"))
+      )
+      tree7.modifyValueLaxAt(List(97, 100), f, e) shouldBe Right(
+        Tree("a", Tree("b", Tree("c")), Tree("dd", Tree("e", Tree("f"))), Tree("g"))
+      )
+      tree7.modifyValueLaxAt(List(97, 100), fi("b"), e) shouldBe Right(
+        Tree("a", Tree("b", Tree("c")), Tree("b", Tree("e", Tree("f"))), Tree("g"))
+      )
+      tree7.modifyValueLaxAt(List(97, 100, 101), f, e) shouldBe Right(
+        Tree("a", Tree("b", Tree("c")), Tree("d", Tree("ee", Tree("f"))), Tree("g"))
+      )
+      tree7.modifyValueLaxAt(List(97, 100, 101, 102), f, e) shouldBe Right(
+        Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e", Tree("ff"))), Tree("g"))
+      )
+      tree7.modifyValueLaxAt(List(97, 103), f, e) shouldBe Right(
+        Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e", Tree("f"))), Tree("gg"))
+      )
+      tree7.modifyValueLaxAt(List(98), f, e) shouldBe Left(tree7)
+      tree7.modifyValueLaxAt(List(97, 99), f, e) shouldBe Left(tree7)
+      tree7.modifyValueLaxAt(List(97, 103, 103), f, e) shouldBe Left(tree7)
+      tree7.modifyValueLaxAt(List(97, 100, 103), f, e) shouldBe Left(tree7)
+      tree7.modifyValueLaxAt(List(97, 98, 99, 100), f, e) shouldBe Left(tree7)
+      tree7.modifyValueLaxAt(List(97, 98, 101), f, e) shouldBe Left(tree7)
+    }
+
     "modify lax a subtree selected by the path" in {
       tree0.modifyTreeLaxAt(List("a", "b"), _ => tree2) shouldBe Left(tree0)
       tree1.modifyTreeLaxAt(List("a"), _ => tree2) shouldBe Right(Tree("a", Tree("b")))
@@ -620,52 +620,6 @@ class TreeModificationsSpec extends FunSuite {
       tree4_2.modifyTreeLaxAt(List("b"), _ => Tree("b", Tree("c", Tree("e")))) shouldBe Left(tree4_2)
       tree4_2.modifyTreeLaxAt(List("d"), _ => Tree("b", Tree("c", Tree("e")))) shouldBe Left(tree4_2)
       tree4_2.modifyTreeLaxAt(List("b", "c"), _ => Tree("b", Tree("c", Tree("e")))) shouldBe Left(tree4_2)
-    }
-
-    "modify lax a subtree selected by the path using an extractor function" in {
-      val codeF: String => Int = s => s.head.toInt
-      tree0.modifyTreeLaxAt(List(97, 98), _ => tree2, codeF) shouldBe Left(tree0)
-      tree1.modifyTreeLaxAt(List(97), _ => tree2, codeF) shouldBe Right(Tree("a", Tree("b")))
-      tree1.modifyTreeLaxAt(List(98), _ => tree2, codeF) shouldBe Left(tree1)
-      tree2.modifyTreeLaxAt(List(97), _ => tree3_2, codeF) shouldBe Right(Tree("a", Tree("b"), Tree("c")))
-      tree2.modifyTreeLaxAt(List(97, 98), _ => tree3_2, codeF) shouldBe Right(
-        Tree("a", Tree("a", Tree("b"), Tree("c")))
-      )
-      tree2.modifyTreeLaxAt(List(97, 99), _ => tree3_2, codeF) shouldBe Left(tree2)
-      tree3_2.modifyTreeLaxAt(List(97, 98), _ => tree2, codeF) shouldBe Right(
-        Tree("a", Tree("a", Tree("b")), Tree("c"))
-      )
-      tree3_2.modifyTreeLaxAt(List(97, 98), _ => tree3_2, codeF) shouldBe Right(
-        Tree("a", Tree("a", Tree("b"), Tree("c")), Tree("c"))
-      )
-      tree3_2.modifyTreeLaxAt(List(97, 99), _ => tree2, codeF) shouldBe Right(
-        Tree("a", Tree("b"), Tree("a", Tree("b")))
-      )
-      tree3_2.modifyTreeLaxAt(List(97, 99), _ => tree3_2, codeF) shouldBe Right(
-        Tree("a", Tree("b"), Tree("a", Tree("b"), Tree("c")))
-      )
-      tree3_2.modifyTreeLaxAt(List(97), _ => tree2, codeF) shouldBe Right(tree2)
-      tree3_2.modifyTreeLaxAt(List(97), _ => tree9, codeF) shouldBe Right(tree9)
-      tree3_2.modifyTreeLaxAt(List(97, 97), _ => tree2, codeF) shouldBe Left(tree3_2)
-      tree3_2.modifyTreeLaxAt(List(98, 97), _ => tree2, codeF) shouldBe Left(tree3_2)
-      tree3_2.modifyTreeLaxAt(List(98), _ => tree2, codeF) shouldBe Left(tree3_2)
-      tree3_2.modifyTreeLaxAt(List(98, 98), _ => tree2, codeF) shouldBe Left(tree3_2)
-      tree3_2.modifyTreeLaxAt(List(97, 99), _ => Tree("b", Tree("d")), codeF) shouldBe Right(
-        Tree("a", Tree("b"), Tree("b", Tree("d")))
-      )
-      tree4_2.modifyTreeLaxAt(List(97, 100), _ => Tree("b", Tree("c", Tree("e"))), codeF) shouldBe Right(
-        Tree("a", Tree("b", Tree("c")), Tree("b", Tree("c", Tree("e"))))
-      )
-      tree4_2.modifyTreeLaxAt(List(97, 98, 99), _ => Tree("b", Tree("c", Tree("e"))), codeF) shouldBe Right(
-        Tree("a", Tree("b", Tree("b", Tree("c", Tree("e")))), Tree("d"))
-      )
-      tree4_2.modifyTreeLaxAt(List(97, 98, 100), _ => Tree("b", Tree("c", Tree("e"))), codeF) shouldBe Left(tree4_2)
-      tree4_2.modifyTreeLaxAt(List(97, 100, 99), _ => Tree("b", Tree("c", Tree("e"))), codeF) shouldBe Left(tree4_2)
-      tree4_2.modifyTreeLaxAt(List(97, 101), _ => Tree("b", Tree("c", Tree("e"))), codeF) shouldBe Left(tree4_2)
-      tree4_2.modifyTreeLaxAt(List(97, 99), _ => Tree("b", Tree("c", Tree("e"))), codeF) shouldBe Left(tree4_2)
-      tree4_2.modifyTreeLaxAt(List(98), _ => Tree("b", Tree("c", Tree("e"))), codeF) shouldBe Left(tree4_2)
-      tree4_2.modifyTreeLaxAt(List(100), _ => Tree("b", Tree("c", Tree("e"))), codeF) shouldBe Left(tree4_2)
-      tree4_2.modifyTreeLaxAt(List(98, 99), _ => Tree("b", Tree("c", Tree("e"))), codeF) shouldBe Left(tree4_2)
     }
 
     "modify distinct a subtree selected by the path" in {
@@ -764,6 +718,52 @@ class TreeModificationsSpec extends FunSuite {
       tree4_2.modifyTreeAt(List(98), _ => Tree("b", Tree("c", Tree("e"))), codeF) shouldBe Left(tree4_2)
       tree4_2.modifyTreeAt(List(100), _ => Tree("b", Tree("c", Tree("e"))), codeF) shouldBe Left(tree4_2)
       tree4_2.modifyTreeAt(List(98, 99), _ => Tree("b", Tree("c", Tree("e"))), codeF) shouldBe Left(tree4_2)
+    }
+
+    "modify lax a subtree selected by the path using an extractor function" in {
+      val codeF: String => Int = s => s.head.toInt
+      tree0.modifyTreeLaxAt(List(97, 98), _ => tree2, codeF) shouldBe Left(tree0)
+      tree1.modifyTreeLaxAt(List(97), _ => tree2, codeF) shouldBe Right(Tree("a", Tree("b")))
+      tree1.modifyTreeLaxAt(List(98), _ => tree2, codeF) shouldBe Left(tree1)
+      tree2.modifyTreeLaxAt(List(97), _ => tree3_2, codeF) shouldBe Right(Tree("a", Tree("b"), Tree("c")))
+      tree2.modifyTreeLaxAt(List(97, 98), _ => tree3_2, codeF) shouldBe Right(
+        Tree("a", Tree("a", Tree("b"), Tree("c")))
+      )
+      tree2.modifyTreeLaxAt(List(97, 99), _ => tree3_2, codeF) shouldBe Left(tree2)
+      tree3_2.modifyTreeLaxAt(List(97, 98), _ => tree2, codeF) shouldBe Right(
+        Tree("a", Tree("a", Tree("b")), Tree("c"))
+      )
+      tree3_2.modifyTreeLaxAt(List(97, 98), _ => tree3_2, codeF) shouldBe Right(
+        Tree("a", Tree("a", Tree("b"), Tree("c")), Tree("c"))
+      )
+      tree3_2.modifyTreeLaxAt(List(97, 99), _ => tree2, codeF) shouldBe Right(
+        Tree("a", Tree("b"), Tree("a", Tree("b")))
+      )
+      tree3_2.modifyTreeLaxAt(List(97, 99), _ => tree3_2, codeF) shouldBe Right(
+        Tree("a", Tree("b"), Tree("a", Tree("b"), Tree("c")))
+      )
+      tree3_2.modifyTreeLaxAt(List(97), _ => tree2, codeF) shouldBe Right(tree2)
+      tree3_2.modifyTreeLaxAt(List(97), _ => tree9, codeF) shouldBe Right(tree9)
+      tree3_2.modifyTreeLaxAt(List(97, 97), _ => tree2, codeF) shouldBe Left(tree3_2)
+      tree3_2.modifyTreeLaxAt(List(98, 97), _ => tree2, codeF) shouldBe Left(tree3_2)
+      tree3_2.modifyTreeLaxAt(List(98), _ => tree2, codeF) shouldBe Left(tree3_2)
+      tree3_2.modifyTreeLaxAt(List(98, 98), _ => tree2, codeF) shouldBe Left(tree3_2)
+      tree3_2.modifyTreeLaxAt(List(97, 99), _ => Tree("b", Tree("d")), codeF) shouldBe Right(
+        Tree("a", Tree("b"), Tree("b", Tree("d")))
+      )
+      tree4_2.modifyTreeLaxAt(List(97, 100), _ => Tree("b", Tree("c", Tree("e"))), codeF) shouldBe Right(
+        Tree("a", Tree("b", Tree("c")), Tree("b", Tree("c", Tree("e"))))
+      )
+      tree4_2.modifyTreeLaxAt(List(97, 98, 99), _ => Tree("b", Tree("c", Tree("e"))), codeF) shouldBe Right(
+        Tree("a", Tree("b", Tree("b", Tree("c", Tree("e")))), Tree("d"))
+      )
+      tree4_2.modifyTreeLaxAt(List(97, 98, 100), _ => Tree("b", Tree("c", Tree("e"))), codeF) shouldBe Left(tree4_2)
+      tree4_2.modifyTreeLaxAt(List(97, 100, 99), _ => Tree("b", Tree("c", Tree("e"))), codeF) shouldBe Left(tree4_2)
+      tree4_2.modifyTreeLaxAt(List(97, 101), _ => Tree("b", Tree("c", Tree("e"))), codeF) shouldBe Left(tree4_2)
+      tree4_2.modifyTreeLaxAt(List(97, 99), _ => Tree("b", Tree("c", Tree("e"))), codeF) shouldBe Left(tree4_2)
+      tree4_2.modifyTreeLaxAt(List(98), _ => Tree("b", Tree("c", Tree("e"))), codeF) shouldBe Left(tree4_2)
+      tree4_2.modifyTreeLaxAt(List(100), _ => Tree("b", Tree("c", Tree("e"))), codeF) shouldBe Left(tree4_2)
+      tree4_2.modifyTreeLaxAt(List(98, 99), _ => Tree("b", Tree("c", Tree("e"))), codeF) shouldBe Left(tree4_2)
     }
 
   }

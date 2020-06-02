@@ -182,6 +182,75 @@ class TreeUpdatesSpec extends FunSuite {
         )
     }
 
+    "update distinct a child tree" in {
+      tree0.updateChild("a", Tree("a", Tree("x", Tree("y")))) shouldBe tree0
+      tree1.updateChild("a", Tree("a", Tree("x", Tree("y")))) shouldBe tree1
+      tree2.updateChild("a", Tree("a", Tree("x", Tree("y")))) shouldBe tree2
+      tree2.updateChild("b", Tree("a", Tree("x", Tree("y")))) shouldBe Tree("a", Tree("a", Tree("x", Tree("y"))))
+      tree3_1.updateChild("b", Tree("a", Tree("x", Tree("y")))) shouldBe Tree("a", Tree("a", Tree("x", Tree("y"))))
+      tree3_2.updateChild("b", Tree("a", Tree("x", Tree("y")))) shouldBe Tree(
+        "a",
+        Tree("a", Tree("x", Tree("y"))),
+        Tree("c")
+      )
+      tree3_2.updateChild("c", Tree("a", Tree("x", Tree("y")))) shouldBe Tree(
+        "a",
+        Tree("b"),
+        Tree("a", Tree("x", Tree("y")))
+      )
+      tree3_1.updateChild("b", Tree("c", Tree("d"))) shouldBe Tree("a", Tree("c", Tree("d")))
+      tree3_2.updateChild("b", Tree("c", Tree("d"))) shouldBe Tree("a", Tree("c", Tree("d")))
+      tree3_2.updateChild("c", Tree("c", Tree("d"))) shouldBe Tree("a", Tree("b"), Tree("c", Tree("d")))
+      tree4_1.updateChild("b", Tree("c", Tree("d"))) shouldBe Tree("a", Tree("c", Tree("d")))
+      tree4_2.updateChild("b", Tree("c", Tree("d"))) shouldBe Tree("a", Tree("c", Tree("d")), Tree("d"))
+      tree4_2.updateChild("d", Tree("c", Tree("d"))) shouldBe Tree("a", Tree("b", Tree("c")), Tree("c", Tree("d")))
+      tree7.updateChild("b", Tree("d", Tree("e", Tree("g")))) shouldBe
+        Tree("a", Tree("d", Tree("e", Tree("g"), Tree("f"))), Tree("g"))
+      tree7.updateChild("d", Tree("b", Tree("c", Tree("e")), Tree("d"))) shouldBe
+        Tree("a", Tree("b", Tree("c", Tree("e")), Tree("d")), Tree("g"))
+      tree7.updateChild("g", Tree("b", Tree("c", Tree("e")), Tree("d"))) shouldBe
+        Tree("a", Tree("b", Tree("c", Tree("e")), Tree("d")), Tree("d", Tree("e", Tree("f"))))
+      // test case when tree modification doesn't change head which already have duplicate siblings
+      // as this shall not trigger merging
+      tree(Tree("a", Tree("b", Tree("c")), Tree("b", Tree("d")), Tree("b", Tree("e"))))
+        .updateChild("b", Tree("b", Tree("x"))) shouldBe
+        Tree("a", Tree("b", Tree("x")), Tree("b", Tree("d")), Tree("b", Tree("e")))
+    }
+
+    "update lax a child tree" in {
+      tree0.updateChildLax("a", Tree("a", Tree("x", Tree("y")))) shouldBe tree0
+      tree1.updateChildLax("a", Tree("a", Tree("x", Tree("y")))) shouldBe tree1
+      tree2.updateChildLax("a", Tree("a", Tree("x", Tree("y")))) shouldBe tree2
+      tree2.updateChildLax("b", Tree("a", Tree("x", Tree("y")))) shouldBe Tree("a", Tree("a", Tree("x", Tree("y"))))
+      tree3_1.updateChildLax("b", Tree("a", Tree("x", Tree("y")))) shouldBe Tree("a", Tree("a", Tree("x", Tree("y"))))
+      tree3_2.updateChildLax("b", Tree("a", Tree("x", Tree("y")))) shouldBe Tree(
+        "a",
+        Tree("a", Tree("x", Tree("y"))),
+        Tree("c")
+      )
+      tree3_2.updateChildLax("c", Tree("a", Tree("x", Tree("y")))) shouldBe Tree(
+        "a",
+        Tree("b"),
+        Tree("a", Tree("x", Tree("y")))
+      )
+      tree3_1.updateChildLax("b", Tree("c", Tree("d"))) shouldBe Tree("a", Tree("c", Tree("d")))
+      tree3_2.updateChildLax("b", Tree("c", Tree("d"))) shouldBe Tree("a", Tree("c", Tree("d")), Tree("c"))
+      tree3_2.updateChildLax("c", Tree("c", Tree("d"))) shouldBe Tree("a", Tree("b"), Tree("c", Tree("d")))
+      tree4_1.updateChildLax("b", Tree("c", Tree("d"))) shouldBe Tree("a", Tree("c", Tree("d")))
+      tree4_2.updateChildLax("b", Tree("c", Tree("d"))) shouldBe Tree("a", Tree("c", Tree("d")), Tree("d"))
+      tree4_2.updateChildLax("d", Tree("c", Tree("d"))) shouldBe Tree("a", Tree("b", Tree("c")), Tree("c", Tree("d")))
+      tree7.updateChildLax("b", Tree("d", Tree("e", Tree("g")))) shouldBe
+        Tree("a", Tree("d", Tree("e", Tree("g"))), Tree("d", Tree("e", Tree("f"))), Tree("g"))
+      tree7.updateChildLax("d", Tree("b", Tree("c", Tree("e")), Tree("d"))) shouldBe
+        Tree("a", Tree("b", Tree("c")), Tree("b", Tree("c", Tree("e")), Tree("d")), Tree("g"))
+      tree7.updateChildLax("g", Tree("b", Tree("c", Tree("e")), Tree("d"))) shouldBe
+        Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e", Tree("f"))), Tree("b", Tree("c", Tree("e")), Tree("d")))
+      // test case when tree modification doesn't change head which already have duplicate siblings
+      tree(Tree("a", Tree("b", Tree("c")), Tree("b", Tree("d")), Tree("b", Tree("e"))))
+        .updateChildLax("b", Tree("b", Tree("x"))) shouldBe
+        Tree("a", Tree("b", Tree("x")), Tree("b", Tree("d")), Tree("b", Tree("e")))
+    }
+
     "update lax a value of a node selected by the path in the tree" in {
       tree0.updateValueLaxAt(List(), "x") shouldBe Left(tree0)
       tree0.updateValueLaxAt(List("a"), "x") shouldBe Left(tree0)

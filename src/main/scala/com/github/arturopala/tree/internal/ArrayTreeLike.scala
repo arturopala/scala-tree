@@ -196,13 +196,16 @@ abstract class ArrayTreeLike[T: ClassTag] extends TreeLike[T] {
     toPathItem: T => K
   ): Either[Tree[T], Tree[T1]] = ArrayTree.updateValueAt(path, replacement, tree, toPathItem, keepDistinct = true)
 
-  def updateTreeAt[T1 >: T: ClassTag](
+  final override def updateChild[T1 >: T: ClassTag](value: T1, replacement: Tree[T1]): Tree[T1] =
+    ArrayTree.updateChild(value, replacement, tree, keepDistinct = true)
+
+  final override def updateTreeAt[T1 >: T: ClassTag](
     path: Iterable[T1],
     replacement: Tree[T1]
   ): Either[Tree[T], Tree[T1]] =
     ArrayTree.updateTreeAt(path, replacement, tree, keepDistinct = true)
 
-  def updateTreeAt[K, T1 >: T: ClassTag](
+  final override def updateTreeAt[K, T1 >: T: ClassTag](
     path: Iterable[K],
     replacement: Tree[T1],
     toPathItem: T => K

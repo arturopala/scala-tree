@@ -143,7 +143,7 @@ trait LaxTree[T] {
     * @param replacement replacement tree
     * @return modified tree if contains the value
     * @group laxUpdate */
-  def updateChildLax[T1 >: T: ClassTag](value: T1, replacement: Tree[T1]): Tree[T1] = ???
+  def updateChildLax[T1 >: T: ClassTag](value: T1, replacement: Tree[T1]): Tree[T1]
 
   /** Updates the first tree selected by the given path, and returns a whole tree updated.
     * @note This is a lax method, it doesn't preserve children values uniqueness.
@@ -418,6 +418,17 @@ object LaxTreeOps {
         ArrayTree.updateValueAt(path, replacement, tree, toPathItem, keepDistinct = false)
     }
 
+    final override def updateChildLax[T1 >: T: ClassTag](value: T1, replacement: Tree[T1]): Tree[T1] =
+      t match {
+        case Tree.empty => empty
+
+        case node: NodeTree[T] =>
+          NodeTree.updateChild(node, value, replacement, keepDistinct = false)
+
+        case tree: ArrayTree[T] =>
+          ArrayTree.updateChild(value, replacement, tree, keepDistinct = false)
+      }
+
     final override def updateTreeLaxAt[T1 >: T: ClassTag](
       path: Iterable[T1],
       replacement: Tree[T1]
@@ -444,7 +455,6 @@ object LaxTreeOps {
 
       case tree: ArrayTree[T] =>
         ArrayTree.updateTreeAt(path, replacement, tree, toPathItem, keepDistinct = false)
-
     }
 
     final override def modifyChildValueLax[T1 >: T: ClassTag](value: T1, modify: T => T1): Tree[T1] =
