@@ -41,6 +41,15 @@ class ArrayTreeSpec extends AnyWordSpecCompat {
     }
 
     "insert multiple children at once" in {
+      insertChildren(
+        Tree("a"),
+        List(Tree("b", Tree("c", Tree("d")), Tree("f")), Tree("b", Tree("c", Tree("e")), Tree("g"))),
+        Nil,
+        keepDistinct = true
+      ) shouldBe
+        Tree("a", Tree("b", Tree("c", Tree("d"), Tree("e")), Tree("f"), Tree("g")))
+      insertChildren(Tree("a", Tree("b")), List(Tree("a"), Tree("b"), Tree("c")), Nil, keepDistinct = true) shouldBe
+        Tree("a", Tree("a"), Tree("c"), Tree("b"))
       insertChildren(Tree("a"), List(Tree("b")), List(Tree("c")), keepDistinct = true) shouldBe
         Tree("a", Tree("b"), Tree("c"))
       insertChildren(Tree("a"), List(Tree("b")), List(Tree("c")), keepDistinct = false) shouldBe

@@ -229,8 +229,8 @@ object ArrayTreeFunctions {
   }
 
   /** Looks for Some index of the child node holding the given value, or None.
-    * @return some leftmost index if exists or none */
-  final def leftmostChildHavingValue[T](
+    * @return some first index if exists or none */
+  final def firstChildHavingValue[T](
     value: T,
     parentIndex: Int,
     size: Int,
@@ -268,8 +268,8 @@ object ArrayTreeFunctions {
   }
 
   /** Looks for Some index of the child node holding the given value, or None.
-    * @return some rightmost index if exists or none */
-  final def rightmostChildHavingValue[T](
+    * @return some last index if exists or none */
+  final def lastChildHavingValue[T](
     value: T,
     parentIndex: Int,
     size: Int,
@@ -409,9 +409,11 @@ object ArrayTreeFunctions {
         } else throw new NoSuchElementException
 
       final def seekNext(check: Boolean): Unit =
-        if (check && counters.isEmpty) { hasNext = false } else {
+        if (check && counters.isEmpty) { hasNext = false }
+        else {
           i = indexes.peek
-          if (i < 0) { hasNext = false } else {
+          if (i < 0) { hasNext = false }
+          else {
             hasNext = true
             val c = treeStructure(i)
             if (c == 0 || counters.length >= maxDepth - 1) {
@@ -452,10 +454,12 @@ object ArrayTreeFunctions {
         } else throw new NoSuchElementException
 
       final def seekNext(check: Boolean): Unit =
-        if (check && counters.isEmpty) { hasNext = false } else {
+        if (check && counters.isEmpty) { hasNext = false }
+        else {
           val index = indexes.peek
           i = (counters.length + 1, index)
-          if (index < 0) { hasNext = false } else {
+          if (index < 0) { hasNext = false }
+          else {
             hasNext = true
             val c = treeStructure(index)
             if (c == 0 || counters.length >= maxDepth - 1) {
@@ -565,9 +569,11 @@ object ArrayTreeFunctions {
 
       @tailrec
       final def seekNext(check: Boolean): Unit =
-        if (check && counters.isEmpty) { hasNext = false } else {
+        if (check && counters.isEmpty) { hasNext = false }
+        else {
           val i = indexes.peek
-          if (i < 0) { hasNext = false } else {
+          if (i < 0) { hasNext = false }
+          else {
             val c = treeStructure(i)
             if (c == 0 || counters.length >= maxDepth - 1) {
               array = BranchIteratorUtils.readBranch(counters, indexes).push(i)
@@ -1008,7 +1014,7 @@ object ArrayTreeFunctions {
   ): Int =
     if (branchIterator.hasNext) {
       val value = branchIterator.next()
-      rightmostChildHavingValue(value, parentIndex, structureBuffer.length, structureBuffer, valuesBuffer) match {
+      lastChildHavingValue(value, parentIndex, structureBuffer.length, structureBuffer, valuesBuffer) match {
         case Some(index) =>
           insertBranch(branchIterator, index, structureBuffer, valuesBuffer, offset)
 
@@ -1043,7 +1049,7 @@ object ArrayTreeFunctions {
       childrenOf(childStructure, childValues).foldLeft(0) {
         case (offset, (structure, values)) =>
           val bufferIndex = index + offset
-          offset + (leftmostChildHavingValue(
+          offset + (firstChildHavingValue(
             childValues.last,
             bufferIndex,
             structureBuffer.length,
@@ -1064,14 +1070,22 @@ object ArrayTreeFunctions {
     * Does nothing when an empty tree. Uses unsafe recursion.
     * @return tuple of (insertion index, buffers length change) */
   @`inline` final def insertChildDistinct[T](
-    proposedIndex: Int,
+    childIndex: Int,
     childStructure: IntSlice,
     childValues: Slice[T],
     structureBuffer: IntBuffer,
     valuesBuffer: Buffer[T]
   ): (Int, Int) = {
     val (insertIndex, delta1, nextQueue) =
-      tryInsertDistinct(proposedIndex, childStructure, childValues, structureBuffer, valuesBuffer, true, Vector.empty)
+      insertBetweenChildrenDistinct(
+        childIndex,
+        childStructure,
+        childValues,
+        structureBuffer,
+        valuesBuffer,
+        true,
+        Vector.empty
+      )
     val delta2 = insertChildrenDistinct(nextQueue, structureBuffer, valuesBuffer, delta1)
     (insertIndex, delta2)
   }
@@ -1079,7 +1093,7 @@ object ArrayTreeFunctions {
   /** Inserts children into the buffers with checking for duplicates.
     * Each child is inserted on the specified index or merged down with the nearest duplicate.
     * Does nothing for an empty tree.
-    * @param queue list of (proposed index, tree to insert)
+    * @param queue sequence of tuples of (proposed index, tree structure, tree values, place after flag)
     * @return buffer length change */
   @tailrec
   final def insertChildrenDistinct[T](
@@ -1090,46 +1104,54 @@ object ArrayTreeFunctions {
   ): Int =
     if (queue.isEmpty) offset
     else {
-      val (index, structure, values, onLeftSide) = queue.head
+      val (index, structure, values, insertAfter) = queue.head
       if (structure.length == 0) insertChildrenDistinct(queue.tail, structureBuffer, valuesBuffer, offset)
       else {
         val (_, delta, nextQueue) =
-          tryInsertDistinct(index, structure, values, structureBuffer, valuesBuffer, onLeftSide, queue.tail)
+          insertBetweenChildrenDistinct(
+            index,
+            structure,
+            values,
+            structureBuffer,
+            valuesBuffer,
+            insertAfter,
+            queue.tail
+          )
         insertChildrenDistinct(nextQueue, structureBuffer, valuesBuffer, offset + delta)
       }
     }
 
-  /** Tries to insert child distinct to the tree while keeping children distinct.
-    * @param proposedIndex suggested insertion index
+  /** Inserts child distinct to the tree between existing children while keeping them distinct.
+    * @param childIndex suggested insertion index
     * @return tuple of (realInsertionIndex, buffer change delta, next insertions queue) */
-  final def tryInsertDistinct[T](
-    proposedIndex: Int,
+  final def insertBetweenChildrenDistinct[T](
+    childIndex: Int,
     childStructure: IntSlice,
     childValues: Slice[T],
     structureBuffer: IntBuffer,
     valuesBuffer: Buffer[T],
-    placeAfter: Boolean,
-    queue: Vector[(Int, IntSlice, Slice[T], Boolean)]
+    insertAfter: Boolean,
+    queueTail: Vector[(Int, IntSlice, Slice[T], Boolean)]
   ): (Int, Int, Vector[(Int, IntSlice, Slice[T], Boolean)]) = {
 
     val (insertIndex, isDistinct) =
       if (structureBuffer.isEmpty) (0, true)
-      else if (proposedIndex >= 0 && proposedIndex < structureBuffer.length && valuesBuffer(proposedIndex) == childValues.last)
-        (proposedIndex, false)
+      else if (childIndex >= 0 && childIndex < structureBuffer.length && valuesBuffer(childIndex) == childValues.last)
+        (childIndex, false)
       else
         nearestSiblingHavingValue(
           childValues.last,
-          Math.max(0, proposedIndex),
+          Math.max(0, childIndex),
           structureBuffer.length,
           structureBuffer,
           valuesBuffer
         ).map((_, false))
-          .getOrElse((if (placeAfter) bottomIndex(proposedIndex, structureBuffer) else proposedIndex + 1, true))
+          .getOrElse((if (insertAfter) bottomIndex(childIndex, structureBuffer) else childIndex + 1, true))
 
     val i = Math.max(0, insertIndex)
 
-    val (delta1, updatedQueue) = if (isDistinct) {
-      val parent = if (proposedIndex < 0) 0 else parentIndex(proposedIndex, structureBuffer)
+    val (delta1, updatedQueueTail) = if (isDistinct) {
+      val parent = if (childIndex < 0) 0 else parentIndex(childIndex, structureBuffer)
       if (parent >= 0) {
         structureBuffer.increment(parent)
       }
@@ -1137,18 +1159,18 @@ object ArrayTreeFunctions {
       structureBuffer.update(i, 0)
       valuesBuffer.shiftRight(i, 1)
       valuesBuffer.update(i, childValues.last)
-      (1, queue.map(shiftFromWithFlag(i, 1)))
-    } else (0, queue)
+      (1, queueTail.map(shiftFromWithFlag(i, 1)))
+    } else (0, queueTail)
 
-    val (delta2, updatedQueue2) = if (childStructure.length > 1) {
+    val (delta2, updatedQueueTail2) = if (childStructure.length > 1) {
       if (structureBuffer(i) == 0) { // skip checking duplicates and insert remaining tree at once
         val s = treeSize(i, structureBuffer)
         structureBuffer.modify(i, _ + childStructure.last)
         val d = insertSlice(i - s + 1, childStructure.init, childValues.init, structureBuffer, valuesBuffer)
-        (d, updatedQueue.map(shiftFromWithFlag(i - d + 1, d)))
+        (d, updatedQueueTail.map(shiftFromWithFlag(i - d + 1, d)))
       } else {
 
-        val f = placeAfter && insertIndex >= proposedIndex
+        val f = insertAfter && insertIndex >= childIndex
 
         val childrenInsertIndex =
           if (f) bottomIndex(i + delta1, structureBuffer)
@@ -1157,13 +1179,13 @@ object ArrayTreeFunctions {
         val nextTail = childrenOf(childStructure, childValues).map {
           case (s, v) => (childrenInsertIndex, s, v, f)
         }
-        (0, nextTail ++: updatedQueue)
+        (0, nextTail ++: updatedQueueTail)
       }
 
     } else
-      (0, updatedQueue)
+      (0, updatedQueueTail)
 
-    (i, delta1 + delta2, updatedQueue2)
+    (i, delta1 + delta2, updatedQueueTail2)
   }
 
   /** Inserts new children before an existing children of the parent index.
@@ -1246,13 +1268,21 @@ object ArrayTreeFunctions {
       delta1 + delta2 + 1
     }
 
-  /** Inserts children into the buffers with checking for duplicates.
-    * Each child is inserted before an existing children of its parentIndex.
+  /** Inserts new child into the buffers with checking for duplicates.
+    * New child is eventually inserted before an existing children of its parentIndex.
     * Does nothing for an empty tree.
-    * @param queue list of (parentIndex, tree to insert)
     * @return buffer length change */
-  @tailrec
   final def insertBeforeChildrenDistinct[T](
+    parentIndex: Int,
+    childStructure: IntSlice,
+    childValues: Slice[T],
+    structureBuffer: IntBuffer,
+    valuesBuffer: Buffer[T]
+  ): Int =
+    insertBeforeChildrenDistinct(Vector((parentIndex, childStructure, childValues)), structureBuffer, valuesBuffer, 0)
+
+  @tailrec
+  private final def insertBeforeChildrenDistinct[T](
     queue: Vector[(Int, IntSlice, Slice[T])],
     structureBuffer: IntBuffer,
     valuesBuffer: Buffer[T],
@@ -1266,7 +1296,7 @@ object ArrayTreeFunctions {
       if (structure.length == 0) insertBeforeChildrenDistinct(tail, structureBuffer, valuesBuffer, offset)
       else {
         val (insertIndex, isDistinct) =
-          leftmostChildHavingValue(values.last, parentIndex, structureBuffer.length, structureBuffer, valuesBuffer)
+          firstChildHavingValue(values.last, parentIndex, structureBuffer.length, structureBuffer, valuesBuffer)
             .map((_, false))
             .getOrElse((Math.max(0, parentIndex), true))
 
@@ -1298,13 +1328,21 @@ object ArrayTreeFunctions {
       }
     }
 
-  /** Inserts children into the buffers with checking for duplicates.
-    * Each child is inserted after an existing children of its parentIndex.
+  /** Inserts new child into the buffers with checking for duplicates.
+    * New child is eventually inserted after an existing children of its parentIndex.
     * Does nothing for an empty tree.
-    * @param queue list of (parentIndex, tree to insert)
     * @return buffer length change */
-  @tailrec
   final def insertAfterChildrenDistinct[T](
+    parentIndex: Int,
+    childStructure: IntSlice,
+    childValues: Slice[T],
+    structureBuffer: IntBuffer,
+    valuesBuffer: Buffer[T]
+  ): Int =
+    insertAfterChildrenDistinct(Vector((parentIndex, childStructure, childValues)), structureBuffer, valuesBuffer, 0)
+
+  @tailrec
+  private final def insertAfterChildrenDistinct[T](
     queue: Vector[(Int, IntSlice, Slice[T])],
     structureBuffer: IntBuffer,
     valuesBuffer: Buffer[T],
@@ -1318,7 +1356,7 @@ object ArrayTreeFunctions {
       if (structure.length == 0) insertAfterChildrenDistinct(queue.tail, structureBuffer, valuesBuffer, offset)
       else {
         val (insertIndex, isDistinct) =
-          rightmostChildHavingValue(values.last, parentIndex, structureBuffer.length, structureBuffer, valuesBuffer)
+          lastChildHavingValue(values.last, parentIndex, structureBuffer.length, structureBuffer, valuesBuffer)
             .map((_, false))
             .getOrElse((Math.max(0, parentIndex - treeSize(parentIndex, structureBuffer) + 1), true))
 
@@ -1419,7 +1457,7 @@ object ArrayTreeFunctions {
         structureBuffer.length == valuesBuffer.length) {
 
       val (insertIndex, hasDuplicate) =
-        rightmostChildHavingValue(treeValues.last, parentIndex, structureBuffer.length, structureBuffer, valuesBuffer)
+        lastChildHavingValue(treeValues.last, parentIndex, structureBuffer.length, structureBuffer, valuesBuffer)
           .map(i => (i, i != index))
           .getOrElse((index, false))
 

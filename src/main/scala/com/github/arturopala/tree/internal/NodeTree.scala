@@ -868,7 +868,7 @@ object NodeTree {
       }
 
   /** Inserts new child into a tree keeping children distinct.
-    * @note distinct child is prepended on the lef side of existing children list,
+    * @note distinct child is prepended on the left side of existing children list,
     *       otherwise merged down with existing duplicate.
     */
   final def insertChildDistinct[T, T1 >: T](tree: NodeTree[T], newChild: NodeTree[T1]): Tree[T1] =
