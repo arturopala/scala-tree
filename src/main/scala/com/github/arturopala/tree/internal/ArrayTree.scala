@@ -748,7 +748,7 @@ object ArrayTree {
                   index + delta1,
                   structure,
                   values,
-                  insertAfter = true,
+                  insertAfter = false,
                   structureBuffer,
                   valuesBuffer,
                   indexesToTrack

@@ -18,243 +18,243 @@ package com.github.arturopala.tree
 
 import com.github.arturopala.tree.internal.ArrayTreeFunctions._
 import com.github.arturopala.bufferandslice.{Buffer, IntBuffer, IntSlice, Slice}
-import com.github.arturopala.tree.internal.ArrayTreeFunctions
 
 class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
 
   "ArrayTreeFunctions" should {
 
-    /*"try insert child distinct or produce further insert queue" in {
-      testWithBuffers[String, (Int, Int, Vector[(Int, IntSlice, Slice[String], Boolean)])](
-        ArrayTreeFunctions
-          .insertBetweenChildrenDistinct(4, IntSlice(0, 1, 1), Slice("g", "e", "d"), _, _, true, Vector.empty),
+    "insert child distinct" in {
+      testWithBuffers[String, Int](
+        insertBetweenChildrenDistinct(4, IntSlice(0, 1, 1), Slice("g", "e", "d"), false, _, _),
         IntBuffer(0, 0, 1, 1, 0, 3),
         Buffer("g", "f", "e", "d", "b", "a")
       ) {
-        case (structure, values, (index, delta, queue)) =>
-          structure shouldBe Array(0, 0, 1, 1, 0, 3)
-          values shouldBe Array("g", "f", "e", "d", "b", "a")
-          delta shouldBe 0
-          index shouldBe 3
-          queue shouldBe Vector((2, IntSlice(0, 1), Slice("g", "e"), false))
-      }
-      testWithBuffers[String, (Int, Int, Vector[(Int, IntSlice, Slice[String], Boolean)])](
-        ArrayTreeFunctions.insertBetweenChildrenDistinct(2, IntSlice(0, 1), Slice("g", "e"), _, _, false, Vector.empty),
-        IntBuffer(0, 0, 1, 1, 0, 3),
-        Buffer("g", "f", "e", "d", "b", "a")
-      ) {
-        case (structure, values, (index, delta, queue)) =>
-          structure shouldBe Array(0, 0, 1, 1, 0, 3)
-          values shouldBe Array("g", "f", "e", "d", "b", "a")
-          delta shouldBe 0
-          index shouldBe 2
-          queue shouldBe Vector((1, IntSlice(0), Slice("g"), false))
-      }
-      testWithBuffers[String, (Int, Int, Vector[(Int, IntSlice, Slice[String], Boolean)])](
-        ArrayTreeFunctions.insertBetweenChildrenDistinct(1, IntSlice(0), Slice("g"), _, _, false, Vector.empty),
-        IntBuffer(0, 0, 1, 1, 0, 3),
-        Buffer("g", "f", "e", "d", "b", "a")
-      ) {
-        case (structure, values, (index, delta, queue)) =>
+        case (structure, values, delta) =>
           structure shouldBe Array(0, 0, 0, 2, 1, 0, 3)
           values shouldBe Array("g", "f", "g", "e", "d", "b", "a")
           delta shouldBe 1
-          index shouldBe 2
-          queue shouldBe Vector.empty
       }
-      testWithBuffers[String, (Int, Int, Vector[(Int, IntSlice, Slice[String], Boolean)])](
-        ArrayTreeFunctions.insertBetweenChildrenDistinct(4, IntSlice(0, 1), Slice("e", "b"), _, _, true, Vector.empty),
+      testWithBuffers[String, Int](
+        insertBetweenChildrenDistinct(4, IntSlice(0, 1, 1), Slice("g", "e", "d"), true, _, _),
+        IntBuffer(0, 0, 1, 1, 0, 3),
+        Buffer("g", "f", "e", "d", "b", "a")
+      ) {
+        case (structure, values, delta) =>
+          values shouldBe Array("g", "g", "f", "e", "d", "b", "a")
+          structure shouldBe Array(0, 0, 0, 2, 1, 0, 3)
+          delta shouldBe 1
+      }
+      testWithBuffers[String, Int](
+        insertBetweenChildrenDistinct(2, IntSlice(0, 1), Slice("g", "e"), false, _, _),
+        IntBuffer(0, 0, 1, 1, 0, 3),
+        Buffer("g", "f", "e", "d", "b", "a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 0, 0, 2, 1, 0, 3)
+          values shouldBe Array("g", "f", "g", "e", "d", "b", "a")
+          delta shouldBe 1
+      }
+      testWithBuffers[String, Int](
+        insertBetweenChildrenDistinct(1, IntSlice(0), Slice("g"), false, _, _),
+        IntBuffer(0, 0, 1, 1, 0, 3),
+        Buffer("g", "f", "e", "d", "b", "a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 0, 0, 2, 1, 0, 3)
+          values shouldBe Array("g", "f", "g", "e", "d", "b", "a")
+          delta shouldBe 1
+      }
+      testWithBuffers[String, Int](
+        insertBetweenChildrenDistinct(4, IntSlice(0, 1), Slice("e", "b"), false, _, _),
         IntBuffer(0, 0, 2, 0, 1, 0, 0, 2, 3),
         Buffer("c", "d", "b", "d", "c", "d", "c", "a", "a")
       ) {
-        case (structure, values, (index, delta, queue)) =>
-          structure shouldBe Array(0, 0, 2, 0, 1, 0, 0, 2, 3)
-          values shouldBe Array("c", "d", "b", "d", "c", "d", "c", "a", "a")
-          delta shouldBe 0
-          index shouldBe 2
-          queue shouldBe Vector((1, IntSlice(0), Slice("e"), false))
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 0, 0, 3, 0, 1, 0, 0, 2, 3)
+          values shouldBe Array("c", "d", "e", "b", "d", "c", "d", "c", "a", "a")
+          delta shouldBe 1
       }
-      testWithBuffers[String, (Int, Int, Vector[(Int, IntSlice, Slice[String], Boolean)])](
-        ArrayTreeFunctions.insertBetweenChildrenDistinct(3, IntSlice(0, 1), Slice("e", "b"), _, _, true, Vector.empty),
+      testWithBuffers[String, Int](
+        insertBetweenChildrenDistinct(3, IntSlice(0, 1), Slice("e", "b"), false, _, _),
         IntBuffer(0, 1, 0, 1, 0, 0, 2, 3),
         Buffer("d", "b", "d", "c", "d", "c", "b", "a")
       ) {
-        case (structure, values, (index, delta, queue)) =>
-          structure shouldBe Array(0, 1, 0, 1, 0, 0, 2, 3)
-          values shouldBe Array("d", "b", "d", "c", "d", "c", "b", "a")
-          delta shouldBe 0
-          index shouldBe 6
-          queue shouldBe Vector((4, IntSlice(0), Slice("e"), true))
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 1, 0, 1, 0, 0, 0, 3, 3)
+          values shouldBe Array("d", "b", "d", "c", "e", "d", "c", "b", "a")
+          delta shouldBe 1
       }
-      testWithBuffers[String, (Int, Int, Vector[(Int, IntSlice, Slice[String], Boolean)])](
-        ArrayTreeFunctions.insertBetweenChildrenDistinct(2, IntSlice(0, 1), Slice("e", "b"), _, _, true, Vector.empty),
+      testWithBuffers[String, Int](
+        insertBetweenChildrenDistinct(2, IntSlice(0, 1), Slice("e", "b"), false, _, _),
         IntBuffer(0, 0, 2, 1),
         Buffer("d", "c", "b", "a")
       ) {
-        case (structure, values, (index, delta, queue)) =>
-          structure shouldBe Array(0, 0, 2, 1)
-          values shouldBe Array("d", "c", "b", "a")
-          delta shouldBe 0
-          index shouldBe 2
-          queue shouldBe Vector((0, IntSlice(0), Slice("e"), true))
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 0, 0, 3, 1)
+          values shouldBe Array("d", "c", "e", "b", "a")
+          delta shouldBe 1
       }
-      testWithBuffers[String, (Int, Int, Vector[(Int, IntSlice, Slice[String], Boolean)])](
-        ArrayTreeFunctions.insertBetweenChildrenDistinct(1, IntSlice(0, 1), Slice("d", "b"), _, _, true, Vector.empty),
+      testWithBuffers[String, Int](
+        insertBetweenChildrenDistinct(2, IntSlice(0, 1), Slice("e", "b"), true, _, _),
+        IntBuffer(0, 0, 2, 1),
+        Buffer("d", "c", "b", "a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 0, 0, 3, 1)
+          values shouldBe Array("e", "d", "c", "b", "a")
+          delta shouldBe 1
+      }
+      testWithBuffers[String, Int](
+        insertBetweenChildrenDistinct(1, IntSlice(0, 1), Slice("d", "b"), false, _, _),
         IntBuffer(0, 1, 1),
         Buffer("c", "b", "a")
       ) {
-        case (structure, values, (index, delta, queue)) =>
-          structure shouldBe Array(0, 1, 1)
-          values shouldBe Array("c", "b", "a")
-          delta shouldBe 0
-          index shouldBe 1
-          queue shouldBe Vector((0, IntSlice(0), Slice("d"), true))
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 0, 2, 1)
+          values shouldBe Array("c", "d", "b", "a")
+          delta shouldBe 1
       }
-      testWithBuffers[String, (Int, Int, Vector[(Int, IntSlice, Slice[String], Boolean)])](
-        ArrayTreeFunctions.insertBetweenChildrenDistinct(0, IntSlice(0, 1), Slice("c", "b"), _, _, true, Vector.empty),
+      testWithBuffers[String, Int](
+        insertBetweenChildrenDistinct(1, IntSlice(0, 1), Slice("d", "b"), true, _, _),
+        IntBuffer(0, 1, 1),
+        Buffer("c", "b", "a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 0, 2, 1)
+          values shouldBe Array("d", "c", "b", "a")
+          delta shouldBe 1
+      }
+      testWithBuffers[String, Int](
+        insertBetweenChildrenDistinct(0, IntSlice(0, 1), Slice("c", "b"), false, _, _),
         IntBuffer(0, 1),
         Buffer("b", "a")
       ) {
-        case (structure, values, (index, delta, queue)) =>
+        case (structure, values, delta) =>
           structure shouldBe Array(0, 1, 1)
           values shouldBe Array("c", "b", "a")
           delta shouldBe 1
-          index shouldBe 0
-          queue shouldBe Vector()
       }
-      testWithBuffers[String, (Int, Int, Vector[(Int, IntSlice, Slice[String], Boolean)])](
-        ArrayTreeFunctions.insertBetweenChildrenDistinct(-1, IntSlice(0, 1), Slice("d", "c"), _, _, true, Vector.empty),
+      testWithBuffers[String, Int](
+        insertBetweenChildrenDistinct(-1, IntSlice(0, 1), Slice("d", "c"), false, _, _),
         IntBuffer(0, 1),
         Buffer("b", "a")
       ) {
-        case (structure, values, (index, delta, queue)) =>
+        case (structure, values, delta) =>
           structure shouldBe Array(0, 1, 1, 1)
           values shouldBe Array("d", "c", "b", "a")
           delta shouldBe 2
-          index shouldBe 0
-          queue shouldBe Vector()
       }
-      testWithBuffers[String, (Int, Int, Vector[(Int, IntSlice, Slice[String], Boolean)])](
-        ArrayTreeFunctions.insertBetweenChildrenDistinct(0, IntSlice(0, 1), Slice("d", "c"), _, _, true, Vector.empty),
+      testWithBuffers[String, Int](
+        insertBetweenChildrenDistinct(0, IntSlice(0, 1), Slice("d", "c"), false, _, _),
         IntBuffer(0, 1),
         Buffer("b", "a")
       ) {
-        case (structure, values, (index, delta, queue)) =>
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 0, 1, 2)
+          values shouldBe Array("b", "d", "c", "a")
+          delta shouldBe 2
+      }
+      testWithBuffers[String, Int](
+        insertBetweenChildrenDistinct(0, IntSlice(0, 1), Slice("d", "c"), true, _, _),
+        IntBuffer(0, 1),
+        Buffer("b", "a")
+      ) {
+        case (structure, values, delta) =>
           structure shouldBe Array(0, 1, 0, 2)
           values shouldBe Array("d", "c", "b", "a")
           delta shouldBe 2
-          index shouldBe 0
-          queue shouldBe Vector()
       }
-      testWithBuffers[String, (Int, Int, Vector[(Int, IntSlice, Slice[String], Boolean)])](
-        ArrayTreeFunctions.insertBetweenChildrenDistinct(1, IntSlice(0), Slice("d"), _, _, false, Vector.empty),
+      testWithBuffers[String, Int](
+        insertBetweenChildrenDistinct(1, IntSlice(0), Slice("d"), false, _, _),
         IntBuffer(0, 1, 1),
         Buffer("c", "b", "a")
       ) {
-        case (structure, values, (index, delta, queue)) =>
+        case (structure, values, delta) =>
           structure shouldBe Array(0, 1, 0, 2)
           values shouldBe Array("c", "b", "d", "a")
           delta shouldBe 1
-          index shouldBe 2
-          queue shouldBe Vector()
       }
-      testWithBuffers[String, (Int, Int, Vector[(Int, IntSlice, Slice[String], Boolean)])](
-        ArrayTreeFunctions.insertBetweenChildrenDistinct(1, IntSlice(0), Slice("d"), _, _, true, Vector.empty),
+      testWithBuffers[String, Int](
+        insertBetweenChildrenDistinct(1, IntSlice(0), Slice("d"), true, _, _),
         IntBuffer(0, 1, 1),
         Buffer("c", "b", "a")
       ) {
-        case (structure, values, (index, delta, queue)) =>
+        case (structure, values, delta) =>
           structure shouldBe Array(0, 0, 1, 2)
           values shouldBe Array("d", "c", "b", "a")
           delta shouldBe 1
-          index shouldBe 0
-          queue shouldBe Vector()
       }
-      testWithBuffers[String, (Int, Int, Vector[(Int, IntSlice, Slice[String], Boolean)])](
-        ArrayTreeFunctions.insertBetweenChildrenDistinct(-1, IntSlice(0, 1), Slice("c", "b"), _, _, true, Vector.empty),
+      testWithBuffers[String, Int](
+        insertBetweenChildrenDistinct(-1, IntSlice(0, 1), Slice("c", "b"), true, _, _),
         IntBuffer(0),
         Buffer("a")
       ) {
-        case (structure, values, (index, delta, queue)) =>
+        case (structure, values, delta) =>
           structure shouldBe Array(0, 1, 1)
           values shouldBe Array("c", "b", "a")
           delta shouldBe 2
-          index shouldBe 0
-          queue shouldBe Vector()
       }
-      testWithBuffers[String, (Int, Int, Vector[(Int, IntSlice, Slice[String], Boolean)])](
-        ArrayTreeFunctions.insertBetweenChildrenDistinct(0, IntSlice(0), Slice("b"), _, _, true, Vector.empty),
+      testWithBuffers[String, Int](
+        insertBetweenChildrenDistinct(0, IntSlice(0), Slice("b"), true, _, _),
         IntBuffer(0, 0, 2),
         Buffer("c", "b", "a")
       ) {
-        case (structure, values, (index, delta, queue)) =>
+        case (structure, values, delta) =>
           structure shouldBe Array(0, 0, 2)
           values shouldBe Array("c", "b", "a")
           delta shouldBe 0
-          index shouldBe 1
-          queue shouldBe Vector()
       }
-      testWithBuffers[String, (Int, Int, Vector[(Int, IntSlice, Slice[String], Boolean)])](
-        ArrayTreeFunctions.insertBetweenChildrenDistinct(1, IntSlice(0), Slice("b"), _, _, true, Vector.empty),
+      testWithBuffers[String, Int](
+        insertBetweenChildrenDistinct(1, IntSlice(0), Slice("b"), true, _, _),
         IntBuffer(0, 0, 2),
         Buffer("c", "b", "a")
       ) {
-        case (structure, values, (index, delta, queue)) =>
+        case (structure, values, delta) =>
           structure shouldBe Array(0, 0, 2)
           values shouldBe Array("c", "b", "a")
           delta shouldBe 0
-          index shouldBe 1
-          queue shouldBe Vector()
       }
-      testWithBuffers[String, (Int, Int, Vector[(Int, IntSlice, Slice[String], Boolean)])](
-        ArrayTreeFunctions.insertBetweenChildrenDistinct(1, IntSlice(0), Slice("b"), _, _, false, Vector.empty),
+      testWithBuffers[String, Int](
+        insertBetweenChildrenDistinct(1, IntSlice(0), Slice("b"), false, _, _),
         IntBuffer(0, 0, 2),
         Buffer("d", "c", "a")
       ) {
-        case (structure, values, (index, delta, queue)) =>
+        case (structure, values, delta) =>
           structure shouldBe Array(0, 0, 0, 3)
           values shouldBe Array("d", "c", "b", "a")
           delta shouldBe 1
-          index shouldBe 2
-          queue shouldBe Vector()
       }
-      testWithBuffers[String, (Int, Int, Vector[(Int, IntSlice, Slice[String], Boolean)])](
-        ArrayTreeFunctions.insertBetweenChildrenDistinct(1, IntSlice(0), Slice("c"), _, _, true, Vector.empty),
+      testWithBuffers[String, Int](
+        insertBetweenChildrenDistinct(1, IntSlice(0), Slice("c"), true, _, _),
         IntBuffer(0, 0, 2),
         Buffer("d", "b", "a")
       ) {
-        case (structure, values, (index, delta, queue)) =>
+        case (structure, values, delta) =>
           structure shouldBe Array(0, 0, 0, 3)
           values shouldBe Array("d", "c", "b", "a")
           delta shouldBe 1
-          index shouldBe 1
-          queue shouldBe Vector()
       }
-      testWithBuffers[String, (Int, Int, Vector[(Int, IntSlice, Slice[String], Boolean)])](
-        ArrayTreeFunctions.insertBetweenChildrenDistinct(0, IntSlice(0), Slice("c"), _, _, true, Vector.empty),
+      testWithBuffers[String, Int](
+        insertBetweenChildrenDistinct(0, IntSlice(0), Slice("c"), true, _, _),
         IntBuffer(0, 1),
         Buffer("b", "a")
       ) {
-        case (structure, values, (index, delta, queue)) =>
+        case (structure, values, delta) =>
           structure shouldBe Array(0, 0, 2)
           values shouldBe Array("c", "b", "a")
           delta shouldBe 1
-          index shouldBe 0
-          queue shouldBe Vector()
       }
-      testWithBuffers[String, (Int, Int, Vector[(Int, IntSlice, Slice[String], Boolean)])](
-        ArrayTreeFunctions.insertBetweenChildrenDistinct(-1, IntSlice(0), Slice("b"), _, _, true, Vector.empty),
+      testWithBuffers[String, Int](
+        insertBetweenChildrenDistinct(-1, IntSlice(0), Slice("b"), true, _, _),
         IntBuffer(0),
         Buffer("a")
       ) {
-        case (structure, values, (index, delta, queue)) =>
+        case (structure, values, delta) =>
           structure shouldBe Array(0, 1)
           values shouldBe Array("b", "a")
           delta shouldBe 1
-          index shouldBe 0
-          queue shouldBe Vector()
       }
-    }*/
+    }
 
     "remove value and ensure children distinct" in {
       testWithBuffers[String, Int](

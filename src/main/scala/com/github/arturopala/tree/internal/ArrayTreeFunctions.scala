@@ -106,6 +106,29 @@ object ArrayTreeFunctions {
       result
     } else IntBuffer.empty
 
+  /** Index of the first child of the parentIndex. */
+  @`inline` final def firstChildIndex(parentIndex: Int, treeStructure: Int => Int): Option[Int] =
+    if (parentIndex >= 0 && treeStructure(parentIndex) > 0) Some(parentIndex - 1)
+    else None
+
+  /** Index of the last child of the parentIndex. */
+  final def lastChildIndex(parentIndex: Int, treeStructure: Int => Int): Option[Int] =
+    if (parentIndex < 0 || treeStructure(parentIndex) < 1) None
+    else {
+      var n = treeStructure(parentIndex) - 1
+      var i = parentIndex - 1
+      while (n > 0 && i >= 0) {
+        var a = treeStructure(i)
+        while (a > 0) {
+          i = i - 1
+          a = a - 1 + treeStructure(i)
+        }
+        i = i - 1
+        n = n - 1
+      }
+      Some(i)
+    }
+
   /** Lists indexes, in the reverse order, of the children values of the parent node, if any. */
   final def childrenIndexesReverse(parentIndex: Int, treeStructure: Int => Int): IntBuffer =
     if (parentIndex >= 0) {
@@ -1133,9 +1156,9 @@ object ArrayTreeFunctions {
               .getOrElse((if (insertAfter) bottomIndex(childIndex, structureBuffer) else childIndex + 1, true))
 
         val i = Math.max(0, insertIndex)
+        val parent = if (childIndex < 0) 0 else parentIndex(childIndex, structureBuffer)
 
         val (delta1, updatedQueueTail) = if (isDistinct) {
-          val parent = if (childIndex < 0) 0 else parentIndex(childIndex, structureBuffer)
           if (parent >= 0) {
             structureBuffer.increment(parent)
           }
@@ -1156,14 +1179,14 @@ object ArrayTreeFunctions {
             (d, updatedQueueTail.map(shiftFromWithFlag(i - d + 1, d)))
           } else {
 
-            val f = insertAfter && insertIndex >= childIndex
+            val nextInsertAfter = insertAfter || insertIndex > childIndex
 
             val childrenInsertIndex =
-              if (f) bottomIndex(i + delta1, structureBuffer)
+              if (nextInsertAfter) lastChildIndex(i + delta1, structureBuffer).getOrElse(i + delta1 - 1)
               else i + delta1 - 1
 
             val nextTail = childrenOf(childStructure, childValues).map {
-              case (s, v) => (childrenInsertIndex, s, v, f)
+              case (s, v) => (childrenInsertIndex, s, v, nextInsertAfter)
             }
             (0, nextTail ++: updatedQueueTail)
           }

@@ -20,7 +20,7 @@ import com.github.arturopala.bufferandslice.{Buffer, IntBuffer, IntSlice, Slice}
 import com.github.arturopala.tree.LaxTreeOps._
 import com.github.arturopala.tree.internal.ArrayTree._
 import com.github.arturopala.tree.internal.ArrayTreeFunctions
-import com.github.arturopala.tree.internal.ArrayTreeFunctions.{insertBeforeChildren, insertBeforeChildrenDistinct, makeChildrenDistinct, mergeShallowTwoTrees}
+import com.github.arturopala.tree.internal.ArrayTreeFunctions.{insertBeforeChildren, insertBeforeChildrenDistinct, insertBetweenChildrenDistinct, makeChildrenDistinct, mergeShallowTwoTrees}
 
 import scala.reflect.ClassTag
 
@@ -35,6 +35,42 @@ class TreeDebugSpec extends FunSuite with TestWithBuffers {
     def tree[T: ClassTag](t: Tree[T]): Tree[T]
 
     "debug" in {
+
+      tree7.updateChild("b", Tree("d", Tree("e", Tree("g")))) shouldBe
+        Tree("a", Tree("d", Tree("e", Tree("g"), Tree("f"))), Tree("g"))
+
+      testWithBuffers[String, Int](
+        insertBetweenChildrenDistinct(3, IntSlice(0, 1), Slice("e", "b"), false, _, _),
+        IntBuffer(0, 1, 0, 1, 0, 0, 2, 3),
+        Buffer("d", "b", "d", "c", "d", "c", "b", "a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 1, 0, 1, 0, 0, 0, 3, 3)
+          values shouldBe Array("d", "b", "d", "c", "e", "d", "c", "b", "a")
+          delta shouldBe 1
+      }
+
+      testWithBuffers[String, Int](
+        insertBetweenChildrenDistinct(4, IntSlice(0, 1, 1), Slice("g", "e", "d"), true, _, _),
+        IntBuffer(0, 0, 1, 1, 0, 3),
+        Buffer("g", "f", "e", "d", "b", "a")
+      ) {
+        case (structure, values, delta) =>
+          values shouldBe Array("g", "g", "f", "e", "d", "b", "a")
+          structure shouldBe Array(0, 0, 0, 2, 1, 0, 3)
+          delta shouldBe 1
+      }
+
+      testWithBuffers[String, Int](
+        insertBetweenChildrenDistinct(4, IntSlice(0, 1, 1), Slice("g", "e", "d"), false, _, _),
+        IntBuffer(0, 0, 1, 1, 0, 3),
+        Buffer("g", "f", "e", "d", "b", "a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 0, 0, 2, 1, 0, 3)
+          values shouldBe Array("g", "f", "g", "e", "d", "b", "a")
+          delta shouldBe 1
+      }
 
       testWithBuffers[String, Int](
         insertBeforeChildrenDistinct(3, IntSlice(0, 0, 2), Slice("e", "c", "b"), _, _),
