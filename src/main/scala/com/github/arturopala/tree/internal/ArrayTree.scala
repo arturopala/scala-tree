@@ -740,22 +740,31 @@ object ArrayTree {
           val hasSameHeadValue = keepDistinct && replacement.head == valuesBuffer(index)
           val delta1 = ArrayTreeFunctions.removeChildren(index, parentIndex, structureBuffer, valuesBuffer)
           val (structure, values) = replacement.toSlices[T1]
-          val (insertIndex, delta2) =
+          val indexesToTrack = IntBuffer(index + delta1)
+          val delta2 =
             if (keepDistinct)
               ArrayTreeFunctions
-                .insertChildDistinct(index + delta1, structure, values, structureBuffer, valuesBuffer)
+                .insertBetweenChildrenDistinct(
+                  index + delta1,
+                  structure,
+                  values,
+                  insertAfter = true,
+                  structureBuffer,
+                  valuesBuffer,
+                  indexesToTrack
+                )
             else {
               if (parentIndex + delta1 >= 0) {
                 structureBuffer.increment(parentIndex + delta1)
               }
-              val delta = ArrayTreeFunctions
+              IndexTracker.trackShiftRight(Math.max(0, index + delta1), structure.length, indexesToTrack)
+              ArrayTreeFunctions
                 .insertSlice(Math.max(0, index + delta1), structure, values, structureBuffer, valuesBuffer)
-              (index + delta1, delta)
             }
 
           val delta3 = if (!hasSameHeadValue) {
             val p = if (parentIndex >= 0) parentIndex + delta1 + delta2 else parentIndex
-            val i = if (insertIndex <= index + delta1) index + delta1 + delta2 else index + delta1
+            val i = indexesToTrack.peek // /*if (insertIndex <= index + delta1) index + delta1 + delta2 else*/ index + delta1
             ArrayTreeFunctions.removeValue(i, p, structureBuffer, valuesBuffer)
           } else 0
 

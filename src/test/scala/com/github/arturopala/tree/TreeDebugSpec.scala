@@ -27,7 +27,7 @@ import scala.reflect.ClassTag
 // Special test suite to ease single assertions debugging in an IDE
 class TreeDebugSpec extends FunSuite with TestWithBuffers {
 
-  test(Inflated, new Spec with InflatedTestTrees)
+  //test(Inflated, new Spec with InflatedTestTrees)
   test(Deflated, new Spec with DeflatedTestTrees)
 
   sealed trait Spec extends AnyWordSpecCompat with TestTrees {
@@ -36,7 +36,9 @@ class TreeDebugSpec extends FunSuite with TestWithBuffers {
 
     "debug" in {
 
-      tree2.insertChildren(List(Tree("a"), Tree("b"), Tree("c"))) shouldBe Tree("a", Tree("a"), Tree("c"), Tree("b"))
+      updateTree(0, Tree("b", Tree("a")), Tree("c"), true) shouldBe Tree("b", Tree("a"))
+
+      /*tree2.insertChildren(List(Tree("a"), Tree("b"), Tree("c"))) shouldBe Tree("a", Tree("a"), Tree("c"), Tree("b"))
 
       tree1.insertChildren(List(Tree("b", Tree("c", Tree("d")), Tree("f")), Tree("b", Tree("c", Tree("e")), Tree("g")))) shouldBe
         Tree("a", Tree("b", Tree("c", Tree("d"), Tree("e")), Tree("f"), Tree("g")))
@@ -61,7 +63,7 @@ class TreeDebugSpec extends FunSuite with TestWithBuffers {
           structure shouldBe Array(0, 0, 0, 3)
           values shouldBe Array("b", "c", "a", "a")
           delta shouldBe 2
-      }
+      }*/
     }
 
   }

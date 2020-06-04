@@ -1066,29 +1066,23 @@ object ArrayTreeFunctions {
       }
     }
 
-  /** Inserts tree to the buffers at the given index, and keeps children distinct.
-    * Does nothing when an empty tree. Uses unsafe recursion.
-    * @return tuple of (insertion index, buffers length change) */
-  @`inline` final def insertChildDistinct[T](
+  /** Inserts child to the buffers at the given index, and keeps children distinct. */
+  @`inline` final def insertBetweenChildrenDistinct[T](
     childIndex: Int,
     childStructure: IntSlice,
     childValues: Slice[T],
+    insertAfter: Boolean,
     structureBuffer: IntBuffer,
-    valuesBuffer: Buffer[T]
-  ): (Int, Int) = {
-    val (insertIndex, delta1, nextQueue) =
-      insertBetweenChildrenDistinct(
-        childIndex,
-        childStructure,
-        childValues,
-        structureBuffer,
-        valuesBuffer,
-        true,
-        Vector.empty
-      )
-    val delta2 = insertChildrenDistinct(nextQueue, structureBuffer, valuesBuffer, delta1)
-    (insertIndex, delta2)
-  }
+    valuesBuffer: Buffer[T],
+    indexesToTrack: IntBuffer = IntBuffer.empty
+  ): Int =
+    insertBetweenChildrenDistinct(
+      Vector((childIndex, childStructure, childValues, insertAfter)),
+      structureBuffer,
+      valuesBuffer,
+      0,
+      indexesToTrack
+    )
 
   /** Inserts children into the buffers with checking for duplicates.
     * Each child is inserted on the specified index or merged down with the nearest duplicate.
@@ -1096,97 +1090,84 @@ object ArrayTreeFunctions {
     * @param queue sequence of tuples of (proposed index, tree structure, tree values, place after flag)
     * @return buffer length change */
   @tailrec
-  final def insertChildrenDistinct[T](
+  private final def insertBetweenChildrenDistinct[T](
     queue: Vector[(Int, IntSlice, Slice[T], Boolean)],
     structureBuffer: IntBuffer,
     valuesBuffer: Buffer[T],
-    offset: Int
+    offset: Int,
+    indexesToTrack: IntBuffer
   ): Int =
     if (queue.isEmpty) offset
     else {
-      val (index, structure, values, insertAfter) = queue.head
-      if (structure.length == 0) insertChildrenDistinct(queue.tail, structureBuffer, valuesBuffer, offset)
+
+      val (childIndex, childStructure, childValues, insertAfter) = queue.head
+
+      if (childStructure.length == 0)
+        insertBetweenChildrenDistinct(queue.tail, structureBuffer, valuesBuffer, offset, indexesToTrack)
       else {
-        val (_, delta, nextQueue) =
-          insertBetweenChildrenDistinct(
-            index,
-            structure,
-            values,
-            structureBuffer,
-            valuesBuffer,
-            insertAfter,
-            queue.tail
-          )
-        insertChildrenDistinct(nextQueue, structureBuffer, valuesBuffer, offset + delta)
+
+        val (insertIndex, isDistinct) =
+          if (structureBuffer.isEmpty) (0, true)
+          else if (childIndex >= 0 && childIndex < structureBuffer.length && valuesBuffer(childIndex) == childValues.last)
+            (childIndex, false)
+          else
+            nearestSiblingHavingValue(
+              childValues.last,
+              Math.max(0, childIndex),
+              structureBuffer.length,
+              structureBuffer,
+              valuesBuffer
+            ).map((_, false))
+              .getOrElse((if (insertAfter) bottomIndex(childIndex, structureBuffer) else childIndex + 1, true))
+
+        val i = Math.max(0, insertIndex)
+
+        val (delta1, updatedQueueTail) = if (isDistinct) {
+          val parent = if (childIndex < 0) 0 else parentIndex(childIndex, structureBuffer)
+          if (parent >= 0) {
+            structureBuffer.increment(parent)
+          }
+          structureBuffer.shiftRight(i, 1)
+          IndexTracker.trackShiftRight(i, 1, indexesToTrack)
+          structureBuffer.update(i, 0)
+          valuesBuffer.shiftRight(i, 1)
+          valuesBuffer.update(i, childValues.last)
+          (1, queue.tail.map(shiftFromWithFlag(i, 1)))
+        } else (0, queue.tail)
+
+        val (delta2, updatedQueueTail2) = if (childStructure.length > 1) {
+          if (structureBuffer(i) == 0) { // skip checking duplicates and insert remaining tree at once
+            val s = treeSize(i, structureBuffer)
+            structureBuffer.modify(i, _ + childStructure.last)
+            val d = insertSlice(i - s + 1, childStructure.init, childValues.init, structureBuffer, valuesBuffer)
+            IndexTracker.trackShiftRight(Math.max(i - s + 1, 0), childStructure.length - 1, indexesToTrack)
+            (d, updatedQueueTail.map(shiftFromWithFlag(i - d + 1, d)))
+          } else {
+
+            val f = insertAfter && insertIndex >= childIndex
+
+            val childrenInsertIndex =
+              if (f) bottomIndex(i + delta1, structureBuffer)
+              else i + delta1 - 1
+
+            val nextTail = childrenOf(childStructure, childValues).map {
+              case (s, v) => (childrenInsertIndex, s, v, f)
+            }
+            (0, nextTail ++: updatedQueueTail)
+          }
+
+        } else
+          (0, updatedQueueTail)
+
+        insertBetweenChildrenDistinct(
+          updatedQueueTail2,
+          structureBuffer,
+          valuesBuffer,
+          offset + delta1 + delta2,
+          indexesToTrack
+        )
       }
     }
-
-  /** Inserts child distinct to the tree between existing children while keeping them distinct.
-    * @param childIndex suggested insertion index
-    * @return tuple of (realInsertionIndex, buffer change delta, next insertions queue) */
-  final def insertBetweenChildrenDistinct[T](
-    childIndex: Int,
-    childStructure: IntSlice,
-    childValues: Slice[T],
-    structureBuffer: IntBuffer,
-    valuesBuffer: Buffer[T],
-    insertAfter: Boolean,
-    queueTail: Vector[(Int, IntSlice, Slice[T], Boolean)]
-  ): (Int, Int, Vector[(Int, IntSlice, Slice[T], Boolean)]) = {
-
-    val (insertIndex, isDistinct) =
-      if (structureBuffer.isEmpty) (0, true)
-      else if (childIndex >= 0 && childIndex < structureBuffer.length && valuesBuffer(childIndex) == childValues.last)
-        (childIndex, false)
-      else
-        nearestSiblingHavingValue(
-          childValues.last,
-          Math.max(0, childIndex),
-          structureBuffer.length,
-          structureBuffer,
-          valuesBuffer
-        ).map((_, false))
-          .getOrElse((if (insertAfter) bottomIndex(childIndex, structureBuffer) else childIndex + 1, true))
-
-    val i = Math.max(0, insertIndex)
-
-    val (delta1, updatedQueueTail) = if (isDistinct) {
-      val parent = if (childIndex < 0) 0 else parentIndex(childIndex, structureBuffer)
-      if (parent >= 0) {
-        structureBuffer.increment(parent)
-      }
-      structureBuffer.shiftRight(i, 1)
-      structureBuffer.update(i, 0)
-      valuesBuffer.shiftRight(i, 1)
-      valuesBuffer.update(i, childValues.last)
-      (1, queueTail.map(shiftFromWithFlag(i, 1)))
-    } else (0, queueTail)
-
-    val (delta2, updatedQueueTail2) = if (childStructure.length > 1) {
-      if (structureBuffer(i) == 0) { // skip checking duplicates and insert remaining tree at once
-        val s = treeSize(i, structureBuffer)
-        structureBuffer.modify(i, _ + childStructure.last)
-        val d = insertSlice(i - s + 1, childStructure.init, childValues.init, structureBuffer, valuesBuffer)
-        (d, updatedQueueTail.map(shiftFromWithFlag(i - d + 1, d)))
-      } else {
-
-        val f = insertAfter && insertIndex >= childIndex
-
-        val childrenInsertIndex =
-          if (f) bottomIndex(i + delta1, structureBuffer)
-          else i + delta1 - 1
-
-        val nextTail = childrenOf(childStructure, childValues).map {
-          case (s, v) => (childrenInsertIndex, s, v, f)
-        }
-        (0, nextTail ++: updatedQueueTail)
-      }
-
-    } else
-      (0, updatedQueueTail)
-
-    (i, delta1 + delta2, updatedQueueTail2)
-  }
 
   /** Inserts new children before an existing children of the parent index.
     * @return buffers length change */
@@ -1565,7 +1546,7 @@ object ArrayTreeFunctions {
     donorIndex: Int,
     structureBuffer: IntBuffer,
     valuesBuffer: Buffer[T],
-    indexesToSync: IntBuffer = IntBuffer.empty
+    indexesToTrack: IntBuffer = IntBuffer.empty
   ): (Int, Int) =
     if (recipientIndex < 0 || recipientIndex >= structureBuffer.length || donorIndex < 0 || donorIndex >= structureBuffer.length || recipientIndex == donorIndex)
       (0, recipientIndex)
@@ -1589,14 +1570,14 @@ object ArrayTreeFunctions {
       // remove the top donor node
       structureBuffer.shiftLeft(donorIndex + 1, 1)
       valuesBuffer.shiftLeft(donorIndex + 1, 1)
-      trackShiftLeft(donorIndex + 1, 1, indexesToSync)
+      trackShiftLeft(donorIndex + 1, 1, indexesToTrack)
 
       val resultingRecipientIndex = if (recipientIsDonorSubtree) {
         // relocate recipient tree outside of a donor tree
         val gap = donorIndex - recipientIndex - 1
         structureBuffer.moveRangeRight(recipientIndex - recipientSize + 1, recipientIndex + 1, gap)
         valuesBuffer.moveRangeRight(recipientIndex - recipientSize + 1, recipientIndex + 1, gap)
-        trackMoveRangeRight(recipientIndex - recipientSize + 1, recipientIndex + 1, gap, indexesToSync)
+        trackMoveRangeRight(recipientIndex - recipientSize + 1, recipientIndex + 1, gap, indexesToTrack)
         recipientIndex + gap
       } else {
         // relocate donor tree next to the recipient tree
@@ -1604,13 +1585,13 @@ object ArrayTreeFunctions {
           val gap = recipientIndex - recipientSize - donorIndex
           structureBuffer.moveRangeRight(donorIndex - donorSize + 1, donorIndex, gap)
           valuesBuffer.moveRangeRight(donorIndex - donorSize + 1, donorIndex, gap)
-          trackMoveRangeRight(donorIndex - donorSize + 1, donorIndex, gap, indexesToSync)
+          trackMoveRangeRight(donorIndex - donorSize + 1, donorIndex, gap, indexesToTrack)
           recipientIndex - 1
         } else if (recipientIndex <= donorIndex - donorSize) {
           val gap = donorIndex - donorSize - recipientIndex + recipientSize
           structureBuffer.moveRangeLeft(donorIndex - donorSize + 1, donorIndex, gap)
           valuesBuffer.moveRangeLeft(donorIndex - donorSize + 1, donorIndex, gap)
-          trackMoveRangeLeft(donorIndex - donorSize + 1, donorIndex, gap, indexesToSync)
+          trackMoveRangeLeft(donorIndex - donorSize + 1, donorIndex, gap, indexesToTrack)
           recipientIndex + donorSize - 1
         } else {
           recipientIndex - 1
