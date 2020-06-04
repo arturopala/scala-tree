@@ -1309,34 +1309,22 @@ object ArrayTreeFunctions {
   ): Int = {
 
     @tailrec
-    def mergePairs(pairs: IntBuffer, delta: Int): Int =
-      if (pairs.length < 2) delta
-      else {
-        val pair = pairs.asSlice.takeRight(2)
-        val tail = pairs.rewind(2)
-        val recipient = pair(0)
-        val donor = pair(1)
-        val (delta1, modifiedRecipient) = mergeShallowTwoTrees(recipient, donor, structureBuffer, valuesBuffer, tail)
-        val delta2 = makeChildrenDistinct(modifiedRecipient, recipient > donor, structureBuffer, valuesBuffer, tail)
-        mergePairs(tail, delta + delta1 + delta2)
-      }
-
-    val insertIndex = parentIndex
-
-    @tailrec
-    def insert(parentIndex: Int, queue: Iterator[(IntSlice, Slice[T])], delta: Int, duplicates: IntBuffer): Int =
-      if (queue.isEmpty)
-        mergePairs(duplicates, delta)
+    def insert(
+      parentIndex: Int,
+      insertIndex: Int,
+      queue: Iterator[(IntSlice, Slice[T])],
+      delta: Int
+    ): Int =
+      if (queue.isEmpty) delta
       else {
         val (structure, values) = queue.next()
 
         if (structure.length == 0)
-          insert(parentIndex, queue, delta, duplicates)
+          insert(parentIndex, insertIndex, queue, delta)
         else {
 
           if (parentIndex >= 0) structureBuffer.increment(parentIndex)
           val delta1 = insertSlice(insertIndex, structure, values, structureBuffer, valuesBuffer)
-          duplicates.mapInPlace(shiftIfGreaterOrEqualTo(_, insertIndex, delta1))
 
           val duplicateIndex =
             if (parentIndex < 0 && structureBuffer.length > 0 && valuesBuffer.head == values.last)
@@ -1350,15 +1338,22 @@ object ArrayTreeFunctions {
                 valuesBuffer
               )
 
-          duplicateIndex.foreach { i =>
-            duplicates.push(i)
-            duplicates.push(Math.max(0, insertIndex + delta1 - 1))
-          }
-          insert(parentIndex + delta1, queue, delta + delta1, duplicates)
+          val (delta2, nextInsertIndex) = duplicateIndex
+            .map { recipient =>
+              val donor = Math.max(0, insertIndex + delta1 - 1)
+              val d = mergeDeeplyTwoTrees(recipient, donor, structureBuffer, valuesBuffer)
+              val i =
+                if (recipient < insertIndex) insertIndex + d + structure.length
+                else insertIndex
+              (d, i)
+            }
+            .getOrElse((0, insertIndex))
+
+          insert(parentIndex + delta1 + delta2, nextInsertIndex, queue, delta + delta1 + delta2)
         }
       }
 
-    insert(parentIndex, children.iterator, 0, IntBuffer.empty)
+    insert(parentIndex, parentIndex, children.iterator, 0)
   }
 
   /** Inserts new child into the buffers with checking for duplicates.
