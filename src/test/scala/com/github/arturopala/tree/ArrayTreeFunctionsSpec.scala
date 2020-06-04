@@ -1721,7 +1721,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
 
     "insert trees distinct left side" in {
       testWithBuffers[String, Int](
-        insertLeftChildrenDistinct(Vector.empty, _, _, 0),
+        insertBeforeChildrenDistinct(Vector.empty, _, _, 0),
         IntBuffer.empty,
         Buffer.empty[String]
       ) {
@@ -1731,7 +1731,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe 0
       }
       testWithBuffers[String, Int](
-        insertLeftChildrenDistinct(Vector((-1, IntSlice(), Slice.empty[String])), _, _, 0),
+        insertBeforeChildrenDistinct(Vector((-1, IntSlice(), Slice.empty[String])), _, _, 0),
         IntBuffer.empty,
         Buffer.empty[String]
       ) {
@@ -1741,7 +1741,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe 0
       }
       testWithBuffers[String, Int](
-        insertLeftChildrenDistinct(Vector((-1, IntSlice(0), Slice("a"))), _, _, 0),
+        insertBeforeChildrenDistinct(Vector((-1, IntSlice(0), Slice("a"))), _, _, 0),
         IntBuffer.empty,
         Buffer.empty[String]
       ) {
@@ -1751,7 +1751,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe 1
       }
       testWithBuffers[String, Int](
-        insertLeftChildrenDistinct(Vector((0, IntSlice(0), Slice("b"))), _, _, 0),
+        insertBeforeChildrenDistinct(Vector((0, IntSlice(0), Slice("b"))), _, _, 0),
         IntBuffer(0),
         Buffer("a")
       ) {
@@ -1761,7 +1761,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe 1
       }
       testWithBuffers[String, Int](
-        insertLeftChildrenDistinct(Vector((-1, IntSlice(0), Slice("b"))), _, _, 0),
+        insertBeforeChildrenDistinct(Vector((-1, IntSlice(0), Slice("b"))), _, _, 0),
         IntBuffer(0),
         Buffer("a")
       ) {
@@ -1771,7 +1771,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe 1
       }
       testWithBuffers[String, Int](
-        insertLeftChildrenDistinct(Vector((-1, IntSlice(0), Slice("a"))), _, _, 0),
+        insertBeforeChildrenDistinct(Vector((-1, IntSlice(0), Slice("a"))), _, _, 0),
         IntBuffer(0),
         Buffer("a")
       ) {
@@ -1781,7 +1781,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe 0
       }
       testWithBuffers[String, Int](
-        insertLeftChildrenDistinct(Vector((0, IntSlice(0), Slice("c"))), _, _, 0),
+        insertBeforeChildrenDistinct(Vector((0, IntSlice(0), Slice("c"))), _, _, 0),
         IntBuffer(0, 1),
         Buffer("b", "a")
       ) {
@@ -1791,7 +1791,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe 1
       }
       testWithBuffers[String, Int](
-        insertLeftChildrenDistinct(Vector((1, IntSlice(0), Slice("c"))), _, _, 0),
+        insertBeforeChildrenDistinct(Vector((1, IntSlice(0), Slice("c"))), _, _, 0),
         IntBuffer(0, 1),
         Buffer("b", "a")
       ) {
@@ -1801,7 +1801,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe 1
       }
       testWithBuffers[String, Int](
-        insertLeftChildrenDistinct(Vector((1, IntSlice(0), Slice("b"))), _, _, 0),
+        insertBeforeChildrenDistinct(Vector((1, IntSlice(0), Slice("b"))), _, _, 0),
         IntBuffer(0, 1),
         Buffer("b", "a")
       ) {
@@ -1811,7 +1811,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe 0
       }
       testWithBuffers[String, Int](
-        insertLeftChildrenDistinct(Vector((2, IntSlice(0, 1), Slice("c", "b"))), _, _, 0),
+        insertBeforeChildrenDistinct(Vector((2, IntSlice(0, 1), Slice("c", "b"))), _, _, 0),
         IntBuffer(0, 1, 1),
         Buffer("c", "b", "a")
       ) {
@@ -1821,7 +1821,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe 0
       }
       testWithBuffers[String, Int](
-        insertLeftChildrenDistinct(Vector((2, IntSlice(0, 1), Slice("d", "b"))), _, _, 0),
+        insertBeforeChildrenDistinct(Vector((2, IntSlice(0, 1), Slice("d", "b"))), _, _, 0),
         IntBuffer(0, 1, 1),
         Buffer("c", "b", "a")
       ) {
@@ -1831,7 +1831,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe 1
       }
       testWithBuffers[String, Int](
-        insertLeftChildrenDistinct(Vector((3, IntSlice(0, 0, 2), Slice("e", "c", "b"))), _, _, 0),
+        insertBeforeChildrenDistinct(Vector((3, IntSlice(0, 0, 2), Slice("e", "c", "b"))), _, _, 0),
         IntBuffer(0, 0, 2, 1),
         Buffer("d", "c", "b", "a")
       ) {
@@ -1841,7 +1841,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe 1
       }
       testWithBuffers[String, Int](
-        insertLeftChildrenDistinct(Vector((3, IntSlice(0, 0, 2), Slice("c", "d", "b"))), _, _, 0),
+        insertBeforeChildrenDistinct(Vector((3, IntSlice(0, 0, 2), Slice("c", "d", "b"))), _, _, 0),
         IntBuffer(0, 0, 2, 1),
         Buffer("d", "c", "b", "a")
       ) {
@@ -1851,7 +1851,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe 0
       }
       testWithBuffers[String, Int](
-        insertLeftChildrenDistinct(Vector((4, IntSlice(0, 1, 0, 2), Slice("e", "c", "d", "b"))), _, _, 0),
+        insertBeforeChildrenDistinct(Vector((4, IntSlice(0, 1, 0, 2), Slice("e", "c", "d", "b"))), _, _, 0),
         IntBuffer(0, 0, 1, 2, 1),
         Buffer("d", "f", "c", "b", "a")
       ) {
@@ -1861,7 +1861,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe 1
       }
       testWithBuffers[String, Int](
-        insertLeftChildrenDistinct(Vector((2, IntSlice(0, 1, 0, 2), Slice("e", "c", "d", "b"))), _, _, 0),
+        insertBeforeChildrenDistinct(Vector((2, IntSlice(0, 1, 0, 2), Slice("e", "c", "d", "b"))), _, _, 0),
         IntBuffer(0, 0, 2),
         Buffer("c", "b", "a")
       ) {
@@ -1874,7 +1874,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
 
     "insert trees distinct right side" in {
       testWithBuffers[String, Int](
-        insertRightChildrenDistinct(Vector.empty, _, _, 0),
+        insertAfterChildrenDistinct(Vector.empty, _, _, 0),
         IntBuffer.empty,
         Buffer.empty[String]
       ) {
@@ -1884,7 +1884,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe 0
       }
       testWithBuffers[String, Int](
-        insertRightChildrenDistinct(Vector((-1, IntSlice(), Slice.empty[String])), _, _, 0),
+        insertAfterChildrenDistinct(Vector((-1, IntSlice(), Slice.empty[String])), _, _, 0),
         IntBuffer.empty,
         Buffer.empty[String]
       ) {
@@ -1894,7 +1894,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe 0
       }
       testWithBuffers[String, Int](
-        insertRightChildrenDistinct(Vector((-1, IntSlice(0), Slice("a"))), _, _, 0),
+        insertAfterChildrenDistinct(Vector((-1, IntSlice(0), Slice("a"))), _, _, 0),
         IntBuffer.empty,
         Buffer.empty[String]
       ) {
@@ -1904,7 +1904,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe 1
       }
       testWithBuffers[String, Int](
-        insertRightChildrenDistinct(Vector((0, IntSlice(0), Slice("b"))), _, _, 0),
+        insertAfterChildrenDistinct(Vector((0, IntSlice(0), Slice("b"))), _, _, 0),
         IntBuffer(0),
         Buffer("a")
       ) {
@@ -1914,7 +1914,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe 1
       }
       testWithBuffers[String, Int](
-        insertRightChildrenDistinct(Vector((-1, IntSlice(0), Slice("b"))), _, _, 0),
+        insertAfterChildrenDistinct(Vector((-1, IntSlice(0), Slice("b"))), _, _, 0),
         IntBuffer(0),
         Buffer("a")
       ) {
@@ -1924,7 +1924,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe 1
       }
       testWithBuffers[String, Int](
-        insertRightChildrenDistinct(Vector((-1, IntSlice(0), Slice("a"))), _, _, 0),
+        insertAfterChildrenDistinct(Vector((-1, IntSlice(0), Slice("a"))), _, _, 0),
         IntBuffer(0),
         Buffer("a")
       ) {
@@ -1934,7 +1934,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe 0
       }
       testWithBuffers[String, Int](
-        insertRightChildrenDistinct(Vector((0, IntSlice(0), Slice("c"))), _, _, 0),
+        insertAfterChildrenDistinct(Vector((0, IntSlice(0), Slice("c"))), _, _, 0),
         IntBuffer(0, 1),
         Buffer("b", "a")
       ) {
@@ -1944,7 +1944,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe 1
       }
       testWithBuffers[String, Int](
-        insertRightChildrenDistinct(Vector((1, IntSlice(0), Slice("c"))), _, _, 0),
+        insertAfterChildrenDistinct(Vector((1, IntSlice(0), Slice("c"))), _, _, 0),
         IntBuffer(0, 1),
         Buffer("b", "a")
       ) {
@@ -1954,7 +1954,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe 1
       }
       testWithBuffers[String, Int](
-        insertRightChildrenDistinct(Vector((1, IntSlice(0), Slice("b"))), _, _, 0),
+        insertAfterChildrenDistinct(Vector((1, IntSlice(0), Slice("b"))), _, _, 0),
         IntBuffer(0, 1),
         Buffer("b", "a")
       ) {
@@ -1964,7 +1964,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe 0
       }
       testWithBuffers[String, Int](
-        insertRightChildrenDistinct(Vector((2, IntSlice(0, 1), Slice("c", "b"))), _, _, 0),
+        insertAfterChildrenDistinct(Vector((2, IntSlice(0, 1), Slice("c", "b"))), _, _, 0),
         IntBuffer(0, 1, 1),
         Buffer("c", "b", "a")
       ) {
@@ -1974,7 +1974,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe 0
       }
       testWithBuffers[String, Int](
-        insertRightChildrenDistinct(Vector((2, IntSlice(0, 1), Slice("d", "b"))), _, _, 0),
+        insertAfterChildrenDistinct(Vector((2, IntSlice(0, 1), Slice("d", "b"))), _, _, 0),
         IntBuffer(0, 1, 1),
         Buffer("c", "b", "a")
       ) {
@@ -1984,7 +1984,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe 1
       }
       testWithBuffers[String, Int](
-        insertRightChildrenDistinct(Vector((3, IntSlice(0, 0, 2), Slice("e", "c", "b"))), _, _, 0),
+        insertAfterChildrenDistinct(Vector((3, IntSlice(0, 0, 2), Slice("e", "c", "b"))), _, _, 0),
         IntBuffer(0, 0, 2, 1),
         Buffer("d", "c", "b", "a")
       ) {
@@ -1994,7 +1994,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe 1
       }
       testWithBuffers[String, Int](
-        insertRightChildrenDistinct(Vector((3, IntSlice(0, 0, 2), Slice("c", "d", "b"))), _, _, 0),
+        insertAfterChildrenDistinct(Vector((3, IntSlice(0, 0, 2), Slice("c", "d", "b"))), _, _, 0),
         IntBuffer(0, 0, 2, 1),
         Buffer("d", "c", "b", "a")
       ) {
@@ -2004,7 +2004,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe 0
       }
       testWithBuffers[String, Int](
-        insertRightChildrenDistinct(Vector((4, IntSlice(0, 1, 0, 2), Slice("e", "c", "d", "b"))), _, _, 0),
+        insertAfterChildrenDistinct(Vector((4, IntSlice(0, 1, 0, 2), Slice("e", "c", "d", "b"))), _, _, 0),
         IntBuffer(0, 0, 1, 2, 1),
         Buffer("d", "f", "c", "b", "a")
       ) {
@@ -2014,7 +2014,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe 1
       }
       testWithBuffers[String, Int](
-        insertRightChildrenDistinct(Vector((2, IntSlice(0, 1, 0, 2), Slice("e", "c", "d", "b"))), _, _, 0),
+        insertAfterChildrenDistinct(Vector((2, IntSlice(0, 1, 0, 2), Slice("e", "c", "d", "b"))), _, _, 0),
         IntBuffer(0, 0, 2),
         Buffer("c", "b", "a")
       ) {
@@ -2027,7 +2027,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
 
     "insert children on the left side" in {
       testWithBuffers[String, Int](
-        insertLeftChildren(0, List((IntSlice(0), Slice("b"))), _, _, keepDistinct = false),
+        insertBeforeChildren(0, List((IntSlice(0), Slice("b"))), _, _, keepDistinct = false),
         IntBuffer(0),
         Buffer("a")
       ) {
@@ -2037,7 +2037,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe 1
       }
       testWithBuffers[String, Int](
-        insertLeftChildren(0, List((IntSlice(0, 0, 2), Slice("d", "c", "b"))), _, _, keepDistinct = false),
+        insertBeforeChildren(0, List((IntSlice(0, 0, 2), Slice("d", "c", "b"))), _, _, keepDistinct = false),
         IntBuffer(0),
         Buffer("a")
       ) {
@@ -2047,7 +2047,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe 3
       }
       testWithBuffers[String, Int](
-        insertLeftChildren(2, List((IntSlice(0, 0, 2), Slice("f", "e", "d"))), _, _, keepDistinct = false),
+        insertBeforeChildren(2, List((IntSlice(0, 0, 2), Slice("f", "e", "d"))), _, _, keepDistinct = false),
         IntBuffer(0, 0, 2),
         Buffer("c", "b", "a")
       ) {
@@ -2057,7 +2057,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe 3
       }
       testWithBuffers[String, Int](
-        insertLeftChildren(1, List((IntSlice(0, 0, 2), Slice("f", "e", "d"))), _, _, keepDistinct = false),
+        insertBeforeChildren(1, List((IntSlice(0, 0, 2), Slice("f", "e", "d"))), _, _, keepDistinct = false),
         IntBuffer(0, 0, 2),
         Buffer("c", "b", "a")
       ) {
@@ -2067,7 +2067,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe 3
       }
       testWithBuffers[String, Int](
-        insertLeftChildren(0, List((IntSlice(0, 0, 2), Slice("f", "e", "d"))), _, _, keepDistinct = false),
+        insertBeforeChildren(0, List((IntSlice(0, 0, 2), Slice("f", "e", "d"))), _, _, keepDistinct = false),
         IntBuffer(0, 0, 2),
         Buffer("c", "b", "a")
       ) {
@@ -2077,7 +2077,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe 3
       }
       testWithBuffers[String, Int](
-        insertLeftChildren(2, List((IntSlice(0, 0, 2), Slice("e", "d", "c"))), _, _, keepDistinct = true),
+        insertBeforeChildren(2, List((IntSlice(0, 0, 2), Slice("e", "d", "c"))), _, _, keepDistinct = true),
         IntBuffer(0, 0, 2),
         Buffer("c", "b", "a")
       ) {
@@ -2087,7 +2087,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe 2
       }
       testWithBuffers[String, Int](
-        insertLeftChildren(2, List((IntSlice(0, 0, 2), Slice("e", "d", "c"))), _, _, keepDistinct = true),
+        insertBeforeChildren(2, List((IntSlice(0, 0, 2), Slice("e", "d", "c"))), _, _, keepDistinct = true),
         IntBuffer(0, 0, 2),
         Buffer("c", "c", "a")
       ) {
@@ -2100,7 +2100,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
 
     "insert children on the right side" in {
       testWithBuffers[String, Int](
-        insertRightChildren(0, List((IntSlice(0), Slice("b"))), _, _, keepDistinct = false),
+        insertAfterChildren(0, List((IntSlice(0), Slice("b"))), _, _, keepDistinct = false),
         IntBuffer(0),
         Buffer("a")
       ) {
@@ -2110,7 +2110,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe 1
       }
       testWithBuffers[String, Int](
-        insertRightChildren(0, List((IntSlice(0, 0, 2), Slice("d", "c", "b"))), _, _, keepDistinct = false),
+        insertAfterChildren(0, List((IntSlice(0, 0, 2), Slice("d", "c", "b"))), _, _, keepDistinct = false),
         IntBuffer(0),
         Buffer("a")
       ) {
@@ -2120,7 +2120,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe 3
       }
       testWithBuffers[String, Int](
-        insertRightChildren(2, List((IntSlice(0, 0, 2), Slice("f", "e", "d"))), _, _, keepDistinct = false),
+        insertAfterChildren(2, List((IntSlice(0, 0, 2), Slice("f", "e", "d"))), _, _, keepDistinct = false),
         IntBuffer(0, 0, 2),
         Buffer("c", "b", "a")
       ) {
@@ -2130,7 +2130,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe 3
       }
       testWithBuffers[String, Int](
-        insertRightChildren(1, List((IntSlice(0, 0, 2), Slice("f", "e", "d"))), _, _, keepDistinct = false),
+        insertAfterChildren(1, List((IntSlice(0, 0, 2), Slice("f", "e", "d"))), _, _, keepDistinct = false),
         IntBuffer(0, 0, 2),
         Buffer("c", "b", "a")
       ) {
@@ -2140,7 +2140,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe 3
       }
       testWithBuffers[String, Int](
-        insertRightChildren(0, List((IntSlice(0, 0, 2), Slice("f", "e", "d"))), _, _, keepDistinct = false),
+        insertAfterChildren(0, List((IntSlice(0, 0, 2), Slice("f", "e", "d"))), _, _, keepDistinct = false),
         IntBuffer(0, 0, 2),
         Buffer("c", "b", "a")
       ) {
@@ -2150,7 +2150,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe 3
       }
       testWithBuffers[String, Int](
-        insertRightChildren(2, List((IntSlice(0, 0, 2), Slice("e", "d", "c"))), _, _, keepDistinct = true),
+        insertAfterChildren(2, List((IntSlice(0, 0, 2), Slice("e", "d", "c"))), _, _, keepDistinct = true),
         IntBuffer(0, 0, 2),
         Buffer("c", "b", "a")
       ) {
@@ -2160,7 +2160,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe 2
       }
       testWithBuffers[String, Int](
-        insertRightChildren(2, List((IntSlice(0, 0, 2), Slice("e", "d", "c"))), _, _, keepDistinct = true),
+        insertAfterChildren(2, List((IntSlice(0, 0, 2), Slice("e", "d", "c"))), _, _, keepDistinct = true),
         IntBuffer(0, 0, 2),
         Buffer("c", "c", "a")
       ) {

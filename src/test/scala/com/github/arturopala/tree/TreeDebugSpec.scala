@@ -20,7 +20,7 @@ import com.github.arturopala.bufferandslice.{Buffer, IntBuffer, IntSlice, Slice}
 import com.github.arturopala.tree.LaxTreeOps._
 import com.github.arturopala.tree.internal.ArrayTree._
 import com.github.arturopala.tree.internal.ArrayTreeFunctions
-import com.github.arturopala.tree.internal.ArrayTreeFunctions.insertLeftChildren
+import com.github.arturopala.tree.internal.ArrayTreeFunctions.insertBeforeChildren
 
 import scala.reflect.ClassTag
 
@@ -47,7 +47,7 @@ class TreeDebugSpec extends FunSuite with TestWithBuffers {
       tree1.insertChildren(List(Tree.empty, Tree("a"), Tree.empty, Tree("b"))) shouldBe Tree("a", Tree("a"), Tree("b"))
 
       testWithBuffers[String, Int](
-        insertLeftChildren(
+        insertBeforeChildren(
           1,
           List((IntSlice(0), Slice("a")), (IntSlice(0), Slice("b")), (IntSlice(0), Slice("c"))),
           _,

@@ -619,41 +619,41 @@ object ArrayTree {
       transform(target) { (structureBuffer, valuesBuffer) =>
         val (structure, values) = source.toSlices
         ArrayTreeFunctions
-          .insertLeftChildrenDistinct(Vector((index, structure, values)), structureBuffer, valuesBuffer, 0)
+          .insertBeforeChildrenDistinct(Vector((index, structure, values)), structureBuffer, valuesBuffer, 0)
           .nonZeroIntAsSome
       }
     }
 
-  /** Inserts multiple children on the left and right side of the current children. */
+  /** Inserts multiple children before and after the existing children. */
   final def insertChildren[T: ClassTag](
     target: Tree[T],
-    left: Iterable[Tree[T]],
-    right: Iterable[Tree[T]],
+    before: Iterable[Tree[T]],
+    after: Iterable[Tree[T]],
     keepDistinct: Boolean
   ): Tree[T] =
     if (target.isEmpty) Tree.empty
-    else if (left.isEmpty && right.isEmpty) target
+    else if (before.isEmpty && after.isEmpty) target
     else
       transform(target) { (structureBuffer, valuesBuffer) =>
         val delta1 =
-          if (left.isEmpty) 0
+          if (before.isEmpty) 0
           else
             ArrayTreeFunctions
-              .insertLeftChildren(
+              .insertBeforeChildren(
                 structureBuffer.top,
-                left.map(_.toSlices),
+                before.map(_.toSlices),
                 structureBuffer,
                 valuesBuffer,
                 keepDistinct
               )
 
         val delta2 =
-          if (right.isEmpty) 0
+          if (after.isEmpty) 0
           else
             ArrayTreeFunctions
-              .insertRightChildren(
+              .insertAfterChildren(
                 structureBuffer.top,
-                right.map(_.toSlices),
+                after.map(_.toSlices),
                 structureBuffer,
                 valuesBuffer,
                 keepDistinct
@@ -789,8 +789,7 @@ object ArrayTree {
       .followEntirePath(path, target.size - 1, target.structure, target.content)
       .map(indexes =>
         if (indexes.isEmpty) Left(target)
-        else Right(updateValue(indexes.last, replacement, target, keepDistinct))
-      )
+        else Right(updateValue(indexes.last, replacement, target, keepDistinct)))
       .getOrElse(Left(target))
 
   /** Updates value of the node selected by the path.
@@ -806,8 +805,7 @@ object ArrayTree {
       .followEntirePath(path, target.size - 1, target.structure, target.content, toPathItem)
       .map(indexes =>
         if (indexes.isEmpty) Left(target)
-        else Right(updateValue(indexes.last, replacement, target, keepDistinct))
-      )
+        else Right(updateValue(indexes.last, replacement, target, keepDistinct)))
       .getOrElse(Left(target))
 
   /** Updates the child node holding the given value. */
@@ -834,8 +832,7 @@ object ArrayTree {
       .followEntirePath(path, target.size - 1, target.structure, target.content)
       .map(indexes =>
         if (indexes.isEmpty) Left(target)
-        else Right(updateTree(indexes.last, replacement, target, keepDistinct))
-      )
+        else Right(updateTree(indexes.last, replacement, target, keepDistinct)))
       .getOrElse(Left(target))
 
   /** Updates a subtree selected by the path.
@@ -851,8 +848,7 @@ object ArrayTree {
       .followEntirePath(path, target.size - 1, target.structure, target.content, toPathItem)
       .map(indexes =>
         if (indexes.isEmpty) Left(target)
-        else Right(updateTree(indexes.last, replacement, target, keepDistinct))
-      )
+        else Right(updateTree(indexes.last, replacement, target, keepDistinct)))
       .getOrElse(Left(target))
 
   /** Modifies value of the node at the index.
@@ -890,8 +886,7 @@ object ArrayTree {
       .followEntirePath(path, target.size - 1, target.structure, target.content)
       .map(indexes =>
         if (indexes.isEmpty) Left(target)
-        else Right(modifyValue(indexes.last, modify, target, keepDistinct))
-      )
+        else Right(modifyValue(indexes.last, modify, target, keepDistinct)))
       .getOrElse(Left(target))
 
   /** Modifies value of the node selected by the path.
@@ -907,8 +902,7 @@ object ArrayTree {
       .followEntirePath(path, target.size - 1, target.structure, target.content, toPathItem)
       .map(indexes =>
         if (indexes.isEmpty) Left(target)
-        else Right(modifyValue(indexes.last, modify, target, keepDistinct))
-      )
+        else Right(modifyValue(indexes.last, modify, target, keepDistinct)))
       .getOrElse(Left(target))
 
   /** Modifies the tree at the index.
@@ -949,8 +943,7 @@ object ArrayTree {
       .followEntirePath(path, target.size - 1, target.structure, target.content)
       .map(indexes =>
         if (indexes.isEmpty) Left(target)
-        else Right(modifyTree(indexes.last, modify, target, keepDistinct))
-      )
+        else Right(modifyTree(indexes.last, modify, target, keepDistinct)))
       .getOrElse(Left(target))
 
   /** Modifies a subtree selected by the path.
@@ -966,8 +959,7 @@ object ArrayTree {
       .followEntirePath(path, target.size - 1, target.structure, target.content, toPathItem)
       .map(indexes =>
         if (indexes.isEmpty) Left(target)
-        else Right(modifyTree(indexes.last, modify, target, keepDistinct))
-      )
+        else Right(modifyTree(indexes.last, modify, target, keepDistinct)))
       .getOrElse(Left(target))
 
   /** Removes node at the index and merges children to parent.
