@@ -1277,42 +1277,42 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
     }
 
     "merge two trees - do nothing if indexes outside a range or equal" in {
-      testWithBuffers[String, (Int, Int)](mergeTwoTrees(1, 3, _, _), IntBuffer(0, 0, 2), Buffer("c", "b", "a")) {
+      testWithBuffers[String, (Int, Int)](mergeShallowTwoTrees(1, 3, _, _), IntBuffer(0, 0, 2), Buffer("c", "b", "a")) {
         case (structure, values, (delta, index)) =>
           structure shouldBe Array(0, 0, 2)
           values shouldBe Array("c", "b", "a")
           delta shouldBe 0
           index shouldBe 1
       }
-      testWithBuffers[String, (Int, Int)](mergeTwoTrees(1, -1, _, _), IntBuffer(0, 0, 2), Buffer("c", "b", "a")) {
+      testWithBuffers[String, (Int, Int)](mergeShallowTwoTrees(1, -1, _, _), IntBuffer(0, 0, 2), Buffer("c", "b", "a")) {
         case (structure, values, (delta, index)) =>
           structure shouldBe Array(0, 0, 2)
           values shouldBe Array("c", "b", "a")
           delta shouldBe 0
           index shouldBe 1
       }
-      testWithBuffers[String, (Int, Int)](mergeTwoTrees(3, 1, _, _), IntBuffer(0, 0, 2), Buffer("c", "b", "a")) {
+      testWithBuffers[String, (Int, Int)](mergeShallowTwoTrees(3, 1, _, _), IntBuffer(0, 0, 2), Buffer("c", "b", "a")) {
         case (structure, values, (delta, index)) =>
           structure shouldBe Array(0, 0, 2)
           values shouldBe Array("c", "b", "a")
           delta shouldBe 0
           index shouldBe 3
       }
-      testWithBuffers[String, (Int, Int)](mergeTwoTrees(-1, 1, _, _), IntBuffer(0, 0, 2), Buffer("c", "b", "a")) {
+      testWithBuffers[String, (Int, Int)](mergeShallowTwoTrees(-1, 1, _, _), IntBuffer(0, 0, 2), Buffer("c", "b", "a")) {
         case (structure, values, (delta, index)) =>
           structure shouldBe Array(0, 0, 2)
           values shouldBe Array("c", "b", "a")
           delta shouldBe 0
           index shouldBe -1
       }
-      testWithBuffers[String, (Int, Int)](mergeTwoTrees(1, 1, _, _), IntBuffer(0, 0, 2), Buffer("c", "b", "a")) {
+      testWithBuffers[String, (Int, Int)](mergeShallowTwoTrees(1, 1, _, _), IntBuffer(0, 0, 2), Buffer("c", "b", "a")) {
         case (structure, values, (delta, index)) =>
           structure shouldBe Array(0, 0, 2)
           values shouldBe Array("c", "b", "a")
           delta shouldBe 0
           index shouldBe 1
       }
-      testWithBuffers[String, (Int, Int)](mergeTwoTrees(0, 0, _, _), IntBuffer(0, 0, 2), Buffer("c", "b", "a")) {
+      testWithBuffers[String, (Int, Int)](mergeShallowTwoTrees(0, 0, _, _), IntBuffer(0, 0, 2), Buffer("c", "b", "a")) {
         case (structure, values, (delta, index)) =>
           structure shouldBe Array(0, 0, 2)
           values shouldBe Array("c", "b", "a")
@@ -1322,14 +1322,14 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
     }
 
     "merge two trees - smallest use-case, double node tree" in {
-      testWithBuffers[String, (Int, Int)](mergeTwoTrees(1, 0, _, _), IntBuffer(0, 1), Buffer("b", "a")) {
+      testWithBuffers[String, (Int, Int)](mergeShallowTwoTrees(1, 0, _, _), IntBuffer(0, 1), Buffer("b", "a")) {
         case (structure, values, (delta, index)) =>
           structure shouldBe Array(0)
           values shouldBe Array("a")
           delta shouldBe -1
           index shouldBe 0
       }
-      testWithBuffers[String, (Int, Int)](mergeTwoTrees(0, 1, _, _), IntBuffer(0, 1), Buffer("b", "a")) {
+      testWithBuffers[String, (Int, Int)](mergeShallowTwoTrees(0, 1, _, _), IntBuffer(0, 1), Buffer("b", "a")) {
         case (structure, values, (delta, index)) =>
           structure shouldBe Array(0)
           values shouldBe Array("b")
@@ -1339,35 +1339,35 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
     }
 
     "merge two trees - three node tree" in {
-      testWithBuffers[String, (Int, Int)](mergeTwoTrees(1, 2, _, _), IntBuffer(0, 0, 2), Buffer("c", "b", "a")) {
+      testWithBuffers[String, (Int, Int)](mergeShallowTwoTrees(1, 2, _, _), IntBuffer(0, 0, 2), Buffer("c", "b", "a")) {
         case (structure, values, (delta, index)) =>
           structure shouldBe Array(0, 1)
           values shouldBe Array("c", "b")
           delta shouldBe -1
           index shouldBe 1
       }
-      testWithBuffers[String, (Int, Int)](mergeTwoTrees(0, 2, _, _), IntBuffer(0, 0, 2), Buffer("c", "b", "a")) {
+      testWithBuffers[String, (Int, Int)](mergeShallowTwoTrees(0, 2, _, _), IntBuffer(0, 0, 2), Buffer("c", "b", "a")) {
         case (structure, values, (delta, index)) =>
           structure shouldBe Array(0, 1)
           values shouldBe Array("b", "c")
           delta shouldBe -1
           index shouldBe 1
       }
-      testWithBuffers[String, (Int, Int)](mergeTwoTrees(1, 0, _, _), IntBuffer(0, 0, 2), Buffer("c", "b", "a")) {
+      testWithBuffers[String, (Int, Int)](mergeShallowTwoTrees(1, 0, _, _), IntBuffer(0, 0, 2), Buffer("c", "b", "a")) {
         case (structure, values, (delta, index)) =>
           structure shouldBe Array(0, 1)
           values shouldBe Array("b", "a")
           delta shouldBe -1
           index shouldBe 0
       }
-      testWithBuffers[String, (Int, Int)](mergeTwoTrees(2, 0, _, _), IntBuffer(0, 0, 2), Buffer("c", "b", "a")) {
+      testWithBuffers[String, (Int, Int)](mergeShallowTwoTrees(2, 0, _, _), IntBuffer(0, 0, 2), Buffer("c", "b", "a")) {
         case (structure, values, (delta, index)) =>
           structure shouldBe Array(0, 1)
           values shouldBe Array("b", "a")
           delta shouldBe -1
           index shouldBe 1
       }
-      testWithBuffers[String, (Int, Int)](mergeTwoTrees(2, 1, _, _), IntBuffer(0, 0, 2), Buffer("c", "b", "a")) {
+      testWithBuffers[String, (Int, Int)](mergeShallowTwoTrees(2, 1, _, _), IntBuffer(0, 0, 2), Buffer("c", "b", "a")) {
         case (structure, values, (delta, index)) =>
           structure shouldBe Array(0, 1)
           values shouldBe Array("c", "a")
@@ -1378,18 +1378,18 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
 
     "merge two trees - larger trees" in {
       testWithBuffers[String, (Int, Int)](
-        mergeTwoTrees(3, 6, _, _),
+        mergeShallowTwoTrees(3, 6, _, _),
         IntBuffer(0, 0, 1, 2, 0, 1, 1, 2),
         Buffer("h", "g", "f", "e", "d", "c", "b", "a")
       ) {
         case (structure, values, (delta, index)) =>
-          structure shouldBe Array(0, 1, 0, 0, 1, 3, 1)
-          values shouldBe Array("d", "c", "h", "g", "f", "e", "a")
+          structure shouldBe Array(0, 0, 1, 0, 1, 3, 1)
+          values shouldBe Array("h", "g", "f", "d", "c", "e", "a")
           delta shouldBe -1
           index shouldBe 5
       }
       testWithBuffers[String, (Int, Int)](
-        mergeTwoTrees(6, 3, _, _),
+        mergeShallowTwoTrees(6, 3, _, _),
         IntBuffer(0, 0, 1, 2, 0, 1, 1, 2),
         Buffer("h", "g", "f", "e", "d", "c", "b", "a")
       ) {
@@ -1400,7 +1400,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           index shouldBe 5
       }
       testWithBuffers[String, (Int, Int)](
-        mergeTwoTrees(6, 2, _, _),
+        mergeShallowTwoTrees(6, 2, _, _),
         IntBuffer(0, 0, 1, 2, 0, 1, 1, 2),
         Buffer("h", "g", "f", "e", "d", "c", "b", "a")
       ) {
@@ -1411,18 +1411,18 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           index shouldBe 5
       }
       testWithBuffers[String, (Int, Int)](
-        mergeTwoTrees(2, 6, _, _),
+        mergeShallowTwoTrees(2, 6, _, _),
         IntBuffer(0, 0, 1, 2, 0, 1, 1, 2),
         Buffer("h", "g", "f", "e", "d", "c", "b", "a")
       ) {
         case (structure, values, (delta, index)) =>
-          structure shouldBe Array(0, 0, 1, 0, 2, 2, 1)
-          values shouldBe Array("h", "d", "c", "g", "f", "e", "a")
+          structure shouldBe Array(0, 0, 0, 1, 2, 2, 1)
+          values shouldBe Array("h", "g", "d", "c", "f", "e", "a")
           delta shouldBe -1
           index shouldBe 4
       }
       testWithBuffers[String, (Int, Int)](
-        mergeTwoTrees(1, 6, _, _),
+        mergeShallowTwoTrees(1, 6, _, _),
         IntBuffer(0, 0, 1, 2, 0, 1, 1, 2),
         Buffer("h", "g", "f", "e", "d", "c", "b", "a")
       ) {
@@ -1433,7 +1433,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           index shouldBe 3
       }
       testWithBuffers[String, (Int, Int)](
-        mergeTwoTrees(6, 1, _, _),
+        mergeShallowTwoTrees(6, 1, _, _),
         IntBuffer(0, 0, 1, 2, 0, 1, 1, 2),
         Buffer("h", "g", "f", "e", "d", "c", "b", "a")
       ) {
@@ -1444,7 +1444,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           index shouldBe 5
       }
       testWithBuffers[String, (Int, Int)](
-        mergeTwoTrees(6, 0, _, _),
+        mergeShallowTwoTrees(6, 0, _, _),
         IntBuffer(0, 0, 1, 2, 0, 1, 1, 2),
         Buffer("h", "g", "f", "e", "d", "c", "b", "a")
       ) {
@@ -1455,7 +1455,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           index shouldBe 5
       }
       testWithBuffers[String, (Int, Int)](
-        mergeTwoTrees(0, 6, _, _),
+        mergeShallowTwoTrees(0, 6, _, _),
         IntBuffer(0, 0, 1, 2, 0, 1, 1, 2),
         Buffer("h", "g", "f", "e", "d", "c", "b", "a")
       ) {
@@ -1466,7 +1466,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           index shouldBe 2
       }
       testWithBuffers[String, (Int, Int)](
-        mergeTwoTrees(3, 7, _, _),
+        mergeShallowTwoTrees(3, 7, _, _),
         IntBuffer(0, 0, 1, 2, 0, 1, 1, 2),
         Buffer("h", "g", "f", "e", "d", "c", "b", "a")
       ) {
@@ -1477,7 +1477,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           index shouldBe 6
       }
       testWithBuffers[String, (Int, Int)](
-        mergeTwoTrees(7, 3, _, _),
+        mergeShallowTwoTrees(7, 3, _, _),
         IntBuffer(0, 0, 1, 2, 0, 1, 1, 2),
         Buffer("h", "g", "f", "e", "d", "c", "b", "a")
       ) {
@@ -1488,7 +1488,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           index shouldBe 6
       }
       testWithBuffers[String, (Int, Int)](
-        mergeTwoTrees(4, 2, _, _),
+        mergeShallowTwoTrees(4, 2, _, _),
         IntBuffer(0, 0, 1, 2, 0, 1, 1, 2),
         Buffer("h", "g", "f", "e", "d", "c", "b", "a")
       ) {
@@ -1499,7 +1499,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           index shouldBe 3
       }
       testWithBuffers[String, (Int, Int)](
-        mergeTwoTrees(2, 4, _, _),
+        mergeShallowTwoTrees(2, 4, _, _),
         IntBuffer(0, 0, 1, 2, 0, 1, 1, 2),
         Buffer("h", "g", "f", "e", "d", "c", "b", "a")
       ) {
@@ -1550,32 +1550,32 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
     }
 
     "merge children of the node - distinct nodes test cases" in {
-      testWithBuffers[String, Int](makeChildrenDistinct(0, _, _), IntBuffer(0), Buffer("a")) {
+      testWithBuffers[String, Int](makeChildrenDistinct(0, true, _, _), IntBuffer(0), Buffer("a")) {
         case (structure, values, delta) =>
           structure shouldBe Array(0)
           values shouldBe Array("a")
           delta shouldBe 0
       }
-      testWithBuffers[String, Int](makeChildrenDistinct(1, _, _), IntBuffer(0, 1), Buffer("b", "a")) {
+      testWithBuffers[String, Int](makeChildrenDistinct(1, true, _, _), IntBuffer(0, 1), Buffer("b", "a")) {
         case (structure, values, delta) =>
           structure shouldBe Array(0, 1)
           values shouldBe Array("b", "a")
           delta shouldBe 0
       }
-      testWithBuffers[String, Int](makeChildrenDistinct(2, _, _), IntBuffer(0, 1, 1), Buffer("c", "b", "a")) {
+      testWithBuffers[String, Int](makeChildrenDistinct(2, true, _, _), IntBuffer(0, 1, 1), Buffer("c", "b", "a")) {
         case (structure, values, delta) =>
           structure shouldBe Array(0, 1, 1)
           values shouldBe Array("c", "b", "a")
           delta shouldBe 0
       }
-      testWithBuffers[String, Int](makeChildrenDistinct(2, _, _), IntBuffer(0, 0, 2), Buffer("c", "b", "a")) {
+      testWithBuffers[String, Int](makeChildrenDistinct(2, true, _, _), IntBuffer(0, 0, 2), Buffer("c", "b", "a")) {
         case (structure, values, delta) =>
           structure shouldBe Array(0, 0, 2)
           values shouldBe Array("c", "b", "a")
           delta shouldBe 0
       }
       testWithBuffers[String, Int](
-        makeChildrenDistinct(4, _, _),
+        makeChildrenDistinct(4, true, _, _),
         IntBuffer(0, 1, 0, 0, 3),
         Buffer("e", "d", "c", "b", "a")
       ) {
@@ -1585,7 +1585,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe 0
       }
       testWithBuffers[String, Int](
-        makeChildrenDistinct(6, _, _),
+        makeChildrenDistinct(6, true, _, _),
         IntBuffer(0, 1, 0, 2, 0, 0, 3),
         Buffer("g", "f", "e", "d", "c", "b", "a")
       ) {
@@ -1597,26 +1597,34 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
     }
 
     "merge children of the node - duplicated nodes test cases" in {
-      testWithBuffers[String, Int](makeChildrenDistinct(2, _, _), IntBuffer(0, 0, 2), Buffer("b", "b", "a")) {
+      testWithBuffers[String, Int](makeChildrenDistinct(2, true, _, _), IntBuffer(0, 0, 2), Buffer("b", "b", "a")) {
         case (structure, values, delta) =>
           structure shouldBe Array(0, 1)
           values shouldBe Array("b", "a")
           delta shouldBe -1
       }
-      testWithBuffers[String, Int](makeChildrenDistinct(3, _, _), IntBuffer(0, 0, 0, 3), Buffer("b", "c", "b", "a")) {
+      testWithBuffers[String, Int](
+        makeChildrenDistinct(3, true, _, _),
+        IntBuffer(0, 0, 0, 3),
+        Buffer("b", "c", "b", "a")
+      ) {
         case (structure, values, delta) =>
           structure shouldBe Array(0, 0, 2)
           values shouldBe Array("c", "b", "a")
           delta shouldBe -1
       }
-      testWithBuffers[String, Int](makeChildrenDistinct(3, _, _), IntBuffer(0, 0, 0, 3), Buffer("b", "b", "b", "a")) {
+      testWithBuffers[String, Int](
+        makeChildrenDistinct(3, true, _, _),
+        IntBuffer(0, 0, 0, 3),
+        Buffer("b", "b", "b", "a")
+      ) {
         case (structure, values, delta) =>
           structure shouldBe Array(0, 1)
           values shouldBe Array("b", "a")
           delta shouldBe -2
       }
       testWithBuffers[String, Int](
-        makeChildrenDistinct(4, _, _),
+        makeChildrenDistinct(4, true, _, _),
         IntBuffer(0, 0, 0, 0, 4),
         Buffer("c", "b", "c", "b", "a")
       ) {
@@ -1626,7 +1634,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe -2
       }
       testWithBuffers[String, Int](
-        makeChildrenDistinct(4, _, _),
+        makeChildrenDistinct(4, true, _, _),
         IntBuffer(0, 0, 0, 0, 4),
         Buffer("c", "b", "b", "c", "a")
       ) {
@@ -1636,7 +1644,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe -2
       }
       testWithBuffers[String, Int](
-        makeChildrenDistinct(4, _, _),
+        makeChildrenDistinct(4, true, _, _),
         IntBuffer(0, 1, 0, 1, 2),
         Buffer("d", "b", "c", "b", "a")
       ) {
@@ -1646,7 +1654,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe -1
       }
       testWithBuffers[String, Int](
-        makeChildrenDistinct(4, _, _),
+        makeChildrenDistinct(4, true, _, _),
         IntBuffer(0, 1, 0, 1, 2),
         Buffer("c", "b", "c", "b", "a")
       ) {
@@ -1656,7 +1664,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe -2
       }
       testWithBuffers[String, Int](
-        makeChildrenDistinct(6, _, _),
+        makeChildrenDistinct(6, true, _, _),
         IntBuffer(0, 1, 0, 1, 2, 0, 2),
         Buffer("f", "d", "e", "d", "c", "b", "a")
       ) {
@@ -1666,7 +1674,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe 0
       }
       testWithBuffers[String, Int](
-        makeChildrenDistinct(4, _, _),
+        makeChildrenDistinct(4, true, _, _),
         IntBuffer(0, 1, 0, 1, 2, 0, 2),
         Buffer("f", "d", "e", "d", "c", "b", "a")
       ) {
@@ -1676,7 +1684,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe -1
       }
       testWithBuffers[String, Int](
-        makeChildrenDistinct(6, _, _),
+        makeChildrenDistinct(6, true, _, _),
         IntBuffer(0, 1, 0, 1, 2, 0, 2),
         Buffer("d", "c", "d", "c", "b", "b", "a")
       ) {
@@ -1686,7 +1694,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe -3
       }
       testWithBuffers[String, Int](
-        makeChildrenDistinct(9, _, _),
+        makeChildrenDistinct(9, true, _, _),
         IntBuffer(0, 0, 2, 0, 1, 0, 1, 3, 0, 2),
         Buffer("e", "d", "c", "d", "c", "d", "c", "b", "b", "a")
       ) {

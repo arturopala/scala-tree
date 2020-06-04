@@ -764,7 +764,7 @@ object ArrayTree {
 
           val delta3 = if (!hasSameHeadValue) {
             val p = if (parentIndex >= 0) parentIndex + delta1 + delta2 else parentIndex
-            val i = indexesToTrack.peek // /*if (insertIndex <= index + delta1) index + delta1 + delta2 else*/ index + delta1
+            val i = indexesToTrack.peek
             ArrayTreeFunctions.removeValue(i, p, structureBuffer, valuesBuffer)
           } else 0
 
