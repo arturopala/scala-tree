@@ -636,11 +636,28 @@ object ArrayTree {
     else
       transform(target) { (structureBuffer, valuesBuffer) =>
         val delta1 =
-          ArrayTreeFunctions
-            .insertLeftChildren(structureBuffer.top, left.map(_.toSlices), structureBuffer, valuesBuffer, keepDistinct)
+          if (left.isEmpty) 0
+          else
+            ArrayTreeFunctions
+              .insertLeftChildren(
+                structureBuffer.top,
+                left.map(_.toSlices),
+                structureBuffer,
+                valuesBuffer,
+                keepDistinct
+              )
 
-        val delta2 = ArrayTreeFunctions
-          .insertRightChildren(structureBuffer.top, right.map(_.toSlices), structureBuffer, valuesBuffer, keepDistinct)
+        val delta2 =
+          if (right.isEmpty) 0
+          else
+            ArrayTreeFunctions
+              .insertRightChildren(
+                structureBuffer.top,
+                right.map(_.toSlices),
+                structureBuffer,
+                valuesBuffer,
+                keepDistinct
+              )
 
         Some(delta1 + delta2)
       }

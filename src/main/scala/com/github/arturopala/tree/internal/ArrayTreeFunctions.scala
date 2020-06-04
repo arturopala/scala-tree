@@ -409,11 +409,9 @@ object ArrayTreeFunctions {
         } else throw new NoSuchElementException
 
       final def seekNext(check: Boolean): Unit =
-        if (check && counters.isEmpty) { hasNext = false }
-        else {
+        if (check && counters.isEmpty) { hasNext = false } else {
           i = indexes.peek
-          if (i < 0) { hasNext = false }
-          else {
+          if (i < 0) { hasNext = false } else {
             hasNext = true
             val c = treeStructure(i)
             if (c == 0 || counters.length >= maxDepth - 1) {
@@ -454,12 +452,10 @@ object ArrayTreeFunctions {
         } else throw new NoSuchElementException
 
       final def seekNext(check: Boolean): Unit =
-        if (check && counters.isEmpty) { hasNext = false }
-        else {
+        if (check && counters.isEmpty) { hasNext = false } else {
           val index = indexes.peek
           i = (counters.length + 1, index)
-          if (index < 0) { hasNext = false }
-          else {
+          if (index < 0) { hasNext = false } else {
             hasNext = true
             val c = treeStructure(index)
             if (c == 0 || counters.length >= maxDepth - 1) {
@@ -569,11 +565,9 @@ object ArrayTreeFunctions {
 
       @tailrec
       final def seekNext(check: Boolean): Unit =
-        if (check && counters.isEmpty) { hasNext = false }
-        else {
+        if (check && counters.isEmpty) { hasNext = false } else {
           val i = indexes.peek
-          if (i < 0) { hasNext = false }
-          else {
+          if (i < 0) { hasNext = false } else {
             val c = treeStructure(i)
             if (c == 0 || counters.length >= maxDepth - 1) {
               array = BranchIteratorUtils.readBranch(counters, indexes).push(i)
@@ -1518,22 +1512,22 @@ object ArrayTreeFunctions {
     keepDistinct: Boolean
   ): Int =
     if (parentIndex < 0 || parentIndex > structureBuffer.top) 0
+    else if (keepDistinct)
+      ArrayTreeFunctions
+        .insertLeftChildrenDistinct(
+          children.map { case (s, v) => (parentIndex, s, v) }.toVector.reverse,
+          structureBuffer,
+          valuesBuffer,
+          0
+        )
     else
       children.foldRight(0) {
-        case ((structure, values), delta) =>
-          if (keepDistinct)
-            ArrayTreeFunctions
-              .insertLeftChildrenDistinct(
-                Vector((parentIndex + delta, structure, values)),
-                structureBuffer,
-                valuesBuffer,
-                0
-              )
-          else {
-            structureBuffer.increment(parentIndex + delta)
-            ArrayTreeFunctions
-              .insertSlice(parentIndex + delta, structure, values, structureBuffer, valuesBuffer)
-          } + delta
+        case ((structure, values), delta) if structure.length > 0 =>
+          structureBuffer.increment(parentIndex + delta)
+          ArrayTreeFunctions
+            .insertSlice(parentIndex + delta, structure, values, structureBuffer, valuesBuffer) + delta
+
+        case (_, delta) => delta
       }
 
   /** Inserts children on the right side (below) of existing children of the parent index.
@@ -1546,23 +1540,23 @@ object ArrayTreeFunctions {
     keepDistinct: Boolean
   ): Int =
     if (parentIndex < 0 || parentIndex > structureBuffer.top) 0
+    else if (keepDistinct)
+      ArrayTreeFunctions
+        .insertRightChildrenDistinct(
+          children.map { case (s, v) => (parentIndex, s, v) }.toVector,
+          structureBuffer,
+          valuesBuffer,
+          0
+        )
     else
       children.foldLeft(0) {
-        case (delta, (structure, values)) =>
-          if (keepDistinct)
-            ArrayTreeFunctions
-              .insertRightChildrenDistinct(
-                Vector((parentIndex + delta, structure, values)),
-                structureBuffer,
-                valuesBuffer,
-                0
-              )
-          else {
-            val bottom = bottomIndex(parentIndex + delta, structureBuffer)
-            structureBuffer.increment(parentIndex + delta)
-            ArrayTreeFunctions
-              .insertSlice(bottom, structure, values, structureBuffer, valuesBuffer)
-          } + delta
+        case (delta, (structure, values)) if structure.length > 0 =>
+          val bottom = bottomIndex(parentIndex + delta, structureBuffer)
+          structureBuffer.increment(parentIndex + delta)
+          ArrayTreeFunctions
+            .insertSlice(bottom, structure, values, structureBuffer, valuesBuffer) + delta
+
+        case (delta, _) => delta
       }
 
   /** Wraps the tree at index with the new tree, and left/right siblings

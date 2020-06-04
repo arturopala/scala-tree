@@ -110,6 +110,11 @@ trait EmptyTreeLike extends TreeLike[Nothing] {
 
   final override def insertChild[T1: ClassTag](child: Tree[T1]): Tree[T1] = child
 
+  final override def insertChildren[T1: ClassTag](children: Iterable[Tree[T1]]): Tree[T1] = {
+    val validChildren = children.filterNot(_.isEmpty)
+    if (validChildren.size == 1) validChildren.head else Tree.empty
+  }
+
   final override def insertChildAt[T1: ClassTag](path: Iterable[T1], child: Tree[T1]): Tree[T1] =
     if (path.isEmpty) child
     else if (child.isEmpty) empty

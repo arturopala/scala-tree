@@ -893,7 +893,7 @@ object NodeTree {
   final def insertChildrenDistinct[T](
     head: T,
     leftSiblings: Seq[NodeTree[T]],
-    newChildren: Seq[NodeTree[T]],
+    newChildren: Iterable[NodeTree[T]],
     rightSiblings: Seq[NodeTree[T]],
     preserveExisting: Boolean
   ): NodeTree[T] = {

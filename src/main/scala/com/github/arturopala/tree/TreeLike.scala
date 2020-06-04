@@ -483,7 +483,7 @@ trait TreeLike[+T] {
   /** Inserts new children and returns updated tree.
     * @note This method tries to keep children values unique by merging inserted tree (and only that) when needed.
     * @group insertion */
-  def insertChildren[T1 >: T: ClassTag](children: Iterable[Tree[T1]]): Tree[T1] = ???
+  def insertChildren[T1 >: T: ClassTag](children: Iterable[Tree[T1]]): Tree[T1]
 
   /** Inserts, at the given path, a new child and returns a whole tree updated.
     * If path doesn't fully exist in the tree then remaining suffix will be created.

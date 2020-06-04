@@ -85,7 +85,7 @@ trait LaxTree[T] {
   /** Inserts new children and returns updated tree.
     * @note This is a lax method, it doesn't preserve children values uniqueness.
     * @group laxInsertion */
-  def insertChildrenLax[T1 >: T: ClassTag](children: Iterable[Tree[T1]]): Tree[T1] = ???
+  def insertChildrenLax[T1 >: T: ClassTag](children: Iterable[Tree[T1]]): Tree[T1]
 
   /** Inserts, at the given path, a new sub-tree and returns a whole tree updated.
     * If path doesn't fully exist in the tree then remaining suffix will be created.
@@ -338,6 +338,24 @@ object LaxTreeOps {
 
       case tree: ArrayTree[T] =>
         ArrayTree.insertTree(tree.structure.length - 1, subtree, tree)
+    }
+
+    final override def insertChildrenLax[T1 >: T: ClassTag](children: Iterable[Tree[T1]]): Tree[T1] = {
+      val validChildren = children.filterNot(_.isEmpty)
+      t match {
+        case Tree.empty => if (validChildren.size == 1) validChildren.head else Tree.empty
+
+        case node: NodeTree[T] =>
+          if (validChildren.isEmpty) t
+          else if (validChildren.size == 1) t.insertChild(validChildren.head)
+          else if (validChildren.forall(_.isInstanceOf[NodeTree[T1]]))
+            Tree(node.head, validChildren.asInstanceOf[Iterable[NodeTree[T1]]] ++: node.children)
+          else
+            ArrayTree.insertChildren(node, validChildren, Nil, keepDistinct = false)
+
+        case tree: ArrayTree[T] =>
+          ArrayTree.insertChildren(tree, validChildren, Nil, keepDistinct = false)
+      }
     }
 
     final override def insertTreeLaxAt[T1 >: T: ClassTag](path: Iterable[T1], subtree: Tree[T1]): Tree[T1] = t match {

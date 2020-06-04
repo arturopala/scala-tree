@@ -88,6 +88,7 @@ class TreeInsertionsSpec extends FunSuite {
 
     "insert distinct new leaves to a tree" in {
       tree0.insertLeaves(List("a", "b", "c")) shouldBe tree0
+      tree0.insertLeaves(List("a")) shouldBe Tree("a")
       tree1.insertLeaves(List("a", "b", "c")) shouldBe Tree("a", Tree("a"), Tree("b"), Tree("c"))
       tree2.insertLeaves(List("a", "b", "c")) shouldBe Tree("a", Tree("a"), Tree("c"), Tree("b"))
       tree3_1.insertLeaves(List("a", "b", "c")) shouldBe Tree("a", Tree("a"), Tree("c"), Tree("b", Tree("c")))
@@ -100,6 +101,7 @@ class TreeInsertionsSpec extends FunSuite {
 
     "insert lax new leaves to a tree" in {
       tree0.insertLeavesLax(List("a", "b", "c")) shouldBe tree0
+      tree0.insertLeavesLax(List("a")) shouldBe Tree("a")
       tree1.insertLeavesLax(List("a", "b", "c")) shouldBe Tree("a", Tree("a"), Tree("b"), Tree("c"))
       tree2.insertLeavesLax(List("a", "b", "c")) shouldBe Tree("a", Tree("a"), Tree("b"), Tree("c"), Tree("b"))
       tree3_1.insertLeavesLax(List("a", "b", "c")) shouldBe
@@ -244,12 +246,15 @@ class TreeInsertionsSpec extends FunSuite {
       tree2.insertLeafLaxAt(List(98, 97), "c", codeF) shouldBe Left(tree2)
     }
 
-    "insert distinct new subtree to a tree" in {
+    "insert distinct new child to a tree" in {
       tree0.insertChild(Tree.empty) shouldBe Tree.empty
       tree0.insertChild(Tree("a")) shouldBe Tree("a")
       tree0.insertChild(tree9) shouldBe tree9
+      tree1.insertChild(Tree.empty) shouldBe tree1
       tree1.insertChild(Tree("a")) shouldBe Tree("a", Tree("a"))
       tree1.insertChild(Tree("b")) shouldBe Tree("a", Tree("b"))
+      tree1.insertChild(Tree("b").deflated) shouldBe Tree("a", Tree("b"))
+      tree1.insertChild(Tree("b", Tree("c")).deflated) shouldBe Tree("a", Tree("b", Tree("c")))
       tree1.insertChild(Tree.empty) shouldBe tree1
       tree2.insertChild(Tree("a")) shouldBe Tree("a", Tree("a"), Tree("b"))
       tree2.insertChild(Tree("a", Tree("b"))) shouldBe Tree("a", Tree("a", Tree("b")), Tree("b"))
@@ -303,9 +308,13 @@ class TreeInsertionsSpec extends FunSuite {
         Tree("a", Tree("b", Tree("x"), Tree("c")), Tree("b", Tree("d")), Tree("b", Tree("e")))
     }
 
-    "insert lax new subtree to a tree" in {
+    "insert lax new child to a tree" in {
+      tree0.insertChildLax(Tree.empty) shouldBe tree0
       tree0.insertChildLax(Tree("a")) shouldBe Tree("a")
+      tree1.insertChild(Tree.empty) shouldBe tree1
       tree1.insertChildLax(Tree("b")) shouldBe Tree("a", Tree("b"))
+      tree1.insertChildLax(Tree("b").deflated) shouldBe Tree("a", Tree("b"))
+      tree1.insertChildLax(Tree("b", Tree("c")).deflated) shouldBe Tree("a", Tree("b", Tree("c")))
       tree2.insertChildLax(Tree("c")) shouldBe Tree("a", Tree("c"), Tree("b"))
       tree3_1.insertChildLax(Tree("d")) shouldBe Tree("a", Tree("d"), Tree("b", Tree("c")))
       tree3_1.insertChildLax(Tree("b")) shouldBe Tree("a", Tree("b"), Tree("b", Tree("c")))
@@ -1016,6 +1025,111 @@ class TreeInsertionsSpec extends FunSuite {
         Tree("d", Tree("e", Tree("g"), Tree("f"))),
         Tree("g")
       )
+    }
+
+    "insert distinct new children" in {
+      tree0.insertChildren(List(Tree("a"), Tree("b"), Tree("c"))) shouldBe tree0
+      tree0.insertChildren(List(Tree("a"))) shouldBe Tree("a")
+      tree0.insertChildren(List(Tree("a", Tree("b")))) shouldBe Tree("a", Tree("b"))
+      tree1.insertChildren(List(Tree("a"))) shouldBe Tree("a", Tree("a"))
+      tree1.insertChildren(List(Tree.empty)) shouldBe tree1
+      tree1.insertChildren(List(Tree.empty, Tree.empty, Tree.empty)) shouldBe tree1
+      tree1.insertChildren(List(Tree.empty, Tree("a"), Tree.empty, Tree("b"))) shouldBe Tree("a", Tree("a"), Tree("b"))
+      tree1.insertChildren(List(Tree.empty, Tree("a", Tree("c")).deflated, Tree.empty, Tree("b"))) shouldBe
+        Tree("a", Tree("a", Tree("c")), Tree("b"))
+      tree1.insertChildren(List(Tree.empty, Tree("b"), Tree.empty, Tree("b"))) shouldBe Tree("a", Tree("b"))
+      tree1.insertChildren(List(Tree("a"), Tree("b"), Tree("c"))) shouldBe Tree("a", Tree("a"), Tree("b"), Tree("c"))
+      tree1.insertChildren(List(Tree("b"), Tree("b"))) shouldBe Tree("a", Tree("b"))
+      tree1.insertChildren(List(Tree("b", Tree("c")), Tree("b", Tree("c")))) shouldBe Tree("a", Tree("b", Tree("c")))
+      tree1.insertChildren(List(Tree("b", Tree("c")), Tree("b", Tree("d")))) shouldBe
+        Tree("a", Tree("b", Tree("c"), Tree("d")))
+      tree1.insertChildren(List(Tree("b", Tree("c", Tree("d"))), Tree("b", Tree("c", Tree("d"))))) shouldBe
+        Tree("a", Tree("b", Tree("c", Tree("d"))))
+      tree1.insertChildren(List(Tree("b", Tree("c", Tree("d"))), Tree("b", Tree("c", Tree("e"))))) shouldBe
+        Tree("a", Tree("b", Tree("c", Tree("d"), Tree("e"))))
+      tree1.insertChildren(List(Tree("b", Tree("c", Tree("d")), Tree("f")), Tree("b", Tree("c", Tree("e")), Tree("g")))) shouldBe
+        Tree("a", Tree("b", Tree("c", Tree("d"), Tree("e")), Tree("f"), Tree("g")))
+      tree1.insertChildren(List(Tree("a"), Tree("b"), Tree("a"))) shouldBe Tree("a", Tree("a"), Tree("b"))
+      tree1.insertChildren(
+        List(
+          Tree("a", Tree("d"), Tree("e")),
+          Tree("b", Tree("f", Tree("g"))),
+          Tree("c", Tree("h", Tree("i")), Tree("j"))
+        )
+      ) shouldBe
+        Tree(
+          "a",
+          Tree("a", Tree("d"), Tree("e")),
+          Tree("b", Tree("f", Tree("g"))),
+          Tree("c", Tree("h", Tree("i")), Tree("j"))
+        )
+      tree2.insertChildren(List(Tree("a"), Tree("b"), Tree("c"))) shouldBe Tree("a", Tree("a"), Tree("c"), Tree("b"))
+      tree2.insertChildren(List(Tree("b"), Tree("c"), Tree("b"))) shouldBe Tree("a", Tree("c"), Tree("b"))
+      tree2.insertChildren(
+        List(
+          Tree("a", Tree("d"), Tree("e")),
+          Tree("b", Tree("f", Tree("g"))),
+          Tree("c", Tree("h", Tree("i")), Tree("j"))
+        )
+      ) shouldBe
+        Tree(
+          "a",
+          Tree("a", Tree("d"), Tree("e")),
+          Tree("c", Tree("h", Tree("i")), Tree("j")),
+          Tree("b", Tree("f", Tree("g")))
+        )
+    }
+
+    "insert lax new children" in {
+      tree0.insertChildrenLax(List(Tree("a"), Tree("b"), Tree("c"))) shouldBe tree0
+      tree0.insertChildrenLax(List(Tree("a"))) shouldBe Tree("a")
+      tree0.insertChildrenLax(List(Tree("a", Tree("b")))) shouldBe Tree("a", Tree("b"))
+      tree1.insertChildrenLax(List(Tree.empty)) shouldBe tree1
+      tree1.insertChildrenLax(List(Tree.empty, Tree.empty, Tree.empty)) shouldBe tree1
+      tree1.insertChildrenLax(List(Tree.empty, Tree("a"), Tree.empty, Tree("b"))) shouldBe
+        Tree("a", Tree("a"), Tree("b"))
+      tree1.insertChildrenLax(List(Tree.empty, Tree("b"), Tree.empty, Tree("b"))) shouldBe
+        Tree("a", Tree("b"), Tree("b"))
+      tree1.insertChildrenLax(List(Tree.empty, Tree("b", Tree("c")).deflated, Tree.empty, Tree("b"))) shouldBe
+        Tree("a", Tree("b", Tree("c")), Tree("b"))
+      tree1.insertChildrenLax(List(Tree("a"), Tree("b"), Tree("c"))) shouldBe Tree("a", Tree("a"), Tree("b"), Tree("c"))
+      tree1.insertChildrenLax(List(Tree("a"), Tree("b"), Tree("a"))) shouldBe Tree("a", Tree("a"), Tree("b"), Tree("a"))
+      tree1.insertChildrenLax(
+        List(
+          Tree("a", Tree("d"), Tree("e")),
+          Tree("b", Tree("f", Tree("g"))),
+          Tree("c", Tree("h", Tree("i")), Tree("j"))
+        )
+      ) shouldBe
+        Tree(
+          "a",
+          Tree("a", Tree("d"), Tree("e")),
+          Tree("b", Tree("f", Tree("g"))),
+          Tree("c", Tree("h", Tree("i")), Tree("j"))
+        )
+      tree2.insertChildrenLax(List(Tree("a"), Tree("b"), Tree("c"))) shouldBe
+        Tree("a", Tree("a"), Tree("b"), Tree("c"), Tree("b"))
+      tree2.insertChildrenLax(List(Tree("b"), Tree("c"), Tree("b"))) shouldBe Tree(
+        "a",
+        Tree("b"),
+        Tree("c"),
+        Tree("b"),
+        Tree("b")
+      )
+      tree2.insertChildrenLax(
+        List(
+          Tree("a", Tree("d"), Tree("e")),
+          Tree("b", Tree("f", Tree("g"))),
+          Tree("c", Tree("h", Tree("i")), Tree("j"))
+        )
+      ) shouldBe
+        Tree(
+          "a",
+          Tree("a", Tree("d"), Tree("e")),
+          Tree("b", Tree("f", Tree("g"))),
+          Tree("c", Tree("h", Tree("i")), Tree("j")),
+          Tree("b")
+        )
     }
 
   }

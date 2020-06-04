@@ -148,6 +148,22 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
       else node.deflated[T1].insertChild(tree)
   }
 
+  final override def insertChildren[T1 >: T: ClassTag](children: Iterable[Tree[T1]]): Tree[T1] = {
+    val validChildren = children.filterNot(_.isEmpty)
+    if (validChildren.isEmpty) node
+    else if (validChildren.size == 1) node.insertChild(children.head)
+    else if (validChildren.forall(_.isInstanceOf[NodeTree[T1]]))
+      NodeTree.insertChildrenDistinct(
+        node.head,
+        Nil,
+        validChildren.asInstanceOf[Iterable[NodeTree[T1]]],
+        node.children,
+        preserveExisting = true
+      )
+    else
+      ArrayTree.insertChildren(node, children, Nil, keepDistinct = true)
+  }
+
   final override def insertChildAt[T1 >: T: ClassTag](path: Iterable[T1], child: Tree[T1]): Tree[T1] =
     child match {
       case Tree.empty         => node

@@ -20,14 +20,14 @@ import com.github.arturopala.bufferandslice.{Buffer, IntBuffer, IntSlice, Slice}
 import com.github.arturopala.tree.LaxTreeOps._
 import com.github.arturopala.tree.internal.ArrayTree._
 import com.github.arturopala.tree.internal.ArrayTreeFunctions
-import com.github.arturopala.tree.internal.ArrayTreeFunctions.nodesIndexIteratorBreadthFirstWithLimit
+import com.github.arturopala.tree.internal.ArrayTreeFunctions.insertLeftChildren
 
 import scala.reflect.ClassTag
 
 // Special test suite to ease single assertions debugging in an IDE
 class TreeDebugSpec extends FunSuite with TestWithBuffers {
 
-  //test(Inflated, new Spec with InflatedTestTrees)
+  test(Inflated, new Spec with InflatedTestTrees)
   test(Deflated, new Spec with DeflatedTestTrees)
 
   sealed trait Spec extends AnyWordSpecCompat with TestTrees {
@@ -35,7 +35,33 @@ class TreeDebugSpec extends FunSuite with TestWithBuffers {
     def tree[T: ClassTag](t: Tree[T]): Tree[T]
 
     "debug" in {
-      nodesIndexIteratorBreadthFirstWithLimit(2, Array(0, 1, 1), 2).toList shouldBe List(2, 1)
+
+      tree2.insertChildren(List(Tree("a"), Tree("b"), Tree("c"))) shouldBe Tree("a", Tree("a"), Tree("c"), Tree("b"))
+
+      tree1.insertChildren(List(Tree("b", Tree("c", Tree("d")), Tree("f")), Tree("b", Tree("c", Tree("e")), Tree("g")))) shouldBe
+        Tree("a", Tree("b", Tree("c", Tree("d"), Tree("e")), Tree("f"), Tree("g")))
+
+      tree1.insertChildren(List(Tree.empty, Tree("a", Tree("c")).deflated, Tree.empty, Tree("b"))) shouldBe
+        Tree("a", Tree("a", Tree("c")), Tree("b"))
+
+      tree1.insertChildren(List(Tree.empty, Tree("a"), Tree.empty, Tree("b"))) shouldBe Tree("a", Tree("a"), Tree("b"))
+
+      testWithBuffers[String, Int](
+        insertLeftChildren(
+          1,
+          List((IntSlice(0), Slice("a")), (IntSlice(0), Slice("b")), (IntSlice(0), Slice("c"))),
+          _,
+          _,
+          keepDistinct = true
+        ),
+        IntBuffer(0, 1),
+        Buffer("b", "a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 0, 0, 3)
+          values shouldBe Array("b", "c", "a", "a")
+          delta shouldBe 2
+      }
     }
 
   }
