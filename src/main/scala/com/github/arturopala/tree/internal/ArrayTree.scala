@@ -435,6 +435,7 @@ object ArrayTree {
     path: Iterable[T1],
     value: T1,
     target: ArrayTree[T],
+    append: Boolean,
     keepDistinct: Boolean
   ): Tree[T1] = {
     val structure = target.structure
@@ -447,9 +448,10 @@ object ArrayTree {
           case Some(item) =>
             val valueSequence = remaining.toVector.+:(item).:+(value)
             val newNode: Tree[T1] = TreeBuilder.linearTreeFromSequence(valueSequence)
-            insertTree(index, newNode, target)
+            val insertIndex = if (append) bottomIndex(index, target.structure) else index
+            insertTree(insertIndex, index, newNode, target)
           case None =>
-            insertLeaf(index, value, target, false, keepDistinct)
+            insertLeaf(index, value, target, append, keepDistinct)
         }
     }
   }
@@ -461,6 +463,7 @@ object ArrayTree {
     value: T1,
     target: ArrayTree[T],
     toPathItem: T => K,
+    append: Boolean,
     keepDistinct: Boolean
   ): Either[Tree[T], Tree[T1]] = {
     val structure = target.structure
@@ -472,7 +475,7 @@ object ArrayTree {
       case Some(index) =>
         if (unmatched.isDefined) Left(target)
         else {
-          Right(insertLeaf(index, value, target, false, keepDistinct))
+          Right(insertLeaf(index, value, target, append, keepDistinct))
         }
     }
   }
@@ -579,10 +582,10 @@ object ArrayTree {
           case Some(item) =>
             val treeSequence = remaining.map(Tree.apply[T1]).toVector.+:(Tree(item)).:+(subtree)
             val newNode: Tree[T1] = TreeBuilder.fromTreeSequence(treeSequence)
-            insertTree(index, newNode, target)
+            insertTree(index, index, newNode, target)
           case None =>
             if (keepDistinct) insertChildDistinct(index, subtree, target)
-            else insertTree(index, subtree, target)
+            else insertTree(index, index, subtree, target)
         }
     }
   }
@@ -603,7 +606,7 @@ object ArrayTree {
       case Some(index) =>
         if (unmatched.isDefined) Left(target)
         else if (keepDistinct) Right(insertChildDistinct(index, subtree, target))
-        else Right(insertTree(index, subtree, target))
+        else Right(insertTree(index, index, subtree, target))
     }
   }
 
@@ -611,6 +614,7 @@ object ArrayTree {
     * @return modified tree */
   final def insertTree[T: ClassTag](
     index: Int,
+    parentIndex: Int,
     source: Tree[T],
     target: Tree[T]
   ): Tree[T] =
@@ -620,7 +624,7 @@ object ArrayTree {
       assert(index >= 0 && index < target.size, "Insertion index must be within target's tree range [0,length).")
       transform(target) { (structureBuffer, valuesBuffer) =>
         val (structure, values) = source.toSlices
-        structureBuffer.increment(index)
+        if (parentIndex >= 0) structureBuffer.increment(parentIndex)
         ArrayTreeFunctions.insertSlice(index, structure, values, structureBuffer, valuesBuffer).intAsSome
       }
     }

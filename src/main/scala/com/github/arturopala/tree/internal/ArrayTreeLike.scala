@@ -155,28 +155,37 @@ abstract class ArrayTreeLike[T: ClassTag] extends TreeLike[T] {
   final override def insertLeaves[T1 >: T: ClassTag](values: Iterable[T1], append: Boolean = false): Tree[T1] =
     ArrayTree.insertLeaves(tree.structure.top, values, tree, append, keepDistinct = true)
 
-  final override def insertLeafAt[T1 >: T: ClassTag](path: Iterable[T1], value: T1): Tree[T1] =
-    ArrayTree.insertLeafAt(path, value, tree, keepDistinct = true)
+  final override def insertLeafAt[T1 >: T: ClassTag](path: Iterable[T1], value: T1, append: Boolean = false): Tree[T1] =
+    ArrayTree.insertLeafAt(path, value, tree, append, keepDistinct = true)
 
   final override def insertLeafAt[K, T1 >: T: ClassTag](
     path: Iterable[K],
     value: T1,
-    toPathItem: T => K
-  ): Either[Tree[T], Tree[T1]] = ArrayTree.insertLeafAt(path, value, tree, toPathItem, keepDistinct = true)
+    toPathItem: T => K,
+    append: Boolean
+  ): Either[Tree[T], Tree[T1]] = ArrayTree.insertLeafAt(path, value, tree, toPathItem, append, keepDistinct = true)
 
-  final override def insertChild[T1 >: T: ClassTag](child: Tree[T1]): Tree[T1] =
+  final override def insertChild[T1 >: T: ClassTag](child: Tree[T1], append: Boolean = false): Tree[T1] =
     ArrayTree.insertChildDistinct(tree.structure.top, child, tree)
 
-  final override def insertChildren[T1 >: T: ClassTag](children: Iterable[Tree[T1]]): Tree[T1] =
+  final override def insertChildren[T1 >: T: ClassTag](
+    children: Iterable[Tree[T1]],
+    append: Boolean = false
+  ): Tree[T1] =
     ArrayTree.insertChildren(tree, children.filterNot(_.isEmpty), Nil, keepDistinct = true)
 
-  final override def insertChildAt[T1 >: T: ClassTag](path: Iterable[T1], child: Tree[T1]): Tree[T1] =
+  final override def insertChildAt[T1 >: T: ClassTag](
+    path: Iterable[T1],
+    child: Tree[T1],
+    append: Boolean = false
+  ): Tree[T1] =
     ArrayTree.insertTreeAt(path, child, tree, keepDistinct = true)
 
   final override def insertChildAt[K, T1 >: T: ClassTag](
     path: Iterable[K],
     child: Tree[T1],
-    toPathItem: T => K
+    toPathItem: T => K,
+    append: Boolean
   ): Either[Tree[T], Tree[T1]] =
     ArrayTree.insertTreeAt(path, child, tree, toPathItem, keepDistinct = true)
 

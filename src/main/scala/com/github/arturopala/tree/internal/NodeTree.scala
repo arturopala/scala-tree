@@ -871,8 +871,9 @@ object NodeTree {
     * @note distinct child is prepended on the left side of existing children list,
     *       otherwise merged down with existing duplicate.
     */
-  final def insertChildDistinct[T, T1 >: T](tree: NodeTree[T], newChild: NodeTree[T1]): Tree[T1] =
-    insertChildDistinct(tree.head, Nil, newChild, tree.children, preserveExisting = true)
+  final def insertChildDistinct[T, T1 >: T](tree: NodeTree[T], newChild: NodeTree[T1], append: Boolean): Tree[T1] =
+    if (append) insertChildDistinct(tree.head, tree.children, newChild, Nil, preserveExisting = true)
+    else insertChildDistinct(tree.head, Nil, newChild, tree.children, preserveExisting = true)
 
   /** Ensures that a child at an index position is distinct,
     * if not, then merges it with the nearest duplicate on the right side or left side.
@@ -1040,6 +1041,7 @@ object NodeTree {
     tree: NodeTree[T],
     pathIterator: Iterator[T1],
     nodeToInsert: NodeTree[T1],
+    append: Boolean,
     keepDistinct: Boolean
   ): Option[Tree[T1]] =
     splitTreeFollowingPath(tree, pathIterator).flatMap {
@@ -1048,14 +1050,23 @@ object NodeTree {
           TreeBuilder
             .fromTreeSequence((Tree(value) +: remainingBranchIterator.map(Tree.apply[T1]).toVector) :+ nodeToInsert)
             .asInstanceOf[NodeTree[T1]]
-        val newNode = Tree(remainingTree.head, branchTree +: remainingTree.children)
+        val newNode = Tree(
+          remainingTree.head,
+          if (append) remainingTree.children :+ branchTree
+          else branchTree +: remainingTree.children
+        )
         Some(TreeBuilder.fromChildAndTreeSplit(newNode, treeSplit))
 
       case (treeSplit, None, _, remainingTree) =>
         val newNode =
           if (keepDistinct && !remainingTree.isLeaf)
-            remainingTree.insertChild(nodeToInsert).asInstanceOf[NodeTree[T1]]
-          else Tree(remainingTree.head, nodeToInsert +: remainingTree.children)
+            remainingTree.insertChild(nodeToInsert, append).asInstanceOf[NodeTree[T1]]
+          else
+            Tree(
+              remainingTree.head,
+              if (append) remainingTree.children :+ nodeToInsert
+              else nodeToInsert +: remainingTree.children
+            )
         Some(TreeBuilder.fromChildAndTreeSplit(newNode, treeSplit))
     }
 
@@ -1064,6 +1075,7 @@ object NodeTree {
     pathIterator: Iterator[K],
     toPathItem: T => K,
     nodeToInsert: NodeTree[T1],
+    append: Boolean,
     keepDistinct: Boolean
   ): Either[Tree[T], Tree[T1]] =
     splitTreeFollowingEntirePath(tree, pathIterator, toPathItem)
@@ -1071,8 +1083,13 @@ object NodeTree {
         case (treeSplit, recipientTree) =>
           val newNode =
             if (keepDistinct && !recipientTree.isLeaf)
-              recipientTree.insertChild(nodeToInsert).asInstanceOf[NodeTree[T1]]
-            else Tree(recipientTree.head, nodeToInsert +: recipientTree.children)
+              recipientTree.insertChild(nodeToInsert, append).asInstanceOf[NodeTree[T1]]
+            else
+              Tree(
+                recipientTree.head,
+                if (append) recipientTree.children :+ nodeToInsert
+                else nodeToInsert +: recipientTree.children
+              )
           Right(TreeBuilder.fromChildAndTreeSplit(newNode, treeSplit))
       }
       .getOrElse(Left(tree))

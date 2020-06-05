@@ -134,26 +134,30 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
         )
     }
 
-  final override def insertLeafAt[T1 >: T: ClassTag](path: Iterable[T1], value: T1): Tree[T1] =
-    NodeTree.insertTreeAt(node, path.iterator, Tree(value), keepDistinct = true).getOrElse(node)
+  final override def insertLeafAt[T1 >: T: ClassTag](path: Iterable[T1], value: T1, append: Boolean = false): Tree[T1] =
+    NodeTree.insertTreeAt(node, path.iterator, Tree(value), append, keepDistinct = true).getOrElse(node)
 
   final override def insertLeafAt[K, T1 >: T: ClassTag](
     path: Iterable[K],
     value: T1,
-    toPathItem: T => K
+    toPathItem: T => K,
+    append: Boolean
   ): Either[Tree[T], Tree[T1]] =
-    NodeTree.insertTreeAt(node, path.iterator, toPathItem, Tree(value), keepDistinct = true)
+    NodeTree.insertTreeAt(node, path.iterator, toPathItem, Tree(value), append, keepDistinct = true)
 
-  final override def insertChild[T1 >: T: ClassTag](child: Tree[T1]): Tree[T1] = child match {
+  final override def insertChild[T1 >: T: ClassTag](child: Tree[T1], append: Boolean = false): Tree[T1] = child match {
     case Tree.empty         => node
-    case tree: NodeTree[T1] => NodeTree.insertChildDistinct(node, tree)
+    case tree: NodeTree[T1] => NodeTree.insertChildDistinct(node, tree, append)
     case tree: ArrayTree[T1] =>
       if (Tree.preferInflated(node, tree))
-        NodeTree.insertChildDistinct(node, tree.inflated.asInstanceOf[NodeTree[T1]])
-      else node.deflated[T1].insertChild(tree)
+        NodeTree.insertChildDistinct(node, tree.inflated.asInstanceOf[NodeTree[T1]], append)
+      else node.deflated[T1].insertChild(tree, append)
   }
 
-  final override def insertChildren[T1 >: T: ClassTag](children: Iterable[Tree[T1]]): Tree[T1] = {
+  final override def insertChildren[T1 >: T: ClassTag](
+    children: Iterable[Tree[T1]],
+    append: Boolean = false
+  ): Tree[T1] = {
     val validChildren = children.filterNot(_.isEmpty)
     if (validChildren.isEmpty) node
     else if (validChildren.size == 1) node.insertChild(children.head)
@@ -169,14 +173,19 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
       ArrayTree.insertChildren(node, children, Nil, keepDistinct = true)
   }
 
-  final override def insertChildAt[T1 >: T: ClassTag](path: Iterable[T1], child: Tree[T1]): Tree[T1] =
+  final override def insertChildAt[T1 >: T: ClassTag](
+    path: Iterable[T1],
+    child: Tree[T1],
+    append: Boolean = false
+  ): Tree[T1] =
     child match {
-      case Tree.empty         => node
-      case tree: NodeTree[T1] => NodeTree.insertTreeAt(node, path.iterator, tree, keepDistinct = true).getOrElse(node)
+      case Tree.empty => node
+      case tree: NodeTree[T1] =>
+        NodeTree.insertTreeAt(node, path.iterator, tree, append, keepDistinct = true).getOrElse(node)
       case tree: ArrayTree[T1] =>
         if (Tree.preferInflated(node, tree))
           NodeTree
-            .insertTreeAt(node, path.iterator, tree.inflated.asInstanceOf[NodeTree[T1]], keepDistinct = true)
+            .insertTreeAt(node, path.iterator, tree.inflated.asInstanceOf[NodeTree[T1]], append, keepDistinct = true)
             .getOrElse(node)
         else node.deflated[T1].insertChildAt(path, tree)
     }
@@ -184,13 +193,21 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
   final override def insertChildAt[K, T1 >: T: ClassTag](
     path: Iterable[K],
     child: Tree[T1],
-    toPathItem: T => K
+    toPathItem: T => K,
+    append: Boolean
   ): Either[Tree[T], Tree[T1]] = child match {
     case Tree.empty         => Left(node)
-    case tree: NodeTree[T1] => NodeTree.insertTreeAt(node, path.iterator, toPathItem, tree, keepDistinct = true)
+    case tree: NodeTree[T1] => NodeTree.insertTreeAt(node, path.iterator, toPathItem, tree, append, keepDistinct = true)
     case tree: ArrayTree[T1] =>
       NodeTree
-        .insertTreeAt(node, path.iterator, toPathItem, tree.inflated.asInstanceOf[NodeTree[T1]], keepDistinct = true)
+        .insertTreeAt(
+          node,
+          path.iterator,
+          toPathItem,
+          tree.inflated.asInstanceOf[NodeTree[T1]],
+          append,
+          keepDistinct = true
+        )
   }
 
   final override def insertBranch[T1 >: T: ClassTag](branch: Iterable[T1]): Tree[T1] =

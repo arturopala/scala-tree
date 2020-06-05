@@ -99,23 +99,28 @@ trait EmptyTreeLike extends TreeLike[Nothing] {
   final override def insertLeaves[T1: ClassTag](values: Iterable[T1], append: Boolean = false): Tree[T1] =
     if (values.size == 1) Tree(values.head) else Tree.empty
 
-  final override def insertLeafAt[T1: ClassTag](path: Iterable[T1], value: T1): Tree[T1] =
+  final override def insertLeafAt[T1: ClassTag](path: Iterable[T1], value: T1, append: Boolean = false): Tree[T1] =
     Tree.empty.insertBranch(path.toList :+ value)
 
   final override def insertLeafAt[K, T1: ClassTag](
     path: Iterable[K],
     value: T1,
-    toPathItem: Nothing => K
+    toPathItem: Nothing => K,
+    append: Boolean
   ): Either[Tree[Nothing], Tree[T1]] = Left(Tree.empty)
 
-  final override def insertChild[T1: ClassTag](child: Tree[T1]): Tree[T1] = child
+  final override def insertChild[T1: ClassTag](child: Tree[T1], append: Boolean = false): Tree[T1] = child
 
-  final override def insertChildren[T1: ClassTag](children: Iterable[Tree[T1]]): Tree[T1] = {
+  final override def insertChildren[T1: ClassTag](children: Iterable[Tree[T1]], append: Boolean = false): Tree[T1] = {
     val validChildren = children.filterNot(_.isEmpty)
     if (validChildren.size == 1) validChildren.head else Tree.empty
   }
 
-  final override def insertChildAt[T1: ClassTag](path: Iterable[T1], child: Tree[T1]): Tree[T1] =
+  final override def insertChildAt[T1: ClassTag](
+    path: Iterable[T1],
+    child: Tree[T1],
+    append: Boolean = false
+  ): Tree[T1] =
     if (path.isEmpty) child
     else if (child.isEmpty) empty
     else TreeBuilder.linearTreeFromSequence(path.toList).insertChildAt(path, child)
@@ -123,7 +128,8 @@ trait EmptyTreeLike extends TreeLike[Nothing] {
   final override def insertChildAt[K, T1: ClassTag](
     path: Iterable[K],
     child: Tree[T1],
-    toPathItem: Nothing => K
+    toPathItem: Nothing => K,
+    append: Boolean
   ): Either[Tree[Nothing], Tree[T1]] =
     if (path.isEmpty) Right(child) else Left(empty)
 

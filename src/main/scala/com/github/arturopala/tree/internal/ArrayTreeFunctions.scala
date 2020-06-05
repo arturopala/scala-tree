@@ -66,7 +66,8 @@ object ArrayTreeFunctions {
 
   /** Calculates leftmost (bottom) index of the tree rooted at index. */
   final def bottomIndex(index: Int, treeStructure: Int => Int): Int =
-    index - treeSize(index, treeStructure) + 1
+    if (treeStructure(index) == 0) index
+    else index - treeSize(index, treeStructure) + 1
 
   /** Calculates the size of the tree starting at index. */
   final def treeSize(index: Int, treeStructure: Int => Int): Int = {

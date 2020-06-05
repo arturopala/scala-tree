@@ -24,7 +24,7 @@ import com.github.arturopala.tree.internal.ArrayTreeFunctions.{expandValueIntoTr
 
 import scala.reflect.ClassTag
 
-// Special test suite to ease single assertions debugging in an IDE
+// Special test suite to ease debugging single assertions in an IDE
 class TreeDebugSpec extends FunSuite with TestWithBuffers {
 
   test(Inflated, new Spec with InflatedTestTrees)
@@ -36,7 +36,9 @@ class TreeDebugSpec extends FunSuite with TestWithBuffers {
 
     "debug" in {
 
-      testWithBuffers[String, Int](
+      tree2.insertLeafLaxAt(List("a", "c"), "a", append = true) shouldBe Tree("a", Tree("b"), Tree("c", Tree("a")))
+
+      /*testWithBuffers[String, Int](
         (structureBuffer: IntBuffer, valuesBuffer: Buffer[String]) =>
           expandValueIntoTreeDistinct(0, 2, IntSlice(0), Slice("b"), structureBuffer, valuesBuffer),
         IntBuffer(0, 0, 2),
@@ -187,7 +189,7 @@ class TreeDebugSpec extends FunSuite with TestWithBuffers {
           structure shouldBe Array(0)
           values shouldBe Array("a")
           delta shouldBe 1
-      }
+      }*/
     }
 
   }
