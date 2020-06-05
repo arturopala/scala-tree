@@ -20,7 +20,7 @@ import com.github.arturopala.bufferandslice.{Buffer, IntBuffer, IntSlice, Slice}
 import com.github.arturopala.tree.LaxTreeOps._
 import com.github.arturopala.tree.internal.ArrayTree._
 import com.github.arturopala.tree.internal.ArrayTreeFunctions
-import com.github.arturopala.tree.internal.ArrayTreeFunctions.{insertBeforeChildren, insertBeforeChildrenDistinct, insertBetweenChildrenDistinct, makeChildrenDistinct, mergeShallowTwoTrees}
+import com.github.arturopala.tree.internal.ArrayTreeFunctions.{expandValueIntoTreeDistinct, insertBeforeChildren, insertBeforeChildrenDistinct, insertBetweenChildrenDistinct, makeChildrenDistinct, mergeShallowTwoTrees}
 
 import scala.reflect.ClassTag
 
@@ -35,6 +35,18 @@ class TreeDebugSpec extends FunSuite with TestWithBuffers {
     def tree[T: ClassTag](t: Tree[T]): Tree[T]
 
     "debug" in {
+
+      testWithBuffers[String, Int](
+        (structureBuffer: IntBuffer, valuesBuffer: Buffer[String]) =>
+          expandValueIntoTreeDistinct(0, 2, IntSlice(0), Slice("b"), structureBuffer, valuesBuffer),
+        IntBuffer(0, 0, 2),
+        Buffer("c", "b", "a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 1)
+          values shouldBe Array("b", "a")
+          delta shouldBe -1
+      }
 
       tree2.insertChildren(List(Tree("a"), Tree("b"), Tree("c"))) shouldBe Tree("a", Tree("a"), Tree("c"), Tree("b"))
 

@@ -21,7 +21,7 @@ import java.util.NoSuchElementException
 /** Extensions to Iterator enabling lightweight composition. */
 object IteratorOps {
 
-  final implicit class IteratorExt[T](iterator: Iterator[T]) {
+  final implicit class IteratorExt[T](val iterator: Iterator[T]) extends AnyVal {
 
     def ++:(prepending: Iterator[T]): Iterator[T] =
       if (prepending.isEmpty) iterator

@@ -910,7 +910,8 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
 
     "expand value into a tree at index" in {
       testWithBuffers[String, Int](
-        expandValueIntoTree(IntSlice(0), Slice("a"), -1, _, _),
+        (structureBuffer: IntBuffer, valuesBuffer: Buffer[String]) =>
+          expandValueIntoTreeLax(-1, IntSlice(0), Slice("a"), structureBuffer, valuesBuffer),
         IntBuffer.empty,
         Buffer.empty[String]
       ) {
@@ -919,14 +920,9 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           values shouldBe Array.empty[String]
           delta shouldBe 0
       }
-      testWithBuffers[String, Int](expandValueIntoTree(IntSlice(0), Slice("b"), -1, _, _), IntBuffer(0), Buffer("a")) {
-        case (structure, values, delta) =>
-          structure shouldBe Array(0)
-          values shouldBe Array("a")
-          delta shouldBe 0
-      }
       testWithBuffers[String, Int](
-        expandValueIntoTree(IntSlice.empty, Slice.empty[String], 0, _, _),
+        (structureBuffer: IntBuffer, valuesBuffer: Buffer[String]) =>
+          expandValueIntoTreeLax(-1, IntSlice(0), Slice("b"), structureBuffer, valuesBuffer),
         IntBuffer(0),
         Buffer("a")
       ) {
@@ -936,7 +932,19 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe 0
       }
       testWithBuffers[String, Int](
-        expandValueIntoTree(IntSlice(0, 1), Slice("b", "a"), 0, _, _),
+        (structureBuffer: IntBuffer, valuesBuffer: Buffer[String]) =>
+          expandValueIntoTreeLax(0, IntSlice.empty, Slice.empty[String], structureBuffer, valuesBuffer),
+        IntBuffer(0),
+        Buffer("a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0)
+          values shouldBe Array("a")
+          delta shouldBe 0
+      }
+      testWithBuffers[String, Int](
+        (structureBuffer: IntBuffer, valuesBuffer: Buffer[String]) =>
+          expandValueIntoTreeLax(0, IntSlice(0, 1), Slice("b", "a"), structureBuffer, valuesBuffer),
         IntBuffer(0, 1),
         Buffer("b", "a")
       ) {
@@ -946,7 +954,8 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe 1
       }
       testWithBuffers[String, Int](
-        expandValueIntoTree(IntSlice(0, 0, 2), Slice("c", "b", "a"), 0, _, _),
+        (structureBuffer: IntBuffer, valuesBuffer: Buffer[String]) =>
+          expandValueIntoTreeLax(0, IntSlice(0, 0, 2), Slice("c", "b", "a"), structureBuffer, valuesBuffer),
         IntBuffer(0, 1),
         Buffer("b", "a")
       ) {
@@ -956,7 +965,8 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe 2
       }
       testWithBuffers[String, Int](
-        expandValueIntoTree(IntSlice(0, 0, 2), Slice("c", "e", "a"), 1, _, _),
+        (structureBuffer: IntBuffer, valuesBuffer: Buffer[String]) =>
+          expandValueIntoTreeLax(1, IntSlice(0, 0, 2), Slice("c", "e", "a"), structureBuffer, valuesBuffer),
         IntBuffer(0, 1),
         Buffer("b", "a")
       ) {
@@ -966,7 +976,8 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe 2
       }
       testWithBuffers[String, Int](
-        expandValueIntoTree(IntSlice(0, 0, 2), Slice("f", "e", "d"), 1, _, _),
+        (structureBuffer: IntBuffer, valuesBuffer: Buffer[String]) =>
+          expandValueIntoTreeLax(1, IntSlice(0, 0, 2), Slice("f", "e", "d"), structureBuffer, valuesBuffer),
         IntBuffer(0, 0, 2),
         Buffer("c", "b", "a")
       ) {
@@ -976,7 +987,8 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe 2
       }
       testWithBuffers[String, Int](
-        expandValueIntoTree(IntSlice(0, 0, 2), Slice("f", "e", "d"), 2, _, _),
+        (structureBuffer: IntBuffer, valuesBuffer: Buffer[String]) =>
+          expandValueIntoTreeLax(2, IntSlice(0, 0, 2), Slice("f", "e", "d"), structureBuffer, valuesBuffer),
         IntBuffer(0, 0, 2),
         Buffer("c", "b", "a")
       ) {
@@ -989,7 +1001,8 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
 
     "expand distinct value into a tree at index" in {
       testWithBuffers[String, Int](
-        expandValueIntoTreeDistinct(IntSlice(0), Slice("a"), -1, -1, _, _),
+        (structureBuffer: IntBuffer, valuesBuffer: Buffer[String]) =>
+          expandValueIntoTreeDistinct(-1, -1, IntSlice(0), Slice("a"), structureBuffer, valuesBuffer),
         IntBuffer.empty,
         Buffer.empty[String]
       ) {
@@ -999,7 +1012,8 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe 0
       }
       testWithBuffers[String, Int](
-        expandValueIntoTreeDistinct(IntSlice(0), Slice("b"), -1, 0, _, _),
+        (structureBuffer: IntBuffer, valuesBuffer: Buffer[String]) =>
+          expandValueIntoTreeDistinct(-1, 0, IntSlice(0), Slice("b"), structureBuffer, valuesBuffer),
         IntBuffer(0),
         Buffer("a")
       ) {
@@ -1009,7 +1023,8 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe 0
       }
       testWithBuffers[String, Int](
-        expandValueIntoTreeDistinct(IntSlice.empty, Slice.empty[String], 0, -1, _, _),
+        (structureBuffer: IntBuffer, valuesBuffer: Buffer[String]) =>
+          expandValueIntoTreeDistinct(0, -1, IntSlice.empty, Slice.empty[String], structureBuffer, valuesBuffer),
         IntBuffer(0),
         Buffer("a")
       ) {
@@ -1019,7 +1034,8 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe 0
       }
       testWithBuffers[String, Int](
-        expandValueIntoTreeDistinct(IntSlice(0, 1), Slice("b", "a"), 0, 1, _, _),
+        (structureBuffer: IntBuffer, valuesBuffer: Buffer[String]) =>
+          expandValueIntoTreeDistinct(0, 1, IntSlice(0, 1), Slice("b", "a"), structureBuffer, valuesBuffer),
         IntBuffer(0, 1),
         Buffer("b", "a")
       ) {
@@ -1029,7 +1045,8 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe 1
       }
       testWithBuffers[String, Int](
-        expandValueIntoTreeDistinct(IntSlice(0, 0, 2), Slice("c", "b", "a"), 0, 1, _, _),
+        (structureBuffer: IntBuffer, valuesBuffer: Buffer[String]) =>
+          expandValueIntoTreeDistinct(0, 1, IntSlice(0, 0, 2), Slice("c", "b", "a"), structureBuffer, valuesBuffer),
         IntBuffer(0, 1),
         Buffer("b", "a")
       ) {
@@ -1039,7 +1056,8 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe 2
       }
       testWithBuffers[String, Int](
-        expandValueIntoTreeDistinct(IntSlice(0, 0, 2), Slice("c", "e", "a"), 1, -1, _, _),
+        (structureBuffer: IntBuffer, valuesBuffer: Buffer[String]) =>
+          expandValueIntoTreeDistinct(1, -1, IntSlice(0, 0, 2), Slice("c", "e", "a"), structureBuffer, valuesBuffer),
         IntBuffer(0, 1),
         Buffer("b", "a")
       ) {
@@ -1049,7 +1067,8 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe 2
       }
       testWithBuffers[String, Int](
-        expandValueIntoTreeDistinct(IntSlice(0, 0, 2), Slice("f", "e", "d"), 1, 2, _, _),
+        (structureBuffer: IntBuffer, valuesBuffer: Buffer[String]) =>
+          expandValueIntoTreeDistinct(1, 2, IntSlice(0, 0, 2), Slice("f", "e", "d"), structureBuffer, valuesBuffer),
         IntBuffer(0, 0, 2),
         Buffer("c", "b", "a")
       ) {
@@ -1059,7 +1078,8 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe 2
       }
       testWithBuffers[String, Int](
-        expandValueIntoTreeDistinct(IntSlice(0, 0, 2), Slice("f", "e", "d"), 2, -1, _, _),
+        (structureBuffer: IntBuffer, valuesBuffer: Buffer[String]) =>
+          expandValueIntoTreeDistinct(2, -1, IntSlice(0, 0, 2), Slice("f", "e", "d"), structureBuffer, valuesBuffer),
         IntBuffer(0, 0, 2),
         Buffer("c", "b", "a")
       ) {
@@ -1069,7 +1089,8 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe 2
       }
       testWithBuffers[String, Int](
-        expandValueIntoTreeDistinct(IntSlice(0), Slice("b"), 0, 2, _, _),
+        (structureBuffer: IntBuffer, valuesBuffer: Buffer[String]) =>
+          expandValueIntoTreeDistinct(0, 2, IntSlice(0), Slice("b"), structureBuffer, valuesBuffer),
         IntBuffer(0, 0, 2),
         Buffer("c", "b", "a")
       ) {
@@ -1079,7 +1100,8 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe -1
       }
       testWithBuffers[String, Int](
-        expandValueIntoTreeDistinct(IntSlice(0, 1), Slice("d", "b"), 0, 2, _, _),
+        (structureBuffer: IntBuffer, valuesBuffer: Buffer[String]) =>
+          expandValueIntoTreeDistinct(0, 2, IntSlice(0, 1), Slice("d", "b"), structureBuffer, valuesBuffer),
         IntBuffer(0, 0, 2),
         Buffer("c", "b", "a")
       ) {
@@ -1089,7 +1111,15 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe 0
       }
       testWithBuffers[String, Int](
-        expandValueIntoTreeDistinct(IntSlice(0, 1, 1, 1), Slice("f", "e", "d", "b"), 0, 2, _, _),
+        (structureBuffer: IntBuffer, valuesBuffer: Buffer[String]) =>
+          expandValueIntoTreeDistinct(
+            0,
+            2,
+            IntSlice(0, 1, 1, 1),
+            Slice("f", "e", "d", "b"),
+            structureBuffer,
+            valuesBuffer
+          ),
         IntBuffer(0, 0, 2),
         Buffer("c", "b", "a")
       ) {
@@ -1099,7 +1129,15 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe 2
       }
       testWithBuffers[String, Int](
-        expandValueIntoTreeDistinct(IntSlice(0, 1, 1, 1), Slice("f", "e", "d", "c"), 1, 2, _, _),
+        (structureBuffer: IntBuffer, valuesBuffer: Buffer[String]) =>
+          expandValueIntoTreeDistinct(
+            1,
+            2,
+            IntSlice(0, 1, 1, 1),
+            Slice("f", "e", "d", "c"),
+            structureBuffer,
+            valuesBuffer
+          ),
         IntBuffer(0, 0, 2),
         Buffer("c", "b", "a")
       ) {
@@ -1705,7 +1743,67 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
       }
     }
 
-    "insert trees distinct" in {
+    "insert new child distinct between siblings" in {
+      testWithBuffers[String, Int](
+        insertBetweenChildrenDistinct(1, IntSlice(0, 1, 1), Slice("i", "d", "c"), false, _, _),
+        IntBuffer(0, 1, 0, 0, 1, 2, 0, 3),
+        Buffer("h", "g", "e", "f", "d", "c", "b", "a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 1, 0, 0, 0, 2, 2, 0, 3)
+          values shouldBe Array("h", "g", "e", "i", "f", "d", "c", "b", "a")
+          delta shouldBe 1
+      }
+      testWithBuffers[String, Int](
+        insertBetweenChildrenDistinct(6, IntSlice(0, 1, 1), Slice("i", "d", "c"), false, _, _),
+        IntBuffer(0, 1, 0, 0, 1, 2, 0, 3),
+        Buffer("h", "g", "e", "f", "d", "c", "b", "a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 1, 0, 0, 0, 2, 2, 0, 3)
+          values shouldBe Array("h", "g", "e", "f", "i", "d", "c", "b", "a")
+          delta shouldBe 1
+      }
+      testWithBuffers[String, Int](
+        insertBetweenChildrenDistinct(3, IntSlice(0, 1, 1), Slice("f", "d", "c"), false, _, _),
+        IntBuffer(0, 0, 2, 0, 2),
+        Buffer("e", "d", "c", "b", "a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 0, 1, 2, 0, 2)
+          values shouldBe Array("e", "f", "d", "c", "b", "a")
+          delta shouldBe 1
+      }
+      testWithBuffers[String, Int](
+        insertBetweenChildrenDistinct(3, IntSlice(0, 1), Slice("f", "b"), false, _, _),
+        IntBuffer(0, 0, 2, 0, 2),
+        Buffer("e", "d", "c", "b", "a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 0, 2, 0, 1, 2)
+          values shouldBe Array("e", "d", "c", "f", "b", "a")
+          delta shouldBe 1
+      }
+      testWithBuffers[String, Int](
+        insertBetweenChildrenDistinct(2, IntSlice(0, 1), Slice("f", "b"), false, _, _),
+        IntBuffer(0, 0, 2, 0, 2),
+        Buffer("e", "d", "c", "b", "a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 0, 2, 0, 1, 2)
+          values shouldBe Array("e", "d", "c", "f", "b", "a")
+          delta shouldBe 1
+      }
+      testWithBuffers[String, Int](
+        insertBetweenChildrenDistinct(1, IntSlice(0, 1), Slice("e", "d"), false, _, _),
+        IntBuffer(0, 0, 2),
+        Buffer("c", "b", "a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 0, 0, 1, 3)
+          values shouldBe Array("c", "b", "e", "d", "a")
+          delta shouldBe 2
+      }
       testWithBuffers[String, Int](
         insertBetweenChildrenDistinct(1, IntSlice(0, 1), Slice("e", "d"), true, _, _),
         IntBuffer(0, 0, 2),
@@ -1728,7 +1826,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
       }
     }
 
-    "insert trees distinct before" in {
+    "insert new child distinct before existing children" in {
       testWithBuffers[String, Int](
         insertBeforeChildrenDistinct(-1, IntSlice(), Slice.empty[String], _, _),
         IntBuffer.empty,
@@ -1871,7 +1969,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
       }
     }
 
-    "insert trees distinct after" in {
+    "insert new child distinct after existing children" in {
       testWithBuffers[String, Int](
         insertAfterChildrenDistinct(-1, IntSlice(), Slice.empty[String], _, _),
         IntBuffer.empty,
@@ -2014,7 +2112,169 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
       }
     }
 
-    "insert children on the left side" in {
+    "insert new children distinct before existing children" in {
+      testWithBuffers[String, Int](
+        insertBeforeChildrenDistinct(
+          1,
+          List(
+            (IntSlice(0, 1), Slice("d", "c")),
+            (IntSlice(0, 1, 1), Slice("h", "g", "e")),
+            (IntSlice(0, 1), Slice("f", "e"))
+          ),
+          _,
+          _
+        ),
+        IntBuffer(0, 1),
+        Buffer("c", "a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 1, 0, 0, 1, 2, 2)
+          values shouldBe Array("d", "c", "f", "h", "g", "e", "a")
+          delta shouldBe 5
+      }
+      testWithBuffers[String, Int](
+        insertBeforeChildrenDistinct(
+          1,
+          List(
+            (IntSlice(0, 1), Slice("d", "c")),
+            (IntSlice(0, 1), Slice("f", "e")),
+            (IntSlice(0, 1, 1), Slice("h", "g", "e"))
+          ),
+          _,
+          _
+        ),
+        IntBuffer(0, 1),
+        Buffer("c", "a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 1, 0, 1, 0, 2, 2)
+          values shouldBe Array("d", "c", "h", "g", "f", "e", "a")
+          delta shouldBe 5
+      }
+      testWithBuffers[String, Int](
+        insertBeforeChildrenDistinct(
+          1,
+          List((IntSlice(0, 1), Slice("d", "c")), (IntSlice(0, 1), Slice("f", "e"))),
+          _,
+          _
+        ),
+        IntBuffer(0, 1),
+        Buffer("c", "a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 1, 0, 1, 2)
+          values shouldBe Array("d", "c", "f", "e", "a")
+          delta shouldBe 3
+      }
+      testWithBuffers[String, Int](
+        insertBeforeChildrenDistinct(
+          1,
+          List((IntSlice(0, 1), Slice("d", "c")), (IntSlice(0, 1), Slice("f", "e"))),
+          _,
+          _
+        ),
+        IntBuffer(0, 1),
+        Buffer("b", "a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 0, 1, 0, 1, 3)
+          values shouldBe Array("b", "f", "e", "d", "c", "a")
+          delta shouldBe 4
+      }
+      testWithBuffers[String, Int](
+        insertBeforeChildrenDistinct(1, List((IntSlice(), Slice.empty[String])), _, _),
+        IntBuffer(0, 1),
+        Buffer("b", "a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 1)
+          values shouldBe Array("b", "a")
+          delta shouldBe 0
+      }
+    }
+
+    "insert new children distinct after existing children" in {
+      testWithBuffers[String, Int](
+        insertAfterChildrenDistinct(
+          1,
+          List(
+            (IntSlice(0, 1), Slice("d", "c")),
+            (IntSlice(0, 1, 1), Slice("h", "g", "e")),
+            (IntSlice(0, 1), Slice("f", "e"))
+          ),
+          _,
+          _
+        ),
+        IntBuffer(0, 1),
+        Buffer("c", "a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 0, 1, 2, 0, 1, 2)
+          values shouldBe Array("f", "h", "g", "e", "d", "c", "a")
+          delta shouldBe 5
+      }
+      testWithBuffers[String, Int](
+        insertAfterChildrenDistinct(
+          1,
+          List(
+            (IntSlice(0, 1), Slice("d", "c")),
+            (IntSlice(0, 1), Slice("f", "e")),
+            (IntSlice(0, 1, 1), Slice("h", "g", "e"))
+          ),
+          _,
+          _
+        ),
+        IntBuffer(0, 1),
+        Buffer("c", "a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 1, 0, 2, 0, 1, 2)
+          values shouldBe Array("h", "g", "f", "e", "d", "c", "a")
+          delta shouldBe 5
+      }
+      testWithBuffers[String, Int](
+        insertAfterChildrenDistinct(
+          1,
+          List((IntSlice(0, 1), Slice("d", "c")), (IntSlice(0, 1), Slice("f", "e"))),
+          _,
+          _
+        ),
+        IntBuffer(0, 1),
+        Buffer("c", "a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 1, 0, 1, 2)
+          values shouldBe Array("f", "e", "d", "c", "a")
+          delta shouldBe 3
+      }
+      testWithBuffers[String, Int](
+        insertAfterChildrenDistinct(
+          1,
+          List((IntSlice(0, 1), Slice("d", "c")), (IntSlice(0, 1), Slice("f", "e"))),
+          _,
+          _
+        ),
+        IntBuffer(0, 1),
+        Buffer("b", "a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 1, 0, 1, 0, 3)
+          values shouldBe Array("f", "e", "d", "c", "b", "a")
+          delta shouldBe 4
+      }
+      testWithBuffers[String, Int](
+        insertAfterChildrenDistinct(1, List((IntSlice(), Slice.empty[String])), _, _),
+        IntBuffer(0, 1),
+        Buffer("b", "a")
+      ) {
+        case (structure, values, delta) =>
+          structure shouldBe Array(0, 1)
+          values shouldBe Array("b", "a")
+          delta shouldBe 0
+      }
+    }
+
+    "insert new children before" in {
       testWithBuffers[String, Int](
         insertBeforeChildren(0, List((IntSlice(0), Slice("b"))), _, _, keepDistinct = false),
         IntBuffer(0),
@@ -2087,7 +2347,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
       }
     }
 
-    "insert children on the right side" in {
+    "insert children after" in {
       testWithBuffers[String, Int](
         insertAfterChildren(0, List((IntSlice(0), Slice("b"))), _, _, keepDistinct = false),
         IntBuffer(0),

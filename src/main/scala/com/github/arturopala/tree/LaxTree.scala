@@ -260,7 +260,7 @@ trait LaxTree[T] {
 object LaxTreeOps {
 
   /** [[LaxTree]] extensions for a [[Tree]]. */
-  implicit class LaxTreeExt[T: ClassTag](t: Tree[T]) extends LaxTree[T] {
+  implicit class LaxTreeExt[T: ClassTag](val t: Tree[T]) extends LaxTree[T] {
 
     final override def flatMapLax[K: ClassTag](f: T => Tree[K]): Tree[K] = t match {
       case Tree.empty => Tree.empty
@@ -275,7 +275,7 @@ object LaxTreeOps {
           .getOrElse(empty)
 
       case tree: ArrayTree[T] =>
-        ArrayTree.flatMap(tree.structure, tree.content, f)
+        ArrayTree.flatMapLax(tree.structure, tree.content, f)
     }
 
     final override def insertLeafLax[T1 >: T: ClassTag](value: T1): Tree[T1] = t match {

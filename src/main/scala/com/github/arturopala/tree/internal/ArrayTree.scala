@@ -355,7 +355,7 @@ object ArrayTree {
       )
 
   /** FlatMaps the tree without checking for duplicated children. */
-  final def flatMap[T: ClassTag, K: ClassTag](
+  final def flatMapLax[T: ClassTag, K: ClassTag](
     treeStructure: IntSlice,
     treeValues: Slice[T],
     f: T => Tree[K]
@@ -380,7 +380,7 @@ object ArrayTree {
       } else {
         val (structure, values) = tree.toSlices
         val delta =
-          ArrayTreeFunctions.expandValueIntoTree(structure, values, index + offset, structureBuffer, valuesBuffer)
+          ArrayTreeFunctions.expandValueIntoTreeLax(index + offset, structure, values, structureBuffer, valuesBuffer)
         offset = offset + delta
       }
       index = index + 1
@@ -415,7 +415,7 @@ object ArrayTree {
         val (structure, values) = tree.toSlices
         val delta =
           ArrayTreeFunctions
-            .expandValueIntoTreeDistinct(structure, values, index + offset, parent, structureBuffer, valuesBuffer)
+            .expandValueIntoTreeDistinct(index + offset, parent, structure, values, structureBuffer, valuesBuffer)
         offset = offset + delta
       }
       index = index + 1

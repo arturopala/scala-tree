@@ -489,33 +489,33 @@ class ArrayTreeSpec extends AnyWordSpecCompat {
 
     "flatMap a tree" in {
       val f0: String => Tree[Int] = s => Tree(s.length)
-      flatMap(IntSlice(), Slice.empty[String], f0) shouldBe Tree.empty
-      flatMap(IntSlice(0), Slice("a"), f0) shouldBe Tree(1)
-      flatMap(IntSlice(0, 1), aa_a, f0) shouldBe Tree(1, Tree(2))
-      flatMap(IntSlice(0, 1, 1), aaa_aa_a, f0) shouldBe Tree(1, Tree(2, Tree(3)))
-      flatMap(IntSlice(0, 0, 2), aaa_aa_a, f0) shouldBe Tree(1, Tree(2), Tree(3))
-      flatMap(IntSlice(0, 1, 1, 1), a_aaa_aa_a, f0) shouldBe Tree(
+      flatMapLax(IntSlice(), Slice.empty[String], f0) shouldBe Tree.empty
+      flatMapLax(IntSlice(0), Slice("a"), f0) shouldBe Tree(1)
+      flatMapLax(IntSlice(0, 1), aa_a, f0) shouldBe Tree(1, Tree(2))
+      flatMapLax(IntSlice(0, 1, 1), aaa_aa_a, f0) shouldBe Tree(1, Tree(2, Tree(3)))
+      flatMapLax(IntSlice(0, 0, 2), aaa_aa_a, f0) shouldBe Tree(1, Tree(2), Tree(3))
+      flatMapLax(IntSlice(0, 1, 1, 1), a_aaa_aa_a, f0) shouldBe Tree(
         1,
         Tree(2, Tree(3, Tree(1)))
       )
-      flatMap(IntSlice(0, 0, 0, 3), a_aaa_aa_a, f0) shouldBe Tree(1, Tree(2), Tree(3), Tree(1))
-      flatMap(IntSlice(0, 0, 2, 1), a_aaa_aa_a, f0) shouldBe Tree(1, Tree(2, Tree(3), Tree(1)))
-      flatMap(IntSlice(0, 0, 1, 2), a_aaa_aa_a, f0) shouldBe Tree(1, Tree(2, Tree(3)), Tree(1))
-      flatMap(IntSlice(0, 1, 0, 2), a_aaa_aa_a, f0) shouldBe Tree(1, Tree(2), Tree(3, Tree(1)))
-      flatMap(IntSlice(0, 1, 0, 2, 1), aa_a_aaa_aa_a, f0) shouldBe Tree(1, Tree(2, Tree(3), Tree(1, Tree(2))))
-      flatMap(IntSlice(0, 1, 0, 1, 2), aa_a_aaa_aa_a, f0) shouldBe
+      flatMapLax(IntSlice(0, 0, 0, 3), a_aaa_aa_a, f0) shouldBe Tree(1, Tree(2), Tree(3), Tree(1))
+      flatMapLax(IntSlice(0, 0, 2, 1), a_aaa_aa_a, f0) shouldBe Tree(1, Tree(2, Tree(3), Tree(1)))
+      flatMapLax(IntSlice(0, 0, 1, 2), a_aaa_aa_a, f0) shouldBe Tree(1, Tree(2, Tree(3)), Tree(1))
+      flatMapLax(IntSlice(0, 1, 0, 2), a_aaa_aa_a, f0) shouldBe Tree(1, Tree(2), Tree(3, Tree(1)))
+      flatMapLax(IntSlice(0, 1, 0, 2, 1), aa_a_aaa_aa_a, f0) shouldBe Tree(1, Tree(2, Tree(3), Tree(1, Tree(2))))
+      flatMapLax(IntSlice(0, 1, 0, 1, 2), aa_a_aaa_aa_a, f0) shouldBe
         Tree(1, Tree(2, Tree(3)), Tree(1, Tree(2)))
 
       val f1: String => Tree[Int] = s => Tree(s.length, Tree(s.length * 2))
-      flatMap(IntSlice(), Slice.empty[String], f1) shouldBe Tree.empty
-      flatMap(IntSlice(0), Slice("a"), f1) shouldBe Tree(1, Tree(2))
-      flatMap(IntSlice(0, 1), aa_a, f1) shouldBe Tree(1, Tree(2, Tree(4)), Tree(2))
-      flatMap(IntSlice(0, 1, 1), aaa_aa_a, f1) shouldBe Tree(
+      flatMapLax(IntSlice(), Slice.empty[String], f1) shouldBe Tree.empty
+      flatMapLax(IntSlice(0), Slice("a"), f1) shouldBe Tree(1, Tree(2))
+      flatMapLax(IntSlice(0, 1), aa_a, f1) shouldBe Tree(1, Tree(2, Tree(4)), Tree(2))
+      flatMapLax(IntSlice(0, 1, 1), aaa_aa_a, f1) shouldBe Tree(
         1,
         Tree(2, Tree(3, Tree(6)), Tree(4)),
         Tree(2)
       )
-      flatMap(IntSlice(0, 0, 2), aaa_aa_a, f1) shouldBe Tree(
+      flatMapLax(IntSlice(0, 0, 2), aaa_aa_a, f1) shouldBe Tree(
         1,
         Tree(2, Tree(4)),
         Tree(3, Tree(6)),
@@ -523,10 +523,10 @@ class ArrayTreeSpec extends AnyWordSpecCompat {
       )
 
       val f2: String => Tree[Int] = s => Tree(s.length, Tree(s.length * 2), Tree(s.length + 1))
-      flatMap(IntSlice(), Slice.empty[String], f2) shouldBe Tree.empty
-      flatMap(IntSlice(0), Slice("a"), f2) shouldBe Tree(1, Tree(2), Tree(2))
-      flatMap(IntSlice(0, 1), aa_a, f2) shouldBe Tree(1, Tree(2, Tree(4), Tree(3)), Tree(2), Tree(2))
-      flatMap(IntSlice(0, 1, 1), aaa_aa_a, f2) shouldBe Tree(
+      flatMapLax(IntSlice(), Slice.empty[String], f2) shouldBe Tree.empty
+      flatMapLax(IntSlice(0), Slice("a"), f2) shouldBe Tree(1, Tree(2), Tree(2))
+      flatMapLax(IntSlice(0, 1), aa_a, f2) shouldBe Tree(1, Tree(2, Tree(4), Tree(3)), Tree(2), Tree(2))
+      flatMapLax(IntSlice(0, 1, 1), aaa_aa_a, f2) shouldBe Tree(
         1,
         Tree(2, Tree(3, Tree(6), Tree(4)), Tree(4), Tree(3)),
         Tree(2),
@@ -534,22 +534,22 @@ class ArrayTreeSpec extends AnyWordSpecCompat {
       )
 
       val f3: String => Tree[Int] = _ => Tree.empty
-      flatMap(IntSlice(), Slice.empty[String], f3) shouldBe Tree.empty
-      flatMap(IntSlice(0), Slice("a"), f3) shouldBe Tree.empty
-      flatMap(IntSlice(0, 1), aa_a, f3) shouldBe Tree.empty
-      flatMap(IntSlice(0, 1, 1), aaa_aa_a, f3) shouldBe Tree.empty
+      flatMapLax(IntSlice(), Slice.empty[String], f3) shouldBe Tree.empty
+      flatMapLax(IntSlice(0), Slice("a"), f3) shouldBe Tree.empty
+      flatMapLax(IntSlice(0, 1), aa_a, f3) shouldBe Tree.empty
+      flatMapLax(IntSlice(0, 1, 1), aaa_aa_a, f3) shouldBe Tree.empty
 
       val f4: String => Tree[Int] = s => if (s == "a") Tree.empty else Tree(s.length, Tree(s.length * 2))
-      flatMap(IntSlice(), Slice.empty[String], f4) shouldBe Tree.empty
-      flatMap(IntSlice(0), Slice("a"), f4) shouldBe Tree.empty
-      flatMap(IntSlice(0, 1), aa_a, f4) shouldBe Tree(2, Tree(4))
-      flatMap(IntSlice(0, 1, 1), aaa_aa_a, f4) shouldBe Tree(2, Tree(3, Tree(6)), Tree(4))
+      flatMapLax(IntSlice(), Slice.empty[String], f4) shouldBe Tree.empty
+      flatMapLax(IntSlice(0), Slice("a"), f4) shouldBe Tree.empty
+      flatMapLax(IntSlice(0, 1), aa_a, f4) shouldBe Tree(2, Tree(4))
+      flatMapLax(IntSlice(0, 1, 1), aaa_aa_a, f4) shouldBe Tree(2, Tree(3, Tree(6)), Tree(4))
 
       val f5: String => Tree[Int] = _ => Tree(0, Tree(1, Tree(2, Tree(4, Tree(5)))))
-      flatMap(IntSlice(0), Slice("a"), f5) shouldBe Tree(0, Tree(1, Tree(2, Tree(4, Tree(5)))))
-      flatMap(IntSlice(0, 1), Slice("b", "a"), f5) shouldBe
+      flatMapLax(IntSlice(0), Slice("a"), f5) shouldBe Tree(0, Tree(1, Tree(2, Tree(4, Tree(5)))))
+      flatMapLax(IntSlice(0, 1), Slice("b", "a"), f5) shouldBe
         Tree(0, Tree(0, Tree(1, Tree(2, Tree(4, Tree(5))))), Tree(1, Tree(2, Tree(4, Tree(5)))))
-      flatMap(IntSlice(0, 0, 2), Slice("c", "b", "a"), f5) shouldBe
+      flatMapLax(IntSlice(0, 0, 2), Slice("c", "b", "a"), f5) shouldBe
         Tree(
           0,
           Tree(0, Tree(1, Tree(2, Tree(4, Tree(5))))),
