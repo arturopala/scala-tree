@@ -51,9 +51,11 @@ trait LaxTree[T] {
   // LAX INSERTIONS
 
   /** Inserts a new child node holding the value and returns updated tree.
+    * @param value value of the new child leaf
+    * @param append whether to append or prepend to the existing children
     * @note This is a lax method, it doesn't preserve children values uniqueness.
     * @group laxInsertion */
-  def insertLeafLax[T1 >: T: ClassTag](value: T1): Tree[T1]
+  def insertLeafLax[T1 >: T: ClassTag](value: T1, append: Boolean = false): Tree[T1]
 
   /** Inserts new leaf-type children and returns updated tree.
     * @note This is a lax method, it doesn't preserve children values uniqueness.
@@ -278,14 +280,14 @@ object LaxTreeOps {
         ArrayTree.flatMapLax(tree.structure, tree.content, f)
     }
 
-    final override def insertLeafLax[T1 >: T: ClassTag](value: T1): Tree[T1] = t match {
+    final override def insertLeafLax[T1 >: T: ClassTag](value: T1, append: Boolean = false): Tree[T1] = t match {
       case Tree.empty => Tree(value)
 
       case node: NodeTree[T] =>
-        Tree(node.head, Tree(value) +: node.children)
+        Tree(node.head, if (append) node.children :+ Tree(value) else Tree(value) +: node.children)
 
       case tree: ArrayTree[T] =>
-        ArrayTree.insertLeaf(tree.structure.length - 1, value, tree, keepDistinct = false)
+        ArrayTree.insertLeaf(tree.structure.length - 1, value, tree, append, keepDistinct = false)
     }
 
     final override def insertLeavesLax[T1 >: T: ClassTag](values: Iterable[T1]): Tree[T1] = t match {

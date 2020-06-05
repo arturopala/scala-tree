@@ -18,6 +18,7 @@ package com.github.arturopala.tree.internal
 
 import com.github.arturopala.bufferandslice._
 import com.github.arturopala.tree.Tree.ArrayTree
+import com.github.arturopala.tree.internal.ArrayTreeFunctions.bottomIndex
 import com.github.arturopala.tree.{Tree, TreeBuilder}
 import com.github.arturopala.tree.internal.IntOps._
 
@@ -448,7 +449,7 @@ object ArrayTree {
             val newNode: Tree[T1] = TreeBuilder.linearTreeFromSequence(valueSequence)
             insertTree(index, newNode, target)
           case None =>
-            insertLeaf(index, value, target, keepDistinct)
+            insertLeaf(index, value, target, false, keepDistinct)
         }
     }
   }
@@ -471,7 +472,7 @@ object ArrayTree {
       case Some(index) =>
         if (unmatched.isDefined) Left(target)
         else {
-          Right(insertLeaf(index, value, target, keepDistinct))
+          Right(insertLeaf(index, value, target, false, keepDistinct))
         }
     }
   }
@@ -492,25 +493,32 @@ object ArrayTree {
     }.asInstanceOf[ArrayTree[T1]]
 
   /** Inserts new leaf to a tree at an index.
-    * @param index index of the root of a target sub-tree
+    * @param parentIndex parent index
     * @param value value to insert
-    * @param target whole tree
+    * @param target target tree
     * @param keepDistinct if true keeps children distinct
     * @return modified tree
     */
   final def insertLeaf[T: ClassTag](
-    index: Int,
+    parentIndex: Int,
     value: T,
     target: Tree[T],
+    append: Boolean,
     keepDistinct: Boolean
   ): Tree[T] =
     if (target.isEmpty) Tree(value).deflated
     else {
-      assert(index >= 0 && index < target.size, "Insertion index must be within target's tree range [0,length).")
-      if (keepDistinct && hasChildValue(index, value, target)) target
+      assert(
+        parentIndex >= 0 && parentIndex < target.size,
+        "Insertion index must be within target's tree range [0,length)."
+      )
+      if (keepDistinct && hasChildValue(parentIndex, value, target)) target
       else
         transform(target) { (structureBuffer, valuesBuffer) =>
-          ArrayTreeFunctions.insertValue(index, value, structureBuffer, valuesBuffer).intAsSome
+          val insertIndex =
+            if (append) bottomIndex(parentIndex, structureBuffer)
+            else parentIndex
+          ArrayTreeFunctions.insertValue(insertIndex, parentIndex, value, structureBuffer, valuesBuffer).intAsSome
         }
     }
 

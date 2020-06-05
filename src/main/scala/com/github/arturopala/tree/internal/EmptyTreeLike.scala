@@ -94,7 +94,7 @@ trait EmptyTreeLike extends TreeLike[Nothing] {
 
   final override def prepend[T1: ClassTag](value: T1): Tree[T1] = Tree(value)
 
-  final override def insertLeaf[T1: ClassTag](value: T1): Tree[T1] = Tree(value)
+  final override def insertLeaf[T1: ClassTag](value: T1, append: Boolean = false): Tree[T1] = Tree(value)
 
   final override def insertLeaves[T1: ClassTag](values: Iterable[T1]): Tree[T1] =
     if (values.size == 1) Tree(values.head) else Tree.empty

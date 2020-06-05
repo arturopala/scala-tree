@@ -29,7 +29,7 @@ class TreeInsertionsSpec extends FunSuite {
 
     def tree[T: ClassTag](t: Tree[T]): Tree[T]
 
-    "insert distinct new leaf to a tree" in {
+    "insert distinct new leaf to a tree - prepend to children" in {
       tree0.insertLeaf("a") shouldBe Tree("a")
       tree1.insertLeaf("b") shouldBe Tree("a", Tree("b"))
       tree2.insertLeaf("c") shouldBe Tree("a", Tree("c"), Tree("b"))
@@ -61,7 +61,34 @@ class TreeInsertionsSpec extends FunSuite {
       tree9.insertLeaf("e") shouldBe tree9
     }
 
-    "insert lax new leaf to a tree" in {
+    "insert distinct new leaf to a tree - append to children" in {
+      tree0.insertLeaf("a", append = true) shouldBe Tree("a")
+      tree1.insertLeaf("b", append = true) shouldBe Tree("a", Tree("b"))
+      tree2.insertLeaf("c", append = true) shouldBe Tree("a", Tree("b"), Tree("c"))
+      tree2.insertLeaf("b", append = true) shouldBe tree2
+      tree3_1.insertLeaf("b", append = true) shouldBe tree3_1
+      tree3_1.insertLeaf("d", append = true) shouldBe Tree("a", Tree("b", Tree("c")), Tree("d"))
+      tree3_1.insertLeaf("c", append = true) shouldBe Tree("a", Tree("b", Tree("c")), Tree("c"))
+      tree4_1.insertLeaf("c", append = true) shouldBe Tree("a", Tree("b", Tree("c", Tree("d"))), Tree("c"))
+      tree7.insertLeaf("e", append = true) shouldBe
+        Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e", Tree("f"))), Tree("g"), Tree("e"))
+
+      tree2.insertLeaf("b", append = true) shouldBe tree2
+      tree3_1.insertLeaf("b", append = true) shouldBe tree3_1
+      tree3_2.insertLeaf("b", append = true) shouldBe tree3_2
+      tree3_2.insertLeaf("c", append = true) shouldBe tree3_2
+      tree4_1.insertLeaf("b", append = true) shouldBe tree4_1
+      tree4_2.insertLeaf("b", append = true) shouldBe tree4_2
+      tree4_2.insertLeaf("d", append = true) shouldBe tree4_2
+      tree4_3.insertLeaf("b", append = true) shouldBe tree4_3
+      tree7.insertLeaf("b", append = true) shouldBe tree7
+      tree7.insertLeaf("d", append = true) shouldBe tree7
+      tree7.insertLeaf("g", append = true) shouldBe tree7
+      tree9.insertLeaf("b", append = true) shouldBe tree9
+      tree9.insertLeaf("e", append = true) shouldBe tree9
+    }
+
+    "insert lax new leaf to a tree - prepend to children" in {
       tree0.insertLeafLax("a") shouldBe Tree("a")
       tree1.insertLeafLax("b") shouldBe Tree("a", Tree("b"))
       tree2.insertLeafLax("c") shouldBe Tree("a", Tree("c"), Tree("b"))
@@ -83,6 +110,31 @@ class TreeInsertionsSpec extends FunSuite {
         Tree("b", Tree("c")),
         Tree("d", Tree("e", Tree("f"))),
         Tree("g")
+      )
+    }
+
+    "insert lax new leaf to a tree - append to children" in {
+      tree0.insertLeafLax("a", append = true) shouldBe Tree("a")
+      tree1.insertLeafLax("b", append = true) shouldBe Tree("a", Tree("b"))
+      tree2.insertLeafLax("c", append = true) shouldBe Tree("a", Tree("b"), Tree("c"))
+      tree3_1.insertLeafLax("d", append = true) shouldBe Tree("a", Tree("b", Tree("c")), Tree("d"))
+      tree3_1.insertLeafLax("b", append = true) shouldBe Tree("a", Tree("b", Tree("c")), Tree("b"))
+      tree3_1.insertLeafLax("c", append = true) shouldBe Tree("a", Tree("b", Tree("c")), Tree("c"))
+      tree3_2.insertLeafLax("c", append = true) shouldBe Tree("a", Tree("b"), Tree("c"), Tree("c"))
+      tree4_1.insertLeafLax("c", append = true) shouldBe Tree("a", Tree("b", Tree("c", Tree("d"))), Tree("c"))
+      tree7.insertLeafLax("b", append = true) shouldBe Tree(
+        "a",
+        Tree("b", Tree("c")),
+        Tree("d", Tree("e", Tree("f"))),
+        Tree("g"),
+        Tree("b")
+      )
+      tree7.insertLeafLax("d", append = true) shouldBe Tree(
+        "a",
+        Tree("b", Tree("c")),
+        Tree("d", Tree("e", Tree("f"))),
+        Tree("g"),
+        Tree("d")
       )
     }
 

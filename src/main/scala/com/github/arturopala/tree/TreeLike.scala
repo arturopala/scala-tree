@@ -449,12 +449,14 @@ trait TreeLike[+T] {
   def prepend[T1 >: T: ClassTag](value: T1): Tree[T1]
 
   /** Inserts a new leaf holding the value and returns updated tree.
-    * @note This method tries to keep children values unique by merging inserted tree (and only that) when needed.
+    * @param value value of the new child leaf
+    * @param append whether to append or prepend to the existing children
+    * @note This method tries to keep children values unique by merging inserted leaf (and only that) when needed.
     * @group insertion */
-  def insertLeaf[T1 >: T: ClassTag](value: T1): Tree[T1]
+  def insertLeaf[T1 >: T: ClassTag](value: T1, append: Boolean = false): Tree[T1]
 
   /** Inserts new leaf-type children and returns updated tree.
-    * @note This method tries to keep children values unique by merging inserted tree (and only that) when needed.
+    * @note This method tries to keep children values unique by merging inserted leaves (and only these) when needed.
     * @group insertion */
   def insertLeaves[T1 >: T: ClassTag](values: Iterable[T1]): Tree[T1]
 
@@ -481,7 +483,7 @@ trait TreeLike[+T] {
   def insertChild[T1 >: T: ClassTag](child: Tree[T1]): Tree[T1]
 
   /** Inserts new children and returns updated tree.
-    * @note This method tries to keep children values unique by merging inserted tree (and only that) when needed.
+    * @note This method tries to keep children values unique by merging inserted tree (and only these) when needed.
     * @group insertion */
   def insertChildren[T1 >: T: ClassTag](children: Iterable[Tree[T1]]): Tree[T1]
 

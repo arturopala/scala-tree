@@ -680,16 +680,160 @@ class ArrayTreeSpec extends AnyWordSpecCompat {
         Tree(0, Tree(0, Tree(1, Tree(2, Tree(4, Tree(5))))), Tree(1, Tree(2, Tree(4, Tree(5)))))
     }
 
-    "insert a value" in {
-      insertLeaf(0, "a", Tree("a"), false) shouldBe Tree("a", Tree("a"))
-      insertLeaf(1, "a", Tree("a", Tree("b")), false) shouldBe Tree("a", Tree("a"), Tree("b"))
-      insertLeaf(0, "a", Tree("a", Tree("b")), false) shouldBe Tree("a", Tree("b", Tree("a")))
-      insertLeaf(2, "a", Tree("a", Tree("b"), Tree("c")), false) shouldBe Tree("a", Tree("a"), Tree("b"), Tree("c"))
-      insertLeaf(1, "a", Tree("a", Tree("b"), Tree("c")), false) shouldBe Tree("a", Tree("b", Tree("a")), Tree("c"))
-      insertLeaf(0, "a", Tree("a", Tree("b"), Tree("c")), false) shouldBe Tree("a", Tree("b"), Tree("c", Tree("a")))
-      insertLeaf(0, "a", Tree("a", Tree("b", Tree("c"))), false) shouldBe Tree("a", Tree("b", Tree("c", Tree("a"))))
-      insertLeaf(1, "a", Tree("a", Tree("b", Tree("c"))), false) shouldBe Tree("a", Tree("b", Tree("a"), Tree("c")))
-      insertLeaf(2, "a", Tree("a", Tree("b", Tree("c"))), false) shouldBe Tree("a", Tree("a"), Tree("b", Tree("c")))
+    "insert distinct value prepend to existing children" in {
+      insertLeaf(0, "a", Tree("a"), false, true) shouldBe Tree("a", Tree("a"))
+      insertLeaf(1, "a", Tree("a", Tree("b")), false, true) shouldBe Tree("a", Tree("a"), Tree("b"))
+      insertLeaf(0, "a", Tree("a", Tree("b")), false, true) shouldBe Tree("a", Tree("b", Tree("a")))
+      insertLeaf(2, "a", Tree("a", Tree("b"), Tree("c")), false, true) shouldBe Tree(
+        "a",
+        Tree("a"),
+        Tree("b"),
+        Tree("c")
+      )
+      insertLeaf(1, "a", Tree("a", Tree("b"), Tree("c")), false, true) shouldBe Tree(
+        "a",
+        Tree("b", Tree("a")),
+        Tree("c")
+      )
+      insertLeaf(0, "a", Tree("a", Tree("b"), Tree("c")), false, true) shouldBe Tree(
+        "a",
+        Tree("b"),
+        Tree("c", Tree("a"))
+      )
+      insertLeaf(0, "a", Tree("a", Tree("b", Tree("c"))), false, true) shouldBe Tree(
+        "a",
+        Tree("b", Tree("c", Tree("a")))
+      )
+      insertLeaf(1, "a", Tree("a", Tree("b", Tree("c"))), false, true) shouldBe Tree(
+        "a",
+        Tree("b", Tree("a"), Tree("c"))
+      )
+      insertLeaf(2, "a", Tree("a", Tree("b", Tree("c"))), false, true) shouldBe Tree(
+        "a",
+        Tree("a"),
+        Tree("b", Tree("c"))
+      )
+      insertLeaf(2, "b", Tree("a", Tree("b", Tree("c"))), false, true) shouldBe
+        Tree("a", Tree("b", Tree("c")))
+    }
+
+    "insert lax value - prepend to existing children" in {
+      insertLeaf(0, "a", Tree("a"), false, false) shouldBe Tree("a", Tree("a"))
+      insertLeaf(1, "a", Tree("a", Tree("b")), false, false) shouldBe Tree("a", Tree("a"), Tree("b"))
+      insertLeaf(0, "a", Tree("a", Tree("b")), false, false) shouldBe Tree("a", Tree("b", Tree("a")))
+      insertLeaf(2, "a", Tree("a", Tree("b"), Tree("c")), false, false) shouldBe Tree(
+        "a",
+        Tree("a"),
+        Tree("b"),
+        Tree("c")
+      )
+      insertLeaf(1, "a", Tree("a", Tree("b"), Tree("c")), false, false) shouldBe Tree(
+        "a",
+        Tree("b", Tree("a")),
+        Tree("c")
+      )
+      insertLeaf(0, "a", Tree("a", Tree("b"), Tree("c")), false, false) shouldBe Tree(
+        "a",
+        Tree("b"),
+        Tree("c", Tree("a"))
+      )
+      insertLeaf(0, "a", Tree("a", Tree("b", Tree("c"))), false, false) shouldBe Tree(
+        "a",
+        Tree("b", Tree("c", Tree("a")))
+      )
+      insertLeaf(1, "a", Tree("a", Tree("b", Tree("c"))), false, false) shouldBe Tree(
+        "a",
+        Tree("b", Tree("a"), Tree("c"))
+      )
+      insertLeaf(2, "a", Tree("a", Tree("b", Tree("c"))), false, false) shouldBe Tree(
+        "a",
+        Tree("a"),
+        Tree("b", Tree("c"))
+      )
+      insertLeaf(2, "b", Tree("a", Tree("b", Tree("c"))), false, false) shouldBe Tree(
+        "a",
+        Tree("b"),
+        Tree("b", Tree("c"))
+      )
+    }
+
+    "insert distinct value append to existing children" in {
+      insertLeaf(0, "a", Tree("a"), true, true) shouldBe Tree("a", Tree("a"))
+      insertLeaf(1, "a", Tree("a", Tree("b")), true, true) shouldBe
+        Tree("a", Tree("b"), Tree("a"))
+      insertLeaf(0, "a", Tree("a", Tree("b")), true, true) shouldBe
+        Tree("a", Tree("b", Tree("a")))
+      insertLeaf(2, "a", Tree("a", Tree("b"), Tree("c")), true, true) shouldBe Tree(
+        "a",
+        Tree("b"),
+        Tree("c"),
+        Tree("a")
+      )
+      insertLeaf(1, "a", Tree("a", Tree("b"), Tree("c")), true, true) shouldBe Tree(
+        "a",
+        Tree("b", Tree("a")),
+        Tree("c")
+      )
+      insertLeaf(0, "a", Tree("a", Tree("b"), Tree("c")), true, true) shouldBe Tree(
+        "a",
+        Tree("b"),
+        Tree("c", Tree("a"))
+      )
+      insertLeaf(0, "a", Tree("a", Tree("b", Tree("c"))), true, true) shouldBe Tree(
+        "a",
+        Tree("b", Tree("c", Tree("a")))
+      )
+      insertLeaf(1, "a", Tree("a", Tree("b", Tree("c"))), true, true) shouldBe Tree(
+        "a",
+        Tree("b", Tree("c"), Tree("a"))
+      )
+      insertLeaf(2, "a", Tree("a", Tree("b", Tree("c"))), true, true) shouldBe Tree(
+        "a",
+        Tree("b", Tree("c")),
+        Tree("a")
+      )
+      insertLeaf(2, "b", Tree("a", Tree("b", Tree("c"))), true, true) shouldBe
+        Tree("a", Tree("b", Tree("c")))
+    }
+
+    "insert lax value - append to existing children" in {
+      insertLeaf(0, "a", Tree("a"), true, false) shouldBe Tree("a", Tree("a"))
+      insertLeaf(1, "a", Tree("a", Tree("b")), true, false) shouldBe Tree("a", Tree("b"), Tree("a"))
+      insertLeaf(0, "a", Tree("a", Tree("b")), true, false) shouldBe Tree("a", Tree("b", Tree("a")))
+      insertLeaf(2, "a", Tree("a", Tree("b"), Tree("c")), true, false) shouldBe Tree(
+        "a",
+        Tree("b"),
+        Tree("c"),
+        Tree("a")
+      )
+      insertLeaf(1, "a", Tree("a", Tree("b"), Tree("c")), true, false) shouldBe Tree(
+        "a",
+        Tree("b", Tree("a")),
+        Tree("c")
+      )
+      insertLeaf(0, "a", Tree("a", Tree("b"), Tree("c")), true, false) shouldBe Tree(
+        "a",
+        Tree("b"),
+        Tree("c", Tree("a"))
+      )
+      insertLeaf(0, "a", Tree("a", Tree("b", Tree("c"))), true, false) shouldBe Tree(
+        "a",
+        Tree("b", Tree("c", Tree("a")))
+      )
+      insertLeaf(1, "a", Tree("a", Tree("b", Tree("c"))), true, false) shouldBe Tree(
+        "a",
+        Tree("b", Tree("c"), Tree("a"))
+      )
+      insertLeaf(2, "a", Tree("a", Tree("b", Tree("c"))), true, false) shouldBe Tree(
+        "a",
+        Tree("b", Tree("c")),
+        Tree("a")
+      )
+      insertLeaf(2, "b", Tree("a", Tree("b", Tree("c"))), true, false) shouldBe Tree(
+        "a",
+        Tree("b", Tree("c")),
+        Tree("b")
+      )
     }
 
     "insert a subtree" in {

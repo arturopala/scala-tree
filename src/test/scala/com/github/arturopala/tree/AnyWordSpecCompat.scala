@@ -37,7 +37,7 @@ trait AnyWordSpecCompat extends munit.FunSuite {
     }
   }
 
-  implicit class IterableExt[T](iterable: Iterable[T]) {
+  implicit class IterableExt[T](val iterable: Iterable[T]) {
 
     def shouldBe(expected: Iterable[T])(implicit loc: munit.Location): Unit = {
       assert(
@@ -45,6 +45,23 @@ trait AnyWordSpecCompat extends munit.FunSuite {
         s"both collections must have the same size, expected ${expected.toSeq}, but got ${iterable.toSeq}"
       )
       iterable.zip(expected).foreach { case (a, b) => assertEquals(a, b) }
+    }
+  }
+
+  implicit class ArrayExt[T](val array: Array[T]) {
+
+    def shouldBe(expected: Iterable[T])(implicit loc: munit.Location): Unit = {
+      assert(
+        array.size == expected.size,
+        s"both collections must have the same size, expected ${expected.mkString("[", ",", "]")}, but got ${array
+          .mkString("[", ",", "]")}"
+      )
+      array.zip(expected).zipWithIndex.foreach {
+        case ((a, b), i) =>
+          if (a.isInstanceOf[Array[Int]] && b.isInstanceOf[Array[Int]]) {
+            ArrayExt(a.asInstanceOf[Array[Int]]).shouldBe(b.asInstanceOf[Array[Int]])
+          } else assertEquals(a, b, s"Values at index $i are not same")
+      }
     }
   }
 

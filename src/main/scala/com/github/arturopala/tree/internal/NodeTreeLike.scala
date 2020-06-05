@@ -117,9 +117,9 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
 
   final override def prepend[T1 >: T: ClassTag](value: T1): Tree[T1] = Tree(value, node)
 
-  final override def insertLeaf[T1 >: T: ClassTag](value: T1): Tree[T1] =
+  final override def insertLeaf[T1 >: T: ClassTag](value: T1, append: Boolean = false): Tree[T1] =
     if (node.children.exists(_.head == value)) node
-    else Tree(node.head, Tree(value) +: node.children)
+    else Tree(node.head, if (append) node.children :+ Tree(value) else Tree(value) +: node.children)
 
   final override def insertLeaves[T1 >: T: ClassTag](values: Iterable[T1]): Tree[T1] =
     if (values.isEmpty) node

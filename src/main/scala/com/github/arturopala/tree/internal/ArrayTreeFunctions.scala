@@ -925,19 +925,6 @@ object ArrayTreeFunctions {
     * Shifts existing buffer content right, starting from an index.
     * Increments parent's children count.
     * @return buffer length change */
-  def insertValue[T](index: Int, value: T, structureBuffer: IntBuffer, valuesBuffer: Buffer[T]): Int = {
-    structureBuffer.increment(index)
-    structureBuffer.shiftRight(index, 1)
-    structureBuffer.update(index, 0)
-    valuesBuffer.shiftRight(index, 1)
-    valuesBuffer.update(index, value)
-    1
-  }
-
-  /** Inserts new child value of the parent at an index..
-    * Shifts existing buffer content right, starting from an index.
-    * Increments parent's children count.
-    * @return buffer length change */
   def insertValue[T](
     index: Int,
     parentIndex: Int,
