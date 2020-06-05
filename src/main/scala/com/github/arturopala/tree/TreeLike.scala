@@ -456,9 +456,11 @@ trait TreeLike[+T] {
   def insertLeaf[T1 >: T: ClassTag](value: T1, append: Boolean = false): Tree[T1]
 
   /** Inserts new leaf-type children and returns updated tree.
+    * @param values values of the new children leaves
+    * @param append whether to append or prepend to the existing children
     * @note This method tries to keep children values unique by merging inserted leaves (and only these) when needed.
     * @group insertion */
-  def insertLeaves[T1 >: T: ClassTag](values: Iterable[T1]): Tree[T1]
+  def insertLeaves[T1 >: T: ClassTag](values: Iterable[T1], append: Boolean = false): Tree[T1]
 
   /** Inserts, at the given path, a new leaf holding the value and returns a whole tree updated.
     * If path doesn't fully exist in the tree then remaining suffix will be created.

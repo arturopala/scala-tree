@@ -58,9 +58,11 @@ trait LaxTree[T] {
   def insertLeafLax[T1 >: T: ClassTag](value: T1, append: Boolean = false): Tree[T1]
 
   /** Inserts new leaf-type children and returns updated tree.
+    * @param values values of the new children leaves
+    * @param append whether to append or prepend to the existing children
     * @note This is a lax method, it doesn't preserve children values uniqueness.
     * @group laxInsertion */
-  def insertLeavesLax[T1 >: T: ClassTag](values: Iterable[T1]): Tree[T1]
+  def insertLeavesLax[T1 >: T: ClassTag](values: Iterable[T1], append: Boolean = false): Tree[T1]
 
   /** Inserts, at the given path, a new child node holding the value and returns a whole tree updated.
     * If path doesn't fully exist in the tree then remaining suffix will be created.
@@ -290,15 +292,20 @@ object LaxTreeOps {
         ArrayTree.insertLeaf(tree.structure.length - 1, value, tree, append, keepDistinct = false)
     }
 
-    final override def insertLeavesLax[T1 >: T: ClassTag](values: Iterable[T1]): Tree[T1] = t match {
-      case Tree.empty => if (values.size == 1) Tree(values.head) else Tree.empty
+    final override def insertLeavesLax[T1 >: T: ClassTag](values: Iterable[T1], append: Boolean = false): Tree[T1] =
+      t match {
+        case Tree.empty => if (values.size == 1) Tree(values.head) else Tree.empty
 
-      case node: NodeTree[T] =>
-        Tree(node.head, values.map(Tree.apply[T1]) ++: node.children)
+        case node: NodeTree[T] =>
+          Tree(
+            node.head,
+            if (append) node.children ++ values.map(Tree.apply[T1])
+            else values.map(Tree.apply[T1]) ++: node.children
+          )
 
-      case tree: ArrayTree[T] =>
-        ArrayTree.insertLeaves(tree.structure.length - 1, values, tree, keepDistinct = false)
-    }
+        case tree: ArrayTree[T] =>
+          ArrayTree.insertLeaves(tree.structure.length - 1, values, tree, append, keepDistinct = false)
+      }
 
     final override def insertLeafLaxAt[T1 >: T: ClassTag](path: Iterable[T1], value: T1): Tree[T1] = t match {
       case Tree.empty =>

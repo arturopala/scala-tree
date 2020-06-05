@@ -493,9 +493,10 @@ object ArrayTree {
     }.asInstanceOf[ArrayTree[T1]]
 
   /** Inserts new leaf to a tree at an index.
-    * @param parentIndex parent index
+    * @param parentIndex index of the tree where to insert child
     * @param value value to insert
-    * @param target target tree
+    * @param target the array tree
+    * @param append whether to append (after) or prepend (before) to the existing children
     * @param keepDistinct if true keeps children distinct
     * @return modified tree
     */
@@ -523,29 +524,41 @@ object ArrayTree {
     }
 
   /** Inserts new leaves to a tree at an index.
-    * @param index index of the root of a target sub-tree
+    * @param parentIndex index of the tree where to insert children
     * @param values leaves to insert
-    * @param target whole tree
+    * @param target the array tree
+    * @param append whether to append (after) or prepend (before) to the existing children
     * @param keepDistinct if true keeps children distinct
     * @return modified tree
     */
   final def insertLeaves[T: ClassTag](
-    index: Int,
+    parentIndex: Int,
     values: Iterable[T],
     target: Tree[T],
+    append: Boolean,
     keepDistinct: Boolean
   ): Tree[T] =
     if (target.isEmpty || values.isEmpty) if (values.size == 1) Tree(values.head) else Tree.empty
     else
       transform(target) { (structureBuffer, valuesBuffer) =>
         val toInsert = if (keepDistinct) {
-          val existing = ArrayTreeFunctions.childrenIndexes(index, structureBuffer).map(valuesBuffer)
+          val existing = ArrayTreeFunctions.childrenIndexes(parentIndex, structureBuffer).map(valuesBuffer)
           values.filterNot(value => existing.exists(_ == value))
         } else values
         val size = toInsert.size
-        structureBuffer.modify(index, _ + size)
+        val insertIndex =
+          if (append) bottomIndex(parentIndex, structureBuffer)
+          else parentIndex
+        structureBuffer.modify(parentIndex, _ + size)
         ArrayTreeFunctions
-          .insertFromIteratorReverse(index, size, continually(0), toInsert.iterator, structureBuffer, valuesBuffer)
+          .insertFromIteratorReverse(
+            insertIndex,
+            size,
+            continually(0),
+            toInsert.iterator,
+            structureBuffer,
+            valuesBuffer
+          )
           .nonZeroIntAsSome
       }
 

@@ -121,12 +121,17 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
     if (node.children.exists(_.head == value)) node
     else Tree(node.head, if (append) node.children :+ Tree(value) else Tree(value) +: node.children)
 
-  final override def insertLeaves[T1 >: T: ClassTag](values: Iterable[T1]): Tree[T1] =
+  final override def insertLeaves[T1 >: T: ClassTag](values: Iterable[T1], append: Boolean = false): Tree[T1] =
     if (values.isEmpty) node
     else {
       val distinctLeafs = values.filterNot(node.containsChild)
       if (distinctLeafs.isEmpty) node
-      else Tree(node.head, distinctLeafs.map(Tree.apply[T1]) ++: node.children)
+      else
+        Tree(
+          node.head,
+          if (append) node.children ++ distinctLeafs.map(Tree.apply[T1])
+          else distinctLeafs.map(Tree.apply[T1]) ++: node.children
+        )
     }
 
   final override def insertLeafAt[T1 >: T: ClassTag](path: Iterable[T1], value: T1): Tree[T1] =

@@ -29,7 +29,7 @@ class TreeInsertionsSpec extends FunSuite {
 
     def tree[T: ClassTag](t: Tree[T]): Tree[T]
 
-    "insert distinct new leaf to a tree - prepend to children" in {
+    "insert distinct new leaf to a tree - prepend to existing" in {
       tree0.insertLeaf("a") shouldBe Tree("a")
       tree1.insertLeaf("b") shouldBe Tree("a", Tree("b"))
       tree2.insertLeaf("c") shouldBe Tree("a", Tree("c"), Tree("b"))
@@ -61,7 +61,7 @@ class TreeInsertionsSpec extends FunSuite {
       tree9.insertLeaf("e") shouldBe tree9
     }
 
-    "insert distinct new leaf to a tree - append to children" in {
+    "insert distinct new leaf to a tree - append to existing" in {
       tree0.insertLeaf("a", append = true) shouldBe Tree("a")
       tree1.insertLeaf("b", append = true) shouldBe Tree("a", Tree("b"))
       tree2.insertLeaf("c", append = true) shouldBe Tree("a", Tree("b"), Tree("c"))
@@ -88,7 +88,7 @@ class TreeInsertionsSpec extends FunSuite {
       tree9.insertLeaf("e", append = true) shouldBe tree9
     }
 
-    "insert lax new leaf to a tree - prepend to children" in {
+    "insert lax new leaf to a tree - prepend to existing" in {
       tree0.insertLeafLax("a") shouldBe Tree("a")
       tree1.insertLeafLax("b") shouldBe Tree("a", Tree("b"))
       tree2.insertLeafLax("c") shouldBe Tree("a", Tree("c"), Tree("b"))
@@ -113,7 +113,7 @@ class TreeInsertionsSpec extends FunSuite {
       )
     }
 
-    "insert lax new leaf to a tree - append to children" in {
+    "insert lax new leaf to a tree - append to existing" in {
       tree0.insertLeafLax("a", append = true) shouldBe Tree("a")
       tree1.insertLeafLax("b", append = true) shouldBe Tree("a", Tree("b"))
       tree2.insertLeafLax("c", append = true) shouldBe Tree("a", Tree("b"), Tree("c"))
@@ -138,7 +138,7 @@ class TreeInsertionsSpec extends FunSuite {
       )
     }
 
-    "insert distinct new leaves to a tree" in {
+    "insert distinct new leaves to a tree - prepend to existing" in {
       tree0.insertLeaves(List("a", "b", "c")) shouldBe tree0
       tree0.insertLeaves(List("a")) shouldBe Tree("a")
       tree1.insertLeaves(List("a", "b", "c")) shouldBe Tree("a", Tree("a"), Tree("b"), Tree("c"))
@@ -151,7 +151,7 @@ class TreeInsertionsSpec extends FunSuite {
         Tree("a", Tree("a"), Tree("c"), Tree("b", Tree("c")), Tree("d"))
     }
 
-    "insert lax new leaves to a tree" in {
+    "insert lax new leaves to a tree - prepend to existing" in {
       tree0.insertLeavesLax(List("a", "b", "c")) shouldBe tree0
       tree0.insertLeavesLax(List("a")) shouldBe Tree("a")
       tree1.insertLeavesLax(List("a", "b", "c")) shouldBe Tree("a", Tree("a"), Tree("b"), Tree("c"))
@@ -164,6 +164,36 @@ class TreeInsertionsSpec extends FunSuite {
         Tree("a", Tree("a"), Tree("b"), Tree("c"), Tree("b", Tree("c", Tree("d"))))
       tree4_2.insertLeavesLax(List("a", "b", "c")) shouldBe
         Tree("a", Tree("a"), Tree("b"), Tree("c"), Tree("b", Tree("c")), Tree("d"))
+    }
+
+    "insert distinct new leaves to a tree - append to existing" in {
+      tree0.insertLeaves(List("a", "b", "c"), append = true) shouldBe tree0
+      tree0.insertLeaves(List("a"), append = true) shouldBe Tree("a")
+      tree1.insertLeaves(List("a", "b", "c"), append = true) shouldBe Tree("a", Tree("a"), Tree("b"), Tree("c"))
+      tree2.insertLeaves(List("a", "b", "c"), append = true) shouldBe Tree("a", Tree("b"), Tree("a"), Tree("c"))
+      tree3_1
+        .insertLeaves(List("a", "b", "c"), append = true) shouldBe Tree("a", Tree("b", Tree("c")), Tree("a"), Tree("c"))
+      tree3_2.insertLeaves(List("a", "b", "c"), append = true) shouldBe Tree("a", Tree("b"), Tree("c"), Tree("a"))
+      tree4_1.insertLeaves(List("a", "b", "c"), append = true) shouldBe
+        Tree("a", Tree("b", Tree("c", Tree("d"))), Tree("a"), Tree("c"))
+      tree4_2.insertLeaves(List("a", "b", "c"), append = true) shouldBe
+        Tree("a", Tree("b", Tree("c")), Tree("d"), Tree("a"), Tree("c"))
+    }
+
+    "insert lax new leaves to a tree - append to existing" in {
+      tree0.insertLeavesLax(List("a", "b", "c"), append = true) shouldBe tree0
+      tree0.insertLeavesLax(List("a")) shouldBe Tree("a")
+      tree1.insertLeavesLax(List("a", "b", "c"), append = true) shouldBe Tree("a", Tree("a"), Tree("b"), Tree("c"))
+      tree2.insertLeavesLax(List("a", "b", "c"), append = true) shouldBe
+        Tree("a", Tree("b"), Tree("a"), Tree("b"), Tree("c"))
+      tree3_1.insertLeavesLax(List("a", "b", "c"), append = true) shouldBe
+        Tree("a", Tree("b", Tree("c")), Tree("a"), Tree("b"), Tree("c"))
+      tree3_2.insertLeavesLax(List("a", "b", "c"), append = true) shouldBe
+        Tree("a", Tree("b"), Tree("c"), Tree("a"), Tree("b"), Tree("c"))
+      tree4_1.insertLeavesLax(List("a", "b", "c"), append = true) shouldBe
+        Tree("a", Tree("b", Tree("c", Tree("d"))), Tree("a"), Tree("b"), Tree("c"))
+      tree4_2.insertLeavesLax(List("a", "b", "c"), append = true) shouldBe
+        Tree("a", Tree("b", Tree("c")), Tree("d"), Tree("a"), Tree("b"), Tree("c"))
     }
 
     "insert distinct new leaf to a tree at the specified path" in {
