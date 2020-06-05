@@ -224,8 +224,7 @@ object ArrayTree {
     treeValues: Int => T
   ): Boolean =
     ArrayTreeFunctions
-      .childrenIndexes(parentIndex, treeStructure)
-      .iterator
+      .childrenIndexesIterator(parentIndex, treeStructure)
       .exists(i => treeValues(i) == value)
 
   /** Checks if the tree contains given branch. */

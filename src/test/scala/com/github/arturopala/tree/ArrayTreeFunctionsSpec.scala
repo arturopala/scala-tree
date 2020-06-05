@@ -395,6 +395,26 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
       )
     }
 
+    "find last child index" in {
+      lastChildIndex(0, Array(0)) shouldBe None
+      lastChildIndex(1, Array(0, 1)) shouldBe Some(0)
+      lastChildIndex(2, Array(0, 1, 1)) shouldBe Some(1)
+      lastChildIndex(3, Array(0, 0, 0, 3)) shouldBe Some(0)
+      lastChildIndex(4, Array(0, 1, 0, 1, 2)) shouldBe Some(1)
+      lastChildIndex(3, Array(0, 1, 0, 1, 2)) shouldBe Some(2)
+      lastChildIndex(1, Array(0, 1, 0, 1, 2)) shouldBe Some(0)
+      lastChildIndex(6, Array(0, 0, 2, 0, 0, 2, 2)) shouldBe Some(2)
+      lastChildIndex(2, Array(0, 0, 2, 0, 0, 2, 2)) shouldBe Some(0)
+      lastChildIndex(5, Array(0, 0, 2, 0, 0, 2, 2)) shouldBe Some(3)
+      lastChildIndex(0, Array(0, 0, 0, 0, 2, 2, 2)) shouldBe None
+      lastChildIndex(1, Array(0, 0, 0, 0, 2, 2, 2)) shouldBe None
+      lastChildIndex(2, Array(0, 0, 0, 0, 2, 2, 2)) shouldBe None
+      lastChildIndex(3, Array(0, 0, 0, 0, 2, 2, 2)) shouldBe None
+      lastChildIndex(4, Array(0, 0, 0, 0, 2, 2, 2)) shouldBe Some(2)
+      lastChildIndex(5, Array(0, 0, 0, 0, 2, 2, 2)) shouldBe Some(1)
+      lastChildIndex(6, Array(0, 0, 0, 0, 2, 2, 2)) shouldBe Some(0)
+    }
+
     "list children indexes" in {
       childrenIndexes(0, Array(0)).asSlice shouldBe IntSlice.empty
       childrenIndexes(1, Array(0, 1)).asSlice shouldBe IntSlice(0)
@@ -413,6 +433,26 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
       childrenIndexes(4, Array(0, 0, 0, 0, 2, 2, 2)).asSlice shouldBe IntSlice(3, 2)
       childrenIndexes(5, Array(0, 0, 0, 0, 2, 2, 2)).asSlice shouldBe IntSlice(4, 1)
       childrenIndexes(6, Array(0, 0, 0, 0, 2, 2, 2)).asSlice shouldBe IntSlice(5, 0)
+    }
+
+    "iterate over children indexes" in {
+      childrenIndexesIterator(0, Array(0)).toList shouldBe Nil
+      childrenIndexesIterator(1, Array(0, 1)).toList shouldBe List(0)
+      childrenIndexesIterator(2, Array(0, 1, 1)).toList shouldBe List(1)
+      childrenIndexesIterator(3, Array(0, 0, 0, 3)).toList shouldBe List(2, 1, 0)
+      childrenIndexesIterator(4, Array(0, 1, 0, 1, 2)).toList shouldBe List(3, 1)
+      childrenIndexesIterator(3, Array(0, 1, 0, 1, 2)).toList shouldBe List(2)
+      childrenIndexesIterator(1, Array(0, 1, 0, 1, 2)).toList shouldBe List(0)
+      childrenIndexesIterator(6, Array(0, 0, 2, 0, 0, 2, 2)).toList shouldBe List(5, 2)
+      childrenIndexesIterator(2, Array(0, 0, 2, 0, 0, 2, 2)).toList shouldBe List(1, 0)
+      childrenIndexesIterator(5, Array(0, 0, 2, 0, 0, 2, 2)).toList shouldBe List(4, 3)
+      childrenIndexesIterator(0, Array(0, 0, 0, 0, 2, 2, 2)).toList shouldBe Nil
+      childrenIndexesIterator(1, Array(0, 0, 0, 0, 2, 2, 2)).toList shouldBe Nil
+      childrenIndexesIterator(2, Array(0, 0, 0, 0, 2, 2, 2)).toList shouldBe Nil
+      childrenIndexesIterator(3, Array(0, 0, 0, 0, 2, 2, 2)).toList shouldBe Nil
+      childrenIndexesIterator(4, Array(0, 0, 0, 0, 2, 2, 2)).toList shouldBe List(3, 2)
+      childrenIndexesIterator(5, Array(0, 0, 0, 0, 2, 2, 2)).toList shouldBe List(4, 1)
+      childrenIndexesIterator(6, Array(0, 0, 0, 0, 2, 2, 2)).toList shouldBe List(5, 0)
     }
 
     "list children indexes in the reverse order" in {

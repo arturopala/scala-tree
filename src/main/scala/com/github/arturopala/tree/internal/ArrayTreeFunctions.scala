@@ -20,6 +20,7 @@ import java.util.NoSuchElementException
 
 import com.github.arturopala.bufferandslice.IndexTracker.{trackMoveRangeLeft, trackMoveRangeRight, trackShiftLeft}
 import com.github.arturopala.bufferandslice.{Buffer, IndexTracker, IntBuffer, IntSlice, Slice}
+import com.github.arturopala.tree.internal.ArrayTreeFunctions.parentIndex
 
 import scala.annotation.tailrec
 import scala.collection.Iterator.continually
@@ -83,6 +84,29 @@ object ArrayTreeFunctions {
     else throw new IllegalArgumentException(s"Incomplete tree, size is $size, but missing at least $a node(s)")
   }
 
+  /** Index of the first child of the parentIndex. */
+  @`inline` final def firstChildIndex(parentIndex: Int, treeStructure: Int => Int): Option[Int] =
+    if (parentIndex >= 0 && treeStructure(parentIndex) > 0) Some(parentIndex - 1)
+    else None
+
+  /** Index of the last child of the parentIndex. */
+  final def lastChildIndex(parentIndex: Int, treeStructure: Int => Int): Option[Int] =
+    if (parentIndex < 0 || treeStructure(parentIndex) < 1) None
+    else {
+      var n = treeStructure(parentIndex) - 1
+      var i = parentIndex - 1
+      while (n > 0 && i >= 0) {
+        var a = treeStructure(i)
+        while (a > 0) {
+          i = i - 1
+          a = a - 1 + treeStructure(i)
+        }
+        i = i - 1
+        n = n - 1
+      }
+      Some(i)
+    }
+
   /** Lists indexes of the children values of the parent node, if any. */
   final def childrenIndexes(parentIndex: Int, treeStructure: Int => Int): IntBuffer =
     if (parentIndex >= 0) {
@@ -106,18 +130,18 @@ object ArrayTreeFunctions {
       result
     } else IntBuffer.empty
 
-  /** Index of the first child of the parentIndex. */
-  @`inline` final def firstChildIndex(parentIndex: Int, treeStructure: Int => Int): Option[Int] =
-    if (parentIndex >= 0 && treeStructure(parentIndex) > 0) Some(parentIndex - 1)
-    else None
+  /** Iterates over indexes of the children of the parent node, if any. */
+  final def childrenIndexesIterator(parentIndex: Int, treeStructure: Int => Int): Iterator[Int] = new Iterator[Int] {
 
-  /** Index of the last child of the parentIndex. */
-  final def lastChildIndex(parentIndex: Int, treeStructure: Int => Int): Option[Int] =
-    if (parentIndex < 0 || treeStructure(parentIndex) < 1) None
-    else {
-      var n = treeStructure(parentIndex) - 1
-      var i = parentIndex - 1
-      while (n > 0 && i >= 0) {
+    var n = treeStructure(parentIndex)
+    var i = parentIndex - 1
+
+    final override def hasNext: Boolean = n > 0
+
+    final override def next: Int =
+      if (n <= 0) throw new NoSuchElementException()
+      else {
+        val item = i
         var a = treeStructure(i)
         while (a > 0) {
           i = i - 1
@@ -125,9 +149,9 @@ object ArrayTreeFunctions {
         }
         i = i - 1
         n = n - 1
+        item
       }
-      Some(i)
-    }
+  }
 
   /** Lists indexes, in the reverse order, of the children values of the parent node, if any. */
   final def childrenIndexesReverse(parentIndex: Int, treeStructure: Int => Int): IntBuffer =
@@ -154,7 +178,7 @@ object ArrayTreeFunctions {
 
   /** Returns a list of children of a tree represented by the structure and content slices. */
   @`inline` final def childrenOf[T](treeStructure: IntSlice, treeValues: Slice[T]): Iterator[(IntSlice, Slice[T])] =
-    childrenIndexes(treeStructure.top, treeStructure).iterator
+    childrenIndexesIterator(treeStructure.top, treeStructure)
       .map(treeAt(_, treeStructure, treeValues))
 
   /** Returns a reversed list of children of a tree represented by the structure and content slices. */

@@ -81,16 +81,14 @@ abstract class ArrayTreeLike[T: ClassTag] extends TreeLike[T] {
   final override def childrenValues: Iterable[T] =
     iterableFrom(
       ArrayTreeFunctions
-        .childrenIndexes(tree.structure.top, tree.structure)
-        .iterator
+        .childrenIndexesIterator(tree.structure.top, tree.structure)
         .map(tree.content)
     )
 
   final override def children: Iterable[Tree[T]] =
     iterableFrom(
       ArrayTreeFunctions
-        .childrenIndexes(tree.structure.top, tree.structure)
-        .iterator
+        .childrenIndexesIterator(tree.structure.top, tree.structure)
         .map(ArrayTree.treeAt(_, tree.structure, tree.content))
     )
 
