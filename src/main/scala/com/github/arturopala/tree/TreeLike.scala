@@ -115,6 +115,14 @@ trait TreeLike[+T] {
     * @group values */
   def childrenValues: Iterable[T]
 
+  /** Returns value of the first child, if any.
+    * @group values */
+  def firstChildValue: Option[T] = ???
+
+  /** Returns value of the last child, if any.
+    * @group values */
+  def lastChildValue: Option[T] = ???
+
   /** Iterates over all the node's values in this tree.
     * @param mode tree traversing mode, either depth-first or breadth-first
     * @group values */
@@ -153,6 +161,14 @@ trait TreeLike[+T] {
   /** Returns direct children trees, i.e. the subtrees.
     * @group sub-trees */
   def children: Iterable[Tree[T]]
+
+  /** Returns the first child, if any.
+    * @group values */
+  def firstChild: Option[Tree[T]] = ???
+
+  /** Returns the last child, if any.
+    * @group values */
+  def lastChild: Option[Tree[T]] = ???
 
   /** Iterates over all the possible subtrees in this tree inclusive.
     * @param mode tree traversing mode, either depth-first or breadth-first
