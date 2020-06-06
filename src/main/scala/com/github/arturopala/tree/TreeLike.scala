@@ -539,16 +539,16 @@ trait TreeLike[+T] {
   ): Either[Tree[T], Tree[T1]] = ???
 
   /** Inserts a new branch of values and returns updated tree.
+    * Branch must start with the existing root element of the tree, otherwise the tree will stay intact.
     * @note This method tries to keep children values unique by merging modified tree (and only that) when needed.
     * @param branch iterable of values forming a path from the root to the leaf.
-    * @note New branch must start with the existing root element of the tree, otherwise the tree will stay intact.
     * @group insertion */
   def insertBranch[T1 >: T: ClassTag](branch: Iterable[T1]): Tree[T1]
 
   /** Inserts a new branch of values and returns updated tree.
+    * Branch must start with the existing root element of the tree, otherwise the tree will stay intact.
     * @note This method tries to keep children values unique by merging modified tree (and only that) when needed.
     * @param branches iterable of iterables of values forming a path from the root to the leaf.
-    * @note New branch must start with the existing root element of the tree, otherwise the tree will stay intact.
     * @group insertion */
   def insertBranches[T1 >: T: ClassTag](branches: Iterable[Iterable[T1]]): Tree[T1] = ???
 
