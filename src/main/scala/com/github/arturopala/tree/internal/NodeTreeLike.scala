@@ -240,10 +240,8 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
           keepDistinct = true
         )
         .getOrElse(node)
-    else if (append)
-      ??? //ArrayTree.insertAfterChildren(node, children, keepDistinct = true)
     else
-      ??? //ArrayTree.insertBeforeChildren(node, children, keepDistinct = true)
+      ArrayTree.insertChildrenAt(path, children, node.deflated[T1], append, keepDistinct = true)
   }
 
   final override def insertChildrenAt[K, T1 >: T: ClassTag](

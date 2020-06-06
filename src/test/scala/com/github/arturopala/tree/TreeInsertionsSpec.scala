@@ -2155,6 +2155,8 @@ class TreeInsertionsSpec extends FunSuite {
       tree0.insertChildrenAt(List("a"), List(tree1, tree2), append = true) shouldBe tree0
       tree1.insertChildrenAt(List("a"), List(tree0, tree1, tree2, tree3_1, tree3_2), append = false) shouldBe
         Tree("a", Tree("a", Tree("b", Tree("c")), Tree("c")))
+      tree1.insertChildrenAt(List("a"), List(tree0, tree1.deflated, tree2, tree3_1.deflated, tree3_2), append = false) shouldBe
+        Tree("a", Tree("a", Tree("b", Tree("c")), Tree("c")))
       tree1.insertChildrenAt(List("a"), List(tree0, tree1, tree2, tree3_1, tree3_2), append = true) shouldBe
         Tree("a", Tree("a", Tree("b", Tree("c")), Tree("c")))
       tree1.insertChildrenAt(List("a"), List(tree3_2, tree3_1, tree2, tree1, tree0), append = false) shouldBe
@@ -2164,6 +2166,8 @@ class TreeInsertionsSpec extends FunSuite {
       tree2.insertChildrenAt(List("a"), List(tree1, tree2, tree3_1, tree3_2), append = false) shouldBe
         Tree("a", Tree("a", Tree("b", Tree("c")), Tree("c")), Tree("b"))
       tree2.insertChildrenAt(List("a"), List(tree1, tree2, tree3_1, tree3_2), append = true) shouldBe
+        Tree("a", Tree("b"), Tree("a", Tree("b", Tree("c")), Tree("c")))
+      tree2.insertChildrenAt(List("a"), List(tree1, tree2.deflated, tree3_1, tree3_2.deflated), append = true) shouldBe
         Tree("a", Tree("b"), Tree("a", Tree("b", Tree("c")), Tree("c")))
       tree3_1.insertChildrenAt(List("a"), List(tree1, tree2, tree3_1, tree3_2), append = false) shouldBe
         Tree("a", Tree("a", Tree("b", Tree("c")), Tree("c")), Tree("b", Tree("c")))
