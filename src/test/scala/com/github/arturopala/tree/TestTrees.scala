@@ -72,6 +72,18 @@ trait TestTrees {
     */
   val tree13: Tree[String]
 
+  /**
+    Tree.empty
+    Tree("a")
+    Tree("a", Tree("b"))
+    Tree("a", Tree("b", Tree("c")))
+    Tree("a", Tree("b"), Tree("c"))
+    Tree("a", Tree("b", Tree("c", Tree("d"))))
+    Tree("a", Tree("b", Tree("c")), Tree("d"))
+    Tree("a", Tree("b"), Tree("c"), Tree("d"))
+    Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e", Tree("f"))), Tree("g"))
+    Tree("a", Tree("b", Tree("c", Tree("d"))), Tree("e", Tree("f", Tree("g")), Tree("h", Tree("i"))))
+    */
   val allTrees: Seq[Tree[String]]
 }
 

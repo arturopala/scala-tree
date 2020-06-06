@@ -28,7 +28,7 @@ import scala.reflect.ClassTag
 class TreeDebugSpec extends FunSuite with TestWithBuffers {
 
   test(Inflated, new Spec with InflatedTestTrees)
-  test(Deflated, new Spec with DeflatedTestTrees)
+  //test(Deflated, new Spec with DeflatedTestTrees)
 
   sealed trait Spec extends AnyWordSpecCompat with TestTrees {
 
@@ -36,7 +36,7 @@ class TreeDebugSpec extends FunSuite with TestWithBuffers {
 
     "debug" in {
 
-      tree2.insertLeafLaxAt(List("a", "c"), "a", append = true) shouldBe Tree("a", Tree("b"), Tree("c", Tree("a")))
+      //tree2.insertLeafLaxAt(List("a", "c"), "a", append = true) shouldBe Tree("a", Tree("b"), Tree("c", Tree("a")))
 
       /*testWithBuffers[String, Int](
         (structureBuffer: IntBuffer, valuesBuffer: Buffer[String]) =>

@@ -350,10 +350,14 @@ object LaxTreeOps {
         case node: NodeTree[T] =>
           child match {
             case Tree.empty         => node
-            case tree: NodeTree[T1] => Tree(node.head, tree +: node.children)
+            case tree: NodeTree[T1] => Tree(node.head, if (append) node.children :+ tree else tree +: node.children)
             case tree: ArrayTree[T1] =>
               if (Tree.preferInflated(node, tree))
-                Tree(node.head, tree.inflated.asInstanceOf[NodeTree[T1]] +: node.children)
+                Tree(
+                  node.head,
+                  if (append) node.children :+ tree.inflated.asInstanceOf[NodeTree[T1]]
+                  else tree.inflated.asInstanceOf[NodeTree[T1]] +: node.children
+                )
               else node.deflated[T1].insertChildLax(tree, append)
           }
 
@@ -374,12 +378,17 @@ object LaxTreeOps {
           if (validChildren.isEmpty) t
           else if (validChildren.size == 1) t.insertChild(validChildren.head, append)
           else if (validChildren.forall(_.isInstanceOf[NodeTree[T1]]))
-            Tree(node.head, validChildren.asInstanceOf[Iterable[NodeTree[T1]]] ++: node.children)
-          else
-            ArrayTree.insertChildren(node, validChildren, Nil, keepDistinct = false)
+            Tree(
+              node.head,
+              if (append) node.children ++ validChildren.asInstanceOf[Iterable[NodeTree[T1]]]
+              else validChildren.asInstanceOf[Iterable[NodeTree[T1]]] ++: node.children
+            )
+          else if (append) ArrayTree.insertAfterChildren(node, validChildren, keepDistinct = false)
+          else ArrayTree.insertBeforeChildren(node, validChildren, keepDistinct = false)
 
         case tree: ArrayTree[T] =>
-          ArrayTree.insertChildren(tree, validChildren, Nil, keepDistinct = false)
+          if (append) ArrayTree.insertAfterChildren(tree, validChildren, keepDistinct = false)
+          else ArrayTree.insertBeforeChildren(tree, validChildren, keepDistinct = false)
       }
     }
 
@@ -413,7 +422,7 @@ object LaxTreeOps {
         }
 
       case tree: ArrayTree[T] =>
-        ArrayTree.insertTreeAt(path, subtree, tree, keepDistinct = false)
+        ArrayTree.insertTreeAt(path, subtree, tree, append, keepDistinct = false)
     }
 
     final override def insertTreeLaxAt[K, T1 >: T: ClassTag](
@@ -443,7 +452,7 @@ object LaxTreeOps {
         }
 
       case tree: ArrayTree[T] =>
-        ArrayTree.insertTreeAt(path, subtree, tree, toPathItem, keepDistinct = false)
+        ArrayTree.insertTreeAt(path, subtree, tree, toPathItem, append, keepDistinct = false)
     }
 
     final override def updateChildValueLax[T1 >: T: ClassTag](existingValue: T1, replacement: T1): Tree[T1] =

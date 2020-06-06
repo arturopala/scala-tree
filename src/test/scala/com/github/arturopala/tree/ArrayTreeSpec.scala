@@ -852,23 +852,52 @@ class ArrayTreeSpec extends AnyWordSpecCompat {
       )
     }
 
-    "insert a subtree distinct" in {
+    "insert a child distinct - prepend to existing" in {
       //insertSubtreeDistinct(0, Tree.empty, Tree.empty) shouldBe Tree.empty
-      insertChildDistinct(0, Tree("a"), Tree.empty) shouldBe Tree("a")
-      insertChildDistinct(0, Tree.empty, Tree("a")) shouldBe Tree("a")
-      insertChildDistinct(0, Tree("a"), Tree("a")) shouldBe Tree("a", Tree("a"))
-      insertChildDistinct(1, Tree("a"), Tree("a", Tree("b"))) shouldBe Tree("a", Tree("a"), Tree("b"))
-      insertChildDistinct(0, Tree("a"), Tree("a", Tree("b"))) shouldBe Tree("a", Tree("b", Tree("a")))
-      insertChildDistinct(1, Tree("b", Tree("a")), Tree("a", Tree("b"))) shouldBe Tree("a", Tree("b", Tree("a")))
-      insertChildDistinct(0, Tree("b", Tree("a")), Tree("a", Tree("b"))) shouldBe Tree(
+      insertChildDistinct(0, Tree("a"), Tree.empty, append = false) shouldBe Tree("a")
+      insertChildDistinct(0, Tree.empty, Tree("a"), append = false) shouldBe Tree("a")
+      insertChildDistinct(0, Tree("a"), Tree("a"), append = false) shouldBe Tree("a", Tree("a"))
+      insertChildDistinct(1, Tree("a"), Tree("a", Tree("b")), append = false) shouldBe Tree("a", Tree("a"), Tree("b"))
+      insertChildDistinct(0, Tree("a"), Tree("a", Tree("b")), append = false) shouldBe Tree("a", Tree("b", Tree("a")))
+      insertChildDistinct(1, Tree("b", Tree("a")), Tree("a", Tree("b")), append = false) shouldBe Tree(
+        "a",
+        Tree("b", Tree("a"))
+      )
+      insertChildDistinct(0, Tree("b", Tree("a")), Tree("a", Tree("b")), append = false) shouldBe Tree(
         "a",
         Tree("b", Tree("b", Tree("a")))
       )
-      insertChildDistinct(2, Tree("a", Tree("b")), Tree("b", Tree("a", Tree("b")))) shouldBe Tree(
+      insertChildDistinct(2, Tree("a", Tree("b")), Tree("b", Tree("a", Tree("b"))), append = false) shouldBe Tree(
         "b",
         Tree("a", Tree("b"))
       )
-      insertChildDistinct(2, Tree("b", Tree("d"), Tree("e")), Tree("a", Tree("b"), Tree("c"))) shouldBe Tree(
+      insertChildDistinct(2, Tree("b", Tree("d"), Tree("e")), Tree("a", Tree("b"), Tree("c")), append = false) shouldBe Tree(
+        "a",
+        Tree("b", Tree("d"), Tree("e")),
+        Tree("c")
+      )
+    }
+
+    "insert a child distinct - append to existing" in {
+      //insertSubtreeDistinct(0, Tree.empty, Tree.empty) shouldBe Tree.empty
+      insertChildDistinct(0, Tree("a"), Tree.empty, append = true) shouldBe Tree("a")
+      insertChildDistinct(0, Tree.empty, Tree("a"), append = true) shouldBe Tree("a")
+      insertChildDistinct(0, Tree("a"), Tree("a"), append = true) shouldBe Tree("a", Tree("a"))
+      insertChildDistinct(1, Tree("a"), Tree("a", Tree("b")), append = true) shouldBe Tree("a", Tree("b"), Tree("a"))
+      insertChildDistinct(0, Tree("a"), Tree("a", Tree("b")), append = true) shouldBe Tree("a", Tree("b", Tree("a")))
+      insertChildDistinct(1, Tree("b", Tree("a")), Tree("a", Tree("b")), append = true) shouldBe Tree(
+        "a",
+        Tree("b", Tree("a"))
+      )
+      insertChildDistinct(0, Tree("b", Tree("a")), Tree("a", Tree("b")), append = true) shouldBe Tree(
+        "a",
+        Tree("b", Tree("b", Tree("a")))
+      )
+      insertChildDistinct(2, Tree("a", Tree("b")), Tree("b", Tree("a", Tree("b"))), append = true) shouldBe Tree(
+        "b",
+        Tree("a", Tree("b"))
+      )
+      insertChildDistinct(2, Tree("b", Tree("d"), Tree("e")), Tree("a", Tree("b"), Tree("c")), append = true) shouldBe Tree(
         "a",
         Tree("b", Tree("d"), Tree("e")),
         Tree("c")

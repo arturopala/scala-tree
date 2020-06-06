@@ -549,9 +549,7 @@ object ArrayTree {
           values.filterNot(value => existing.exists(_ == value))
         } else values
         val size = toInsert.size
-        val insertIndex =
-          if (append) bottomIndex(parentIndex, structureBuffer)
-          else parentIndex
+        val insertIndex = if (append) bottomIndex(parentIndex, structureBuffer) else parentIndex
         structureBuffer.modify(parentIndex, _ + size)
         ArrayTreeFunctions
           .insertFromIteratorReverse(
@@ -571,6 +569,7 @@ object ArrayTree {
     path: Iterable[T1],
     subtree: Tree[T1],
     target: ArrayTree[T],
+    append: Boolean,
     keepDistinct: Boolean
   ): Tree[T1] = {
     val (indexes, unmatched, remaining, _) =
@@ -582,10 +581,14 @@ object ArrayTree {
           case Some(item) =>
             val treeSequence = remaining.map(Tree.apply[T1]).toVector.+:(Tree(item)).:+(subtree)
             val newNode: Tree[T1] = TreeBuilder.fromTreeSequence(treeSequence)
-            insertTree(index, index, newNode, target)
+            val insertIndex = if (append) bottomIndex(index, target.structure) else index
+            insertTree(insertIndex, index, newNode, target)
           case None =>
-            if (keepDistinct) insertChildDistinct(index, subtree, target)
-            else insertTree(index, index, subtree, target)
+            if (keepDistinct) insertChildDistinct(index, subtree, target, append)
+            else {
+              val insertIndex = if (append) bottomIndex(index, target.structure) else index
+              insertTree(insertIndex, index, subtree, target)
+            }
         }
     }
   }
@@ -597,6 +600,7 @@ object ArrayTree {
     subtree: Tree[T1],
     target: ArrayTree[T],
     toPathItem: T => K,
+    append: Boolean,
     keepDistinct: Boolean
   ): Either[Tree[T], Tree[T1]] = {
     val (indexes, unmatched, _, _) =
@@ -605,8 +609,11 @@ object ArrayTree {
       case None => Left(target)
       case Some(index) =>
         if (unmatched.isDefined) Left(target)
-        else if (keepDistinct) Right(insertChildDistinct(index, subtree, target))
-        else Right(insertTree(index, index, subtree, target))
+        else if (keepDistinct) Right(insertChildDistinct(index, subtree, target, append))
+        else {
+          val insertIndex = if (append) bottomIndex(index, target.structure) else index
+          Right(insertTree(insertIndex, index, subtree, target))
+        }
     }
   }
 
@@ -634,7 +641,8 @@ object ArrayTree {
   final def insertChildDistinct[T: ClassTag](
     index: Int,
     source: Tree[T],
-    target: Tree[T]
+    target: Tree[T],
+    append: Boolean
   ): Tree[T] =
     if (source.isEmpty) target
     else if (target.isEmpty) source
@@ -642,11 +650,56 @@ object ArrayTree {
       assert(index >= 0 && index < target.size, "Insertion index must be within target's tree range [0,length).")
       transform(target) { (structureBuffer, valuesBuffer) =>
         val (structure, values) = source.toSlices
-        ArrayTreeFunctions
-          .insertBeforeChildrenDistinct(index, structure, values, structureBuffer, valuesBuffer)
-          .nonZeroIntAsSome
+        (if (append)
+           ArrayTreeFunctions
+             .insertAfterChildrenDistinct(index, structure, values, structureBuffer, valuesBuffer)
+         else
+           ArrayTreeFunctions
+             .insertBeforeChildrenDistinct(index, structure, values, structureBuffer, valuesBuffer)).nonZeroIntAsSome
       }
     }
+
+  /** Inserts multiple children before the existing children. */
+  final def insertBeforeChildren[T: ClassTag](
+    target: Tree[T],
+    before: Iterable[Tree[T]],
+    keepDistinct: Boolean
+  ): Tree[T] =
+    if (target.isEmpty) Tree.empty
+    else if (before.isEmpty) target
+    else
+      transform(target) { (structureBuffer, valuesBuffer) =>
+        ArrayTreeFunctions
+          .insertBeforeChildren(
+            structureBuffer.top,
+            before.map(_.toSlices),
+            structureBuffer,
+            valuesBuffer,
+            keepDistinct
+          )
+          .intAsSome
+      }
+
+  /** Inserts multiple children after the existing children. */
+  final def insertAfterChildren[T: ClassTag](
+    target: Tree[T],
+    after: Iterable[Tree[T]],
+    keepDistinct: Boolean
+  ): Tree[T] =
+    if (target.isEmpty) Tree.empty
+    else if (after.isEmpty) target
+    else
+      transform(target) { (structureBuffer, valuesBuffer) =>
+        ArrayTreeFunctions
+          .insertAfterChildren(
+            structureBuffer.top,
+            after.map(_.toSlices),
+            structureBuffer,
+            valuesBuffer,
+            keepDistinct
+          )
+          .intAsSome
+      }
 
   /** Inserts multiple children before and after the existing children. */
   final def insertChildren[T: ClassTag](
