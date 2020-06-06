@@ -249,7 +249,21 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
     children: Iterable[Tree[T1]],
     toPathItem: T => K,
     append: Boolean
-  ): Either[Tree[T], Tree[T1]] = ???
+  ): Either[Tree[T], Tree[T1]] = {
+    val validChildren = children.filterNot(_.isEmpty)
+    if (validChildren.isEmpty) Right(node)
+    else if (validChildren.size == 1) Right(node.insertChild(children.head, append))
+    else
+      NodeTree
+        .insertChildrenAt(
+          node,
+          path.iterator,
+          toPathItem,
+          children.map(_.inflated).asInstanceOf[Iterable[NodeTree[T1]]],
+          append,
+          keepDistinct = true
+        )
+  }
 
   final override def insertBranch[T1 >: T: ClassTag](branch: Iterable[T1]): Tree[T1] =
     NodeTree.insertBranch(node, branch.iterator).getOrElse(node)
