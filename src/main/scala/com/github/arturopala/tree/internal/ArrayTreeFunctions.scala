@@ -1242,6 +1242,36 @@ object ArrayTreeFunctions {
       delta1 + delta2 + 1
     }
 
+  /** Inserts new children before or after an existing children of the parent index.
+    * @param append whether to insert after (if true) or before (if false)
+    * @return buffers length change */
+  final def insertChildren[T](
+    parentIndex: Int,
+    newChildren: Iterable[(IntSlice, Slice[T])],
+    structureBuffer: IntBuffer,
+    valuesBuffer: Buffer[T],
+    append: Boolean,
+    keepDistinct: Boolean
+  ): Int =
+    if (parentIndex < 0 || parentIndex > structureBuffer.top) 0
+    else if (append) insertAfterChildren(parentIndex, newChildren, structureBuffer, valuesBuffer, keepDistinct)
+    else insertBeforeChildren(parentIndex, newChildren, structureBuffer, valuesBuffer, keepDistinct)
+
+  /** Inserts new children before or after an existing children of the parent index.
+    * @param append whether to insert after (if true) or before (if false)
+    * @return buffers length change */
+  final def insertChildrenDistinct[T](
+    parentIndex: Int,
+    childStructure: IntSlice,
+    childValues: Slice[T],
+    structureBuffer: IntBuffer,
+    valuesBuffer: Buffer[T],
+    append: Boolean
+  ): Int =
+    if (append)
+      insertAfterChildrenDistinct(parentIndex, Seq((childStructure, childValues)), structureBuffer, valuesBuffer)
+    else insertBeforeChildrenDistinct(parentIndex, Seq((childStructure, childValues)), structureBuffer, valuesBuffer)
+
   /** Inserts new children before an existing children of the parent index.
     * @return buffers length change */
   final def insertBeforeChildren[T](
@@ -1274,7 +1304,7 @@ object ArrayTreeFunctions {
     * New child is eventually inserted before an existing children of its parentIndex.
     * Does nothing for an empty tree.
     * @return buffer length change */
-  final def insertBeforeChildrenDistinct[T](
+  final def insertBeforeChildDistinct[T](
     parentIndex: Int,
     childStructure: IntSlice,
     childValues: Slice[T],
@@ -1331,7 +1361,7 @@ object ArrayTreeFunctions {
     * Does nothing for an empty tree.
     *
     * @return buffer length change */
-  final def insertAfterChildrenDistinct[T](
+  final def insertAfterChildDistinct[T](
     parentIndex: Int,
     childStructure: IntSlice,
     childValues: Slice[T],

@@ -135,7 +135,7 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
     }
 
   final override def insertLeafAt[T1 >: T: ClassTag](path: Iterable[T1], value: T1, append: Boolean = false): Tree[T1] =
-    NodeTree.insertTreeAt(node, path.iterator, Tree(value), append, keepDistinct = true).getOrElse(node)
+    NodeTree.insertChildAt(node, path.iterator, Tree(value), append, keepDistinct = true).getOrElse(node)
 
   final override def insertLeafAt[K, T1 >: T: ClassTag](
     path: Iterable[K],
@@ -143,7 +143,7 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
     toPathItem: T => K,
     append: Boolean
   ): Either[Tree[T], Tree[T1]] =
-    NodeTree.insertTreeAt(node, path.iterator, toPathItem, Tree(value), append, keepDistinct = true)
+    NodeTree.insertChildAt(node, path.iterator, toPathItem, Tree(value), append, keepDistinct = true)
 
   final override def insertChild[T1 >: T: ClassTag](child: Tree[T1], append: Boolean = false): Tree[T1] = child match {
     case Tree.empty         => node
@@ -192,11 +192,11 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
     child match {
       case Tree.empty => node
       case tree: NodeTree[T1] =>
-        NodeTree.insertTreeAt(node, path.iterator, tree, append, keepDistinct = true).getOrElse(node)
+        NodeTree.insertChildAt(node, path.iterator, tree, append, keepDistinct = true).getOrElse(node)
       case tree: ArrayTree[T1] =>
         if (Tree.preferInflated(node, tree))
           NodeTree
-            .insertTreeAt(node, path.iterator, tree.inflated.asInstanceOf[NodeTree[T1]], append, keepDistinct = true)
+            .insertChildAt(node, path.iterator, tree.inflated.asInstanceOf[NodeTree[T1]], append, keepDistinct = true)
             .getOrElse(node)
         else node.deflated[T1].insertChildAt(path, tree)
     }
@@ -207,11 +207,12 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
     toPathItem: T => K,
     append: Boolean
   ): Either[Tree[T], Tree[T1]] = child match {
-    case Tree.empty         => Left(node)
-    case tree: NodeTree[T1] => NodeTree.insertTreeAt(node, path.iterator, toPathItem, tree, append, keepDistinct = true)
+    case Tree.empty => Left(node)
+    case tree: NodeTree[T1] =>
+      NodeTree.insertChildAt(node, path.iterator, toPathItem, tree, append, keepDistinct = true)
     case tree: ArrayTree[T1] =>
       NodeTree
-        .insertTreeAt(
+        .insertChildAt(
           node,
           path.iterator,
           toPathItem,
@@ -220,6 +221,37 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
           keepDistinct = true
         )
   }
+
+  final override def insertChildrenAt[T1 >: T: ClassTag](
+    path: Iterable[T1],
+    children: Iterable[Tree[T1]],
+    append: Boolean = false
+  ): Tree[T1] = {
+    val validChildren = children.filterNot(_.isEmpty)
+    if (validChildren.isEmpty) node
+    else if (validChildren.size == 1) node.insertChild(children.head, append)
+    else if (validChildren.forall(_.isInstanceOf[NodeTree[T1]]))
+      NodeTree
+        .insertChildrenAt(
+          node,
+          path.iterator,
+          children.asInstanceOf[Iterable[NodeTree[T1]]],
+          append,
+          keepDistinct = true
+        )
+        .getOrElse(node)
+    else if (append)
+      ??? //ArrayTree.insertAfterChildren(node, children, keepDistinct = true)
+    else
+      ??? //ArrayTree.insertBeforeChildren(node, children, keepDistinct = true)
+  }
+
+  final override def insertChildrenAt[K, T1 >: T: ClassTag](
+    path: Iterable[K],
+    children: Iterable[Tree[T1]],
+    toPathItem: T => K,
+    append: Boolean
+  ): Either[Tree[T], Tree[T1]] = ???
 
   final override def insertBranch[T1 >: T: ClassTag](branch: Iterable[T1]): Tree[T1] =
     NodeTree.insertBranch(node, branch.iterator).getOrElse(node)

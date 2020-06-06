@@ -838,14 +838,21 @@ class ArrayTreeSpec extends AnyWordSpecCompat {
 
     "insert a subtree" in {
       //insertSubtree(0, Tree.empty, Tree.empty) shouldBe Tree.empty
-      insertTree(0, 0, Tree("a"), Tree.empty) shouldBe Tree("a")
-      insertTree(0, 0, Tree.empty, Tree("a")) shouldBe Tree("a")
-      insertTree(0, 0, Tree("a"), Tree("a")) shouldBe Tree("a", Tree("a"))
-      insertTree(1, 1, Tree("a"), Tree("a", Tree("b"))) shouldBe Tree("a", Tree("a"), Tree("b"))
-      insertTree(0, 0, Tree("a"), Tree("a", Tree("b"))) shouldBe Tree("a", Tree("b", Tree("a")))
-      insertTree(1, 1, Tree("b", Tree("a")), Tree("a", Tree("b"))) shouldBe Tree("a", Tree("b", Tree("a")), Tree("b"))
-      insertTree(0, 0, Tree("b", Tree("a")), Tree("a", Tree("b"))) shouldBe Tree("a", Tree("b", Tree("b", Tree("a"))))
-      insertTree(2, 2, Tree("a", Tree("b")), Tree("b", Tree("a", Tree("b")))) shouldBe Tree(
+      insertTreeAtIndex(0, 0, Tree("a"), Tree.empty) shouldBe Tree("a")
+      insertTreeAtIndex(0, 0, Tree.empty, Tree("a")) shouldBe Tree("a")
+      insertTreeAtIndex(0, 0, Tree("a"), Tree("a")) shouldBe Tree("a", Tree("a"))
+      insertTreeAtIndex(1, 1, Tree("a"), Tree("a", Tree("b"))) shouldBe Tree("a", Tree("a"), Tree("b"))
+      insertTreeAtIndex(0, 0, Tree("a"), Tree("a", Tree("b"))) shouldBe Tree("a", Tree("b", Tree("a")))
+      insertTreeAtIndex(1, 1, Tree("b", Tree("a")), Tree("a", Tree("b"))) shouldBe Tree(
+        "a",
+        Tree("b", Tree("a")),
+        Tree("b")
+      )
+      insertTreeAtIndex(0, 0, Tree("b", Tree("a")), Tree("a", Tree("b"))) shouldBe Tree(
+        "a",
+        Tree("b", Tree("b", Tree("a")))
+      )
+      insertTreeAtIndex(2, 2, Tree("a", Tree("b")), Tree("b", Tree("a", Tree("b")))) shouldBe Tree(
         "b",
         Tree("a", Tree("b")),
         Tree("a", Tree("b"))

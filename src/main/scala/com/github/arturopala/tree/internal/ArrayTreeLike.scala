@@ -180,7 +180,7 @@ abstract class ArrayTreeLike[T: ClassTag] extends TreeLike[T] {
     child: Tree[T1],
     append: Boolean = false
   ): Tree[T1] =
-    ArrayTree.insertTreeAt(path, child, tree, append, keepDistinct = true)
+    ArrayTree.insertChildAt(path, child, tree, append, keepDistinct = true)
 
   final override def insertChildAt[K, T1 >: T: ClassTag](
     path: Iterable[K],
@@ -188,7 +188,21 @@ abstract class ArrayTreeLike[T: ClassTag] extends TreeLike[T] {
     toPathItem: T => K,
     append: Boolean
   ): Either[Tree[T], Tree[T1]] =
-    ArrayTree.insertTreeAt(path, child, tree, toPathItem, append, keepDistinct = true)
+    ArrayTree.insertChildAt(path, child, tree, toPathItem, append, keepDistinct = true)
+
+  final override def insertChildrenAt[T1 >: T: ClassTag](
+    path: Iterable[T1],
+    children: Iterable[Tree[T1]],
+    append: Boolean = false
+  ): Tree[T1] =
+    ArrayTree.insertChildrenAt(path, children, tree, append, keepDistinct = true)
+
+  final override def insertChildrenAt[K, T1 >: T: ClassTag](
+    path: Iterable[K],
+    children: Iterable[Tree[T1]],
+    toPathItem: T => K,
+    append: Boolean
+  ): Either[Tree[T], Tree[T1]] = ???
 
   final override def insertBranch[T1 >: T: ClassTag](branch: Iterable[T1]): Tree[T1] =
     ArrayTree.insertBranch(tree.structure.top, branch, tree)

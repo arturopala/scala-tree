@@ -1037,7 +1037,7 @@ object NodeTree {
           buildTreeFromPartials(queue.safeTail, node +: result.drop(numberOfChildrenToCollect), prepend)
       }
 
-  final def insertTreeAt[T, T1 >: T: ClassTag](
+  final def insertChildAt[T, T1 >: T: ClassTag](
     tree: NodeTree[T],
     pathIterator: Iterator[T1],
     nodeToInsert: NodeTree[T1],
@@ -1070,7 +1070,7 @@ object NodeTree {
         Some(TreeBuilder.fromChildAndTreeSplit(newNode, treeSplit))
     }
 
-  final def insertTreeAt[T, T1 >: T: ClassTag, K](
+  final def insertChildAt[T, T1 >: T: ClassTag, K](
     tree: NodeTree[T],
     pathIterator: Iterator[K],
     toPathItem: T => K,
@@ -1093,6 +1093,41 @@ object NodeTree {
           Right(TreeBuilder.fromChildAndTreeSplit(newNode, treeSplit))
       }
       .getOrElse(Left(tree))
+
+  /** Inserts new children at the specified path. */
+  final def insertChildrenAt[T, T1 >: T: ClassTag](
+    tree: NodeTree[T],
+    pathIterator: Iterator[T1],
+    children: Iterable[NodeTree[T1]],
+    append: Boolean,
+    keepDistinct: Boolean
+  ): Option[Tree[T1]] =
+    splitTreeFollowingPath(tree, pathIterator).flatMap {
+      case (treeSplit, Some(value), remainingBranchIterator, remainingTree) =>
+        val branch = value +: remainingBranchIterator.toSeq
+        val branchTree: NodeTree[T1] =
+          TreeBuilder
+            .linearTreeFromSequence(branch)
+            .insertChildrenAt(branch, children, append)
+            .asInstanceOf[NodeTree[T1]]
+        val newNode = Tree(
+          remainingTree.head,
+          if (append) remainingTree.children :+ branchTree
+          else branchTree +: remainingTree.children
+        )
+        Some(TreeBuilder.fromChildAndTreeSplit(newNode, treeSplit))
+
+      case (treeSplit, None, _, remainingTree) =>
+        val newNode =
+          if (keepDistinct) remainingTree.insertChildren(children, append).asInstanceOf[NodeTree[T1]]
+          else
+            Tree(
+              remainingTree.head,
+              if (append) remainingTree.children ++ children
+              else children ++: remainingTree.children
+            )
+        Some(TreeBuilder.fromChildAndTreeSplit(newNode, treeSplit))
+    }
 
   /** Splits the tree following the path and succeeds only if all path items exists.
     * The tree children split is a triple of (children list left of value, a value, children list right of value)

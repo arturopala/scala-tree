@@ -322,7 +322,7 @@ object LaxTreeOps {
         Tree.empty.insertBranch(path.toSeq :+ value)
 
       case node: NodeTree[T] =>
-        NodeTree.insertTreeAt(node, path.iterator, Tree(value), append, keepDistinct = false).getOrElse(node)
+        NodeTree.insertChildAt(node, path.iterator, Tree(value), append, keepDistinct = false).getOrElse(node)
 
       case tree: ArrayTree[T] =>
         ArrayTree.insertLeafAt(path, value, tree, append, keepDistinct = false)
@@ -337,7 +337,7 @@ object LaxTreeOps {
       case Tree.empty => Left(Tree.empty)
 
       case node: NodeTree[T] =>
-        NodeTree.insertTreeAt(node, path.iterator, toPathItem, Tree(value), append, keepDistinct = false)
+        NodeTree.insertChildAt(node, path.iterator, toPathItem, Tree(value), append, keepDistinct = false)
 
       case tree: ArrayTree[T] =>
         ArrayTree.insertLeafAt(path, value, tree, toPathItem, append, keepDistinct = false)
@@ -363,7 +363,7 @@ object LaxTreeOps {
 
         case tree: ArrayTree[T] =>
           val insertIndex = if (append) 0 else tree.structure.top
-          ArrayTree.insertTree(insertIndex, tree.structure.top, child, tree)
+          ArrayTree.insertTreeAtIndex(insertIndex, tree.structure.top, child, tree)
       }
 
     final override def insertChildrenLax[T1 >: T: ClassTag](
@@ -406,11 +406,11 @@ object LaxTreeOps {
         subtree match {
           case Tree.empty => node
           case tree: NodeTree[T1] =>
-            NodeTree.insertTreeAt(node, path.iterator, tree, append, keepDistinct = false).getOrElse(node)
+            NodeTree.insertChildAt(node, path.iterator, tree, append, keepDistinct = false).getOrElse(node)
           case tree: ArrayTree[T1] =>
             if (Tree.preferInflated(node, tree))
               NodeTree
-                .insertTreeAt(
+                .insertChildAt(
                   node,
                   path.iterator,
                   tree.inflated.asInstanceOf[NodeTree[T1]],
@@ -422,7 +422,7 @@ object LaxTreeOps {
         }
 
       case tree: ArrayTree[T] =>
-        ArrayTree.insertTreeAt(path, subtree, tree, append, keepDistinct = false)
+        ArrayTree.insertChildAt(path, subtree, tree, append, keepDistinct = false)
     }
 
     final override def insertTreeLaxAt[K, T1 >: T: ClassTag](
@@ -438,10 +438,10 @@ object LaxTreeOps {
         subtree match {
           case Tree.empty => Left(node)
           case tree: NodeTree[T1] =>
-            NodeTree.insertTreeAt(node, path.iterator, toPathItem, tree, append, keepDistinct = false)
+            NodeTree.insertChildAt(node, path.iterator, toPathItem, tree, append, keepDistinct = false)
           case tree: ArrayTree[T1] =>
             NodeTree
-              .insertTreeAt(
+              .insertChildAt(
                 node,
                 path.iterator,
                 toPathItem,
@@ -452,7 +452,7 @@ object LaxTreeOps {
         }
 
       case tree: ArrayTree[T] =>
-        ArrayTree.insertTreeAt(path, subtree, tree, toPathItem, append, keepDistinct = false)
+        ArrayTree.insertChildAt(path, subtree, tree, toPathItem, append, keepDistinct = false)
     }
 
     final override def updateChildValueLax[T1 >: T: ClassTag](existingValue: T1, replacement: T1): Tree[T1] =

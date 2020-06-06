@@ -107,7 +107,7 @@ trait EmptyTreeLike extends TreeLike[Nothing] {
     value: T1,
     toPathItem: Nothing => K,
     append: Boolean
-  ): Either[Tree[Nothing], Tree[T1]] = Left(Tree.empty)
+  ): Either[Tree[Nothing], Tree[T1]] = Left(empty)
 
   final override def insertChild[T1: ClassTag](child: Tree[T1], append: Boolean = false): Tree[T1] = child
 
@@ -130,8 +130,20 @@ trait EmptyTreeLike extends TreeLike[Nothing] {
     child: Tree[T1],
     toPathItem: Nothing => K,
     append: Boolean
-  ): Either[Tree[Nothing], Tree[T1]] =
-    if (path.isEmpty) Right(child) else Left(empty)
+  ): Either[Tree[Nothing], Tree[T1]] = Left(empty)
+
+  final override def insertChildrenAt[T1: ClassTag](
+    path: Iterable[T1],
+    children: Iterable[Tree[T1]],
+    append: Boolean = false
+  ): Tree[T1] = empty
+
+  final override def insertChildrenAt[K, T1: ClassTag](
+    path: Iterable[K],
+    children: Iterable[Tree[T1]],
+    toPathItem: Nothing => K,
+    append: Boolean
+  ): Either[Tree[Nothing], Tree[T1]] = Left(empty)
 
   final override def insertBranch[T1: ClassTag](branch: Iterable[T1]): Tree[T1] =
     if (branch.isEmpty) Tree.empty

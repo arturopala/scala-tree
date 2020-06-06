@@ -539,7 +539,7 @@ trait TreeLike[+T] {
     path: Iterable[T1],
     children: Iterable[Tree[T1]],
     append: Boolean = false
-  ): Tree[T1] = ???
+  ): Tree[T1]
 
   /** Attempts to insert, at the given path, new children and returns a whole tree updated.
     * If path doesn't fully exist in the tree then tree will remain NOT updated.
@@ -552,7 +552,7 @@ trait TreeLike[+T] {
     children: Iterable[Tree[T1]],
     toPathItem: T => K,
     append: Boolean
-  ): Either[Tree[T], Tree[T1]] = ???
+  ): Either[Tree[T], Tree[T1]]
 
   /** Inserts a new branch of values and returns updated tree.
     * Branch must start with the existing root element of the tree, otherwise the tree will stay intact.

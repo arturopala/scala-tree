@@ -249,6 +249,9 @@ object Tree {
 
     override protected val tree: ArrayTree[T] = this
 
+    /** Top index of the buffers. */
+    def top: Int = tree.structure.top
+
     override val size: Int = tree.structure.length
     override lazy val width: Int = delayedWidth
     override lazy val height: Int = delayedHeight

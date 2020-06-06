@@ -16,9 +16,16 @@
 
 package com.github.arturopala.tree
 
+import java.util.concurrent.atomic.AtomicInteger
+
 import scala.reflect.ClassTag
 
 trait AnyWordSpecCompat extends munit.FunSuite {
+
+  val counter = new AtomicInteger(0)
+
+  def test(body: => Unit)(implicit loc: munit.Location): Unit =
+    test(s"#${counter.incrementAndGet()} (line ${loc.line})")(body)
 
   implicit class NameExt[T](name: String) {
 
@@ -32,6 +39,18 @@ trait AnyWordSpecCompat extends munit.FunSuite {
         munitTestsBuffer(i) = {
           val test = munitTestsBuffer(i)
           test.withName(name + " should " + test.name)
+        }
+      }
+    }
+
+    def suite(body: => T): Unit = {
+      val pos0 = munitTestsBuffer.length
+      body
+      val pos1 = munitTestsBuffer.length
+      for (i <- pos0 until pos1) {
+        munitTestsBuffer(i) = {
+          val test = munitTestsBuffer(i)
+          test.withName(name + " " + test.name)
         }
       }
     }
