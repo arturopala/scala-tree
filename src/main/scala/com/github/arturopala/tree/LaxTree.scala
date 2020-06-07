@@ -73,7 +73,7 @@ trait LaxTree[T] {
   def insertLeafLaxAt[T1 >: T: ClassTag](path: Iterable[T1], value: T1, append: Boolean = false): Tree[T1]
 
   /** Attempts to insert, at the given path, a new child node holding the value and returns a whole tree updated.
-    * If path doesn't fully exist in the tree then tree will remain NOT updated.
+    * If path doesn't fully exist in the tree then the tree will remain intact.
     * @note This is a lax method, it doesn't preserve children values uniqueness.
     * @param path list of K items forming a path from the root to the parent node.
     * @param toPathItem extractor of the K path item from the tree's node value
@@ -96,22 +96,46 @@ trait LaxTree[T] {
     * @group laxInsertion */
   def insertChildrenLax[T1 >: T: ClassTag](children: Iterable[Tree[T1]], append: Boolean = false): Tree[T1]
 
-  /** Inserts, at the given path, a new sub-tree and returns a whole tree updated.
+  /** Inserts, at the given path, a new child and returns a whole tree updated.
     * If path doesn't fully exist in the tree then remaining suffix will be created.
     * @note This is a lax method, it doesn't preserve children values uniqueness.
     * @param path list of node's values forming a path from the root to the parent node.
     * @group laxInsertion */
-  def insertTreeLaxAt[T1 >: T: ClassTag](path: Iterable[T1], subtree: Tree[T1], append: Boolean = false): Tree[T1]
+  def insertChildLaxAt[T1 >: T: ClassTag](path: Iterable[T1], subtree: Tree[T1], append: Boolean = false): Tree[T1]
 
-  /** Attempts to insert, at the given path, a new sub-tree and return a whole tree updated.
-    * If path doesn't fully exist in the tree then tree will remain NOT updated.
+  /** Attempts to insert, at the given path, a new child and return a whole tree updated.
+    * If path doesn't fully exist in the tree then the tree will remain intact.
     * @note This is a lax method, it doesn't preserve children values uniqueness.
     * @param path list K items forming a path from the root to the parent node.
     * @return either right of modified tree or left with existing unmodified tree
     * @group laxInsertion */
-  def insertTreeLaxAt[K, T1 >: T: ClassTag](
+  def insertChildLaxAt[K, T1 >: T: ClassTag](
     path: Iterable[K],
     subtree: Tree[T1],
+    toPathItem: T => K,
+    append: Boolean
+  ): Either[Tree[T], Tree[T1]]
+
+  /** Inserts, at the given path, new children and returns a whole tree updated.
+    * If path doesn't fully exist in the tree then remaining suffix will be created.
+    * @note This is a lax method, it doesn't preserve children values uniqueness.
+    * @param path list of node's values forming a path from the root to the parent node.
+    * @group insertion */
+  def insertChildrenLaxAt[T1 >: T: ClassTag](
+    path: Iterable[T1],
+    children: Iterable[Tree[T1]],
+    append: Boolean = false
+  ): Tree[T1]
+
+  /** Attempts to insert, at the given path, new children and returns a whole tree updated.
+    * If path doesn't fully exist in the tree then the tree will remain intact.
+    * @note This is a lax method, it doesn't preserve children values uniqueness.
+    * @param path list K items forming a path from the root to the parent node.
+    * @return either right of modified tree or left with existing unmodified tree
+    * @group insertion */
+  def insertChildrenLaxAt[K, T1 >: T: ClassTag](
+    path: Iterable[K],
+    children: Iterable[Tree[T1]],
     toPathItem: T => K,
     append: Boolean
   ): Either[Tree[T], Tree[T1]]
@@ -392,18 +416,18 @@ object LaxTreeOps {
       }
     }
 
-    final override def insertTreeLaxAt[T1 >: T: ClassTag](
+    final override def insertChildLaxAt[T1 >: T: ClassTag](
       path: Iterable[T1],
-      subtree: Tree[T1],
+      child: Tree[T1],
       append: Boolean = false
     ): Tree[T1] = t match {
       case Tree.empty =>
-        if (path.isEmpty) subtree
-        else if (subtree.isEmpty) empty
-        else TreeBuilder.linearTreeFromSequence(path.toSeq).insertTreeLaxAt(path, subtree, append)
+        if (path.isEmpty) child
+        else if (child.isEmpty) empty
+        else TreeBuilder.linearTreeFromSequence(path.toSeq).insertChildLaxAt(path, child, append)
 
       case node: NodeTree[T] =>
-        subtree match {
+        child match {
           case Tree.empty => node
           case tree: NodeTree[T1] =>
             NodeTree.insertChildAt(node, path.iterator, tree, append, keepDistinct = false).getOrElse(node)
@@ -418,24 +442,24 @@ object LaxTreeOps {
                   keepDistinct = false
                 )
                 .getOrElse(node)
-            else node.deflated[T1].insertTreeLaxAt(path, tree, append)
+            else node.deflated[T1].insertChildLaxAt(path, tree, append)
         }
 
       case tree: ArrayTree[T] =>
-        ArrayTree.insertChildAt(path, subtree, tree, append, keepDistinct = false)
+        ArrayTree.insertChildAt(path, child, tree, append, keepDistinct = false)
     }
 
-    final override def insertTreeLaxAt[K, T1 >: T: ClassTag](
+    final override def insertChildLaxAt[K, T1 >: T: ClassTag](
       path: Iterable[K],
-      subtree: Tree[T1],
+      child: Tree[T1],
       toPathItem: T => K,
       append: Boolean
     ): Either[Tree[T], Tree[T1]] = t match {
       case Tree.empty =>
-        if (path.isEmpty) Right(subtree) else Left(empty)
+        if (path.isEmpty) Right(child) else Left(empty)
 
       case node: NodeTree[T] =>
-        subtree match {
+        child match {
           case Tree.empty => Left(node)
           case tree: NodeTree[T1] =>
             NodeTree.insertChildAt(node, path.iterator, toPathItem, tree, append, keepDistinct = false)
@@ -452,7 +476,66 @@ object LaxTreeOps {
         }
 
       case tree: ArrayTree[T] =>
-        ArrayTree.insertChildAt(path, subtree, tree, toPathItem, append, keepDistinct = false)
+        ArrayTree.insertChildAt(path, child, tree, toPathItem, append, keepDistinct = false)
+    }
+
+    final override def insertChildrenLaxAt[T1 >: T: ClassTag](
+      path: Iterable[T1],
+      children: Iterable[Tree[T1]],
+      append: Boolean = false
+    ): Tree[T1] = {
+      val validChildren = children.filterNot(_.isEmpty)
+      t match {
+        case Tree.empty => Tree.empty
+
+        case node: NodeTree[T] =>
+          if (validChildren.isEmpty) t
+          else if (validChildren.size == 1) t.insertChildLaxAt(path, validChildren.head, append)
+          else if (validChildren.forall(_.isInstanceOf[NodeTree[T1]]))
+            NodeTree
+              .insertChildrenAt(
+                node,
+                path.iterator,
+                validChildren.map(_.inflated).asInstanceOf[Iterable[NodeTree[T1]]],
+                append,
+                keepDistinct = false
+              )
+              .getOrElse(node)
+          else
+            ArrayTree.insertChildrenAt(path, validChildren, node.deflated[T1], append, keepDistinct = false)
+
+        case tree: ArrayTree[T] =>
+          ArrayTree.insertChildrenAt(path, validChildren, tree, append, keepDistinct = false)
+      }
+    }
+
+    final override def insertChildrenLaxAt[K, T1 >: T: ClassTag](
+      path: Iterable[K],
+      children: Iterable[Tree[T1]],
+      toPathItem: T => K,
+      append: Boolean
+    ): Either[Tree[T], Tree[T1]] = {
+      val validChildren = children.filterNot(_.isEmpty)
+      t match {
+        case Tree.empty => Left(Tree.empty)
+
+        case node: NodeTree[T] =>
+          if (validChildren.isEmpty) Right(t)
+          else if (validChildren.size == 1) t.insertChildLaxAt(path, validChildren.head, toPathItem, append)
+          else
+            NodeTree
+              .insertChildrenAt(
+                node,
+                path.iterator,
+                toPathItem,
+                validChildren.map(_.inflated).asInstanceOf[Iterable[NodeTree[T1]]],
+                append,
+                keepDistinct = false
+              )
+
+        case tree: ArrayTree[T] =>
+          ArrayTree.insertChildrenAt(path, validChildren, tree, toPathItem, append, keepDistinct = false)
+      }
     }
 
     final override def updateChildValueLax[T1 >: T: ClassTag](existingValue: T1, replacement: T1): Tree[T1] =

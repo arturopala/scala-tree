@@ -921,11 +921,11 @@ object NodeTree {
   final def insertChildDistinct[T](
     head: T,
     leftSiblings: Seq[NodeTree[T]],
-    newChild: NodeTree[T],
+    child: NodeTree[T],
     rightSiblings: Seq[NodeTree[T]],
     preserveExisting: Boolean
   ): NodeTree[T] = {
-    val (left, right) = insertDistinctBetweenSiblings(leftSiblings, newChild, rightSiblings, preserveExisting)
+    val (left, right) = insertDistinctBetweenSiblings(leftSiblings, child, rightSiblings, preserveExisting)
     Tree(head, left ++ right)
   }
 
@@ -937,26 +937,26 @@ object NodeTree {
     */
   final def insertDistinctBetweenSiblings[T](
     leftSiblings: Seq[NodeTree[T]],
-    newChild: NodeTree[T],
+    child: NodeTree[T],
     rightSiblings: Seq[NodeTree[T]],
     preserveExisting: Boolean
   ): (Seq[NodeTree[T]], Seq[NodeTree[T]]) =
-    splitSequenceWhen[NodeTree[T]](_.head == newChild.head, leftSiblings.reverse) match {
+    splitSequenceWhen[NodeTree[T]](_.head == child.head, leftSiblings.reverse) match {
       case Some((right, duplicateOnLeft, left)) =>
         val mergedNode =
-          insertChildrenDistinct(newChild.head, duplicateOnLeft.children, newChild.children, Nil, preserveExisting)
+          insertChildrenDistinct(child.head, duplicateOnLeft.children, child.children, Nil, preserveExisting)
         (left.reverse ++: mergedNode +: right.reverse, rightSiblings)
 
       case None =>
-        splitSequenceWhen[NodeTree[T]](_.head == newChild.head, rightSiblings) match {
+        splitSequenceWhen[NodeTree[T]](_.head == child.head, rightSiblings) match {
           case None =>
-            (leftSiblings :+ newChild, rightSiblings)
+            (leftSiblings :+ child, rightSiblings)
 
           case Some((left, duplicateOnRight, right)) =>
             val mergedNode =
               insertChildrenDistinct(
-                newChild.head,
-                newChild.children,
+                child.head,
+                child.children,
                 duplicateOnRight.children,
                 Nil,
                 preserveExisting
@@ -1106,10 +1106,16 @@ object NodeTree {
       case (treeSplit, Some(value), remainingBranchIterator, remainingTree) =>
         val branch = value +: remainingBranchIterator.toSeq
         val branchTree: NodeTree[T1] =
-          TreeBuilder
-            .linearTreeFromSequence(branch)
-            .insertChildrenAt(branch, children, append)
-            .asInstanceOf[NodeTree[T1]]
+          if (keepDistinct)
+            TreeBuilder
+              .linearTreeFromSequence(branch)
+              .insertChildrenAt(branch, children, append)
+              .asInstanceOf[NodeTree[T1]]
+          else {
+            TreeBuilder
+              .fromTreeSequence(branch.init.map(Tree.apply[T1]) :+ Tree(branch.last, children.toSeq))
+              .asInstanceOf[NodeTree[T1]]
+          }
         val newNode = Tree(
           remainingTree.head,
           if (append) remainingTree.children :+ branchTree

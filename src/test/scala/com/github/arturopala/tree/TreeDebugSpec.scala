@@ -34,7 +34,15 @@ class TreeDebugSpec extends FunSuite with TestWithBuffers {
 
     def tree[T: ClassTag](t: Tree[T]): Tree[T]
 
-    "debug" suite {}
+    "debug" suite {
+      test(
+        tree1.insertChildrenLaxAt(List("a", "b"), List(tree0, tree1, tree2, tree3_1, tree3_2), append = false) shouldBe
+          Tree(
+            "a",
+            Tree("b", Tree("a"), Tree("a", Tree("b")), Tree("a", Tree("b", Tree("c"))), Tree("a", Tree("b"), Tree("c")))
+          )
+      )
+    }
 
   }
 
