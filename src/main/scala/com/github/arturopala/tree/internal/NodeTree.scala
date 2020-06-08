@@ -601,7 +601,7 @@ object NodeTree {
     subtreesRight match {
       case Nil =>
         val branchTree: Tree[T1] =
-          TreeBuilder.linearTreeFromSequence(branchHead +: branchTailIterator.toSeq).asInstanceOf[Tree[T1]]
+          TreeBuilder.linearTreeFromSequence(branchHead +: branchTailIterator.toSeq)
         branchTree +: subtreesLeft
 
       case head :: tail if head.head == branchHead =>
@@ -985,7 +985,7 @@ object NodeTree {
     maxLookupLevel: Int
   ): Tree[T] =
     if (queue.isEmpty) {
-      TreeBuilder.fromSizeAndTreePairsIterable(result).head.asInstanceOf[Tree[T]]
+      TreeBuilder.fromSizeAndTreePairsIterable(result).head
     } else {
       val (tree, inspectChildren, level) = queue.head
       if (inspectChildren || level <= maxLookupLevel) {
@@ -1053,7 +1053,6 @@ object NodeTree {
         val branchTree: Tree[T1] =
           TreeBuilder
             .fromTreeSequence((Tree(value) +: remainingBranchIterator.map(Tree.apply[T1]).toVector) :+ nodeToInsert)
-            .asInstanceOf[Tree[T1]]
         val newNode = Tree(
           remainingTree.head,
           if (append) remainingTree.children.toSeq :+ branchTree
@@ -1064,7 +1063,7 @@ object NodeTree {
       case (treeSplit, None, _, recipientTree) =>
         val newNode =
           if (keepDistinct && !recipientTree.isLeaf)
-            recipientTree.insertChild(nodeToInsert, append).asInstanceOf[Tree[T1]]
+            recipientTree.insertChild(nodeToInsert, append)
           else
             Tree(
               recipientTree.head,
@@ -1087,7 +1086,7 @@ object NodeTree {
         case (treeSplit, recipientTree) =>
           val newNode =
             if (keepDistinct && !recipientTree.isLeaf)
-              recipientTree.insertChild(nodeToInsert, append).asInstanceOf[Tree[T1]]
+              recipientTree.insertChild(nodeToInsert, append)
             else
               Tree(
                 recipientTree.head,
@@ -1114,11 +1113,10 @@ object NodeTree {
             TreeBuilder
               .linearTreeFromSequence(branch)
               .insertChildrenAt(branch, children, append)
-              .asInstanceOf[Tree[T1]]
           else {
             TreeBuilder
               .fromTreeSequence(branch.init.map(Tree.apply[T1]) :+ Tree(branch.last, children.toSeq))
-              .asInstanceOf[Tree[T1]]
+
           }
         val newNode = Tree(
           remainingTree.head,
