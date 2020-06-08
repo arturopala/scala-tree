@@ -19,7 +19,7 @@ package com.github.arturopala.tree.internal
 import java.util.NoSuchElementException
 
 import com.github.arturopala.tree.{Tree, TreeBuilder}
-import com.github.arturopala.tree.Tree.{ArrayTree, Binary, Leaf, Node, NodeTree, Unary}
+import com.github.arturopala.tree.Tree.{ArrayTree, Binary, Leaf, NodeTree, Unary}
 import com.github.arturopala.bufferandslice.{Buffer, IntBuffer, IntSlice, Slice}
 import com.github.arturopala.tree.internal.VectorOps._
 import com.github.arturopala.tree.internal.IteratorOps._
@@ -217,7 +217,7 @@ object NodeTree {
   private def values[T](pred: T => Boolean, result: Vector[T], queue: Vector[Tree[T]]): Vector[T] =
     if (queue.isEmpty) result
     else {
-      val Node(head: T, children: Iterable[Tree[T]]) = queue.head
+      val Tree(head: T, children: Iterable[Tree[T]]) = queue.head
       if (pred(head)) values(pred, result :+ head, children ++: queue.safeTail)
       else values(pred, result, children ++: queue.safeTail)
     }
@@ -344,7 +344,7 @@ object NodeTree {
   ): Vector[Tree[T]] =
     if (queue.isEmpty) result
     else {
-      val node @ Node(_, children: Iterable[Tree[T]]) = queue.head
+      val node @ Tree(_, children: Iterable[Tree[T]]) = queue.head
       if (pred(node)) trees(pred, result :+ node, children ++: queue.safeTail)
       else trees(pred, result, children ++: queue.safeTail)
     }
@@ -380,7 +380,7 @@ object NodeTree {
       override def next(): Iterable[T] =
         if (queue.isEmpty) throw new NoSuchElementException()
         else {
-          val (acc, Node(head: T, children: Iterable[Tree[T]])) = queue.head
+          val (acc, Tree(head: T, children: Iterable[Tree[T]])) = queue.head
           val branch = acc :+ head
           queue = seekNext(children.map((branch, _)) ++: queue.safeTail)
           branch
@@ -390,7 +390,7 @@ object NodeTree {
       private def seekNext(q: Queue): Queue =
         if (q.isEmpty) q
         else {
-          val (acc, Node(head: T, children: Iterable[Tree[T]])) = q.head
+          val (acc, Tree(head: T, children: Iterable[Tree[T]])) = q.head
           val branch = acc :+ head
           children match {
             case Nil => q
@@ -411,7 +411,7 @@ object NodeTree {
       override def next(): Iterable[T] =
         if (queue.isEmpty) throw new NoSuchElementException()
         else {
-          val (acc, Node(head: T, children: Iterable[Tree[T]])) = queue.head
+          val (acc, Tree(head: T, children: Iterable[Tree[T]])) = queue.head
           val branch = acc :+ head
           queue = seekNext(children.map((branch, _)) ++: queue.safeTail)
           branch
@@ -421,7 +421,7 @@ object NodeTree {
       private def seekNext(q: Queue): Queue =
         if (q.isEmpty) q
         else {
-          val (acc, Node(head: T, children: Iterable[Tree[T]])) = q.head
+          val (acc, Tree(head: T, children: Iterable[Tree[T]])) = q.head
           val branch = acc :+ head
           children match {
             case Nil if pred(branch) => q
@@ -448,7 +448,7 @@ object NodeTree {
       override def next(): Iterable[T] =
         if (queue.isEmpty) throw new NoSuchElementException()
         else {
-          val (acc, Node(head: T, children: Iterable[Tree[T]])) = queue.head
+          val (acc, Tree(head: T, children: Iterable[Tree[T]])) = queue.head
           val branch = acc :+ head
           queue =
             if (branch.length < maxDepth) seekNext(children.map((branch, _)) ++: queue.safeTail)
@@ -460,7 +460,7 @@ object NodeTree {
       private def seekNext(q: Queue): Queue =
         if (q.isEmpty) q
         else {
-          val (acc, Node(head: T, children: Iterable[Tree[T]])) = q.head
+          val (acc, Tree(head: T, children: Iterable[Tree[T]])) = q.head
           val branch = acc :+ head
           children match {
             case s if (s.isEmpty || branch.length >= maxDepth) && pred(branch) => q
@@ -483,7 +483,7 @@ object NodeTree {
     if (queue.isEmpty) result
     else
       queue.head match {
-        case (acc, Node(head: T, children: Iterable[Tree[T]])) =>
+        case (acc, Tree(head: T, children: Iterable[Tree[T]])) =>
           val branch = acc :+ head
           children match {
             case Nil if pred(branch) => branches(pred, result :+ branch, queue.safeTail)
@@ -632,7 +632,7 @@ object NodeTree {
     else
       queue.head match {
         case Leaf(head) => toPairsList((0, head) +: result, queue.safeTail)
-        case Node(head: T, children: Iterable[Tree[T]]) =>
+        case Tree(head: T, children: Iterable[Tree[T]]) =>
           toPairsList((children.size, head) +: result, children ++: queue.safeTail)
       }
 
@@ -668,7 +668,7 @@ object NodeTree {
           values.update(position, head)
           toArrays(structure, values, queue, position - 1, queuePosition - 1)
 
-        case Node(head: T, children: Iterable[Tree[T]]) =>
+        case Tree(head: T, children: Iterable[Tree[T]]) =>
           structure.update(position, children.size)
           values.update(position, head)
           var rp: Int = queuePosition + children.size - 1
@@ -699,7 +699,7 @@ object NodeTree {
           structure.update(position, 0)
           toStructureArray(structure, queue, position - 1, queuePosition - 1)
 
-        case Node(_, children: Iterable[Tree[T]]) =>
+        case Tree(_, children: Iterable[Tree[T]]) =>
           structure.update(position, children.size)
           var rp: Int = queuePosition + children.size - 1
           children.foreach { child =>
@@ -718,7 +718,7 @@ object NodeTree {
     else
       queue.head match {
         case Leaf(head) => toTreeList((0, Tree(head)) +: result, queue.safeTail)
-        case Node(head: T, children: Iterable[Tree[T]]) =>
+        case Tree(head: T, children: Iterable[Tree[T]]) =>
           toTreeList((children.size, Tree(head)) +: result, children ++: queue.safeTail)
       }
 
@@ -733,7 +733,7 @@ object NodeTree {
         case Leaf(head)                => listMap(f, (0, f(head)) +: result, queue.safeTail)
         case Unary(head, child)        => listMap(f, (1, f(head)) +: result, child +: queue.safeTail)
         case Binary(head, left, right) => listMap(f, (2, f(head)) +: result, left +: right +: queue.safeTail)
-        case Node(head: T, children: Iterable[Tree[T]]) =>
+        case Tree(head: T, children: Iterable[Tree[T]]) =>
           listMap(f, (children.size, f(head)) +: result, children ++: queue.safeTail)
       }
 
@@ -775,7 +775,7 @@ object NodeTree {
           queue(queuePosition + 1) = left
           arrayMap(f, structure, values, queue, position - 1, queuePosition + 1)
 
-        case Node(head: T, children: Iterable[Tree[T]]) =>
+        case Tree(head: T, children: Iterable[Tree[T]]) =>
           structure.update(position, children.size)
           values.update(position, f(head))
           var rp: Int = queuePosition + children.size - 1
@@ -796,7 +796,7 @@ object NodeTree {
     else
       queue.head match {
         case Leaf(head) => listFlatMap(f, (0, f(head)) +: result, queue.safeTail)
-        case Node(head: T, children: Iterable[Tree[T]]) =>
+        case Tree(head: T, children: Iterable[Tree[T]]) =>
           listFlatMap(f, (children.size, f(head)) +: result, children ++: queue.safeTail)
       }
 
@@ -836,7 +836,7 @@ object NodeTree {
     if (queue.isEmpty) builder
     else
       queue.head match {
-        case (level, prefix, Node(head: T, children: Iterable[Tree[T]])) =>
+        case (level, prefix, Tree(head: T, children: Iterable[Tree[T]])) =>
           val string = show(head)
           if (level <= maxDepth) {
             if (newBranch) builder.append(branchSeparator).append(prefix)
@@ -1322,7 +1322,7 @@ object NodeTree {
       case Tree.empty =>
         TreeBuilder.fromTreeSplit[T1](treeSplit)
 
-      case tree: Tree[T1] =>
+      case tree: NodeTree[T1] =>
         if (keepDistinct && treeSplit.nonEmpty && tree.head != child.head) {
           val (left, head, right) = treeSplit.head
           val newHead = insertChildDistinct(head, left, tree, right, preserveExisting = false)
@@ -1400,7 +1400,7 @@ object NodeTree {
           case Tree.empty =>
             Tree(tree.head, left ++ right)
 
-          case t: Tree[T1] =>
+          case t: NodeTree[T1] =>
             if (keepDistinct && t.head != node.head) {
               insertChildDistinct(tree.head, left, t, right, preserveExisting = false)
             } else {
@@ -1519,7 +1519,7 @@ object NodeTree {
             case Tree.empty =>
               Tree(tree.head, left ++ right)
 
-            case t: Tree[T1] =>
+            case t: NodeTree[T1] =>
               if (keepDistinct && t.head != node.head) {
                 insertChildDistinct(tree.head, left, t, right, preserveExisting = false)
               } else {

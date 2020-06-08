@@ -135,11 +135,10 @@ object Tree {
     else if (children.size == 2) new Binary(head, children.head, children.drop(1).head)
     else new Bunch(head, children)
 
-  object Node {
-
-    /** Universal Tree extractor of a tuple of (head, children). */
-    def unapply[T](node: Tree[T]): Option[(T, Iterable[Tree[T]])] =
-      Some((node.head, node.children))
+  /** Extracts non-empty tree as a tuple of (head, children). */
+  final def unapply[T](node: Tree[T]): Option[(T, Iterable[Tree[T]])] = node match {
+    case Tree.empty => None
+    case _          => Some((node.head, node.children))
   }
 
   /**
@@ -221,7 +220,7 @@ object Tree {
   final class ArrayTree[T: ClassTag] private[tree] (
     val structure: IntSlice,
     val content: Slice[T],
-    delayedWidth:  => Int,
+    delayedWidth: => Int,
     delayedHeight: => Int
   ) extends ArrayTreeLike[T] with Tree[T] {
 
