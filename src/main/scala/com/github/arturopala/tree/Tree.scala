@@ -104,19 +104,41 @@ object Tree {
     * @group Creation */
   final def apply[T](): Tree[T] = empty
 
-  /** Creates a leaf tree.
+  /** Creates new leaf tree.
     * @group Creation */
   final def apply[T](head: T): Tree[T] = new Leaf(head)
 
-  /** Creates a tree having a single child.
+  /** Creates new tree having a single child.
     * @group Creation */
   final def apply[T](head: T, child: Tree[T]): Tree[T] = new Unary(head, child)
 
-  /** Creates a tree having two children.
+  /** Creates new tree having two children.
     * @group Creation */
   final def apply[T](head: T, left: Tree[T], right: Tree[T]): Tree[T] = new Binary(head, left, right)
 
-  /** Creates a tree node from the head and multiple children.
+  /** Creates new tree from the head value and list of children.
+    * @group Creation */
+  final def apply[T](head: T, children: Iterable[Tree[T]]): Tree[T] =
+    if (children.isEmpty) new Leaf(head)
+    else if (children.size == 1) new Unary(head, children.head)
+    else if (children.size == 2) new Binary(head, children.head, children.drop(1).head)
+    else new Bunch(head, children.toSeq)
+
+  /** Creates new tree from the head value and initial children, and last child.
+    * @group Creation */
+  final def apply[T](head: T, children: Iterable[Tree[T]], child: Tree[T]): Tree[T] =
+    if (children.isEmpty) new Unary(head, child)
+    else if (children.size == 1) new Binary(head, children.head, child)
+    else new Bunch(head, children.toSeq :+ child)
+
+  /** Creates new tree from the head value and first child, and following children.
+    * @group Creation */
+  final def apply[T](head: T, child: Tree[T], children: Iterable[Tree[T]]): Tree[T] =
+    if (children.isEmpty) new Unary(head, child)
+    else if (children.size == 1) new Binary(head, child, children.head)
+    else new Bunch(head, child +: children.toSeq)
+
+  /** Creates new tree from the head and multiple children.
     * @group Creation */
   final def apply[T](
     head: T,
@@ -127,13 +149,15 @@ object Tree {
   ): Tree[T] =
     new Bunch(head, child1 +: child2 +: child3 +: otherChildren.toIndexedSeq)
 
-  /** Creates a tree node from the value and list of subtrees.
+  /** Creates a tree node from the head value and a tuple of (left children, right children).
     * @group Creation */
-  final def apply[T](head: T, children: Iterable[Tree[T]]): Tree[T] =
-    if (children.isEmpty) new Leaf(head)
-    else if (children.size == 1) new Unary(head, children.head)
-    else if (children.size == 2) new Binary(head, children.head, children.drop(1).head)
-    else new Bunch(head, children)
+  final def apply[T](head: T, children: (Iterable[Tree[T]], Iterable[Tree[T]])): Tree[T] =
+    children match {
+      case (s1, s2) if s1.isEmpty                   => Tree(head, s2)
+      case (s1, s2) if s2.isEmpty                   => Tree(head, s1)
+      case (s1, s2) if s1.size == 1 && s2.size == 1 => Tree.Binary(head, s1.head, s2.head)
+      case (s1, s2)                                 => Tree(head, s1 ++ s2)
+    }
 
   /** Extracts non-empty tree as a tuple of (head, children). */
   final def unapply[T](node: Tree[T]): Option[(T, Iterable[Tree[T]])] = node match {
@@ -170,6 +194,7 @@ object Tree {
   }
 
   object Leaf {
+    def apply[T](head: T): Tree[T] = new Leaf(head)
     def unapply[T](node: Leaf[T]): Option[T] = Some(node.head)
   }
 
@@ -185,6 +210,7 @@ object Tree {
   }
 
   object Unary {
+    def apply[T](head: T, child: Tree[T]): Tree[T] = new Unary(head, child)
     def unapply[T](node: Unary[T]): Option[(T, Tree[T])] = Some((node.head, node.child))
   }
 
@@ -200,17 +226,23 @@ object Tree {
   }
 
   object Binary {
+    def apply[T](head: T, left: Tree[T], right: Tree[T]): Tree[T] = new Binary(head, left, right)
     def unapply[T](node: Binary[T]): Option[(T, Tree[T], Tree[T])] = Some((node.head, node.left, node.right))
   }
 
   /** Concrete node of the Tree, consisting of a value and a list of subtrees (more than two). */
-  final class Bunch[+T] private[Tree] (val head: T, val children: Iterable[Tree[T]]) extends NodeTree[T] {
+  final class Bunch[+T] private[Tree] (val head: T, val children: Seq[Tree[T]]) extends NodeTree[T] {
 
     override val size: Int = 1 + children.map(_.size).sum
     override val width: Int = Math.max(1, children.map(_.width).sum)
     override val height: Int = 1 + children.maxBy(_.height).height
     override def isLeaf: Boolean = children.isEmpty
     override def childrenCount: Int = children.size
+  }
+
+  object Bunch {
+    def apply[T](head: T, children: Seq[Tree[T]]): Tree[T] = new Bunch(head, children)
+    def unapply[T](node: Bunch[T]): Option[(T, Seq[Tree[T]])] = Some((node.head, node.children))
   }
 
   /**

@@ -722,20 +722,28 @@ object ArrayTree {
     }
   }
 
+  /** Prepends children with the new child without checking for duplicates. */
+  final def prependChild[T, T1 >: T: ClassTag](tree: ArrayTree[T], child: Tree[T1]): Tree[T1] =
+    insertTreeAtIndex(tree.top, tree.top, child, tree)
+
+  /** Appends children with the new child without checking for duplicates. */
+  final def appendChild[T, T1 >: T: ClassTag](tree: ArrayTree[T], child: Tree[T1]): Tree[T1] =
+    insertTreeAtIndex(0, tree.top, child, tree)
+
   /** Inserts a subtree to a tree at an index.
     * @return modified tree */
   final def insertTreeAtIndex[T: ClassTag](
     index: Int,
     parentIndex: Int,
-    source: Tree[T],
+    child: Tree[T],
     target: Tree[T]
   ): Tree[T] =
-    if (source.isEmpty) target
-    else if (target.isEmpty) source
+    if (child.isEmpty) target
+    else if (target.isEmpty) child
     else {
       assert(index >= 0 && index < target.size, "Insertion index must be within target's tree range [0,length).")
       transform(target) { (structureBuffer, valuesBuffer) =>
-        val (structure, values) = source.toSlices
+        val (structure, values) = child.toSlices
         if (parentIndex >= 0) structureBuffer.increment(parentIndex)
         ArrayTreeFunctions.insertSlice(index, structure, values, structureBuffer, valuesBuffer).intAsSome
       }

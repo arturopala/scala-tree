@@ -237,14 +237,22 @@ object TreeBuilder {
   final def fromTreeSequence[T: ClassTag](seq: Seq[Tree[T]]): Tree[T] =
     fromReverseTreeIterator(seq.reverseIterator, Tree.empty)
 
+  /** Builds a main-branch tree from a list of trees. */
+  final def fromTreeSequence[T: ClassTag](seq: Seq[Tree[T]], lastChild: Tree[T]): Tree[T] =
+    fromReverseTreeIterator(seq.reverseIterator, lastChild)
+
+  /** Builds a main-branch tree from a list of trees. */
+  final def fromTreeSequence[T: ClassTag](head: T, seq: Seq[Tree[T]], lastChild: Tree[T]): Tree[T] =
+    Tree(head, fromReverseTreeIterator(seq.reverseIterator, lastChild))
+
   /** Builds a single-branch tree from a reverse iterator over child trees */
   @tailrec
-  final def fromReverseTreeIterator[T: ClassTag](iterator: Iterator[Tree[T]], child: Tree[T]): Tree[T] =
+  final def fromReverseTreeIterator[T: ClassTag](iterator: Iterator[Tree[T]], lastChild: Tree[T]): Tree[T] =
     if (iterator.hasNext) {
-      val tree = iterator.next().insertChild(child)
+      val tree = iterator.next().insertChild(lastChild)
       fromReverseTreeIterator(iterator, tree)
     } else {
-      child
+      lastChild
     }
 
   /** Builds a tree from the sequence of tree splits (leftChildren, value, rightChildren).

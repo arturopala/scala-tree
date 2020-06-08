@@ -27,6 +27,16 @@ class NodeTreeSpec extends AnyWordSpecCompat {
 
   s"NodeTree" should {
 
+    "insert branch" in {
+      insertBranch(Tree("a", Tree("b"), Tree("c"), Tree("d", Tree("e"))), List("a", "c", "d", "e", "f").iterator) shouldBe
+        Some(Tree("a", Tree("b"), Tree("c", Tree("d", Tree("e", Tree("f")))), Tree("d", Tree("e"))))
+    }
+
+    "insert branch unsafe" in {
+      insertBranchUnsafe(Tree("a", Tree("b"), Tree("c"), Tree("d", Tree("e"))), List("a", "c", "d", "e", "f").iterator) shouldBe
+        Some(Tree("a", Tree("b"), Tree("c", Tree("d", Tree("e", Tree("f")))), Tree("d", Tree("e"))))
+    }
+
     "iterate over tree values depth-first" in {
       valuesIterator(Tree("a"), true).toList shouldBe List("a")
       valuesIterator(Tree("a", Tree("b")), true).toList shouldBe List("a", "b")
@@ -377,6 +387,32 @@ class NodeTreeSpec extends AnyWordSpecCompat {
         (List(Tree("a", Tree("b"), Tree("c"))), List(Tree("a", Tree("d"))))
       insertDistinctBetweenSiblings(List(), Tree("c"), List(Tree("c"), Tree("e")), false) shouldBe
         (List(Tree("c")), List(Tree("e")))
+      insertDistinctBetweenSiblings(
+        List(Tree("a", Tree("b"), Tree("c"))),
+        Tree("b", Tree("c", Tree("d"))),
+        List(),
+        false
+      ) shouldBe
+        (List(Tree("a", Tree("b"), Tree("c")), Tree("b", Tree("c", Tree("d")))), List())
+      insertDistinctBetweenSiblings(
+        List(
+          Tree("a", Tree("b")),
+          Tree("a", Tree("c")),
+          Tree("a", Tree("b"), Tree("c")),
+          Tree("b", Tree("c", Tree("d"))),
+          Tree("c", Tree("d"), Tree("e"))
+        ),
+        Tree("a", Tree("c", Tree("d"))),
+        List(),
+        false
+      ) shouldBe
+        (List(
+          Tree("a", Tree("b")),
+          Tree("a", Tree("c")),
+          Tree("a", Tree("b"), Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("d"))),
+          Tree("c", Tree("d"), Tree("e"))
+        ), List())
     }
 
     "insert children distinct" in {
