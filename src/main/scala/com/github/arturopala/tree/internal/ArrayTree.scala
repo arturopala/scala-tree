@@ -891,18 +891,20 @@ object ArrayTree {
   final def updateValue[T: ClassTag, T1 >: T: ClassTag](
     index: Int,
     replacement: T1,
-    tree: ArrayTree[T],
+    tree: Tree[T],
     keepDistinct: Boolean
-  ): Tree[T1] =
-    if (index < 0 || replacement == tree.content(index)) tree
+  ): Tree[T1] = {
+    val (structure, values) = tree.toSlices[T]
+    if (index < 0 || replacement == values(index)) tree
     else if (keepDistinct) {
       transform[T1](tree) { (structureBuffer, valuesBuffer) =>
         valuesBuffer(index) = replacement
         ArrayTreeFunctions.ensureChildDistinct(index, structureBuffer, valuesBuffer).intAsSome
       }
     } else {
-      new ArrayTree(tree.structure, tree.content.update(index, replacement), tree.width, tree.height)
+      new ArrayTree(structure, values.update(index, replacement), tree.width, tree.height)
     }
+  }
 
   /** Updates tree at the index.
     * @return updated tree */
@@ -1051,11 +1053,14 @@ object ArrayTree {
   final def modifyValue[T: ClassTag, T1 >: T: ClassTag](
     index: Int,
     modify: T => T1,
-    tree: ArrayTree[T],
+    tree: Tree[T],
     keepDistinct: Boolean
   ): Tree[T1] =
     if (index < 0) tree
-    else updateValue(index, modify(tree.content(index)), tree, keepDistinct)
+    else {
+      val values = tree.toSlices[T]._2
+      updateValue(index, modify(values(index)), tree, keepDistinct)
+    }
 
   /** Modifies value of the child node holding the given value. */
   final def modifyChildValue[T: ClassTag, T1 >: T: ClassTag](
@@ -1107,13 +1112,14 @@ object ArrayTree {
   final def modifyTree[T: ClassTag, T1 >: T: ClassTag](
     index: Int,
     modify: Tree[T] => Tree[T1],
-    tree: ArrayTree[T],
+    tree: Tree[T],
     keepDistinct: Boolean
   ): Tree[T1] =
     if (index < 0) tree
     else {
-      val newTree = treeAt(index, tree.structure, tree.content)
-      updateTree(index, modify(newTree), tree, keepDistinct)
+      val (structure, values) = tree.toSlices[T]
+      val subtree = treeAt(index, structure, values)
+      updateTree(index, modify(subtree), tree, keepDistinct)
     }
 
   /** Modifies the child node holding the given value. */
@@ -1166,7 +1172,7 @@ object ArrayTree {
   final def removeValue[T: ClassTag](
     index: Int,
     parentIndexOpt: Option[Int],
-    tree: ArrayTree[T],
+    tree: Tree[T],
     keepDistinct: Boolean
   ): Tree[T] =
     if (index < 0) tree

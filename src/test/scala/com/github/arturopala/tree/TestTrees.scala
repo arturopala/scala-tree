@@ -16,8 +16,6 @@
 
 package com.github.arturopala.tree
 
-import com.github.arturopala.tree.Tree.NodeTree
-
 import scala.reflect.ClassTag
 
 /** Exemplary trees of growing complexity for testing. */
@@ -94,48 +92,48 @@ object TestTrees {
   /**
     * [a]
     */
-  val tree1: NodeTree[String] = Tree("a")
+  val tree1: Tree[String] = Tree("a")
 
   /**
     * [a,b]
     */
-  val tree2: NodeTree[String] = Tree("a", Tree("b"))
+  val tree2: Tree[String] = Tree("a", Tree("b"))
 
   /**
     * [a,b,c]
     */
-  val tree3_1: NodeTree[String] = Tree("a", Tree("b", Tree("c")))
+  val tree3_1: Tree[String] = Tree("a", Tree("b", Tree("c")))
 
   /**
     * [a,b]
     * [a,c]
     */
-  val tree3_2: NodeTree[String] = Tree("a", Tree("b"), Tree("c"))
+  val tree3_2: Tree[String] = Tree("a", Tree("b"), Tree("c"))
 
   /**
     * [a,b,c,d]
     */
-  val tree4_1: NodeTree[String] = Tree("a", Tree("b", Tree("c", Tree("d"))))
+  val tree4_1: Tree[String] = Tree("a", Tree("b", Tree("c", Tree("d"))))
 
   /**
     * [a,b,c]
     * [a,d]
     */
-  val tree4_2: NodeTree[String] = Tree("a", Tree("b", Tree("c")), Tree("d"))
+  val tree4_2: Tree[String] = Tree("a", Tree("b", Tree("c")), Tree("d"))
 
   /**
     * [a,b]
     * [a,c]
     * [a,d]
     */
-  val tree4_3: NodeTree[String] = Tree("a", Tree("b"), Tree("c"), Tree("d"))
+  val tree4_3: Tree[String] = Tree("a", Tree("b"), Tree("c"), Tree("d"))
 
   /**
     * [a,b,c]
     * [a,d,e,f]
     * [a,g]
     */
-  val tree7: NodeTree[String] =
+  val tree7: Tree[String] =
     Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e", Tree("f"))), Tree("g"))
 
   /**
@@ -143,7 +141,7 @@ object TestTrees {
     * [a,e,f,g]
     * [a,e,h,i]
     */
-  val tree9: NodeTree[String] =
+  val tree9: Tree[String] =
     Tree("a", Tree("b", Tree("c", Tree("d"))), Tree("e", Tree("f", Tree("g")), Tree("h", Tree("i"))))
 
   /**
@@ -155,7 +153,7 @@ object TestTrees {
     * [a,j,k,l]
     * [a,j,m]
     */
-  val tree13: NodeTree[String] =
+  val tree13: Tree[String] =
     Tree(
       "a",
       Tree("b", Tree("c", Tree("d")), Tree("e", Tree("f"), Tree("g")), Tree("h")),

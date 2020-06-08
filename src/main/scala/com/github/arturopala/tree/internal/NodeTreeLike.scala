@@ -44,8 +44,6 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
   final override def values(mode: TraversingMode = TopDownDepthFirst): Iterable[T] =
     iterableFrom(NodeTree.valuesIterator(node, mode.isDepthFirst))
 
-  final def valuesUnsafe: Iterable[T] = node.head +: node.children.flatMap(_.valuesUnsafe)
-
   final override def leaves: Iterable[T] =
     iterableFrom(NodeTree.leavesIterator(node))
 
@@ -72,8 +70,6 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
   final override def trees(mode: TraversingMode = TopDownDepthFirst): Iterable[Tree[T]] =
     iterableFrom(NodeTree.treesIterator(node, mode.isDepthFirst))
 
-  final def treesUnsafe: Iterable[Tree[T]] = node +: node.children.flatMap(_.treesUnsafe)
-
   final override def treesWithFilter(
     pred: Tree[T] => Boolean,
     mode: TraversingMode = TopDownDepthFirst,
@@ -95,12 +91,6 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
 
   final override def branches: Iterable[Iterable[T]] = iterableFrom(NodeTree.branchesIterator(node))
 
-  final def branchesUnsafe: Seq[Seq[T]] = node.children match {
-    case Nil => List(List(node.head))
-    case _ =>
-      node.children.flatMap(_.branchesUnsafe).map(node.head +: _)
-  }
-
   final override def branchesWithFilter(
     pred: Iterable[T] => Boolean,
     maxDepth: Int = Int.MaxValue
@@ -119,7 +109,7 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
 
   final override def insertLeaf[T1 >: T: ClassTag](value: T1, append: Boolean = false): Tree[T1] =
     if (node.children.exists(_.head == value)) node
-    else Tree(node.head, if (append) node.children :+ Tree(value) else Tree(value) +: node.children)
+    else Tree(node.head, if (append) node.children.toSeq :+ Tree(value) else Tree(value) +: node.children.toSeq)
 
   final override def insertLeaves[T1 >: T: ClassTag](values: Iterable[T1], append: Boolean = false): Tree[T1] =
     if (values.isEmpty) node
@@ -165,7 +155,7 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
       if (append)
         NodeTree.insertChildrenDistinct(
           node.head,
-          node.children,
+          node.children.toSeq,
           validChildren.asInstanceOf[Iterable[NodeTree[T1]]],
           Nil,
           preserveExisting = true
@@ -175,7 +165,7 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
           node.head,
           Nil,
           validChildren.asInstanceOf[Iterable[NodeTree[T1]]],
-          node.children,
+          node.children.toSeq,
           preserveExisting = true
         )
     else if (append)
@@ -367,18 +357,18 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
   }
 
   final def mapUnsafe[K: ClassTag](f: T => K): Tree[K] = {
-    def mapNodeUnsafe(n: NodeTree[T]): NodeTree[K] = Tree(f(n.head), n.children.map(mapNodeUnsafe))
+    def mapNodeUnsafe(n: Tree[T]): Tree[K] = Tree(f(n.head), n.children.map(mapNodeUnsafe))
     mapNodeUnsafe(node)
   }
 
   final override def selectValue[K](path: Iterable[K], toPathItem: T => K): Option[T] =
-    NodeTree.select(node, path, (n: NodeTree[T]) => n.head, toPathItem)
+    NodeTree.select(node, path, (n: Tree[T]) => n.head, toPathItem)
 
   final override def selectTree[T1 >: T: ClassTag](path: Iterable[T1]): Option[Tree[T]] =
-    NodeTree.select(node, path, (n: NodeTree[T]) => n)
+    NodeTree.select(node, path, (n: Tree[T]) => n)
 
   final override def selectTree[K](path: Iterable[K], toPathItem: T => K): Option[Tree[T]] =
-    NodeTree.select(node, path, (n: NodeTree[T]) => n, toPathItem)
+    NodeTree.select(node, path, (n: Tree[T]) => n, toPathItem)
 
   final override def containsChild[T1 >: T](value: T1): Boolean = node.children.exists(_.head == value)
 

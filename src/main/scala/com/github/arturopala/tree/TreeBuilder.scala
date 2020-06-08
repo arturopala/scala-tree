@@ -48,7 +48,7 @@ object TreeBuilder {
   @tailrec
   private final def fromSizeAndValuePairs[T](
     iterator: Iterator[(Int, T)],
-    result: List[NodeTree[T]] = Nil
+    result: List[Tree[T]] = Nil
   ): List[Tree[T]] =
     if (iterator.hasNext) {
       val (size, value) = iterator.next()
@@ -78,7 +78,7 @@ object TreeBuilder {
   private final def fromIterators[T](
     structure: Iterator[Int],
     values: Iterator[T],
-    result: List[NodeTree[T]]
+    result: List[Tree[T]]
   ): List[Tree[T]] =
     if (structure.hasNext && values.hasNext) {
       val value = values.next()
@@ -179,7 +179,7 @@ object TreeBuilder {
   @tailrec
   private final def fromSizeAndTreePairs[T](
     iterator: Iterator[(Int, Tree[T])],
-    result: List[NodeTree[T]] = Nil,
+    result: List[Tree[T]] = Nil,
     strategy: TreeMergeStrategy = TreeMergeStrategy.Join
   ): List[Tree[T]] =
     if (iterator.hasNext) {
@@ -226,7 +226,7 @@ object TreeBuilder {
 
   /** Builds a single-branch tree from a reverse iterator over node's values. */
   @tailrec
-  final def linearTreeFromReverseValueIterator[T: ClassTag](iterator: Iterator[T], child: NodeTree[T]): Tree[T] =
+  final def linearTreeFromReverseValueIterator[T: ClassTag](iterator: Iterator[T], child: Tree[T]): Tree[T] =
     if (iterator.hasNext) {
       linearTreeFromReverseValueIterator(iterator, Tree(iterator.next(), child))
     } else {
@@ -251,15 +251,15 @@ object TreeBuilder {
     * @param child bottom tree node, put in the middle between first leftChildren and rightChildren.
     */
   final def fromChildAndTreeSplit[T](
-    child: NodeTree[T],
-    treeSplit: Seq[(Seq[NodeTree[T]], T, Seq[NodeTree[T]])]
+    child: Tree[T],
+    treeSplit: Seq[(Seq[Tree[T]], T, Seq[Tree[T]])]
   ): Tree[T] =
     treeSplit.foldLeft(child) { case (n, (l, v, r)) => Tree(v, l ++: (n +: r)) }
 
   /** Builds a tree from the sequence of tree splits (leftChildren, value, rightChildren).
     */
   final def fromTreeSplit[T](
-    treeSplit: Seq[(Seq[NodeTree[T]], T, Seq[NodeTree[T]])]
+    treeSplit: Seq[(Seq[Tree[T]], T, Seq[Tree[T]])]
   ): Tree[T] =
     if (treeSplit.isEmpty) Tree.empty
     else
@@ -276,7 +276,7 @@ object TreeBuilder {
 
     /** When a value of a node expands into a new Node,
       * we need a way to deal with the existing subtrees. */
-    def merge[T](newNode: NodeTree[T], existingSubtrees: List[NodeTree[T]]): NodeTree[T]
+    def merge[T](newNode: Tree[T], existingSubtrees: List[Tree[T]]): Tree[T]
 
     /** When a value of a node expands into an Empty tree,
       * we need to decide either to keep or remove existing subtrees. */
@@ -289,7 +289,7 @@ object TreeBuilder {
     object Join extends TreeMergeStrategy {
 
       /** Concatenates new and existing subtrees of an expanded node. */
-      override final def merge[T](newNode: NodeTree[T], existingSubtrees: List[NodeTree[T]]): NodeTree[T] =
+      override final def merge[T](newNode: Tree[T], existingSubtrees: List[Tree[T]]): Tree[T] =
         Tree(newNode.head, existingSubtrees ++ newNode.children)
 
       /** Joins orphaned subtrees to the parent node. */

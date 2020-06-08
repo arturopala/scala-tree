@@ -316,7 +316,7 @@ object LaxTreeOps {
       case Tree.empty => Tree(value)
 
       case node: NodeTree[T] =>
-        Tree(node.head, if (append) node.children :+ Tree(value) else Tree(value) +: node.children)
+        Tree(node.head, if (append) node.children.toSeq :+ Tree(value) else Tree(value) +: node.children.toSeq)
 
       case tree: ArrayTree[T] =>
         ArrayTree.insertLeaf(tree.structure.length - 1, value, tree, append, keepDistinct = false)
@@ -373,14 +373,15 @@ object LaxTreeOps {
 
         case node: NodeTree[T] =>
           child match {
-            case Tree.empty         => node
-            case tree: NodeTree[T1] => Tree(node.head, if (append) node.children :+ tree else tree +: node.children)
+            case Tree.empty => node
+            case tree: NodeTree[T1] =>
+              Tree(node.head, if (append) node.children.toSeq :+ tree else tree +: node.children.toSeq)
             case tree: ArrayTree[T1] =>
               if (Tree.preferInflated(node, tree))
                 Tree(
                   node.head,
-                  if (append) node.children :+ tree.inflated.asInstanceOf[NodeTree[T1]]
-                  else tree.inflated.asInstanceOf[NodeTree[T1]] +: node.children
+                  if (append) node.children.toSeq :+ tree.inflated.asInstanceOf[NodeTree[T1]]
+                  else tree.inflated.asInstanceOf[NodeTree[T1]] +: node.children.toSeq
                 )
               else node.deflated[T1].insertChildLax(tree, append)
           }

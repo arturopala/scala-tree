@@ -75,7 +75,7 @@ sealed trait Tree[+T] extends TreeLike[T] {
 
   final override def hashCode(): Int = hashcode
 
-  // Tree is immutable so we shall calculate hashcode once
+  // Tree is immutable so we shall calculate hashcode only once
   protected final lazy val hashcode: Int = {
     var hash = 17
     hash = hash * 31 + headOption.hashCode()
@@ -100,67 +100,53 @@ sealed trait Tree[+T] extends TreeLike[T] {
   */
 object Tree {
 
-  /** Arbitrary number for inflate-deflate heuristics. */
-  @`inline` final val DEFLATE_SIZE_THRESHOLD: Int = 1000
-
   /** Creates an empty Tree, same as [[Tree.empty]].
     * @group Creation */
   final def apply[T](): Tree[T] = empty
 
   /** Creates a leaf tree.
     * @group Creation */
-  final def apply[T](head: T): NodeTree[T] = new Leaf(head)
+  final def apply[T](head: T): Tree[T] = new Leaf(head)
 
   /** Creates a tree having a single child.
     * @group Creation */
-  final def apply[T](head: T, child: NodeTree[T]): NodeTree[T] = new Unary(head, child)
+  final def apply[T](head: T, child: Tree[T]): Tree[T] = new Unary(head, child)
 
   /** Creates a tree having two children.
     * @group Creation */
-  final def apply[T](head: T, left: NodeTree[T], right: NodeTree[T]): NodeTree[T] = new Binary(head, left, right)
+  final def apply[T](head: T, left: Tree[T], right: Tree[T]): Tree[T] = new Binary(head, left, right)
 
   /** Creates a tree node from the head and multiple children.
     * @group Creation */
   final def apply[T](
     head: T,
-    child1: NodeTree[T],
-    child2: NodeTree[T],
-    child3: NodeTree[T],
-    otherChildren: NodeTree[T]*
-  ): NodeTree[T] =
+    child1: Tree[T],
+    child2: Tree[T],
+    child3: Tree[T],
+    otherChildren: Tree[T]*
+  ): Tree[T] =
     new Bunch(head, child1 +: child2 +: child3 +: otherChildren.toIndexedSeq)
 
   /** Creates a tree node from the value and list of subtrees.
     * @group Creation */
-  final def apply[T](head: T, children: Seq[NodeTree[T]]): NodeTree[T] =
+  final def apply[T](head: T, children: Iterable[Tree[T]]): Tree[T] =
     if (children.isEmpty) new Leaf(head)
     else if (children.size == 1) new Unary(head, children.head)
-    else if (children.size == 2) new Binary(head, children.head, children(1))
+    else if (children.size == 2) new Binary(head, children.head, children.drop(1).head)
     else new Bunch(head, children)
-
-  /** Deflates the tree, if inflated, otherwise returns as is.
-    * @group Utilities */
-  final def deflate[T: ClassTag](tree: Tree[T]): Tree[T] = tree match {
-    case `empty`                 => Tree.empty
-    case arrayTree: ArrayTree[T] => arrayTree
-    case _ =>
-      val (structure, values) = tree.toArrays
-      new ArrayTree[T](IntSlice.of(structure), Slice.of(values), tree.width, tree.height)
-  }
-
-  /** Inflates the tree, if deflated, otherwise returns as is.
-    * @group Utilities */
-  final def inflate[T](tree: Tree[T]): Tree[T] = tree match {
-    case `empty`                 => Tree.empty
-    case arrayTree: ArrayTree[T] => arrayTree.inflated
-    case _                       => tree
-  }
 
   object Node {
 
-    /** Universal NodeTree extractor as a tuple of (head, children). */
-    def unapply[T](node: NodeTree[T]): Option[(T, Seq[NodeTree[T]])] =
+    /** Universal Tree extractor of a tuple of (head, children). */
+    def unapply[T](node: Tree[T]): Option[(T, Iterable[Tree[T]])] =
       Some((node.head, node.children))
+  }
+
+  /**
+    * An empty Tree singleton.
+    */
+  final case object empty extends Tree[Nothing] with EmptyTreeLike {
+    override val toString: String = "Tree.empty"
   }
 
   /**
@@ -170,8 +156,7 @@ object Tree {
     * Concrete, specialized node types are [[Leaf]], [[Unary]], [[Binary]], and [[Bunch]].
     */
   sealed trait NodeTree[+T] extends Tree[T] with NodeTreeLike[T] {
-    override protected val node: NodeTree[T] = this
-    override def children: Seq[NodeTree[T]]
+    final override protected val node: NodeTree[T] = this
   }
 
   /** Concrete node of the Tree, consisting of a value and no subtrees. */
@@ -181,7 +166,7 @@ object Tree {
     override def width: Int = 1
     override def height: Int = 1
     override def isLeaf: Boolean = true
-    override def children: List[NodeTree[T]] = Nil
+    override def children: Iterable[Tree[T]] = Iterable.empty[Tree[T]]
     override def childrenCount: Int = 0
   }
 
@@ -190,44 +175,43 @@ object Tree {
   }
 
   /** Concrete node of the Tree, consisting of a value and a single subtree. */
-  final class Unary[+T] private[Tree] (val head: T, val child: NodeTree[T]) extends NodeTree[T] {
+  final class Unary[+T] private[Tree] (val head: T, val child: Tree[T]) extends NodeTree[T] {
 
     override val size: Int = 1 + child.size
     override val width: Int = Math.max(1, child.width)
     override val height: Int = 1 + child.height
     override def isLeaf: Boolean = false
-    override def children: List[NodeTree[T]] = List(child)
+    override def children: Iterable[Tree[T]] = List(child)
     override def childrenCount: Int = 1
   }
 
   object Unary {
-    def unapply[T](node: Unary[T]): Option[(T, NodeTree[T])] = Some((node.head, node.child))
+    def unapply[T](node: Unary[T]): Option[(T, Tree[T])] = Some((node.head, node.child))
   }
 
   /** Concrete node of the Tree, consisting of a value and two subtrees. */
-  final class Binary[+T] private[Tree] (val head: T, val left: NodeTree[T], val right: NodeTree[T])
-      extends NodeTree[T] {
+  final class Binary[+T] private[Tree] (val head: T, val left: Tree[T], val right: Tree[T]) extends NodeTree[T] {
 
     override val size: Int = 1 + left.size + right.size
     override val width: Int = Math.max(1, left.width + right.width)
     override val height: Int = 1 + Math.max(left.height, right.height)
     override def isLeaf: Boolean = false
-    override def children: List[NodeTree[T]] = List(left, right)
+    override def children: Iterable[Tree[T]] = List(left, right)
     override def childrenCount: Int = 2
   }
 
   object Binary {
-    def unapply[T](node: Binary[T]): Option[(T, NodeTree[T], NodeTree[T])] = Some((node.head, node.left, node.right))
+    def unapply[T](node: Binary[T]): Option[(T, Tree[T], Tree[T])] = Some((node.head, node.left, node.right))
   }
 
   /** Concrete node of the Tree, consisting of a value and a list of subtrees (more than two). */
-  final class Bunch[+T] private[Tree] (val head: T, val children: Seq[NodeTree[T]]) extends NodeTree[T] {
+  final class Bunch[+T] private[Tree] (val head: T, val children: Iterable[Tree[T]]) extends NodeTree[T] {
 
     override val size: Int = 1 + children.map(_.size).sum
     override val width: Int = Math.max(1, children.map(_.width).sum)
     override val height: Int = 1 + children.maxBy(_.height).height
     override def isLeaf: Boolean = children.isEmpty
-    override def childrenCount: Int = children.length
+    override def childrenCount: Int = children.size
   }
 
   /**
@@ -237,7 +221,7 @@ object Tree {
   final class ArrayTree[T: ClassTag] private[tree] (
     val structure: IntSlice,
     val content: Slice[T],
-    delayedWidth: => Int,
+    delayedWidth:  => Int,
     delayedHeight: => Int
   ) extends ArrayTreeLike[T] with Tree[T] {
 
@@ -260,12 +244,26 @@ object Tree {
     override def childrenCount: Int = tree.structure.last
   }
 
-  /**
-    * An empty Tree singleton.
-    */
-  final case object empty extends Tree[Nothing] with EmptyTreeLike {
-    override val toString: String = "Tree.empty"
+  /** Deflates the tree, if inflated, otherwise returns as is.
+    * @group Utilities */
+  final def deflate[T: ClassTag](tree: Tree[T]): Tree[T] = tree match {
+    case `empty`                 => Tree.empty
+    case arrayTree: ArrayTree[T] => arrayTree
+    case _ =>
+      val (structure, values) = tree.toArrays
+      new ArrayTree[T](IntSlice.of(structure), Slice.of(values), tree.width, tree.height)
   }
+
+  /** Inflates the tree, if deflated, otherwise returns as is.
+    * @group Utilities */
+  final def inflate[T](tree: Tree[T]): Tree[T] = tree match {
+    case `empty`                 => Tree.empty
+    case arrayTree: ArrayTree[T] => arrayTree.inflated
+    case _                       => tree
+  }
+
+  /** Arbitrary number for inflate-deflate heuristics. */
+  @`inline` final val DEFLATE_SIZE_THRESHOLD: Int = 1000
 
   @`inline` final def preferInflated[T, T1 >: T](node: Tree.NodeTree[T], tree: Tree.ArrayTree[T1]): Boolean =
     tree.size < Tree.DEFLATE_SIZE_THRESHOLD || tree.size <= node.size

@@ -331,16 +331,20 @@ abstract class ArrayTreeLike[T: ClassTag] extends TreeLike[T] {
 
   final override def toPairsIterator: Iterator[(Int, T)] = tree.structure.iterator.zip(tree.content.iterator)
 
-  final override def toArrays[T1 >: T: ClassTag]: (Array[Int], Array[T1]) =
-    (tree.structure.toArray, tree.content.toArray.asInstanceOf[Array[T1]])
+  @`inline` final override def toArrays[T1 >: T: ClassTag]: (Array[Int], Array[T1]) =
+    (tree.structure.toArray, tree.content.toArray[T1])
 
-  final def toSlices[T1 >: T: ClassTag]: (IntSlice, Slice[T1]) =
-    (tree.structure, tree.content.asInstanceOf[Slice[T1]])
+  @`inline` final def toSlices[T1 >: T: ClassTag]: (IntSlice, Slice[T1]) =
+    if (implicitly[ClassTag[T]].runtimeClass.equals(implicitly[ClassTag[T1]].runtimeClass))
+      (tree.structure, tree.content.asInstanceOf[Slice[T1]])
+    else (tree.structure, Slice.of(tree.content.toArray[T1]))
 
-  final override def toBuffers[T1 >: T: ClassTag]: (IntBuffer, Buffer[T1]) =
-    (tree.structure.toBuffer, Buffer(tree.content.toArray[T1]))
+  @`inline` final override def toBuffers[T1 >: T: ClassTag]: (IntBuffer, Buffer[T1]) =
+    if (implicitly[ClassTag[T]].runtimeClass.equals(implicitly[ClassTag[T1]].runtimeClass))
+      (tree.structure.toBuffer, tree.content.toBuffer.asInstanceOf[Buffer[T1]])
+    else (tree.structure.toBuffer, Buffer(tree.content.toArray[T1]))
 
-  final override def toStructureArray: Array[Int] = tree.structure.toArray
+  @`inline` final override def toStructureArray: Array[Int] = tree.structure.toArray
 
   final override def mkStringFromBranches(
     show: T => String,
@@ -367,6 +371,11 @@ abstract class ArrayTreeLike[T: ClassTag] extends TreeLike[T] {
   final def inflated: Tree[T] =
     TreeBuilder.fromIterators(tree.structure.iterator, tree.content.iterator).headOption.getOrElse(Tree.empty)
 
-  final def deflated[T1 >: T](implicit tag: ClassTag[T1]): Tree[T1] = tree
+  final def deflated[T1 >: T](implicit tag: ClassTag[T1]): ArrayTree[T1] =
+    (if (implicitly[ClassTag[T]].runtimeClass.equals(tag.runtimeClass)) tree
+     else {
+       val (structure, values) = tree.toBuffers[T1]
+       ArrayTree.fromBuffers[T1](structure, values)
+     }).asInstanceOf[ArrayTree[T1]]
 
 }
