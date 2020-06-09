@@ -475,7 +475,7 @@ class ArrayTreeSpec extends AnyWordSpecCompat {
       selectTree(List(1, 1), 1, IntSlice(0, 1), Slice("b", "a"), length) shouldBe Some(Tree("b"))
       selectTree(List(1, 0), 1, IntSlice(0, 1), Slice("b", "a"), length) shouldBe None
       selectTree(List(0, 1), 1, IntSlice(0, 1), Slice("b", "a"), length) shouldBe None
-      selectTree(List(1, 1), 2, IntSlice(0, 0, 2), Slice("c", "b", "a"), length) shouldBe Some(Tree("c"))
+      selectTree(List(1, 1), 2, IntSlice(0, 0, 2), Slice("c", "b", "a"), length) shouldBe Some(Tree("b"))
       selectTree(List(1, 2, 3), 4, IntSlice(0, 1, 0, 1, 2), Slice("aaaaa", "aaaa", "aaa", "aa", "a"), length) shouldBe Some(
         Tree("aaa")
       )

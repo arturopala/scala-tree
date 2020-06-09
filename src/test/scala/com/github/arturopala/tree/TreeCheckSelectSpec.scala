@@ -16,12 +16,16 @@
 
 package com.github.arturopala.tree
 
+import scala.reflect.ClassTag
+
 class TreeCheckSelectSpec extends FunSuite {
 
   test(Inflated, new Spec with InflatedTestTrees)
   test(Deflated, new Spec with DeflatedTestTrees)
 
   sealed trait Spec extends AnyWordSpecCompat with TestTrees {
+
+    def tree[T: ClassTag](t: Tree[T]): Tree[T]
 
     "check if the tree contains a branch" in {
       tree0.containsBranch(List()) shouldBe false
@@ -219,7 +223,7 @@ class TreeCheckSelectSpec extends FunSuite {
       tree3_1.selectValue(List(1), _.length) shouldBe Some("a")
       tree3_2.selectValue(List(), _.length) shouldBe None
       tree3_2.selectValue(List(1), _.length) shouldBe Some("a")
-      tree3_2.selectValue(List(1, 1), _.length) shouldBe Some("c")
+      tree3_2.selectValue(List(1, 1), _.length) shouldBe Some("b")
       tree3_2.selectValue(List("a"), identity) shouldBe Some("a")
       tree3_2.selectValue(List("a", "b"), identity) shouldBe Some("b")
       tree3_2.selectValue(List("a", "c"), identity) shouldBe Some("c")
@@ -298,6 +302,10 @@ class TreeCheckSelectSpec extends FunSuite {
       tree9.selectTree(List("a", "e", "f", "g")) shouldBe Some(Tree("g"))
       tree9.selectTree(List("a", "e", "h", "i")) shouldBe Some(Tree("i"))
       tree9.selectTree(List("a", "e", "f", "i")) shouldBe None
+
+      tree(Tree("a", Tree("b", Tree("c")), Tree("b", Tree("d")), Tree("b", Tree("e"))))
+        .selectTree(List("a", "b")) shouldBe
+        Some(Tree("b", Tree("c")))
     }
 
     "select a tree by path using extractor function" in {
@@ -316,6 +324,10 @@ class TreeCheckSelectSpec extends FunSuite {
       tree3_2.selectTree(List(97, 97), codeF) shouldBe None
       tree3_2.selectTree(List(98), codeF) shouldBe None
       tree3_2.selectTree(List(), codeF) shouldBe None
+
+      tree(Tree("a", Tree("b", Tree("c")), Tree("b", Tree("d")), Tree("b", Tree("e"))))
+        .selectTree(List(97, 98), codeF) shouldBe
+        Some(Tree("b", Tree("c")))
     }
 
   }

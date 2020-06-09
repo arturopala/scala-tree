@@ -303,7 +303,7 @@ object ArrayTree {
     treeStructure: Int => Int,
     treeValues: Int => T
   ): Boolean =
-    ArrayTreeFunctions.followEntirePath(path, startIndex, treeStructure, treeValues, false).isDefined
+    ArrayTreeFunctions.followEntirePath(path, startIndex, treeStructure, treeValues, last = false).isDefined
 
   /** Checks if the tree contains given path (as a branch prefix). */
   @`inline` final def containsPath[T, K](
@@ -313,7 +313,7 @@ object ArrayTree {
     treeValues: Int => T,
     toPathItem: T => K
   ): Boolean =
-    ArrayTreeFunctions.followEntirePath(path, startIndex, treeStructure, treeValues, toPathItem, false).isDefined
+    ArrayTreeFunctions.followEntirePath(path, startIndex, treeStructure, treeValues, toPathItem, last = false).isDefined
 
   /** Selects node's value accessible by path using item extractor function. */
   @`inline` final def selectValue[T, K](
@@ -324,7 +324,7 @@ object ArrayTree {
     toPathItem: T => K
   ): Option[T] =
     ArrayTreeFunctions
-      .followEntirePath(path, startIndex, treeStructure, treeValues, toPathItem, true)
+      .followEntirePath(path, startIndex, treeStructure, treeValues, toPathItem, last = false)
       .map(indexes => treeValues(indexes.last))
 
   /** Selects tree accessible by path. */
@@ -335,7 +335,7 @@ object ArrayTree {
     treeValues: Slice[T]
   ): Option[Tree[T]] =
     ArrayTreeFunctions
-      .followEntirePath(path, startIndex, treeStructure, treeValues, true)
+      .followEntirePath(path, startIndex, treeStructure, treeValues, last = false)
       .map(indexes => treeAt[T](indexes.last, treeStructure, treeValues))
 
   /** Selects tree accessible by path using item extractor function. */
@@ -347,7 +347,7 @@ object ArrayTree {
     toPathItem: T => K
   ): Option[Tree[T]] =
     ArrayTreeFunctions
-      .followEntirePath(path, startIndex, treeStructure, treeValues, toPathItem, true)
+      .followEntirePath(path, startIndex, treeStructure, treeValues, toPathItem, last = false)
       .map(indexes => treeAt[T](indexes.last, treeStructure, treeValues))
 
   /** Returns tree rooted at the given index. */

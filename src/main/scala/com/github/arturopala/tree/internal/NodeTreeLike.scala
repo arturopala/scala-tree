@@ -362,13 +362,13 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
   }
 
   final override def selectValue[K](path: Iterable[K], toPathItem: T => K): Option[T] =
-    NodeTree.select(node, path, (n: Tree[T]) => n.head, toPathItem)
+    NodeTree.select(node, path, (n: Tree[T]) => n.head, toPathItem, last = false)
 
   final override def selectTree[T1 >: T: ClassTag](path: Iterable[T1]): Option[Tree[T]] =
-    NodeTree.select(node, path, (n: Tree[T]) => n)
+    NodeTree.select(node, path, (n: Tree[T]) => n, last = false)
 
   final override def selectTree[K](path: Iterable[K], toPathItem: T => K): Option[Tree[T]] =
-    NodeTree.select(node, path, (n: Tree[T]) => n, toPathItem)
+    NodeTree.select(node, path, (n: Tree[T]) => n, toPathItem, last = false)
 
   final override def containsChild[T1 >: T](value: T1): Boolean = node.children.exists(_.head == value)
 
@@ -379,6 +379,7 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
     NodeTree.containsBranch(node, branch, toPathItem)
 
   final override def containsPath[T1 >: T](path: Iterable[T1]): Boolean = NodeTree.containsPath(node, path)
+
   final override def containsPath[K](path: Iterable[K], toPathItem: T => K): Boolean =
     NodeTree.containsPath(node, path, toPathItem)
 

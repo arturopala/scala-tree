@@ -51,7 +51,7 @@ Depends on:
 - a standard built-in Scala library,
 - [`com.github.arturopala.bufferandslice`](https://github.com/arturopala/buffer-and-slice).
 
-Cross-compiles to Scala versions `2.13.1`, `2.12.11`, `2.11.12`, and Dotty `0.23.0-RC1`.
+Cross-compiles to Scala versions `2.13.1`, `2.12.11`, `2.11.12`, and Dotty `0.24.0-RC1`.
 
 API
 ---

@@ -495,17 +495,19 @@ object NodeTree {
   final def select[T, T1 >: T, R](
     node: Tree[T],
     path: Iterable[T1],
-    result: Tree[T] => R
+    result: Tree[T] => R,
+    last: Boolean
   ): Option[R] =
     if (path.isEmpty || (path.nonEmpty && path.head != node.head)) None
     else if (path.tail.isEmpty) {
       if (path.head == node.head) Some(result(node)) else None
     } else {
-      val nextOpt = node.children.collect {
-        case nextNode if path.tail.head == nextNode.head => nextNode
-      }.lastOption
+      val item = path.tail.head
+      val nextOpt =
+        if (last) node.children.filter(_.head == item).lastOption
+        else node.children.iterator.find(_.head == item)
       if (nextOpt.isEmpty) None
-      else select(nextOpt.get, path.tail, result)
+      else select(nextOpt.get, path.tail, result, last)
     }
 
   @tailrec
@@ -513,17 +515,19 @@ object NodeTree {
     node: Tree[T],
     path: Iterable[K],
     toResult: Tree[T] => R,
-    toPathItem: T => K
+    toPathItem: T => K,
+    last: Boolean
   ): Option[R] =
     if (path.isEmpty || (path.nonEmpty && path.head != toPathItem(node.head))) None
     else if (path.tail.isEmpty) {
       if (path.head == toPathItem(node.head)) Some(toResult(node)) else None
     } else {
-      val nextOpt = node.children.collect {
-        case nextNode if path.tail.head == toPathItem(nextNode.head) => nextNode
-      }.lastOption
+      val item = path.tail.head
+      val nextOpt =
+        if (last) node.children.filter(n => toPathItem(n.head) == item).lastOption
+        else node.children.iterator.find(n => toPathItem(n.head) == item)
       if (nextOpt.isEmpty) None
-      else select(nextOpt.get, path.tail, toResult, toPathItem)
+      else select(nextOpt.get, path.tail, toResult, toPathItem, last)
     }
 
   @`inline` final def containsBranch[T, T1 >: T](node: Tree[T], branch: Iterable[T1]): Boolean =
