@@ -120,7 +120,7 @@ trait LaxTree[T] {
     * If path doesn't fully exist in the tree then remaining suffix will be created.
     * @note This is a lax method, it doesn't preserve children values uniqueness.
     * @param path list of node's values forming a path from the root to the parent node.
-    * @group insertion */
+    * @group laxInsertion */
   def insertChildrenLaxAt[T1 >: T: ClassTag](
     path: Iterable[T1],
     children: Iterable[Tree[T1]],
@@ -132,7 +132,7 @@ trait LaxTree[T] {
     * @note This is a lax method, it doesn't preserve children values uniqueness.
     * @param path list K items forming a path from the root to the parent node.
     * @return either right of modified tree or left with existing unmodified tree
-    * @group insertion */
+    * @group laxInsertion */
   def insertChildrenLaxAt[K, T1 >: T: ClassTag](
     path: Iterable[K],
     children: Iterable[Tree[T1]],

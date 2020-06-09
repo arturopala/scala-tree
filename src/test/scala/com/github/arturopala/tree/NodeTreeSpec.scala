@@ -28,8 +28,30 @@ class NodeTreeSpec extends AnyWordSpecCompat {
   s"NodeTree" should {
 
     "insert branch" in {
-      insertBranch(Tree("a", Tree("b"), Tree("c"), Tree("d", Tree("e"))), List("a", "c", "d", "e", "f").iterator) shouldBe
+      insertBranch(
+        Tree("a", Tree("b"), Tree("c"), Tree("d", Tree("e"))),
+        List("a", "c", "d", "e", "f").iterator,
+        append = false
+      ) shouldBe
         Some(Tree("a", Tree("b"), Tree("c", Tree("d", Tree("e", Tree("f")))), Tree("d", Tree("e"))))
+      insertBranch(
+        Tree("a", Tree("b"), Tree("c"), Tree("d", Tree("e"))),
+        List("a", "c", "d", "e", "f").iterator,
+        append = true
+      ) shouldBe
+        Some(Tree("a", Tree("b"), Tree("c", Tree("d", Tree("e", Tree("f")))), Tree("d", Tree("e"))))
+      insertBranch(
+        Tree("a", Tree("b"), Tree("c"), Tree("d", Tree("e"))),
+        List("a", "d", "d", "e", "f").iterator,
+        append = false
+      ) shouldBe
+        Some(Tree("a", Tree("b"), Tree("c"), Tree("d", Tree("d", Tree("e", Tree("f"))), Tree("e"))))
+      insertBranch(
+        Tree("a", Tree("b"), Tree("c"), Tree("d", Tree("e"))),
+        List("a", "d", "d", "e", "f").iterator,
+        append = true
+      ) shouldBe
+        Some(Tree("a", Tree("b"), Tree("c"), Tree("d", Tree("e"), Tree("d", Tree("e", Tree("f"))))))
     }
 
     "insert branch unsafe" in {

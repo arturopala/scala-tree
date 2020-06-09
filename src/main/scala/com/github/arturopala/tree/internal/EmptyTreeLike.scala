@@ -145,7 +145,7 @@ trait EmptyTreeLike extends TreeLike[Nothing] {
     append: Boolean
   ): Either[Tree[Nothing], Tree[T1]] = Left(empty)
 
-  final override def insertBranch[T1: ClassTag](branch: Iterable[T1]): Tree[T1] =
+  final override def insertBranch[T1: ClassTag](branch: Iterable[T1], append: Boolean = false): Tree[T1] =
     if (branch.isEmpty) Tree.empty
     else TreeBuilder.linearTreeFromSequence(branch.toList)
 

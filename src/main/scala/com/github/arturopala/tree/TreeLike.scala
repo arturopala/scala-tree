@@ -483,6 +483,7 @@ trait TreeLike[+T] {
     * @note This method tries to keep children values unique by merging inserted leaf (and only that) when needed.
     * @param path list of node's values forming a path from the root to the parent node.
     * @param value a value to insert as a new child
+    * @param append whether to append or prepend to the existing children
     * @group insertion */
   def insertLeafAt[T1 >: T: ClassTag](path: Iterable[T1], value: T1, append: Boolean = false): Tree[T1]
 
@@ -491,6 +492,7 @@ trait TreeLike[+T] {
     * @note This method tries to keep children values unique by merging inserted leaf (and only that) when needed.
     * @param path list of K items forming a path from the root to the parent node.
     * @param toPathItem extractor of the K path item from the tree's node value
+    * @param append whether to append or prepend to the existing children
     * @return either right of modified tree or left with existing unmodified tree
     * @group insertion */
   def insertLeafAt[K, T1 >: T: ClassTag](
@@ -502,11 +504,13 @@ trait TreeLike[+T] {
 
   /** Inserts a new child and returns updated tree.
     * @note This method tries to keep children values unique by merging inserted tree (and only that) when needed.
+    * @param append whether to append or prepend to the existing children
     * @group insertion */
   def insertChild[T1 >: T: ClassTag](child: Tree[T1], append: Boolean = false): Tree[T1]
 
   /** Inserts new children and returns updated tree.
     * @note This method tries to keep children values unique by merging inserted tree (and only these) when needed.
+    * @param append whether to append or prepend to the existing children
     * @group insertion */
   def insertChildren[T1 >: T: ClassTag](children: Iterable[Tree[T1]], append: Boolean = false): Tree[T1]
 
@@ -514,6 +518,7 @@ trait TreeLike[+T] {
     * If path doesn't fully exist in the tree then remaining suffix will be created.
     * @note This method tries to keep children values unique by merging inserted tree (and only that) when needed.
     * @param path list of node's values forming a path from the root to the parent node.
+    * @param append whether to append or prepend to the existing children
     * @group insertion */
   def insertChildAt[T1 >: T: ClassTag](path: Iterable[T1], child: Tree[T1], append: Boolean = false): Tree[T1]
 
@@ -521,6 +526,8 @@ trait TreeLike[+T] {
     * If path doesn't fully exist in the tree then tree will remain NOT updated.
     * @note This method tries to keep children values unique by merging modified tree (and only that) when needed.
     * @param path list K items forming a path from the root to the parent node.
+    * @param toPathItem extractor of the K path item from the tree's node value
+    * @param append whether to append or prepend to the existing children
     * @return either right of modified tree or left with existing unmodified tree
     * @group insertion */
   def insertChildAt[K, T1 >: T: ClassTag](
@@ -534,6 +541,7 @@ trait TreeLike[+T] {
     * If path doesn't fully exist in the tree then remaining suffix will be created.
     * @note This method tries to keep children values unique by merging inserted tree (and only that) when needed.
     * @param path list of node's values forming a path from the root to the parent node.
+    * @param append whether to append or prepend to the existing children
     * @group insertion */
   def insertChildrenAt[T1 >: T: ClassTag](
     path: Iterable[T1],
@@ -543,8 +551,11 @@ trait TreeLike[+T] {
 
   /** Attempts to insert, at the given path, new children and returns a whole tree updated.
     * If path doesn't fully exist in the tree then tree will remain NOT updated.
+    *
     * @note This method tries to keep children values unique by merging modified tree (and only that) when needed.
-    * @param path list K items forming a path from the root to the parent node.
+    * @param path       list K items forming a path from the root to the parent node.
+    * @param toPathItem extractor of the K path item from the tree's node value
+    * @param append whether to append or prepend to the existing children
     * @return either right of modified tree or left with existing unmodified tree
     * @group insertion */
   def insertChildrenAt[K, T1 >: T: ClassTag](
@@ -554,19 +565,21 @@ trait TreeLike[+T] {
     append: Boolean
   ): Either[Tree[T], Tree[T1]]
 
-  /** Inserts a new branch of values and returns updated tree.
+  /** Inserts a new branch of values and returns the tree updated.
     * Branch must start with the existing root element of the tree, otherwise the tree will stay intact.
     * @note This method tries to keep children values unique by merging modified tree (and only that) when needed.
     * @param branch iterable of values forming a path from the root to the leaf.
+    * @param append whether to append or prepend to the existing children
     * @group insertion */
-  def insertBranch[T1 >: T: ClassTag](branch: Iterable[T1]): Tree[T1]
+  def insertBranch[T1 >: T: ClassTag](branch: Iterable[T1], append: Boolean = false): Tree[T1]
 
-  /** Inserts a new branch of values and returns updated tree.
-    * Branch must start with the existing root element of the tree, otherwise the tree will stay intact.
+  /** Inserts new branches of values and returns the tree updated.
+    * Each branch must start with the existing root element of the tree, otherwise it will have no effect.
     * @note This method tries to keep children values unique by merging modified tree (and only that) when needed.
     * @param branches iterable of iterables of values forming a path from the root to the leaf.
+    * @param append whether to append or prepend to the existing children
     * @group insertion */
-  def insertBranches[T1 >: T: ClassTag](branches: Iterable[Iterable[T1]]): Tree[T1] = ???
+  def insertBranches[T1 >: T: ClassTag](branches: Iterable[Iterable[T1]], append: Boolean = false): Tree[T1] = ???
 
   // DISTINCT UPDATES
 

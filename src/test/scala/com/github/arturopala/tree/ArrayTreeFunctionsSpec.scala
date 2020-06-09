@@ -477,18 +477,30 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
 
     "append children indexes to buffer" in {
       val buffer = new IntBuffer()
-      writeChildrenIndexesToBuffer(0, Array(0), buffer, 0) shouldBe 0
-      writeChildrenIndexesToBuffer(1, Array(0, 1), buffer, 0) shouldBe 1
-      buffer(0) shouldBe 0
-      writeChildrenIndexesToBuffer(2, Array(0, 0, 2), buffer, 1) shouldBe 2
-      buffer(1) shouldBe 0
-      buffer(2) shouldBe 1
-      writeChildrenIndexesToBuffer(3, Array(0, 0, 2, 1), buffer, 3) shouldBe 1
-      buffer(3) shouldBe 2
-      writeChildrenIndexesToBuffer(4, Array(0, 0, 0, 0, 3, 2), buffer, 4) shouldBe 3
-      buffer(4) shouldBe 1
-      buffer(5) shouldBe 2
-      buffer(6) shouldBe 3
+      writeChildrenIndexesToBuffer(0, Array(0), buffer, 0, reverse = false) shouldBe 0
+      buffer.toArray shouldBe Array.empty[Int]
+      writeChildrenIndexesToBuffer(1, Array(0, 1), buffer, 0, reverse = false) shouldBe 1
+      buffer.toArray shouldBe Array(0)
+      writeChildrenIndexesToBuffer(2, Array(0, 0, 2), buffer, 1, reverse = false) shouldBe 2
+      buffer.toArray shouldBe Array(0, 1, 0)
+      writeChildrenIndexesToBuffer(3, Array(0, 0, 2, 1), buffer, 3, reverse = false) shouldBe 1
+      buffer.toArray shouldBe Array(0, 1, 0, 2)
+      writeChildrenIndexesToBuffer(4, Array(0, 0, 0, 0, 3, 2), buffer, 4, reverse = false) shouldBe 3
+      buffer.toArray shouldBe Array(0, 1, 0, 2, 3, 2, 1)
+    }
+
+    "append children indexes to buffer reverse" in {
+      val buffer = new IntBuffer()
+      writeChildrenIndexesToBuffer(0, Array(0), buffer, 0, reverse = true) shouldBe 0
+      buffer.toArray shouldBe Array.empty[Int]
+      writeChildrenIndexesToBuffer(1, Array(0, 1), buffer, 0, reverse = true) shouldBe 1
+      buffer.toArray shouldBe Array(0)
+      writeChildrenIndexesToBuffer(2, Array(0, 0, 2), buffer, 1, reverse = true) shouldBe 2
+      buffer.toArray shouldBe Array(0, 0, 1)
+      writeChildrenIndexesToBuffer(3, Array(0, 0, 2, 1), buffer, 3, reverse = true) shouldBe 1
+      buffer.toArray shouldBe Array(0, 0, 1, 2)
+      writeChildrenIndexesToBuffer(4, Array(0, 0, 0, 0, 3, 2), buffer, 4, reverse = true) shouldBe 3
+      buffer.toArray shouldBe Array(0, 0, 1, 2, 1, 2, 3)
     }
 
     "find leftmost index of child's node holding a value" in {
@@ -893,59 +905,73 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
       def see[T](t: (IntSlice, Option[String], Iterator[T], Boolean)): (List[Int], Option[String], List[T], Boolean) =
         (t._1.toList, t._2, t._3.toList, t._4)
 
-      see(followPath(List("a"), -1, Array.empty[Int], Array.empty[String])) shouldBe (Nil, Some("a"), Nil, false)
-      see(followPath(List("a"), 0, Array(0), Array("a"))) shouldBe (List(0), None, Nil, true)
-      see(followPath(List("a", "a"), 0, Array(0), Array("a"))) shouldBe (List(0), Some("a"), Nil, false)
-      see(followPath(List("a", "b", "c"), 0, Array(0), Array("a"))) shouldBe (List(0), Some("b"), List("c"), false)
-      see(followPath(List("a", "b"), 1, Array(0, 1), Array("b", "a"))) shouldBe (List(1, 0), None, Nil, true)
-      see(followPath(List("a", "b"), 1, Array(0, 1), Array("c", "a"))) shouldBe (List(1), Some("b"), Nil, false)
-      see(followPath(List("a", "b", "c"), 2, Array(0, 1, 1), Array("c", "b", "a"))) shouldBe (List(2, 1, 0), None, Nil, true)
-      see(followPath(List("a", "b"), 2, Array(0, 1, 1), Array("c", "b", "a"))) shouldBe (List(2, 1), None, Nil, false)
-      see(followPath(List("a", "c"), 2, Array(0, 1, 1), Array("c", "b", "a"))) shouldBe (List(2), Some("c"), Nil, false)
-      see(followPath(List("a", "c", "d"), 2, Array(0, 1, 1), Array("c", "b", "a"))) shouldBe (List(2), Some("c"), List(
+      see(followPath(List("a"), -1, Array.empty[Int], Array.empty[String], false)) shouldBe (Nil, Some("a"), Nil, false)
+      see(followPath(List("a"), 0, Array(0), Array("a"), false)) shouldBe (List(0), None, Nil, true)
+      see(followPath(List("a", "a"), 0, Array(0), Array("a"), false)) shouldBe (List(0), Some("a"), Nil, false)
+      see(followPath(List("a", "b", "c"), 0, Array(0), Array("a"), false)) shouldBe (List(0), Some("b"), List("c"), false)
+      see(followPath(List("a", "b"), 1, Array(0, 1), Array("b", "a"), false)) shouldBe (List(1, 0), None, Nil, true)
+      see(followPath(List("a", "b"), 1, Array(0, 1), Array("c", "a"), false)) shouldBe (List(1), Some("b"), Nil, false)
+      see(followPath(List("a", "b", "c"), 2, Array(0, 1, 1), Array("c", "b", "a"), false)) shouldBe (List(2, 1, 0), None, Nil, true)
+      see(followPath(List("a", "b"), 2, Array(0, 1, 1), Array("c", "b", "a"), false)) shouldBe (List(2, 1), None, Nil, false)
+      see(followPath(List("a", "c"), 2, Array(0, 1, 1), Array("c", "b", "a"), false)) shouldBe (List(2), Some("c"), Nil, false)
+      see(followPath(List("a", "c", "d"), 2, Array(0, 1, 1), Array("c", "b", "a"), false)) shouldBe (List(2), Some("c"), List(
         "d"
       ), false)
-      see(followPath(List("a", "c", "d"), 1, Array(0, 1, 1), Array("c", "b", "a"))) shouldBe (Nil, Some("a"), List(
+      see(followPath(List("a", "c", "d"), 1, Array(0, 1, 1), Array("c", "b", "a"), false)) shouldBe (Nil, Some("a"), List(
         "c",
         "d"
       ), false)
-      see(followPath(List("a", "b"), 2, Array(0, 0, 2), Array("c", "b", "a"))) shouldBe (List(2, 1), None, Nil, true)
-      see(followPath(List("a", "c"), 2, Array(0, 0, 2), Array("c", "b", "a"))) shouldBe (List(2, 0), None, Nil, true)
+      see(followPath(List("a", "b"), 2, Array(0, 0, 2), Array("c", "b", "a"), false)) shouldBe (List(2, 1), None, Nil, true)
+      see(followPath(List("a", "c"), 2, Array(0, 0, 2), Array("c", "b", "a"), false)) shouldBe (List(2, 0), None, Nil, true)
 
       val v4 = Array("d", "c", "b", "a")
       val s4_1 = Array(0, 0, 1, 2)
-      see(followPath(List("a", "d"), 3, s4_1, v4)) shouldBe (List(3, 0), None, Nil, true)
-      see(followPath(List("a", "b"), 3, s4_1, v4)) shouldBe (List(3, 2), None, Nil, false)
-      see(followPath(List("a", "b", "c"), 3, s4_1, v4)) shouldBe (List(3, 2, 1), None, Nil, true)
-      see(followPath(List("a", "b", "d"), 3, s4_1, v4)) shouldBe (List(3, 2), Some("d"), Nil, false)
+      see(followPath(List("a", "d"), 3, s4_1, v4, false)) shouldBe (List(3, 0), None, Nil, true)
+      see(followPath(List("a", "b"), 3, s4_1, v4, false)) shouldBe (List(3, 2), None, Nil, false)
+      see(followPath(List("a", "b", "c"), 3, s4_1, v4, false)) shouldBe (List(3, 2, 1), None, Nil, true)
+      see(followPath(List("a", "b", "d"), 3, s4_1, v4, false)) shouldBe (List(3, 2), Some("d"), Nil, false)
 
       val v7 = Array("g", "f", "e", "d", "c", "b", "a")
       val s7_1 = Array(0, 0, 2, 0, 0, 2, 2)
-      see(followPath(List("a", "e", "g"), 6, s7_1, v7)) shouldBe (List(6, 2, 0), None, Nil, true)
-      see(followPath(List("a", "b", "d"), 6, s7_1, v7)) shouldBe (List(6, 5, 3), None, Nil, true)
-      see(followPath(List("a", "b", "e"), 6, s7_1, v7)) shouldBe (List(6, 5), Some("e"), Nil, false)
+      see(followPath(List("a", "e", "g"), 6, s7_1, v7, false)) shouldBe (List(6, 2, 0), None, Nil, true)
+      see(followPath(List("a", "b", "d"), 6, s7_1, v7, false)) shouldBe (List(6, 5, 3), None, Nil, true)
+      see(followPath(List("a", "b", "e"), 6, s7_1, v7, false)) shouldBe (List(6, 5), Some("e"), Nil, false)
 
       val s7_2 = Array(0, 1, 1, 0, 1, 2, 1)
-      see(followPath(List("a", "e", "g"), 6, s7_2, v7)) shouldBe (List(6), Some("e"), List("g"), false)
-      see(followPath(List("a", "b", "c"), 6, s7_2, v7)) shouldBe (List(6, 5, 4), None, Nil, false)
-      see(followPath(List("a", "b", "d"), 6, s7_2, v7)) shouldBe (List(6, 5), Some("d"), Nil, false)
-      see(followPath(List("a", "b", "e"), 6, s7_2, v7)) shouldBe (List(6, 5, 2), None, Nil, false)
-      see(followPath(List("a", "b", "e", "f"), 6, s7_2, v7)) shouldBe (List(6, 5, 2, 1), None, Nil, false)
-      see(followPath(List("a", "b", "e", "f", "g"), 6, s7_2, v7)) shouldBe (List(6, 5, 2, 1, 0), None, Nil, true)
+      see(followPath(List("a", "e", "g"), 6, s7_2, v7, false)) shouldBe (List(6), Some("e"), List("g"), false)
+      see(followPath(List("a", "b", "c"), 6, s7_2, v7, false)) shouldBe (List(6, 5, 4), None, Nil, false)
+      see(followPath(List("a", "b", "d"), 6, s7_2, v7, false)) shouldBe (List(6, 5), Some("d"), Nil, false)
+      see(followPath(List("a", "b", "e"), 6, s7_2, v7, false)) shouldBe (List(6, 5, 2), None, Nil, false)
+      see(followPath(List("a", "b", "e", "f"), 6, s7_2, v7, false)) shouldBe (List(6, 5, 2, 1), None, Nil, false)
+      see(followPath(List("a", "b", "e", "f", "g"), 6, s7_2, v7, false)) shouldBe (List(6, 5, 2, 1, 0), None, Nil, true)
     }
 
-    "insert a branch into the buffers" in {
-      insertBranch(List.empty[String].iterator, 0, IntBuffer.empty, Buffer.empty[String], 0) shouldBe 0
-      insertBranch(List("a").iterator, -1, IntBuffer.empty, Buffer.empty[String], 0) shouldBe 1
-      insertBranch(List("a", "b").iterator, -1, IntBuffer.empty, Buffer.empty[String], 0) shouldBe 2
-      insertBranch(List("b").iterator, 0, IntBuffer(0), Buffer("a"), 0) shouldBe 1
-      insertBranch(List("a").iterator, 0, IntBuffer(0), Buffer("a"), 0) shouldBe 1
-      insertBranch(List("a", "b", "c").iterator, 0, IntBuffer(0), Buffer("a"), 0) shouldBe 3
-      insertBranch(List("b", "c").iterator, 1, IntBuffer(0, 1), Buffer("a", "b"), 0) shouldBe 2
-      insertBranch(List("b", "c").iterator, 1, IntBuffer(0, 1), Buffer("b", "a"), 0) shouldBe 1
-      insertBranch(List("b", "c", "d", "e", "f").iterator, 1, IntBuffer(0, 1), Buffer("b", "a"), 0) shouldBe 4
-      insertBranch(List("b", "c", "d", "e", "f").iterator, 2, IntBuffer(0, 1, 1), Buffer("c", "b", "a"), 0) shouldBe 3
-      insertBranch(List("b", "c", "d", "e", "f").iterator, 2, IntBuffer(0, 0, 2), Buffer("c", "b", "a"), 0) shouldBe 4
+    "insert a branch into the buffers - prepend to the existing" in {
+      insertBranch(List.empty[String].iterator, 0, false, IntBuffer.empty, Buffer.empty[String], 0) shouldBe 0
+      insertBranch(List("a").iterator, -1, false, IntBuffer.empty, Buffer.empty[String], 0) shouldBe 1
+      insertBranch(List("a", "b").iterator, -1, false, IntBuffer.empty, Buffer.empty[String], 0) shouldBe 2
+      insertBranch(List("b").iterator, 0, false, IntBuffer(0), Buffer("a"), 0) shouldBe 1
+      insertBranch(List("a").iterator, 0, false, IntBuffer(0), Buffer("a"), 0) shouldBe 1
+      insertBranch(List("a", "b", "c").iterator, 0, false, IntBuffer(0), Buffer("a"), 0) shouldBe 3
+      insertBranch(List("b", "c").iterator, 1, false, IntBuffer(0, 1), Buffer("a", "b"), 0) shouldBe 2
+      insertBranch(List("b", "c").iterator, 1, false, IntBuffer(0, 1), Buffer("b", "a"), 0) shouldBe 1
+      insertBranch(List("b", "c", "d", "e", "f").iterator, 1, false, IntBuffer(0, 1), Buffer("b", "a"), 0) shouldBe 4
+      insertBranch(List("b", "c", "d", "e", "f").iterator, 2, false, IntBuffer(0, 1, 1), Buffer("c", "b", "a"), 0) shouldBe 3
+      insertBranch(List("b", "c", "d", "e", "f").iterator, 2, false, IntBuffer(0, 0, 2), Buffer("c", "b", "a"), 0) shouldBe 4
+    }
+
+    "insert a branch into the buffers - append to the existing" in {
+      insertBranch(List.empty[String].iterator, 0, true, IntBuffer.empty, Buffer.empty[String], 0) shouldBe 0
+      insertBranch(List("a").iterator, -1, true, IntBuffer.empty, Buffer.empty[String], 0) shouldBe 1
+      insertBranch(List("a", "b").iterator, -1, true, IntBuffer.empty, Buffer.empty[String], 0) shouldBe 2
+      insertBranch(List("b").iterator, 0, true, IntBuffer(0), Buffer("a"), 0) shouldBe 1
+      insertBranch(List("a").iterator, 0, true, IntBuffer(0), Buffer("a"), 0) shouldBe 1
+      insertBranch(List("a", "b", "c").iterator, 0, true, IntBuffer(0), Buffer("a"), 0) shouldBe 3
+      insertBranch(List("b", "c").iterator, 1, true, IntBuffer(0, 1), Buffer("a", "b"), 0) shouldBe 2
+      insertBranch(List("b", "c").iterator, 1, true, IntBuffer(0, 1), Buffer("b", "a"), 0) shouldBe 1
+      insertBranch(List("b", "c", "d", "e", "f").iterator, 1, true, IntBuffer(0, 1), Buffer("b", "a"), 0) shouldBe 4
+      insertBranch(List("b", "c", "d", "e", "f").iterator, 2, true, IntBuffer(0, 1, 1), Buffer("c", "b", "a"), 0) shouldBe 3
+      insertBranch(List("b", "c", "d", "e", "f").iterator, 2, true, IntBuffer(0, 0, 2), Buffer("c", "b", "a"), 0) shouldBe 4
     }
 
     "expand value into a tree at index" in {

@@ -556,6 +556,20 @@ class TreeInsertionsSpec extends FunSuite {
       tree(Tree("a", Tree("b", Tree("c")), Tree("b", Tree("d")), Tree("b", Tree("e"))))
         .insertChild(Tree("b", Tree("x"))) shouldBe
         Tree("a", Tree("b", Tree("x"), Tree("c")), Tree("b", Tree("d")), Tree("b", Tree("e")))
+      tree(
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("d"), Tree("d")), Tree("c", Tree("d"), Tree("d"))),
+          Tree("b", Tree("c", Tree("d"), Tree("d")), Tree("c", Tree("d"), Tree("d"))),
+          Tree("b", Tree("c", Tree("d"), Tree("d")), Tree("c", Tree("d"), Tree("d")))
+        )
+      ).insertChildAt(List("a", "b", "c", "d"), Tree("x", Tree("y"), Tree("z"))) shouldBe
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("d", Tree("x", Tree("y"), Tree("z"))), Tree("d")), Tree("c", Tree("d"), Tree("d"))),
+          Tree("b", Tree("c", Tree("d"), Tree("d")), Tree("c", Tree("d"), Tree("d"))),
+          Tree("b", Tree("c", Tree("d"), Tree("d")), Tree("c", Tree("d"), Tree("d")))
+        )
     }
 
     "insert distinct new child to a tree - append to existing" in {
@@ -2453,7 +2467,7 @@ class TreeInsertionsSpec extends FunSuite {
 
     // BRANCH INSERTION
 
-    "insert new branch to a tree" in {
+    "insert new branch to a tree - prepend to existing" in {
       tree0.insertBranch(List("a", "b", "c", "d")) shouldBe Tree("a", Tree("b", Tree("c", Tree("d"))))
       tree1.insertBranch(List("a", "b", "c", "d")) shouldBe Tree("a", Tree("b", Tree("c", Tree("d"))))
       tree1.insertBranch(List("a", "c", "c", "d")) shouldBe Tree("a", Tree("c", Tree("c", Tree("d"))))
@@ -2501,6 +2515,77 @@ class TreeInsertionsSpec extends FunSuite {
         Tree("d", Tree("e", Tree("g"), Tree("f"))),
         Tree("g")
       )
+    }
+
+    "insert new branch to a tree - append to existing" in {
+      tree0.insertBranch(List("a", "b", "c", "d"), append = true) shouldBe Tree("a", Tree("b", Tree("c", Tree("d"))))
+      tree1.insertBranch(List("a", "b", "c", "d"), append = true) shouldBe Tree("a", Tree("b", Tree("c", Tree("d"))))
+      tree1.insertBranch(List("a", "c", "c", "d"), append = true) shouldBe Tree("a", Tree("c", Tree("c", Tree("d"))))
+      tree1.insertBranch(List("b", "c", "d"), append = true) shouldBe Tree("a")
+      tree2.insertBranch(List("a", "b", "c", "d"), append = true) shouldBe Tree("a", Tree("b", Tree("c", Tree("d"))))
+      tree2.insertBranch(List("a", "c", "c", "d"), append = true) shouldBe Tree(
+        "a",
+        Tree("b"),
+        Tree("c", Tree("c", Tree("d")))
+      )
+      tree2
+        .insertBranch(List("a", "b", "c", "d"), append = true)
+        .insertBranch(List("a", "b", "e", "f"), append = true) shouldBe Tree(
+        "a",
+        Tree("b", Tree("c", Tree("d")), Tree("e", Tree("f")))
+      )
+      tree3_1.insertBranch(List("a", "b", "c", "d"), append = true) shouldBe Tree("a", Tree("b", Tree("c", Tree("d"))))
+      tree3_1.insertBranch(List("a", "b", "e", "f"), append = true) shouldBe Tree(
+        "a",
+        Tree("b", Tree("c"), Tree("e", Tree("f")))
+      )
+      tree3_2.insertBranch(List("a", "b", "c", "d"), append = true) shouldBe Tree(
+        "a",
+        Tree("b", Tree("c", Tree("d"))),
+        Tree("c")
+      )
+      tree4_1.insertBranch(List("a", "b", "c", "d"), append = true) shouldBe Tree("a", Tree("b", Tree("c", Tree("d"))))
+      tree4_2.insertBranch(List("a", "b", "c", "d"), append = true) shouldBe Tree(
+        "a",
+        Tree("b", Tree("c", Tree("d"))),
+        Tree("d")
+      )
+      tree4_3.insertBranch(List("a", "b", "c", "d"), append = true) shouldBe Tree(
+        "a",
+        Tree("b", Tree("c", Tree("d"))),
+        Tree("c"),
+        Tree("d")
+      )
+      tree7.insertBranch(List("a", "b", "c", "d"), append = true) shouldBe Tree(
+        "a",
+        Tree("b", Tree("c", Tree("d"))),
+        Tree("d", Tree("e", Tree("f"))),
+        Tree("g")
+      )
+      tree7.insertBranch(List("a", "g", "h", "i"), append = true) shouldBe Tree(
+        "a",
+        Tree("b", Tree("c")),
+        Tree("d", Tree("e", Tree("f"))),
+        Tree("g", Tree("h", Tree("i")))
+      )
+      tree7.insertBranch(List("a", "d", "g", "h"), append = true) shouldBe Tree(
+        "a",
+        Tree("b", Tree("c")),
+        Tree("d", Tree("e", Tree("f")), Tree("g", Tree("h"))),
+        Tree("g")
+      )
+      tree7.insertBranch(List("a", "d", "e", "g"), append = true) shouldBe Tree(
+        "a",
+        Tree("b", Tree("c")),
+        Tree("d", Tree("e", Tree("f"), Tree("g"))),
+        Tree("g")
+      )
+      tree(Tree("a", Tree("b", Tree("c")), Tree("b", Tree("d")), Tree("b", Tree("e"))))
+        .insertBranch(List("a", "b", "f"), append = false) shouldBe
+        Tree("a", Tree("b", Tree("f"), Tree("c")), Tree("b", Tree("d")), Tree("b", Tree("e")))
+      tree(Tree("a", Tree("b", Tree("c")), Tree("b", Tree("d")), Tree("b", Tree("e"))))
+        .insertBranch(List("a", "b", "f"), append = true) shouldBe
+        Tree("a", Tree("b", Tree("c")), Tree("b", Tree("d")), Tree("b", Tree("e"), Tree("f")))
     }
 
   }

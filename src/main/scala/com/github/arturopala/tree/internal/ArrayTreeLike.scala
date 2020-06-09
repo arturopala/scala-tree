@@ -205,8 +205,8 @@ abstract class ArrayTreeLike[T: ClassTag] extends TreeLike[T] {
   ): Either[Tree[T], Tree[T1]] =
     ArrayTree.insertChildrenAt(path, children, tree, toPathItem, append, keepDistinct = true)
 
-  final override def insertBranch[T1 >: T: ClassTag](branch: Iterable[T1]): Tree[T1] =
-    ArrayTree.insertBranch(tree.structure.top, branch, tree)
+  final override def insertBranch[T1 >: T: ClassTag](branch: Iterable[T1], append: Boolean = false): Tree[T1] =
+    ArrayTree.insertBranch(tree.structure.top, branch, tree, append)
 
   // DISTINCT UPDATES
 

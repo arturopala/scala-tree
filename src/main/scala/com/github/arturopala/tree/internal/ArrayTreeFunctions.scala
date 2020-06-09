@@ -213,14 +213,15 @@ object ArrayTreeFunctions {
     parentIndex: Int,
     treeStructure: Int => Int,
     buffer: IntBuffer,
-    position: Int
+    position: Int,
+    reverse: Boolean
   ): Int =
     if (parentIndex < 0) 0
     else {
       val numberOfChildren = treeStructure(parentIndex)
       if (numberOfChildren == 0) 0
       else {
-        var pos = position + numberOfChildren - 1
+        var pos = position + (if (reverse) numberOfChildren - 1 else 0)
         buffer(pos) = parentIndex - 1
         var n = numberOfChildren - 1
         var i = parentIndex - 1
@@ -231,7 +232,7 @@ object ArrayTreeFunctions {
             a = a - 1 + treeStructure(i)
           }
           i = i - 1
-          pos = pos - 1
+          pos = if (reverse) pos - 1 else pos + 1
           buffer(pos) = i
           n = n - 1
         }
@@ -436,7 +437,7 @@ object ArrayTreeFunctions {
           val numberOfChildren = treeStructure(index)
           if (numberOfChildren > 0) {
             queue.shiftRight(0, numberOfChildren)
-            writeChildrenIndexesToBuffer(index, treeStructure, queue, 0)
+            writeChildrenIndexesToBuffer(index, treeStructure, queue, 0, reverse = true)
           }
           index
         } else throw new NoSuchElementException
@@ -480,7 +481,7 @@ object ArrayTreeFunctions {
               BranchIteratorUtils.retract(counters, indexes)
             } else {
               counters.push(c)
-              writeChildrenIndexesToBuffer(i, treeStructure, indexes, indexes.length)
+              writeChildrenIndexesToBuffer(i, treeStructure, indexes, indexes.length, reverse = true)
             }
           }
         }
@@ -526,7 +527,7 @@ object ArrayTreeFunctions {
               BranchIteratorUtils.retract(counters, indexes)
             } else {
               counters.push(c)
-              writeChildrenIndexesToBuffer(index, treeStructure, indexes, indexes.length)
+              writeChildrenIndexesToBuffer(index, treeStructure, indexes, indexes.length, reverse = true)
             }
           }
         }
@@ -558,7 +559,7 @@ object ArrayTreeFunctions {
             val numberOfChildren = treeStructure(index)
             if (numberOfChildren > 0) {
               queue.shiftRight(0, numberOfChildren)
-              writeChildrenIndexesToBuffer(index, treeStructure, queue, 0)
+              writeChildrenIndexesToBuffer(index, treeStructure, queue, 0, reverse = true)
               levels.insertFromIterator(0, numberOfChildren, continually(level + 1))
             }
           }
@@ -593,7 +594,7 @@ object ArrayTreeFunctions {
             val numberOfChildren = treeStructure(index)
             if (numberOfChildren > 0) {
               queue.shiftRight(0, numberOfChildren)
-              writeChildrenIndexesToBuffer(index, treeStructure, queue, 0)
+              writeChildrenIndexesToBuffer(index, treeStructure, queue, 0, reverse = true)
               levels.insertFromIterator(0, numberOfChildren, continually(level + 1))
             }
           }
@@ -641,7 +642,7 @@ object ArrayTreeFunctions {
               BranchIteratorUtils.retract(counters, indexes)
             } else {
               counters.push(c)
-              writeChildrenIndexesToBuffer(i, treeStructure, indexes, indexes.length)
+              writeChildrenIndexesToBuffer(i, treeStructure, indexes, indexes.length, reverse = true)
               seekNext(false)
             }
           }
@@ -763,7 +764,7 @@ object ArrayTreeFunctions {
             n = n + 1
           } else {
             counters.push(c)
-            writeChildrenIndexesToBuffer(i, treeStructure, indexes, indexes.length)
+            writeChildrenIndexesToBuffer(i, treeStructure, indexes, indexes.length, reverse = true)
           }
         }
         counters.nonEmpty
@@ -821,9 +822,10 @@ object ArrayTreeFunctions {
     path: Iterable[T1],
     startIndex: Int,
     treeStructure: Int => Int,
-    treeValues: Int => T
+    treeValues: Int => T,
+    last: Boolean
   ): Option[IntSlice] =
-    followPath(path, startIndex, treeStructure, treeValues) match {
+    followPath(path, startIndex, treeStructure, treeValues, last) match {
       case (indexes, None, _, _) if indexes.nonEmpty => Some(indexes)
       case _                                         => None
     }
@@ -847,9 +849,10 @@ object ArrayTreeFunctions {
     path: Iterable[T1],
     startIndex: Int,
     treeStructure: Int => Int,
-    treeValues: Int => T
+    treeValues: Int => T,
+    last: Boolean
   ): (IntSlice, Option[T1], Iterator[T1], Boolean) =
-    followPath(path, startIndex, treeStructure, treeValues, identity[T, T1])
+    followPath(path, startIndex, treeStructure, treeValues, identity[T, T1], last)
 
   /** Follows the entire path of into the tree using a path item extractor function.
     * @return a Some of an array of travelled indexes, or None if path doesn't exist.
@@ -859,9 +862,10 @@ object ArrayTreeFunctions {
     startIndex: Int,
     treeStructure: Int => Int,
     treeValues: Int => T,
-    toPathItem: T => K
+    toPathItem: T => K,
+    last: Boolean
   ): Option[IntSlice] =
-    followPath(path, startIndex, treeStructure, treeValues, toPathItem) match {
+    followPath(path, startIndex, treeStructure, treeValues, toPathItem, last) match {
       case (indexes, None, _, _) if indexes.nonEmpty => Some(indexes)
       case _                                         => None
     }
@@ -887,7 +891,8 @@ object ArrayTreeFunctions {
     startIndex: Int,
     treeStructure: Int => Int,
     treeValues: Int => T,
-    toPathItem: T => K
+    toPathItem: T => K,
+    last: Boolean
   ): (IntSlice, Option[K], Iterator[K], Boolean) = {
 
     val indexes = new IntBuffer(8) // travelled indexes
@@ -905,7 +910,7 @@ object ArrayTreeFunctions {
           val ci = children(n) // child index
           if (ci >= 0 && pathSegment.contains(toPathItem(treeValues(ci)))) {
             indexes.push(ci)
-            writeChildrenIndexesToBuffer(ci, treeStructure, children, 0)
+            writeChildrenIndexesToBuffer(ci, treeStructure, children, 0, reverse = last)
             pathSegment = None
             n = -1 // force inner loop exit
           } else {
@@ -1055,21 +1060,27 @@ object ArrayTreeFunctions {
   final def insertBranch[T](
     branchIterator: Iterator[T],
     parentIndex: Int,
+    append: Boolean,
     structureBuffer: IntBuffer,
     valuesBuffer: Buffer[T],
     offset: Int
   ): Int =
     if (branchIterator.hasNext) {
       val value = branchIterator.next()
-      lastChildHavingValue(value, parentIndex, structureBuffer.length, structureBuffer, valuesBuffer) match {
+      val duplicate =
+        if (append) lastChildHavingValue(value, parentIndex, structureBuffer.length, structureBuffer, valuesBuffer)
+        else firstChildHavingValue(value, parentIndex, structureBuffer.length, structureBuffer, valuesBuffer)
+
+      duplicate match {
         case Some(index) =>
-          insertBranch(branchIterator, index, structureBuffer, valuesBuffer, offset)
+          insertBranch(branchIterator, index, append, structureBuffer, valuesBuffer, offset)
 
         case None =>
-          val insertIndex = if (parentIndex >= 0) {
-            structureBuffer.increment(parentIndex)
-            parentIndex
-          } else 0
+          val insertIndex =
+            if (parentIndex >= 0) {
+              if (append) bottomIndex(parentIndex, structureBuffer) else parentIndex
+            } else 0
+          if (parentIndex >= 0) structureBuffer.increment(parentIndex)
           val l0 = valuesBuffer.length
           valuesBuffer.insert(insertIndex, value)
           valuesBuffer.insertFromIteratorReverse(insertIndex, branchIterator)

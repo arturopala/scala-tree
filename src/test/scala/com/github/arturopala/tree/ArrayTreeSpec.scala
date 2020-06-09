@@ -913,40 +913,40 @@ class ArrayTreeSpec extends AnyWordSpecCompat {
 
     "insert a branch into the tree" in {
       //insertBranch(-1, List(), Tree.empty) shouldBe Tree.empty
-      insertBranch(-1, List("a"), Tree.empty) shouldBe Tree("a")
-      insertBranch(-1, List("a", "b", "c", "d", "e"), Tree.empty) shouldBe Tree(
+      insertBranch(-1, List("a"), Tree.empty, append = false) shouldBe Tree("a")
+      insertBranch(-1, List("a", "b", "c", "d", "e"), Tree.empty, append = false) shouldBe Tree(
         "a",
         Tree("b", Tree("c", Tree("d", Tree("e"))))
       )
-      insertBranch(0, List("a"), Tree("a")) shouldBe Tree("a")
-      insertBranch(1, List("a"), Tree("a", Tree("b"))) shouldBe Tree("a", Tree("b"))
-      insertBranch(1, List("a", "b"), Tree("a", Tree("b"))) shouldBe Tree("a", Tree("b"))
-      insertBranch(1, List("a", "c"), Tree("a", Tree("b"))) shouldBe Tree("a", Tree("c"), Tree("b"))
-      insertBranch(3, List("a", "c"), Tree("a", Tree("b"), Tree("c"), Tree("d"))) shouldBe Tree(
+      insertBranch(0, List("a"), Tree("a"), append = false) shouldBe Tree("a")
+      insertBranch(1, List("a"), Tree("a", Tree("b")), append = false) shouldBe Tree("a", Tree("b"))
+      insertBranch(1, List("a", "b"), Tree("a", Tree("b")), append = false) shouldBe Tree("a", Tree("b"))
+      insertBranch(1, List("a", "c"), Tree("a", Tree("b")), append = false) shouldBe Tree("a", Tree("c"), Tree("b"))
+      insertBranch(3, List("a", "c"), Tree("a", Tree("b"), Tree("c"), Tree("d")), append = false) shouldBe Tree(
         "a",
         Tree("b"),
         Tree("c"),
         Tree("d")
       )
-      insertBranch(3, List("a", "c", "e"), Tree("a", Tree("b"), Tree("c"), Tree("d"))) shouldBe Tree(
+      insertBranch(3, List("a", "c", "e"), Tree("a", Tree("b"), Tree("c"), Tree("d")), append = false) shouldBe Tree(
         "a",
         Tree("b"),
         Tree("c", Tree("e")),
         Tree("d")
       )
-      insertBranch(3, List("a", "b", "c"), Tree("a", Tree("b"), Tree("c"), Tree("d"))) shouldBe Tree(
+      insertBranch(3, List("a", "b", "c"), Tree("a", Tree("b"), Tree("c"), Tree("d")), append = false) shouldBe Tree(
         "a",
         Tree("b", Tree("c")),
         Tree("c"),
         Tree("d")
       )
-      insertBranch(3, List("a", "d", "c"), Tree("a", Tree("b"), Tree("c"), Tree("d"))) shouldBe Tree(
+      insertBranch(3, List("a", "d", "c"), Tree("a", Tree("b"), Tree("c"), Tree("d")), append = false) shouldBe Tree(
         "a",
         Tree("b"),
         Tree("c"),
         Tree("d", Tree("c"))
       )
-      insertBranch(3, List("a", "e", "c"), Tree("a", Tree("b"), Tree("c"), Tree("d"))) shouldBe Tree(
+      insertBranch(3, List("a", "e", "c"), Tree("a", Tree("b"), Tree("c"), Tree("d")), append = false) shouldBe Tree(
         "a",
         Tree("e", Tree("c")),
         Tree("b"),
