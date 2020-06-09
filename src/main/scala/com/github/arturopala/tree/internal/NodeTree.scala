@@ -33,17 +33,6 @@ object NodeTree {
   /** Type alias of a tree split, i.e. a tuple of (leftChildren, head, rightChildren). */
   type TreeSplit[T] = (Seq[Tree[T]], T, Seq[Tree[T]])
 
-  object NonEmptyNode {
-
-    /** Extracts head, first child and remaining children if non empty. */
-    def unapply[T](node: Tree[T]): Option[(T, Tree[T], Iterable[Tree[T]])] = node match {
-      case _: Tree.Leaf[T]      => None
-      case node: Tree.Unary[T]  => Some((node.head, node.child, Nil))
-      case node: Tree.Binary[T] => Some((node.head, node.left, node.right :: Nil))
-      case _                    => Some((node.head, node.children.head, node.children.tail))
-    }
-  }
-
   final def leavesIterator[T](node: Tree[T]): Iterator[T] = new Iterator[T] {
 
     type Queue = Iterator[Tree[T]]
