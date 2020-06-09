@@ -44,13 +44,6 @@ object NodeTree {
     }
   }
 
-  object Node2 {
-
-    /** Universal NodeTree extractor as a tuple of (head, childrenIterator). */
-    def unapply[T](node: Tree[T]): Option[(T, Iterator[Tree[T]])] =
-      Some((node.head, node.children.iterator))
-  }
-
   final def leavesIterator[T](node: Tree[T]): Iterator[T] = new Iterator[T] {
 
     type Queue = Iterator[Tree[T]]
@@ -78,7 +71,7 @@ object NodeTree {
             hasNext = true
             queue = queue.trim
 
-          case Node2(_, children: Iterator[Tree[T]]) =>
+          case Tree(_, children: Iterable[Tree[T]]) =>
             queue = children ++: queue.trim
             seekNext()
         }
@@ -100,7 +93,7 @@ object NodeTree {
     override final def next(): T =
       if (queue.isEmpty) throw new NoSuchElementException()
       else {
-        val Node2(head: T, children: Iterator[Tree[T]]) = queue.next
+        val Tree(head: T, children: Iterable[Tree[T]]) = queue.next
         queue =
           if (depthFirst) children ++: queue.trim
           else queue.trim :++ children
@@ -136,7 +129,7 @@ object NodeTree {
       override final def next(): (Int, T, Boolean) =
         if (queue.isEmpty) throw new NoSuchElementException()
         else {
-          val (level, node @ Node2(head: T, children: Iterator[Tree[T]])) = queue.next
+          val (level, node @ Tree(head: T, children: Iterable[Tree[T]])) = queue.next
           if (level < maxDepth)
             queue =
               if (depthFirst) children.map((level + 1, _)) ++: queue.trim
@@ -191,7 +184,7 @@ object NodeTree {
       private final def seekNext(): Unit = {
         hasNext = false
         if (queue.hasNext) {
-          val (level, Node2(head: T, children: Iterator[Tree[T]])) = queue.next
+          val (level, Tree(head: T, children: Iterable[Tree[T]])) = queue.next
           if (level < maxDepth) {
             queue =
               if (depthFirst) children.map((level + 1, _)) ++: queue.trim
@@ -360,7 +353,7 @@ object NodeTree {
       override def next(): Iterable[T] =
         if (queue.isEmpty) throw new NoSuchElementException()
         else {
-          val (acc, Node2(head: T, children: Iterator[Tree[T]])) = queue.next
+          val (acc, Tree(head: T, children: Iterable[Tree[T]])) = queue.next
           val branch = acc :+ head
           queue = children.map((branch, _)) ++: queue.trim
           branch
@@ -501,7 +494,7 @@ object NodeTree {
   ): Int =
     if (queue.isEmpty) result
     else {
-      val (acc, Node2(head: T, children: Iterator[Tree[T]])) = queue.next
+      val (acc, Tree(head: T, children: Iterable[Tree[T]])) = queue.next
       val branch = acc :+ head
       children match {
         case i if i.isEmpty && pred(branch) => countBranches(pred, 1 + result, queue.trim)

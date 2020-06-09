@@ -28,10 +28,14 @@ object IteratorOps {
       else if (iterator.isEmpty) prepending
       else new ChainedIterator(prepending, iterator)
 
+    def ++:(prepending: Iterable[T]): Iterator[T] = ++:(prepending.iterator)
+
     def :++(appending: Iterator[T]): Iterator[T] =
       if (appending.isEmpty) iterator
       else if (iterator.isEmpty) appending
       else new ChainedIterator(iterator, appending)
+
+    def :++(appending: Iterable[T]): Iterator[T] = :++(appending.iterator)
 
     def trim: Iterator[T] = iterator match {
       case chi: ChainedIterator[T] => chi.trim
