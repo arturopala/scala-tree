@@ -64,7 +64,7 @@ object ArrayTreeFunctions {
     if (c) -1 else i
   }
 
-  /** Calculates leftmost (bottom) index of the tree rooted at index. */
+  /** Calculates rightmost (bottom) index of the tree rooted at index. */
   final def bottomIndex(index: Int, treeStructure: Int => Int): Int =
     if (treeStructure(index) == 0) index
     else index - treeSize(index, treeStructure) + 1
@@ -823,9 +823,9 @@ object ArrayTreeFunctions {
     startIndex: Int,
     treeStructure: Int => Int,
     treeValues: Int => T,
-    last: Boolean
+    rightmost: Boolean
   ): Option[IntSlice] =
-    followPath(path, startIndex, treeStructure, treeValues, last) match {
+    followPath(path, startIndex, treeStructure, treeValues, rightmost) match {
       case (indexes, None, _, _) if indexes.nonEmpty => Some(indexes)
       case _                                         => None
     }
@@ -850,9 +850,9 @@ object ArrayTreeFunctions {
     startIndex: Int,
     treeStructure: Int => Int,
     treeValues: Int => T,
-    last: Boolean
+    rightmost: Boolean
   ): (IntSlice, Option[T1], Iterator[T1], Boolean) =
-    followPath(path, startIndex, treeStructure, treeValues, identity[T, T1], last)
+    followPath(path, startIndex, treeStructure, treeValues, identity[T, T1], rightmost)
 
   /** Follows the entire path of into the tree using a path item extractor function.
     * @return a Some of an array of travelled indexes, or None if path doesn't exist.
@@ -863,9 +863,9 @@ object ArrayTreeFunctions {
     treeStructure: Int => Int,
     treeValues: Int => T,
     toPathItem: T => K,
-    last: Boolean
+    rightmost: Boolean
   ): Option[IntSlice] =
-    followPath(path, startIndex, treeStructure, treeValues, toPathItem, last) match {
+    followPath(path, startIndex, treeStructure, treeValues, toPathItem, rightmost) match {
       case (indexes, None, _, _) if indexes.nonEmpty => Some(indexes)
       case _                                         => None
     }
@@ -892,7 +892,7 @@ object ArrayTreeFunctions {
     treeStructure: Int => Int,
     treeValues: Int => T,
     toPathItem: T => K,
-    last: Boolean
+    rightmost: Boolean
   ): (IntSlice, Option[K], Iterator[K], Boolean) = {
 
     val indexes = new IntBuffer(8) // travelled indexes
@@ -910,7 +910,7 @@ object ArrayTreeFunctions {
           val ci = children(n) // child index
           if (ci >= 0 && pathSegment.contains(toPathItem(treeValues(ci)))) {
             indexes.push(ci)
-            writeChildrenIndexesToBuffer(ci, treeStructure, children, 0, reverse = last)
+            writeChildrenIndexesToBuffer(ci, treeStructure, children, 0, reverse = rightmost)
             pathSegment = None
             n = -1 // force inner loop exit
           } else {

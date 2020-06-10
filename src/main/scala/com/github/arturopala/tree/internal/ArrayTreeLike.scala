@@ -305,8 +305,8 @@ abstract class ArrayTreeLike[T: ClassTag] extends TreeLike[T] {
 
   // PATH-BASED OPERATIONS
 
-  final override def selectValue[K](path: Iterable[K], toPathItem: T => K): Option[T] =
-    ArrayTree.selectValue(path, tree.structure.top, tree.structure, tree.content, toPathItem)
+  final override def selectValue[K](path: Iterable[K], toPathItem: T => K, rightmost: Boolean = false): Option[T] =
+    ArrayTree.selectValue(path, tree.structure.top, tree.structure, tree.content, toPathItem, rightmost)
 
   final override def selectTree[T1 >: T: ClassTag](path: Iterable[T1]): Option[Tree[T]] =
     ArrayTree.selectTree(path, tree.structure.top, tree.structure, tree.content)

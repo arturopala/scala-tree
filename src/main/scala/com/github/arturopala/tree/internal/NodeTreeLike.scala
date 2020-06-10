@@ -103,6 +103,30 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
   final override def countBranches(pred: Iterable[T] => Boolean): Int =
     NodeTree.countBranches(pred, node)
 
+  // SELECTIONS
+
+  final override def selectValue[K](path: Iterable[K], toPathItem: T => K, rightmost: Boolean = false): Option[T] =
+    NodeTree.select(node, path, (n: Tree[T]) => n.head, toPathItem, rightmost = rightmost)
+
+  final override def selectTree[T1 >: T: ClassTag](path: Iterable[T1]): Option[Tree[T]] =
+    NodeTree.select(node, path, (n: Tree[T]) => n, rightmost = false)
+
+  final override def selectTree[K](path: Iterable[K], toPathItem: T => K): Option[Tree[T]] =
+    NodeTree.select(node, path, (n: Tree[T]) => n, toPathItem, rightmost = false)
+
+  final override def containsChild[T1 >: T](value: T1): Boolean = node.children.exists(_.head == value)
+
+  final override def containsBranch[T1 >: T](branch: Iterable[T1]): Boolean =
+    NodeTree.containsBranch(node, branch)
+
+  final override def containsBranch[K](branch: Iterable[K], toPathItem: T => K): Boolean =
+    NodeTree.containsBranch(node, branch, toPathItem)
+
+  final override def containsPath[T1 >: T](path: Iterable[T1]): Boolean = NodeTree.containsPath(node, path)
+
+  final override def containsPath[K](path: Iterable[K], toPathItem: T => K): Boolean =
+    NodeTree.containsPath(node, path, toPathItem)
+
   // DISTINCT INSERTIONS
 
   final override def prepend[T1 >: T: ClassTag](value: T1): Tree[T1] = Tree(value, node)
@@ -361,32 +385,14 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
     mapNodeUnsafe(node)
   }
 
-  final override def selectValue[K](path: Iterable[K], toPathItem: T => K): Option[T] =
-    NodeTree.select(node, path, (n: Tree[T]) => n.head, toPathItem, last = false)
-
-  final override def selectTree[T1 >: T: ClassTag](path: Iterable[T1]): Option[Tree[T]] =
-    NodeTree.select(node, path, (n: Tree[T]) => n, last = false)
-
-  final override def selectTree[K](path: Iterable[K], toPathItem: T => K): Option[Tree[T]] =
-    NodeTree.select(node, path, (n: Tree[T]) => n, toPathItem, last = false)
-
-  final override def containsChild[T1 >: T](value: T1): Boolean = node.children.exists(_.head == value)
-
-  final override def containsBranch[T1 >: T](branch: Iterable[T1]): Boolean =
-    NodeTree.containsBranch(node, branch)
-
-  final override def containsBranch[K](branch: Iterable[K], toPathItem: T => K): Boolean =
-    NodeTree.containsBranch(node, branch, toPathItem)
-
-  final override def containsPath[T1 >: T](path: Iterable[T1]): Boolean = NodeTree.containsPath(node, path)
-
-  final override def containsPath[K](path: Iterable[K], toPathItem: T => K): Boolean =
-    NodeTree.containsPath(node, path, toPathItem)
-
   final override def toPairsIterator: Iterator[(Int, T)] = NodeTree.toPairsList(node).iterator
+
   final override def toArrays[T1 >: T: ClassTag]: (Array[Int], Array[T1]) = NodeTree.toArrays(node)
+
   final override def toSlices[T1 >: T: ClassTag]: (IntSlice, Slice[T1]) = NodeTree.toSlices(node)
+
   final override def toBuffers[T1 >: T: ClassTag]: (IntBuffer, Buffer[T1]) = NodeTree.toBuffers(node)
+
   final override def toStructureArray: Array[Int] = NodeTree.toStructureArray(node)
 
   final override def mkStringFromBranches(

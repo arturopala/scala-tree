@@ -433,20 +433,28 @@ class ArrayTreeSpec extends AnyWordSpecCompat {
     }
 
     "select a value by the path" in {
-      selectValue(List("a"), -1, IntSlice(), Slice.empty[String], id) shouldBe None
-      selectValue(List("a"), 0, Array(0), Array("a"), id) shouldBe Some("a")
-      selectValue(List("a", "b"), 0, Array(0), Array("a"), id) shouldBe None
-      selectValue(List("a", "a"), 0, Array(0), Array("a"), id) shouldBe None
-      selectValue(List("a", "b"), 0, Array(0, 1), Array("b", "a"), id) shouldBe None
-      selectValue(List("a", "b"), 1, Array(0, 1), Array("b", "a"), id) shouldBe Some("b")
-      selectValue(List("a", "b"), 1, Array(0, 1), Array("c", "a"), id) shouldBe None
-      selectValue(List("a", "b"), 2, Array(0, 0, 2), Array("c", "b", "a"), id) shouldBe Some("b")
-      selectValue(List("a", "c"), 2, Array(0, 0, 2), Array("c", "b", "a"), id) shouldBe Some("c")
-      selectValue(List("a", "d"), 3, Array(0, 0, 1, 2), Array("d", "c", "b", "a"), id) shouldBe Some("d")
-      selectValue(List("a", "b", "c"), 3, Array(0, 0, 1, 2), Array("d", "c", "b", "a"), id) shouldBe Some("c")
-      selectValue(List("a", "b", "c"), 3, Array(0, 0, 1, 2), Array("d", "c", "b", "a"), id) shouldBe Some("c")
-      selectValue(List("a", "b"), 3, Array(0, 0, 1, 2), Array("d", "c", "b", "a"), id) shouldBe Some("b")
-      selectValue(List("a", "c"), 3, Array(0, 0, 1, 2), Array("d", "c", "b", "a"), id) shouldBe None
+      selectValue(List("a"), -1, IntSlice(), Slice.empty[String], id, rightmost = true) shouldBe None
+      selectValue(List("a"), 0, Array(0), Array("a"), id, rightmost = true) shouldBe Some("a")
+      selectValue(List("a", "b"), 0, Array(0), Array("a"), id, rightmost = true) shouldBe None
+      selectValue(List("a", "a"), 0, Array(0), Array("a"), id, rightmost = true) shouldBe None
+      selectValue(List("a", "b"), 0, Array(0, 1), Array("b", "a"), id, rightmost = true) shouldBe None
+      selectValue(List("a", "b"), 1, Array(0, 1), Array("b", "a"), id, rightmost = true) shouldBe Some("b")
+      selectValue(List("a", "b"), 1, Array(0, 1), Array("c", "a"), id, rightmost = true) shouldBe None
+      selectValue(List("a", "b"), 2, Array(0, 0, 2), Array("c", "b", "a"), id, rightmost = true) shouldBe Some("b")
+      selectValue(List("a", "c"), 2, Array(0, 0, 2), Array("c", "b", "a"), id, rightmost = true) shouldBe Some("c")
+      selectValue(List("a", "d"), 3, Array(0, 0, 1, 2), Array("d", "c", "b", "a"), id, rightmost = true) shouldBe Some(
+        "d"
+      )
+      selectValue(List("a", "b", "c"), 3, Array(0, 0, 1, 2), Array("d", "c", "b", "a"), id, rightmost = true) shouldBe Some(
+        "c"
+      )
+      selectValue(List("a", "b", "c"), 3, Array(0, 0, 1, 2), Array("d", "c", "b", "a"), id, rightmost = true) shouldBe Some(
+        "c"
+      )
+      selectValue(List("a", "b"), 3, Array(0, 0, 1, 2), Array("d", "c", "b", "a"), id, rightmost = true) shouldBe Some(
+        "b"
+      )
+      selectValue(List("a", "c"), 3, Array(0, 0, 1, 2), Array("d", "c", "b", "a"), id, rightmost = true) shouldBe None
     }
 
     "select a tree by the path" in {

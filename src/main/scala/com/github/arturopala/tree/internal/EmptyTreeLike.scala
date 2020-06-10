@@ -90,6 +90,28 @@ trait EmptyTreeLike extends TreeLike[Nothing] {
 
   final override def countBranches(pred: Iterable[Nothing] => Boolean): Int = 0
 
+  // SELECTIONS
+
+  final override def selectValue[K](
+    path: Iterable[K],
+    toPathItem: Nothing => K,
+    rightmost: Boolean = false
+  ): Option[Nothing] = None
+
+  final override def selectTree[T1: ClassTag](path: Iterable[T1]): Option[Tree[Nothing]] = None
+
+  final override def selectTree[K](path: Iterable[K], toPathItem: Nothing => K): Option[Tree[Nothing]] = None
+
+  final override def containsChild[T1](value: T1): Boolean = false
+
+  final override def containsBranch[T1](branch: Iterable[T1]): Boolean = false
+
+  final override def containsBranch[K](branch: Iterable[K], toPathItem: Nothing => K): Boolean = false
+
+  final override def containsPath[T1](path: Iterable[T1]): Boolean = false
+
+  final override def containsPath[K](path: Iterable[K], toPathItem: Nothing => K): Boolean = false
+
   // INSERTIONS
 
   final override def prepend[T1: ClassTag](value: T1): Tree[T1] = Tree(value)
@@ -246,24 +268,16 @@ trait EmptyTreeLike extends TreeLike[Nothing] {
   ): Tree[Nothing] =
     Tree.empty
 
-  // SELECTIONS
-
-  final override def selectValue[K](path: Iterable[K], toPathItem: Nothing => K): Option[Nothing] = None
-  final override def selectTree[T1: ClassTag](path: Iterable[T1]): Option[Tree[Nothing]] = None
-  final override def selectTree[K](path: Iterable[K], toPathItem: Nothing => K): Option[Tree[Nothing]] = None
-
-  final override def containsChild[T1](value: T1): Boolean = false
-  final override def containsBranch[T1](branch: Iterable[T1]): Boolean = false
-  final override def containsBranch[K](branch: Iterable[K], toPathItem: Nothing => K): Boolean = false
-  final override def containsPath[T1](path: Iterable[T1]): Boolean = false
-  final override def containsPath[K](path: Iterable[K], toPathItem: Nothing => K): Boolean = false
-
   final override def map[K: ClassTag](f: Nothing => K): Tree[K] = empty
 
   final override def toPairsIterator: Iterator[(Int, Nothing)] = Iterator.empty
+
   final override def toArrays[T1: ClassTag]: (Array[Int], Array[T1]) = (Array.empty[Int], Array.empty[T1])
+
   final override def toSlices[T1: ClassTag]: (IntSlice, Slice[T1]) = (IntSlice.empty, Slice.empty[T1])
+
   final override def toBuffers[T1: ClassTag]: (IntBuffer, Buffer[T1]) = (IntBuffer.empty, Buffer.empty[T1])
+
   final override val toStructureArray: Array[Int] = Array.empty[Int]
 
   final override def mkStringFromBranches(

@@ -503,7 +503,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
       buffer.toArray shouldBe Array(0, 0, 1, 2, 1, 2, 3)
     }
 
-    "find leftmost index of child's node holding a value" in {
+    "find rightmost index of child's node holding a value" in {
       firstChildHavingValue(2, -1, 0, Array.empty[Int], Array.empty[Int]) shouldBe None
       firstChildHavingValue(2, 0, 1, Array(0), Array(2)) shouldBe None
       firstChildHavingValue(2, 1, 2, Array(0, 1), Array(2, 1)) shouldBe Some(0)

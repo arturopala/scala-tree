@@ -259,6 +259,11 @@ class TreeCheckSelectSpec extends FunSuite {
       tree9.selectValue(List("a", "e", "f", "g"), identity) shouldBe Some("g")
       tree9.selectValue(List("a", "e", "h", "i"), identity) shouldBe Some("i")
       tree9.selectValue(List("a", "e", "f", "i"), identity) shouldBe None
+      // test leftmost and rightmost selection
+      tree(Tree("a", Tree("b", Tree("c")), Tree("b", Tree("d")), Tree("b", Tree("e"))))
+        .selectValue(List(1, 1, 1), _.length) shouldBe Some("c")
+      tree(Tree("a", Tree("b", Tree("c")), Tree("b", Tree("d")), Tree("b", Tree("e"))))
+        .selectValue(List(1, 1, 1), _.length, rightmost = true) shouldBe Some("e")
     }
 
     "select a tree by a path" in {

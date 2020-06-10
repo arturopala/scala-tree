@@ -496,7 +496,7 @@ object NodeTree {
     node: Tree[T],
     path: Iterable[T1],
     result: Tree[T] => R,
-    last: Boolean
+    rightmost: Boolean
   ): Option[R] =
     if (path.isEmpty || (path.nonEmpty && path.head != node.head)) None
     else if (path.tail.isEmpty) {
@@ -504,10 +504,10 @@ object NodeTree {
     } else {
       val item = path.tail.head
       val nextOpt =
-        if (last) node.children.filter(_.head == item).lastOption
+        if (rightmost) node.children.filter(_.head == item).lastOption
         else node.children.iterator.find(_.head == item)
       if (nextOpt.isEmpty) None
-      else select(nextOpt.get, path.tail, result, last)
+      else select(nextOpt.get, path.tail, result, rightmost)
     }
 
   @tailrec
@@ -516,7 +516,7 @@ object NodeTree {
     path: Iterable[K],
     toResult: Tree[T] => R,
     toPathItem: T => K,
-    last: Boolean
+    rightmost: Boolean
   ): Option[R] =
     if (path.isEmpty || (path.nonEmpty && path.head != toPathItem(node.head))) None
     else if (path.tail.isEmpty) {
@@ -524,10 +524,10 @@ object NodeTree {
     } else {
       val item = path.tail.head
       val nextOpt =
-        if (last) node.children.filter(n => toPathItem(n.head) == item).lastOption
+        if (rightmost) node.children.filter(n => toPathItem(n.head) == item).lastOption
         else node.children.iterator.find(n => toPathItem(n.head) == item)
       if (nextOpt.isEmpty) None
-      else select(nextOpt.get, path.tail, toResult, toPathItem, last)
+      else select(nextOpt.get, path.tail, toResult, toPathItem, rightmost)
     }
 
   @`inline` final def containsBranch[T, T1 >: T](node: Tree[T], branch: Iterable[T1]): Boolean =
@@ -624,7 +624,7 @@ object NodeTree {
     branchIterator: Iterator[T1],
     append: Boolean
   ): Option[Tree[T1]] =
-    splitTreeFollowingPath(tree, branchIterator, last = append).flatMap {
+    splitTreeFollowingPath(tree, branchIterator, rightmost = append).flatMap {
       case (treeSplit, Some(value), remainingBranchIterator, remainingTree) =>
         val branchTree: Tree[T1] =
           TreeBuilder.linearTreeFromSequence(value +: remainingBranchIterator.toVector)
@@ -960,14 +960,14 @@ object NodeTree {
     rightSiblings: Iterable[Tree[T]],
     preserveExisting: Boolean
   ): (Iterable[Tree[T]], Iterable[Tree[T]]) =
-    splitSequenceWhenLast[Tree[T]](_.head == child.head, leftSiblings) match {
+    splitSequenceWhen[Tree[T]](_.head == child.head, leftSiblings, rightmost = true) match {
       case Some((left, duplicateOnLeft, right)) =>
         val mergedNode =
           insertChildrenDistinct(child.head, duplicateOnLeft.children, child.children, Nil, preserveExisting)
         (left ++: mergedNode +: right, rightSiblings)
 
       case None =>
-        splitSequenceWhen[Tree[T]](_.head == child.head, rightSiblings, last = false) match {
+        splitSequenceWhen[Tree[T]](_.head == child.head, rightSiblings, rightmost = false) match {
           case None =>
             (leftSiblings.toVector :+ child, rightSiblings)
 
@@ -1063,7 +1063,7 @@ object NodeTree {
     append: Boolean,
     keepDistinct: Boolean
   ): Option[Tree[T1]] =
-    splitTreeFollowingPath(tree, pathIterator, last = false).flatMap {
+    splitTreeFollowingPath(tree, pathIterator, rightmost = false).flatMap {
       case (treeSplit, Some(value), remainingBranchIterator, remainingTree) =>
         val branchTree: Tree[T1] =
           TreeBuilder
@@ -1090,7 +1090,7 @@ object NodeTree {
     append: Boolean,
     keepDistinct: Boolean
   ): Either[Tree[T], Tree[T1]] =
-    splitTreeFollowingEntirePath(tree, pathIterator, toPathItem)
+    splitTreeFollowingEntirePath(tree, pathIterator, toPathItem, rightmost = false)
       .map {
         case (treeSplit, recipientTree) =>
           val newNode =
@@ -1111,7 +1111,7 @@ object NodeTree {
     append: Boolean,
     keepDistinct: Boolean
   ): Option[Tree[T1]] =
-    splitTreeFollowingPath(tree, pathIterator, last = false).flatMap {
+    splitTreeFollowingPath(tree, pathIterator, rightmost = false).flatMap {
       case (treeSplit, Some(value), remainingBranchIterator, remainingTree) =>
         val branch = value +: remainingBranchIterator.toVector
         val branchTree: Tree[T1] =
@@ -1147,7 +1147,7 @@ object NodeTree {
     append: Boolean,
     keepDistinct: Boolean
   ): Either[Tree[T], Tree[T1]] =
-    splitTreeFollowingEntirePath(tree, pathIterator, toPathItem)
+    splitTreeFollowingEntirePath(tree, pathIterator, toPathItem, rightmost = false)
       .map {
         case (treeSplit, recipientTree) =>
           val newNode =
@@ -1160,7 +1160,7 @@ object NodeTree {
 
   /** Splits the tree following the path and succeeds only if all path items exists.
     * The tree children split is a triple of (children list left of value, a value, children list right of value)
-    * @return some pair of (the tree split, recipient tree holding the last path item)
+    * @return some pair of (the tree split, recipient tree holding the rightmost path item)
     *         or none if:
     *         1) the path doesn't exist in full,
     *         2) the path root doesn't match the tree root.
@@ -1168,9 +1168,9 @@ object NodeTree {
   final def splitTreeFollowingEntirePath[T, T1 >: T](
     tree: Tree[T],
     pathIterator: Iterator[T1],
-    last: Boolean
+    rightmost: Boolean
   ): Option[(Vector[TreeSplit[T]], Tree[T])] =
-    splitTreeFollowingPath[T, T1](tree, pathIterator, last).flatMap {
+    splitTreeFollowingPath[T, T1](tree, pathIterator, rightmost).flatMap {
       case (_, Some(_), _, _)                  => None
       case (treeSplit, None, _, remainingTree) => Some((treeSplit, remainingTree))
     }
@@ -1179,20 +1179,20 @@ object NodeTree {
     * The tree children split is a triple of (children list left of value, a value, children list right of value)
     * @return some quadruple of (
     *         - the tree split,
-    *         - optionally last unmatched path item,
+    *         - optionally rightmost unmatched path item,
     *         - remaining path iterator,
-    *         - a remaining tree holding the last matched path value
+    *         - a remaining tree holding the rightmost matched path value
     *         ) or none if the path root doesn't match tree root at all.
     */
   final def splitTreeFollowingPath[T, T1 >: T](
     tree: Tree[T],
     pathIterator: Iterator[T1],
-    last: Boolean
+    rightmost: Boolean
   ): Option[(Vector[TreeSplit[T]], Option[T1], Iterator[T1], Tree[T])] =
     if (pathIterator.isEmpty) None
     else {
       val head = pathIterator.next
-      if (tree.head == head) Some(splitTreeFollowingPath(tree, pathIterator, Vector.empty, last)) else None
+      if (tree.head == head) Some(splitTreeFollowingPath(tree, pathIterator, Vector.empty, rightmost)) else None
     }
 
   @tailrec
@@ -1200,16 +1200,16 @@ object NodeTree {
     tree: Tree[T],
     pathIterator: Iterator[T1],
     queue: Vector[TreeSplit[T]],
-    last: Boolean
+    rightmost: Boolean
   ): (Vector[TreeSplit[T]], Option[T1], Iterator[T1], Tree[T]) =
     if (pathIterator.hasNext) {
       val value: T1 = pathIterator.next()
-      splitSequenceWhen[Tree[T]](_.head == value, tree.children, last) match {
+      splitSequenceWhen[Tree[T]](_.head == value, tree.children, rightmost) match {
         case None =>
           (queue, Some(value), pathIterator, tree)
 
         case Some((left, node, right)) =>
-          splitTreeFollowingPath(node, pathIterator, (left, tree.head, right) +: queue, last)
+          splitTreeFollowingPath(node, pathIterator, (left, tree.head, right) +: queue, rightmost)
       }
     } else {
       (queue, None, pathIterator, tree)
@@ -1218,7 +1218,7 @@ object NodeTree {
   /** Splits the tree following the path, using toPathItem extractor function,
     * and succeeds only if all path items exists.
     * The tree children split is a triple of (children list left of value, a value, children list right of value)
-    * @return some pair of (the tree split, recipient tree matching the last path item)
+    * @return some pair of (the tree split, recipient tree matching the rightmost path item)
     *         or none if:
     *         1) the path doesn't exist in full,
     *         2) the path root doesn't match the tree root.
@@ -1226,9 +1226,10 @@ object NodeTree {
   final def splitTreeFollowingEntirePath[T, K](
     tree: Tree[T],
     pathIterator: Iterator[K],
-    toPathItem: T => K
+    toPathItem: T => K,
+    rightmost: Boolean
   ): Option[(Vector[TreeSplit[T]], Tree[T])] =
-    splitTreeFollowingPath(tree, pathIterator, toPathItem).flatMap {
+    splitTreeFollowingPath(tree, pathIterator, toPathItem, rightmost).flatMap {
       case (_, Some(_), _, _)                  => None
       case (treeSplit, None, _, remainingTree) => Some((treeSplit, remainingTree))
     }
@@ -1237,9 +1238,9 @@ object NodeTree {
     * The tree children split is a triple of (children list left of value, a value, children list right of value)
     * @return some quadruple of (
     *         - the tree split,
-    *         - optionally last unmatched path item,
+    *         - optionally rightmost unmatched path item,
     *         - remaining path iterator,
-    *         - a remaining tree holding the last matched path item
+    *         - a remaining tree holding the rightmost matched path item
     *         ) or none if:
     *               1) the path doesn't exist in full,
     *               2) the path root doesn't match the tree root.
@@ -1247,12 +1248,14 @@ object NodeTree {
   final def splitTreeFollowingPath[T, K](
     tree: Tree[T],
     pathIterator: Iterator[K],
-    toPathItem: T => K
+    toPathItem: T => K,
+    rightmost: Boolean
   ): Option[(Vector[TreeSplit[T]], Option[K], Iterator[K], Tree[T])] =
     if (pathIterator.isEmpty) None
     else {
       val head = pathIterator.next
-      if (toPathItem(tree.head) == head) Some(splitTreeFollowingPath(tree, pathIterator, toPathItem, Vector.empty))
+      if (toPathItem(tree.head) == head)
+        Some(splitTreeFollowingPath(tree, pathIterator, toPathItem, Vector.empty, rightmost))
       else None
     }
 
@@ -1261,16 +1264,17 @@ object NodeTree {
     tree: Tree[T],
     pathIterator: Iterator[K],
     toPathItem: T => K,
-    queue: Vector[TreeSplit[T]]
+    queue: Vector[TreeSplit[T]],
+    rightmost: Boolean
   ): (Vector[TreeSplit[T]], Option[K], Iterator[K], Tree[T]) =
     if (pathIterator.hasNext) {
       val pathItem: K = pathIterator.next()
-      splitSequenceWhen[Tree[T]](node => toPathItem(node.head) == pathItem, tree.children, last = false) match {
+      splitSequenceWhen[Tree[T]](node => toPathItem(node.head) == pathItem, tree.children, rightmost = false) match {
         case None =>
           (queue, Some(pathItem), pathIterator, tree)
 
         case Some((left, node, right)) =>
-          splitTreeFollowingPath(node, pathIterator, toPathItem, (left, tree.head, right) +: queue)
+          splitTreeFollowingPath(node, pathIterator, toPathItem, (left, tree.head, right) +: queue, rightmost)
       }
     } else {
       (queue, None, pathIterator, tree)
@@ -1280,7 +1284,7 @@ object NodeTree {
   final def splitSequenceWhen[T](
     f: T => Boolean,
     iterable: Iterable[T],
-    last: Boolean
+    rightmost: Boolean
   ): Option[(Vector[T], T, Vector[T])] = {
     @tailrec
     def split(left: Vector[T], right: Iterator[T]): Option[(Vector[T], T, Vector[T])] =
@@ -1292,12 +1296,15 @@ object NodeTree {
       }
 
     if (iterable.isEmpty) None
-    else if (last) splitSequenceWhenLast(f, iterable)
+    else if (rightmost) splitSequenceWhenLast(f, iterable)
     else split(Vector.empty, iterable.iterator)
   }
 
-  /** Optionally splits sequence into left and right part around last matching element. */
-  final def splitSequenceWhenLast[T](f: T => Boolean, iterable: Iterable[T]): Option[(Vector[T], T, Vector[T])] = {
+  /** Optionally splits sequence into left and right part around rightmost matching element. */
+  final private def splitSequenceWhenLast[T](
+    f: T => Boolean,
+    iterable: Iterable[T]
+  ): Option[(Vector[T], T, Vector[T])] = {
     @tailrec
     def split(
       left: Vector[T],
@@ -1311,7 +1318,7 @@ object NodeTree {
         if (f(head)) split(left :+ head, iterator, Vector.empty, Some((left, head)))
         else split(left :+ head, iterator, if (result.isDefined) right :+ head else right, result)
       }
-    if (iterable.isEmpty) None else split(Vector.empty, iterable.iterator, Vector.empty, None)
+    split(Vector.empty, iterable.iterator, Vector.empty, None)
   }
 
   /** Joins single treeSplit back into a tree node. */
@@ -1365,7 +1372,7 @@ object NodeTree {
     replacement: T1,
     keepDistinct: Boolean
   ): Tree[T1] =
-    splitSequenceWhen[Tree[T]](_.head == value, tree.children, last = false) match {
+    splitSequenceWhen[Tree[T]](_.head == value, tree.children, rightmost = false) match {
       case Some((left, node, right)) if node.head != replacement =>
         val updatedNode = Tree(replacement, node.children)
         if (updatedNode == node) tree
@@ -1384,7 +1391,7 @@ object NodeTree {
     replacement: T1,
     keepDistinct: Boolean
   ): Either[Tree[T], Tree[T1]] =
-    splitTreeFollowingEntirePath[T, T1](tree, pathIterator, last = false)
+    splitTreeFollowingEntirePath[T, T1](tree, pathIterator, rightmost = false)
       .map {
         case (treeSplit, recipientTree) =>
           if (replacement != recipientTree.head)
@@ -1401,7 +1408,7 @@ object NodeTree {
     replacement: T1,
     keepDistinct: Boolean
   ): Either[Tree[T], Tree[T1]] =
-    splitTreeFollowingEntirePath(tree, pathIterator, toPathItem)
+    splitTreeFollowingEntirePath(tree, pathIterator, toPathItem, rightmost = false)
       .map {
         case (treeSplit, recipientTree) =>
           if (replacement != recipientTree.head)
@@ -1417,7 +1424,7 @@ object NodeTree {
     replacement: Tree[T1],
     keepDistinct: Boolean
   ): Tree[T1] =
-    splitSequenceWhen[Tree[T]](_.head == value, tree.children, last = false) match {
+    splitSequenceWhen[Tree[T]](_.head == value, tree.children, rightmost = false) match {
       case Some((left, node, right)) if replacement != node =>
         replacement match {
           case Tree.empty =>
@@ -1445,7 +1452,7 @@ object NodeTree {
     replacement: Tree[T1],
     keepDistinct: Boolean
   ): Either[Tree[T], Tree[T1]] =
-    splitTreeFollowingEntirePath[T, T1](tree, pathIterator, last = false)
+    splitTreeFollowingEntirePath[T, T1](tree, pathIterator, rightmost = false)
       .map {
         case (treeSplit, recipientTree) =>
           if (replacement != recipientTree)
@@ -1462,7 +1469,7 @@ object NodeTree {
     replacement: Tree[T1],
     keepDistinct: Boolean
   ): Either[Tree[T], Tree[T1]] =
-    splitTreeFollowingEntirePath(tree, pathIterator, toPathItem)
+    splitTreeFollowingEntirePath(tree, pathIterator, toPathItem, rightmost = false)
       .map {
         case (treeSplit, recipientTree) =>
           if (replacement != recipientTree)
@@ -1478,7 +1485,7 @@ object NodeTree {
     modify: T => T1,
     keepDistinct: Boolean
   ): Tree[T1] =
-    splitSequenceWhen[Tree[T]](_.head == value, tree.children, last = false) match {
+    splitSequenceWhen[Tree[T]](_.head == value, tree.children, rightmost = false) match {
       case None => tree
       case Some((left, node, right)) =>
         val replacement = Tree(modify(node.head), node.children)
@@ -1497,7 +1504,7 @@ object NodeTree {
     modify: T => T1,
     keepDistinct: Boolean
   ): Either[Tree[T], Tree[T1]] =
-    splitTreeFollowingEntirePath[T, T1](tree, pathIterator, last = false)
+    splitTreeFollowingEntirePath[T, T1](tree, pathIterator, rightmost = true)
       .map {
         case (treeSplit, recipientTree) =>
           val replacement = modify(recipientTree.head)
@@ -1515,7 +1522,7 @@ object NodeTree {
     modify: T => T1,
     keepDistinct: Boolean
   ): Either[Tree[T], Tree[T1]] =
-    splitTreeFollowingEntirePath(tree, pathIterator, toPathItem)
+    splitTreeFollowingEntirePath(tree, pathIterator, toPathItem, rightmost = false)
       .map {
         case (treeSplit, recipientTree) =>
           val replacement = modify(recipientTree.head)
@@ -1532,7 +1539,7 @@ object NodeTree {
     modify: Tree[T] => Tree[T1],
     keepDistinct: Boolean
   ): Tree[T1] =
-    splitSequenceWhen[Tree[T]](_.head == value, tree.children, last = false) match {
+    splitSequenceWhen[Tree[T]](_.head == value, tree.children, rightmost = false) match {
       case None => tree
       case Some((left, node, right)) =>
         val replacement = modify(node)
@@ -1562,7 +1569,7 @@ object NodeTree {
     modify: Tree[T] => Tree[T1],
     keepDistinct: Boolean
   ): Either[Tree[T], Tree[T1]] =
-    splitTreeFollowingEntirePath[T, T1](tree, pathIterator, last = false)
+    splitTreeFollowingEntirePath[T, T1](tree, pathIterator, rightmost = false)
       .map {
         case (treeSplit, recipientTree) =>
           val replacement = modify(recipientTree)
@@ -1580,7 +1587,7 @@ object NodeTree {
     modify: Tree[T] => Tree[T1],
     keepDistinct: Boolean
   ): Either[Tree[T], Tree[T1]] =
-    splitTreeFollowingEntirePath(tree, pathIterator, toPathItem)
+    splitTreeFollowingEntirePath(tree, pathIterator, toPathItem, rightmost = false)
       .map {
         case (treeSplit, recipientTree) =>
           val replacement = modify(recipientTree)
@@ -1624,7 +1631,7 @@ object NodeTree {
     value: T1,
     keepDistinct: Boolean
   ): Tree[T] =
-    splitSequenceWhen[Tree[T]](_.head == value, tree.children, last = false) match {
+    splitSequenceWhen[Tree[T]](_.head == value, tree.children, rightmost = false) match {
       case None => tree
       case Some((left, node, right)) =>
         if (keepDistinct && !node.isLeaf) {
@@ -1645,7 +1652,7 @@ object NodeTree {
     pathIterator: Iterator[T1],
     keepDistinct: Boolean
   ): Tree[T] =
-    splitTreeFollowingEntirePath[T, T1](tree, pathIterator, last = false)
+    splitTreeFollowingEntirePath[T, T1](tree, pathIterator, rightmost = false)
       .map {
         case (treeSplit, recipientTree) =>
           removeChildValueFromSplit(tree, treeSplit, recipientTree, keepDistinct)
@@ -1664,7 +1671,7 @@ object NodeTree {
     toPathItem: T => K,
     keepDistinct: Boolean
   ): Tree[T] =
-    splitTreeFollowingEntirePath(tree, pathIterator, toPathItem)
+    splitTreeFollowingEntirePath(tree, pathIterator, toPathItem, rightmost = false)
       .map {
         case (treeSplit, recipientTree) =>
           removeChildValueFromSplit(tree, treeSplit, recipientTree, keepDistinct)
@@ -1676,7 +1683,7 @@ object NodeTree {
     tree: Tree[T],
     value: T1
   ): Tree[T] =
-    splitSequenceWhen[Tree[T]](_.head == value, tree.children, last = false) match {
+    splitSequenceWhen[Tree[T]](_.head == value, tree.children, rightmost = false) match {
       case None                   => tree
       case Some((left, _, right)) => Tree(tree.head, left ++ right)
     }
@@ -1686,7 +1693,7 @@ object NodeTree {
     tree: Tree[T],
     pathIterator: Iterator[T1]
   ): Tree[T] =
-    splitTreeFollowingEntirePath[T, T1](tree, pathIterator, last = false)
+    splitTreeFollowingEntirePath[T, T1](tree, pathIterator, rightmost = false)
       .map { case (treeSplit, _) => TreeBuilder.fromTreeSplit(treeSplit) }
       .getOrElse(tree)
 
@@ -1696,7 +1703,7 @@ object NodeTree {
     pathIterator: Iterator[K],
     toPathItem: T => K
   ): Tree[T] =
-    splitTreeFollowingEntirePath(tree, pathIterator, toPathItem)
+    splitTreeFollowingEntirePath(tree, pathIterator, toPathItem, rightmost = false)
       .map { case (treeSplit, _) => TreeBuilder.fromTreeSplit(treeSplit) }
       .getOrElse(tree)
 

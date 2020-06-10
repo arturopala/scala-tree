@@ -285,9 +285,10 @@ trait TreeLike[+T] {
   /** Selects a first value of the node reachable by the provided path, if any.
     * @param path list of K path items forming a path from the root to the node
     * @param toPathItem extractor of the K path item from the tree's node value
+    * @param rightmost flag, if true then will follow rightmost of duplicated paths, otherwise default to leftmost
     * @tparam K type of path item
     * @group selection */
-  def selectValue[K](path: Iterable[K], toPathItem: T => K): Option[T]
+  def selectValue[K](path: Iterable[K], toPathItem: T => K, rightmost: Boolean = false): Option[T]
 
   /** Selects a first tree anchored at the node reachable by the provided path, if any.
     * @param path list of node's values forming a path from the root to the node.
