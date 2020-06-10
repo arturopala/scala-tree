@@ -311,28 +311,52 @@ class TreeCheckSelectSpec extends FunSuite {
       tree(Tree("a", Tree("b", Tree("c")), Tree("b", Tree("d")), Tree("b", Tree("e"))))
         .selectTree(List("a", "b")) shouldBe
         Some(Tree("b", Tree("c")))
+
+      tree(Tree("a", Tree("b", Tree("c")), Tree("b", Tree("d")), Tree("b", Tree("e"))))
+        .selectTree(List("a", "b"), rightmost = true) shouldBe
+        Some(Tree("b", Tree("e")))
     }
 
     "select a tree by path using extractor function" in {
       val codeF: String => Int = s => s.head.toInt
-      tree0.selectTree(List(), codeF) shouldBe None
-      tree0.selectTree(List(0), codeF) shouldBe None
-      tree1.selectTree(List(), codeF) shouldBe None
-      tree1.selectTree(List(97), codeF) shouldBe Some(Tree("a"))
-      tree1.selectTree(List(96), codeF) shouldBe None
-      tree2.selectTree(List(97, 98), codeF) shouldBe Some(Tree("b"))
-      tree2.selectTree(List(97, 97), codeF) shouldBe None
-      tree2.selectTree(List(98, 97), codeF) shouldBe None
-      tree3_2.selectTree(List(97, 98), codeF) shouldBe Some(Tree("b"))
-      tree3_2.selectTree(List(97, 99), codeF) shouldBe Some(Tree("c"))
-      tree3_2.selectTree(List(97), codeF) shouldBe Some(Tree("a", Tree("b"), Tree("c")))
-      tree3_2.selectTree(List(97, 97), codeF) shouldBe None
-      tree3_2.selectTree(List(98), codeF) shouldBe None
-      tree3_2.selectTree(List(), codeF) shouldBe None
+      tree0.selectTree(List(), codeF, rightmost = false) shouldBe None
+      tree0.selectTree(List(0), codeF, rightmost = false) shouldBe None
+      tree1.selectTree(List(), codeF, rightmost = false) shouldBe None
+      tree1.selectTree(List(97), codeF, rightmost = false) shouldBe Some(Tree("a"))
+      tree1.selectTree(List(96), codeF, rightmost = false) shouldBe None
+      tree2.selectTree(List(97, 98), codeF, rightmost = false) shouldBe Some(Tree("b"))
+      tree2.selectTree(List(97, 97), codeF, rightmost = false) shouldBe None
+      tree2.selectTree(List(98, 97), codeF, rightmost = false) shouldBe None
+      tree3_2.selectTree(List(97, 98), codeF, rightmost = false) shouldBe Some(Tree("b"))
+      tree3_2.selectTree(List(97, 99), codeF, rightmost = false) shouldBe Some(Tree("c"))
+      tree3_2.selectTree(List(97), codeF, rightmost = false) shouldBe Some(Tree("a", Tree("b"), Tree("c")))
+      tree3_2.selectTree(List(97, 97), codeF, rightmost = false) shouldBe None
+      tree3_2.selectTree(List(98), codeF, rightmost = false) shouldBe None
+      tree3_2.selectTree(List(), codeF, rightmost = false) shouldBe None
 
       tree(Tree("a", Tree("b", Tree("c")), Tree("b", Tree("d")), Tree("b", Tree("e"))))
-        .selectTree(List(97, 98), codeF) shouldBe
+        .selectTree(List(97, 98), codeF, rightmost = false) shouldBe
         Some(Tree("b", Tree("c")))
+
+      tree(Tree("a", Tree("b", Tree("c")), Tree("b", Tree("d")), Tree("b", Tree("e"))))
+        .selectTree(List(1, 1), _.length, rightmost = false) shouldBe
+        Some(Tree("b", Tree("c")))
+
+      tree(Tree("a", Tree("b", Tree("c")), Tree("b", Tree("d")), Tree("b", Tree("e"))))
+        .selectTree(List(1, 1, 1), _.length, rightmost = false) shouldBe
+        Some(Tree("c"))
+
+      tree(Tree("a", Tree("b", Tree("c")), Tree("b", Tree("d")), Tree("b", Tree("e"))))
+        .selectTree(List(97, 98), codeF, rightmost = true) shouldBe
+        Some(Tree("b", Tree("e")))
+
+      tree(Tree("a", Tree("b", Tree("c")), Tree("b", Tree("d")), Tree("b", Tree("e"))))
+        .selectTree(List(1, 1), _.length, rightmost = true) shouldBe
+        Some(Tree("b", Tree("e")))
+
+      tree(Tree("a", Tree("b", Tree("c")), Tree("b", Tree("d")), Tree("b", Tree("e"))))
+        .selectTree(List(1, 1, 1), _.length, rightmost = true) shouldBe
+        Some(Tree("e"))
     }
 
   }

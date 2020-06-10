@@ -308,11 +308,11 @@ abstract class ArrayTreeLike[T: ClassTag] extends TreeLike[T] {
   final override def selectValue[K](path: Iterable[K], toPathItem: T => K, rightmost: Boolean = false): Option[T] =
     ArrayTree.selectValue(path, tree.structure.top, tree.structure, tree.content, toPathItem, rightmost)
 
-  final override def selectTree[T1 >: T: ClassTag](path: Iterable[T1]): Option[Tree[T]] =
-    ArrayTree.selectTree(path, tree.structure.top, tree.structure, tree.content)
+  final override def selectTree[T1 >: T: ClassTag](path: Iterable[T1], rightmost: Boolean = false): Option[Tree[T]] =
+    ArrayTree.selectTree(path, tree.structure.top, tree.structure, tree.content, rightmost)
 
-  final override def selectTree[K](path: Iterable[K], toPathItem: T => K): Option[Tree[T]] =
-    ArrayTree.selectTree(path, tree.structure.top, tree.structure, tree.content, toPathItem)
+  final override def selectTree[K](path: Iterable[K], toPathItem: T => K, rightmost: Boolean): Option[Tree[T]] =
+    ArrayTree.selectTree(path, tree.structure.top, tree.structure, tree.content, toPathItem, rightmost)
 
   final override def containsChild[T1 >: T](value: T1): Boolean =
     ArrayTree.containsChild(value, tree.structure.top, tree.structure, tree.content)

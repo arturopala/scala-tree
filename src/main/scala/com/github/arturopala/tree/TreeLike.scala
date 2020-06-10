@@ -293,14 +293,14 @@ trait TreeLike[+T] {
   /** Selects a first tree anchored at the node reachable by the provided path, if any.
     * @param path list of node's values forming a path from the root to the node.
     * @group selection */
-  def selectTree[T1 >: T: ClassTag](path: Iterable[T1]): Option[Tree[T]]
+  def selectTree[T1 >: T: ClassTag](path: Iterable[T1], rightmost: Boolean = false): Option[Tree[T]]
 
   /** Selects a first tree anchored at the node reachable by the provided path, if any.
     * @param path list of K path items forming a path from the root to the node.
     * @param toPathItem extractor of the K path item from the tree's node value
     * @tparam K type of path item
     * @group selection */
-  def selectTree[K](path: Iterable[K], toPathItem: T => K): Option[Tree[T]]
+  def selectTree[K](path: Iterable[K], toPathItem: T => K, rightmost: Boolean): Option[Tree[T]]
 
   // SEARCH
 

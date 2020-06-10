@@ -327,7 +327,7 @@ object ArrayTree {
     rightmost: Boolean
   ): Option[T] =
     ArrayTreeFunctions
-      .followEntirePath(path, startIndex, treeStructure, treeValues, toPathItem, rightmost = rightmost)
+      .followEntirePath(path, startIndex, treeStructure, treeValues, toPathItem, rightmost)
       .map(indexes => treeValues(indexes.last))
 
   /** Selects tree accessible by path. */
@@ -335,10 +335,11 @@ object ArrayTree {
     path: Iterable[T1],
     startIndex: Int,
     treeStructure: IntSlice,
-    treeValues: Slice[T]
+    treeValues: Slice[T],
+    rightmost: Boolean
   ): Option[Tree[T]] =
     ArrayTreeFunctions
-      .followEntirePath(path, startIndex, treeStructure, treeValues, rightmost = false)
+      .followEntirePath(path, startIndex, treeStructure, treeValues, rightmost)
       .map(indexes => treeAt[T](indexes.last, treeStructure, treeValues))
 
   /** Selects tree accessible by path using item extractor function. */
@@ -347,10 +348,11 @@ object ArrayTree {
     startIndex: Int,
     treeStructure: IntSlice,
     treeValues: Slice[T],
-    toPathItem: T => K
+    toPathItem: T => K,
+    rightmost: Boolean
   ): Option[Tree[T]] =
     ArrayTreeFunctions
-      .followEntirePath(path, startIndex, treeStructure, treeValues, toPathItem, rightmost = false)
+      .followEntirePath(path, startIndex, treeStructure, treeValues, toPathItem, rightmost)
       .map(indexes => treeAt[T](indexes.last, treeStructure, treeValues))
 
   /** Returns tree rooted at the given index. */

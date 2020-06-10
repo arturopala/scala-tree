@@ -108,11 +108,11 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
   final override def selectValue[K](path: Iterable[K], toPathItem: T => K, rightmost: Boolean = false): Option[T] =
     NodeTree.select(node, path, (n: Tree[T]) => n.head, toPathItem, rightmost = rightmost)
 
-  final override def selectTree[T1 >: T: ClassTag](path: Iterable[T1]): Option[Tree[T]] =
-    NodeTree.select(node, path, (n: Tree[T]) => n, rightmost = false)
+  final override def selectTree[T1 >: T: ClassTag](path: Iterable[T1], rightmost: Boolean = false): Option[Tree[T]] =
+    NodeTree.select(node, path, (n: Tree[T]) => n, rightmost = rightmost)
 
-  final override def selectTree[K](path: Iterable[K], toPathItem: T => K): Option[Tree[T]] =
-    NodeTree.select(node, path, (n: Tree[T]) => n, toPathItem, rightmost = false)
+  final override def selectTree[K](path: Iterable[K], toPathItem: T => K, rightmost: Boolean): Option[Tree[T]] =
+    NodeTree.select(node, path, (n: Tree[T]) => n, toPathItem, rightmost)
 
   final override def containsChild[T1 >: T](value: T1): Boolean = node.children.exists(_.head == value)
 
