@@ -241,6 +241,40 @@ class TreeInsertionsSpec extends FunSuite {
         Tree("d", Tree("e", Tree("f"))),
         Tree("g", Tree("e", Tree("d")))
       )
+
+      tree(
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d")))
+        )
+      ).insertLeafAt(List("a", "b", "c", "d"), "e") shouldBe
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("d", Tree("e")))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d")))
+        )
+
+      tree(
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d")))
+        )
+      ).insertLeafAt(List("a", "b", "c"), "e") shouldBe
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("e"), Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d")))
+        )
     }
 
     "insert lax new leaf to a tree at the specified path - prepend to existing" in {
@@ -263,6 +297,40 @@ class TreeInsertionsSpec extends FunSuite {
       tree3_2.insertLeafLaxAt(List("a", "b"), "c") shouldBe Tree("a", Tree("b", Tree("c")), Tree("c"))
       tree3_2.insertLeafLaxAt(List("a", "c"), "c") shouldBe Tree("a", Tree("b"), Tree("c", Tree("c")))
       tree3_2.insertLeafLaxAt(List("a", "c", "d"), "c") shouldBe Tree("a", Tree("b"), Tree("c", Tree("d", Tree("c"))))
+
+      tree(
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d")))
+        )
+      ).insertLeafLaxAt(List("a", "b", "c", "d"), "e") shouldBe
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("d", Tree("e")))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d")))
+        )
+
+      tree(
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d")))
+        )
+      ).insertLeafLaxAt(List("a", "b", "c"), "e") shouldBe
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("e"), Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d")))
+        )
     }
 
     "insert distinct new leaf to a tree at the specified path - append to existing" in {
@@ -308,6 +376,40 @@ class TreeInsertionsSpec extends FunSuite {
         Tree("d", Tree("e", Tree("f"))),
         Tree("g", Tree("e", Tree("d")))
       )
+
+      tree(
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d")))
+        )
+      ).insertLeafAt(List("a", "b", "c", "d"), "e", append = true) shouldBe
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d", Tree("e"))))
+        )
+
+      tree(
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d")))
+        )
+      ).insertLeafAt(List("a", "b", "c"), "e", append = true) shouldBe
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d"), Tree("e")))
+        )
     }
 
     "insert lax new leaf to a tree at the specified path - append to existing" in {
@@ -342,6 +444,40 @@ class TreeInsertionsSpec extends FunSuite {
         Tree("b"),
         Tree("c", Tree("d", Tree("c")))
       )
+
+      tree(
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d")))
+        )
+      ).insertLeafLaxAt(List("a", "b", "c", "d"), "e", append = true) shouldBe
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d", Tree("e"))))
+        )
+
+      tree(
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d")))
+        )
+      ).insertLeafLaxAt(List("a", "b", "c"), "e", append = true) shouldBe
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d"), Tree("e")))
+        )
     }
 
     "insert distinct new leaf to a tree at the specified path with path item extractor - prepend to existing" in {
@@ -401,6 +537,44 @@ class TreeInsertionsSpec extends FunSuite {
         )
       )
       tree7.insertLeafAt(List(97, 103, 101), "d", codeF, append = false) shouldBe Left(tree7)
+
+      tree(
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d")))
+        )
+      ).insertLeafAt(List(97, 98, 99, 100), "e", codeF, append = false) shouldBe
+        Right(
+          Tree(
+            "a",
+            Tree("b", Tree("c", Tree("d", Tree("e")))),
+            Tree("b", Tree("c", Tree("e"))),
+            Tree("b", Tree("c", Tree("e"))),
+            Tree("b", Tree("c", Tree("d")))
+          )
+        )
+
+      tree(
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d")))
+        )
+      ).insertLeafAt(List(97, 98, 99), "e", codeF, append = false) shouldBe
+        Right(
+          Tree(
+            "a",
+            Tree("b", Tree("c", Tree("e"), Tree("d"))),
+            Tree("b", Tree("c", Tree("e"))),
+            Tree("b", Tree("c", Tree("e"))),
+            Tree("b", Tree("c", Tree("d")))
+          )
+        )
     }
 
     "insert lax new leaf to a tree at the specified path with path item extractor - prepend to existing" in {
@@ -417,6 +591,44 @@ class TreeInsertionsSpec extends FunSuite {
       tree2.insertLeafLaxAt(List(97, 98), "c", codeF, append = false) shouldBe Right(Tree("a", Tree("b", Tree("c"))))
       tree2.insertLeafLaxAt(List(97, 97), "c", codeF, append = false) shouldBe Left(tree2)
       tree2.insertLeafLaxAt(List(98, 97), "c", codeF, append = false) shouldBe Left(tree2)
+
+      tree(
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d")))
+        )
+      ).insertLeafLaxAt(List(97, 98, 99, 100), "e", codeF, append = false) shouldBe
+        Right(
+          Tree(
+            "a",
+            Tree("b", Tree("c", Tree("d", Tree("e")))),
+            Tree("b", Tree("c", Tree("e"))),
+            Tree("b", Tree("c", Tree("e"))),
+            Tree("b", Tree("c", Tree("d")))
+          )
+        )
+
+      tree(
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d")))
+        )
+      ).insertLeafLaxAt(List(97, 98, 99), "e", codeF, append = false) shouldBe
+        Right(
+          Tree(
+            "a",
+            Tree("b", Tree("c", Tree("e"), Tree("d"))),
+            Tree("b", Tree("c", Tree("e"))),
+            Tree("b", Tree("c", Tree("e"))),
+            Tree("b", Tree("c", Tree("d")))
+          )
+        )
     }
 
     "insert distinct new leaf to a tree at the specified path with path item extractor - append to existing" in {
@@ -476,6 +688,44 @@ class TreeInsertionsSpec extends FunSuite {
         )
       )
       tree7.insertLeafAt(List(97, 103, 101), "d", codeF, append = true) shouldBe Left(tree7)
+
+      tree(
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d")))
+        )
+      ).insertLeafAt(List(97, 98, 99, 100), "e", codeF, append = true) shouldBe
+        Right(
+          Tree(
+            "a",
+            Tree("b", Tree("c", Tree("d"))),
+            Tree("b", Tree("c", Tree("e"))),
+            Tree("b", Tree("c", Tree("e"))),
+            Tree("b", Tree("c", Tree("d", Tree("e"))))
+          )
+        )
+
+      tree(
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d")))
+        )
+      ).insertLeafAt(List(97, 98, 99), "e", codeF, append = true) shouldBe
+        Right(
+          Tree(
+            "a",
+            Tree("b", Tree("c", Tree("d"))),
+            Tree("b", Tree("c", Tree("e"))),
+            Tree("b", Tree("c", Tree("e"))),
+            Tree("b", Tree("c", Tree("d"), Tree("e")))
+          )
+        )
     }
 
     "insert lax new leaf to a tree at the specified path with path item extractor - append to existing" in {
@@ -492,6 +742,44 @@ class TreeInsertionsSpec extends FunSuite {
       tree2.insertLeafLaxAt(List(97, 98), "c", codeF, append = true) shouldBe Right(Tree("a", Tree("b", Tree("c"))))
       tree2.insertLeafLaxAt(List(97, 97), "c", codeF, append = true) shouldBe Left(tree2)
       tree2.insertLeafLaxAt(List(98, 97), "c", codeF, append = true) shouldBe Left(tree2)
+
+      tree(
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d")))
+        )
+      ).insertLeafLaxAt(List(97, 98, 99, 100), "e", codeF, append = true) shouldBe
+        Right(
+          Tree(
+            "a",
+            Tree("b", Tree("c", Tree("d"))),
+            Tree("b", Tree("c", Tree("e"))),
+            Tree("b", Tree("c", Tree("e"))),
+            Tree("b", Tree("c", Tree("d", Tree("e"))))
+          )
+        )
+
+      tree(
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d")))
+        )
+      ).insertLeafLaxAt(List(97, 98, 99), "e", codeF, append = true) shouldBe
+        Right(
+          Tree(
+            "a",
+            Tree("b", Tree("c", Tree("d"))),
+            Tree("b", Tree("c", Tree("e"))),
+            Tree("b", Tree("c", Tree("e"))),
+            Tree("b", Tree("c", Tree("d"), Tree("e")))
+          )
+        )
     }
 
     // TREE INSERTION
@@ -556,6 +844,7 @@ class TreeInsertionsSpec extends FunSuite {
       tree(Tree("a", Tree("b", Tree("c")), Tree("b", Tree("d")), Tree("b", Tree("e"))))
         .insertChild(Tree("b", Tree("x"))) shouldBe
         Tree("a", Tree("b", Tree("x"), Tree("c")), Tree("b", Tree("d")), Tree("b", Tree("e")))
+
       tree(
         Tree(
           "a",
@@ -569,6 +858,23 @@ class TreeInsertionsSpec extends FunSuite {
           Tree("b", Tree("c", Tree("d", Tree("x", Tree("y"), Tree("z"))), Tree("d")), Tree("c", Tree("d"), Tree("d"))),
           Tree("b", Tree("c", Tree("d"), Tree("d")), Tree("c", Tree("d"), Tree("d"))),
           Tree("b", Tree("c", Tree("d"), Tree("d")), Tree("c", Tree("d"), Tree("d")))
+        )
+
+      tree(
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d")))
+        )
+      ).insertChild(Tree("b", Tree("c", Tree("e")))) shouldBe
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("e"), Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d")))
         )
     }
 
@@ -632,6 +938,23 @@ class TreeInsertionsSpec extends FunSuite {
       tree(Tree("a", Tree("b", Tree("c")), Tree("b", Tree("d")), Tree("b", Tree("e"))))
         .insertChild(Tree("b", Tree("x")), append = true) shouldBe
         Tree("a", Tree("b", Tree("c")), Tree("b", Tree("d")), Tree("b", Tree("e"), Tree("x")))
+
+      tree(
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d")))
+        )
+      ).insertChild(Tree("b", Tree("c", Tree("e"))), append = true) shouldBe
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d"), Tree("e")))
+        )
     }
 
     "insert lax new child to a tree - prepend to existing" in {
@@ -734,6 +1057,24 @@ class TreeInsertionsSpec extends FunSuite {
       tree(Tree("a", Tree("b", Tree("c")), Tree("b", Tree("d")), Tree("b", Tree("e"))))
         .insertChildLax(Tree("b", Tree("x"))) shouldBe
         Tree("a", Tree("b", Tree("x")), Tree("b", Tree("c")), Tree("b", Tree("d")), Tree("b", Tree("e")))
+
+      tree(
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d")))
+        )
+      ).insertChildLax(Tree("b", Tree("c", Tree("e")))) shouldBe
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d")))
+        )
     }
 
     "insert lax new child to a tree - append to existing" in {
@@ -848,6 +1189,24 @@ class TreeInsertionsSpec extends FunSuite {
       tree(Tree("a", Tree("b", Tree("c")), Tree("b", Tree("d")), Tree("b", Tree("e"))))
         .insertChildLax(Tree("b", Tree("x")), append = true) shouldBe
         Tree("a", Tree("b", Tree("c")), Tree("b", Tree("d")), Tree("b", Tree("e")), Tree("b", Tree("x")))
+
+      tree(
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d")))
+        )
+      ).insertChildLax(Tree("b", Tree("c", Tree("e"))), append = true) shouldBe
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("e")))
+        )
     }
 
     "insert distinct new child to a tree at the specified path - prepend to existing" in {
@@ -983,6 +1342,40 @@ class TreeInsertionsSpec extends FunSuite {
         Tree("d", Tree("e", Tree("f", Tree("i")))),
         Tree("g")
       )
+
+      tree(
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d")))
+        )
+      ).insertChildAt(List("a", "b", "c"), Tree("e", Tree("d"))) shouldBe
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("e", Tree("d")), Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d")))
+        )
+
+      tree(
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d")))
+        )
+      ).insertChildAt(List("a", "b", "c"), Tree("d", Tree("e"))) shouldBe
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("d", Tree("e")))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d")))
+        )
     }
 
     "insert distinct new child to a tree at the specified path - append to existing" in {
@@ -1118,6 +1511,40 @@ class TreeInsertionsSpec extends FunSuite {
         Tree("d", Tree("e", Tree("f", Tree("i")))),
         Tree("g")
       )
+
+      tree(
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d")))
+        )
+      ).insertChildAt(List("a", "b", "c"), Tree("e", Tree("d")), append = true) shouldBe
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d"), Tree("e", Tree("d"))))
+        )
+
+      tree(
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d")))
+        )
+      ).insertChildAt(List("a", "b", "c"), Tree("d", Tree("e")), append = true) shouldBe
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d", Tree("e"))))
+        )
     }
 
     "insert lax new child to a tree at the specified path - prepend to existing" in {
@@ -1257,6 +1684,40 @@ class TreeInsertionsSpec extends FunSuite {
         Tree("d", Tree("e", Tree("f", Tree("i")), Tree("f"))),
         Tree("g")
       )
+
+      tree(
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d")))
+        )
+      ).insertChildLaxAt(List("a", "b", "c"), Tree("e", Tree("d"))) shouldBe
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("e", Tree("d")), Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d")))
+        )
+
+      tree(
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d")))
+        )
+      ).insertChildLaxAt(List("a", "b", "c"), Tree("d", Tree("e"))) shouldBe
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("d", Tree("e")), Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d")))
+        )
     }
 
     "insert lax new child to a tree at the specified path - append to existing" in {
@@ -1354,6 +1815,40 @@ class TreeInsertionsSpec extends FunSuite {
         Tree("d", Tree("e", Tree("f"), Tree("f", Tree("i")))),
         Tree("g")
       )
+
+      tree(
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d")))
+        )
+      ).insertChildLaxAt(List("a", "b", "c"), Tree("e", Tree("d")), append = true) shouldBe
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d"), Tree("e", Tree("d"))))
+        )
+
+      tree(
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d")))
+        )
+      ).insertChildLaxAt(List("a", "b", "c"), Tree("d", Tree("e")), append = true) shouldBe
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d"), Tree("d", Tree("e"))))
+        )
     }
 
     "insert distinct new child to a tree at the specified path using an extractor function - prepend to existing" in {
@@ -1507,6 +2002,44 @@ class TreeInsertionsSpec extends FunSuite {
           Tree("g", Tree("a", Tree("b"), Tree("c")))
         )
       )
+
+      tree(
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d")))
+        )
+      ).insertChildAt(List(97, 98, 99), Tree("e", Tree("d")), codeF, append = false) shouldBe
+        Right(
+          Tree(
+            "a",
+            Tree("b", Tree("c", Tree("e", Tree("d")), Tree("d"))),
+            Tree("b", Tree("c", Tree("e"))),
+            Tree("b", Tree("c", Tree("e"))),
+            Tree("b", Tree("c", Tree("d")))
+          )
+        )
+
+      tree(
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d")))
+        )
+      ).insertChildAt(List(97, 98, 99), Tree("d", Tree("e")), codeF, append = false) shouldBe
+        Right(
+          Tree(
+            "a",
+            Tree("b", Tree("c", Tree("d", Tree("e")))),
+            Tree("b", Tree("c", Tree("e"))),
+            Tree("b", Tree("c", Tree("e"))),
+            Tree("b", Tree("c", Tree("d")))
+          )
+        )
     }
 
     "insert distinct new child to a tree at the specified path using an extractor function - append to existing" in {
@@ -1660,6 +2193,44 @@ class TreeInsertionsSpec extends FunSuite {
           Tree("g", Tree("a", Tree("b"), Tree("c")))
         )
       )
+
+      tree(
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d")))
+        )
+      ).insertChildAt(List(97, 98, 99), Tree("e", Tree("d")), codeF, append = true) shouldBe
+        Right(
+          Tree(
+            "a",
+            Tree("b", Tree("c", Tree("d"))),
+            Tree("b", Tree("c", Tree("e"))),
+            Tree("b", Tree("c", Tree("e"))),
+            Tree("b", Tree("c", Tree("d"), Tree("e", Tree("d"))))
+          )
+        )
+
+      tree(
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d")))
+        )
+      ).insertChildAt(List(97, 98, 99), Tree("d", Tree("e")), codeF, append = true) shouldBe
+        Right(
+          Tree(
+            "a",
+            Tree("b", Tree("c", Tree("d"))),
+            Tree("b", Tree("c", Tree("e"))),
+            Tree("b", Tree("c", Tree("e"))),
+            Tree("b", Tree("c", Tree("d", Tree("e"))))
+          )
+        )
     }
 
     "insert lax new child to a tree at the specified path using an extractor function - prepend to existing" in {
@@ -1818,6 +2389,44 @@ class TreeInsertionsSpec extends FunSuite {
           Tree("g", Tree("a", Tree("b"), Tree("c")))
         )
       )
+
+      tree(
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d")))
+        )
+      ).insertChildLaxAt(List(97, 98, 99), Tree("e", Tree("d")), codeF, append = false) shouldBe
+        Right(
+          Tree(
+            "a",
+            Tree("b", Tree("c", Tree("e", Tree("d")), Tree("d"))),
+            Tree("b", Tree("c", Tree("e"))),
+            Tree("b", Tree("c", Tree("e"))),
+            Tree("b", Tree("c", Tree("d")))
+          )
+        )
+
+      tree(
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d")))
+        )
+      ).insertChildLaxAt(List(97, 98, 99), Tree("d", Tree("e")), codeF, append = false) shouldBe
+        Right(
+          Tree(
+            "a",
+            Tree("b", Tree("c", Tree("d", Tree("e")), Tree("d"))),
+            Tree("b", Tree("c", Tree("e"))),
+            Tree("b", Tree("c", Tree("e"))),
+            Tree("b", Tree("c", Tree("d")))
+          )
+        )
     }
 
     "insert lax new child to a tree at the specified path using an extractor function - append to existing" in {
@@ -1920,6 +2529,44 @@ class TreeInsertionsSpec extends FunSuite {
           Tree("g", Tree("a", Tree("b"), Tree("c")))
         )
       )
+
+      tree(
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d")))
+        )
+      ).insertChildLaxAt(List(97, 98, 99), Tree("e", Tree("d")), codeF, append = true) shouldBe
+        Right(
+          Tree(
+            "a",
+            Tree("b", Tree("c", Tree("d"))),
+            Tree("b", Tree("c", Tree("e"))),
+            Tree("b", Tree("c", Tree("e"))),
+            Tree("b", Tree("c", Tree("d"), Tree("e", Tree("d"))))
+          )
+        )
+
+      tree(
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d")))
+        )
+      ).insertChildLaxAt(List(97, 98, 99), Tree("d", Tree("e")), codeF, append = true) shouldBe
+        Right(
+          Tree(
+            "a",
+            Tree("b", Tree("c", Tree("d"))),
+            Tree("b", Tree("c", Tree("e"))),
+            Tree("b", Tree("c", Tree("e"))),
+            Tree("b", Tree("c", Tree("d"), Tree("d", Tree("e"))))
+          )
+        )
     }
 
     "insert distinct new children - prepend to existing" in {
@@ -1944,6 +2591,7 @@ class TreeInsertionsSpec extends FunSuite {
         Tree("a", Tree("b", Tree("c", Tree("d"), Tree("e"))))
       tree1.insertChildren(List(Tree("b", Tree("c", Tree("d")), Tree("f")), Tree("b", Tree("c", Tree("e")), Tree("g")))) shouldBe
         Tree("a", Tree("b", Tree("c", Tree("d"), Tree("e")), Tree("f"), Tree("g")))
+      tree1.insertChildren(List(Tree("b"), Tree("a"), Tree("b"))) shouldBe Tree("a", Tree("b"), Tree("a"))
       tree1.insertChildren(List(Tree("a"), Tree("b"), Tree("a"))) shouldBe Tree("a", Tree("a"), Tree("b"))
       tree1.insertChildren(
         List(
@@ -1972,6 +2620,23 @@ class TreeInsertionsSpec extends FunSuite {
           Tree("a", Tree("d"), Tree("e")),
           Tree("c", Tree("h", Tree("i")), Tree("j")),
           Tree("b", Tree("f", Tree("g")))
+        )
+
+      tree(
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d")))
+        )
+      ).insertChildren(List(Tree("b", Tree("c", Tree("e"))), Tree("b", Tree("c", Tree("f"))))) shouldBe
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("e"), Tree("f"), Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d")))
         )
     }
 
@@ -2050,6 +2715,23 @@ class TreeInsertionsSpec extends FunSuite {
           Tree("a", Tree("d"), Tree("e")),
           Tree("c", Tree("h", Tree("i")), Tree("j"))
         )
+
+      tree(
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d")))
+        )
+      ).insertChildren(List(Tree("b", Tree("c", Tree("e"))), Tree("b", Tree("c", Tree("f")))), append = true) shouldBe
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d"), Tree("e"), Tree("f")))
+        )
     }
 
     "insert lax new children - prepend to existing" in {
@@ -2101,6 +2783,25 @@ class TreeInsertionsSpec extends FunSuite {
           Tree("b", Tree("f", Tree("g"))),
           Tree("c", Tree("h", Tree("i")), Tree("j")),
           Tree("b")
+        )
+
+      tree(
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d")))
+        )
+      ).insertChildrenLax(List(Tree("b", Tree("c", Tree("e"))), Tree("b", Tree("c", Tree("f"))))) shouldBe
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("f"))),
+          Tree("b", Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d")))
         )
     }
 
@@ -2166,61 +2867,80 @@ class TreeInsertionsSpec extends FunSuite {
           Tree("b", Tree("f", Tree("g"))),
           Tree("c", Tree("h", Tree("i")), Tree("j"))
         )
+
+      tree(
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d")))
+        )
+      ).insertChildrenLax(List(Tree("b", Tree("c", Tree("e"))), Tree("b", Tree("c", Tree("f")))), append = true) shouldBe
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("f")))
+        )
     }
 
     "insert distinct new children at the specified path" in {
-      tree0.insertChildrenAt(List(), List(), append = false) shouldBe tree0
+      tree0.insertChildrenAt(List(), List()) shouldBe tree0
       tree0.insertChildrenAt(List(), List(), append = true) shouldBe tree0
-      tree0.insertChildrenAt(List("a"), List(tree1, tree2), append = false) shouldBe tree0
+      tree0.insertChildrenAt(List("a"), List(tree1, tree2)) shouldBe tree0
       tree0.insertChildrenAt(List("a"), List(tree1, tree2), append = true) shouldBe tree0
-      tree1.insertChildrenAt(List("a"), List(tree0, tree1, tree2, tree3_1, tree3_2), append = false) shouldBe
+      tree1.insertChildrenAt(List("a"), List(tree0, tree1, tree2, tree3_1, tree3_2)) shouldBe
         Tree("a", Tree("a", Tree("b", Tree("c")), Tree("c")))
-      tree1.insertChildrenAt(List("a"), List(tree0, tree1.deflated, tree2, tree3_1.deflated, tree3_2), append = false) shouldBe
+      tree1.insertChildrenAt(List("a"), List(tree0, tree1.deflated, tree2, tree3_1.deflated, tree3_2)) shouldBe
         Tree("a", Tree("a", Tree("b", Tree("c")), Tree("c")))
       tree1.insertChildrenAt(List("a"), List(tree0, tree1, tree2, tree3_1, tree3_2), append = true) shouldBe
         Tree("a", Tree("a", Tree("b", Tree("c")), Tree("c")))
-      tree1.insertChildrenAt(List("a"), List(tree3_2, tree3_1, tree2, tree1, tree0), append = false) shouldBe
+      tree1.insertChildrenAt(List("a"), List(tree3_2, tree3_1, tree2, tree1, tree0)) shouldBe
         Tree("a", Tree("a", Tree("b", Tree("c")), Tree("c")))
       tree1.insertChildrenAt(List("a"), List(tree3_2, tree3_1, tree2, tree1, tree0), append = true) shouldBe
         Tree("a", Tree("a", Tree("b", Tree("c")), Tree("c")))
-      tree2.insertChildrenAt(List("a"), List(tree1, tree2, tree3_1, tree3_2), append = false) shouldBe
+      tree2.insertChildrenAt(List("a"), List(tree1, tree2, tree3_1, tree3_2)) shouldBe
         Tree("a", Tree("a", Tree("b", Tree("c")), Tree("c")), Tree("b"))
       tree2.insertChildrenAt(List("a"), List(tree1, tree2, tree3_1, tree3_2), append = true) shouldBe
         Tree("a", Tree("b"), Tree("a", Tree("b", Tree("c")), Tree("c")))
       tree2.insertChildrenAt(List("a"), List(tree1, tree2.deflated, tree3_1, tree3_2.deflated), append = true) shouldBe
         Tree("a", Tree("b"), Tree("a", Tree("b", Tree("c")), Tree("c")))
-      tree3_1.insertChildrenAt(List("a"), List(tree1, tree2, tree3_1, tree3_2), append = false) shouldBe
+      tree3_1.insertChildrenAt(List("a"), List(tree1, tree2, tree3_1, tree3_2)) shouldBe
         Tree("a", Tree("a", Tree("b", Tree("c")), Tree("c")), Tree("b", Tree("c")))
       tree3_1.insertChildrenAt(List("a"), List(tree1, tree2, tree3_1, tree3_2), append = true) shouldBe
         Tree("a", Tree("b", Tree("c")), Tree("a", Tree("b", Tree("c")), Tree("c")))
-      tree3_1.insertChildrenAt(List("a", "b"), List(tree1, tree2, tree3_1, tree3_2), append = false) shouldBe
+      tree3_1.insertChildrenAt(List("a", "b"), List(tree1, tree2, tree3_1, tree3_2)) shouldBe
         Tree("a", Tree("b", Tree("a", Tree("b", Tree("c")), Tree("c")), Tree("c")))
       tree3_1.insertChildrenAt(List("a", "b"), List(tree1, tree2, tree3_1, tree3_2), append = true) shouldBe
         Tree("a", Tree("b", Tree("c"), Tree("a", Tree("b", Tree("c")), Tree("c"))))
-      tree3_1.insertChildrenAt(List("a", "b", "c"), List(tree1, tree2, tree3_1, tree3_2), append = false) shouldBe
+      tree3_1.insertChildrenAt(List("a", "b", "c"), List(tree1, tree2, tree3_1, tree3_2)) shouldBe
         Tree("a", Tree("b", Tree("c", Tree("a", Tree("b", Tree("c")), Tree("c")))))
       tree3_1.insertChildrenAt(List("a", "b", "c"), List(tree1, tree2, tree3_1, tree3_2), append = true) shouldBe
         Tree("a", Tree("b", Tree("c", Tree("a", Tree("b", Tree("c")), Tree("c")))))
       tree3_1
-        .insertChildrenAt(List("a", "b", "c", "d", "e"), List(tree1, tree2, tree3_1, tree3_2), append = false) shouldBe
+        .insertChildrenAt(List("a", "b", "c", "d", "e"), List(tree1, tree2, tree3_1, tree3_2)) shouldBe
         Tree("a", Tree("b", Tree("c", Tree("d", Tree("e", Tree("a", Tree("b", Tree("c")), Tree("c")))))))
       tree3_1
         .insertChildrenAt(List("a", "b", "c", "d", "e"), List(tree1, tree2, tree3_1, tree3_2), append = true) shouldBe
         Tree("a", Tree("b", Tree("c", Tree("d", Tree("e", Tree("a", Tree("b", Tree("c")), Tree("c")))))))
       tree4_2
-        .insertChildrenAt(List("a", "b", "c", "d", "e"), List(tree1, tree2, tree3_1, tree3_2), append = false) shouldBe
+        .insertChildrenAt(List("a", "b", "c", "d", "e"), List(tree1, tree2, tree3_1, tree3_2)) shouldBe
         Tree("a", Tree("b", Tree("c", Tree("d", Tree("e", Tree("a", Tree("b", Tree("c")), Tree("c")))))), Tree("d"))
       tree4_2
         .insertChildrenAt(List("a", "b", "c", "d", "e"), List(tree1, tree2, tree3_1, tree3_2), append = true) shouldBe
         Tree("a", Tree("b", Tree("c", Tree("d", Tree("e", Tree("a", Tree("b", Tree("c")), Tree("c")))))), Tree("d"))
       tree4_2
-        .insertChildrenAt(List("a", "e", "f"), List(tree1, tree2, tree3_1, tree3_2), append = false) shouldBe
+        .insertChildrenAt(List("a", "e", "f"), List(tree1, tree2, tree3_1, tree3_2)) shouldBe
         Tree("a", Tree("e", Tree("f", Tree("a", Tree("b", Tree("c")), Tree("c")))), Tree("b", Tree("c")), Tree("d"))
       tree4_2
         .insertChildrenAt(List("a", "e", "f"), List(tree1, tree2, tree3_1, tree3_2), append = true) shouldBe
         Tree("a", Tree("b", Tree("c")), Tree("d"), Tree("e", Tree("f", Tree("a", Tree("b", Tree("c")), Tree("c")))))
       tree9
-        .insertChildrenAt(List("a", "e", "f"), List(tree1, tree2, tree3_1, tree3_2), append = false) shouldBe
+        .insertChildrenAt(List("a", "e", "f"), List(tree1, tree2, tree3_1, tree3_2)) shouldBe
         Tree(
           "a",
           Tree("b", Tree("c", Tree("d"))),
@@ -2234,7 +2954,7 @@ class TreeInsertionsSpec extends FunSuite {
           Tree("e", Tree("f", Tree("g"), Tree("a", Tree("b", Tree("c")), Tree("c"))), Tree("h", Tree("i")))
         )
       tree9
-        .insertChildrenAt(List("a", "e", "j"), List(tree1, tree2, tree3_1, tree3_2), append = false) shouldBe
+        .insertChildrenAt(List("a", "e", "j"), List(tree1, tree2, tree3_1, tree3_2)) shouldBe
         Tree(
           "a",
           Tree("b", Tree("c", Tree("d"))),
@@ -2246,6 +2966,74 @@ class TreeInsertionsSpec extends FunSuite {
           "a",
           Tree("b", Tree("c", Tree("d"))),
           Tree("e", Tree("f", Tree("g")), Tree("h", Tree("i")), Tree("j", Tree("a", Tree("b", Tree("c")), Tree("c"))))
+        )
+
+      tree(
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d")))
+        )
+      ).insertChildrenAt(List("a", "b", "c"), List(Tree("e"), Tree("f"))) shouldBe
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("e"), Tree("f"), Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d")))
+        )
+
+      tree(
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d")))
+        )
+      ).insertChildrenAt(List("a", "b", "c"), List(Tree("e"), Tree("f")), append = true) shouldBe
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d"), Tree("e"), Tree("f")))
+        )
+
+      tree(
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d")))
+        )
+      ).insertChildrenAt(List("a", "b"), List(Tree("c", Tree("e")), Tree("c", Tree("f")))) shouldBe
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("e"), Tree("f"), Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d")))
+        )
+
+      tree(
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d")))
+        )
+      ).insertChildrenAt(List("a", "b"), List(Tree("c", Tree("e")), Tree("c", Tree("f"))), append = true) shouldBe
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d"), Tree("e"), Tree("f")))
         )
     }
 
@@ -2338,6 +3126,44 @@ class TreeInsertionsSpec extends FunSuite {
       tree9
         .insertChildrenAt(List(97, 101, 106), List(tree1, tree2, tree3_1, tree3_2), codeF, append = true) shouldBe
         Left(tree9)
+
+      tree(
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d")))
+        )
+      ).insertChildrenAt(List(97, 98, 99), List(Tree("e"), Tree("d"), Tree("f")), codeF, append = false) shouldBe
+        Right(
+          Tree(
+            "a",
+            Tree("b", Tree("c", Tree("e"), Tree("f"), Tree("d"))),
+            Tree("b", Tree("c", Tree("e"))),
+            Tree("b", Tree("c", Tree("e"))),
+            Tree("b", Tree("c", Tree("d")))
+          )
+        )
+
+      tree(
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d")))
+        )
+      ).insertChildrenAt(List(97, 98, 99), List(Tree("e"), Tree("d"), Tree("f")), codeF, append = true) shouldBe
+        Right(
+          Tree(
+            "a",
+            Tree("b", Tree("c", Tree("d"))),
+            Tree("b", Tree("c", Tree("e"))),
+            Tree("b", Tree("c", Tree("e"))),
+            Tree("b", Tree("c", Tree("d"), Tree("e"), Tree("f")))
+          )
+        )
     }
 
     "insert lax new children at the specified path" in {
@@ -2463,6 +3289,44 @@ class TreeInsertionsSpec extends FunSuite {
             Tree("c")
           )
         )
+
+      tree(
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d")))
+        )
+      ).insertChildrenLaxAt(List(97, 98, 99), List(Tree("d"), Tree("f")), codeF, append = false) shouldBe
+        Right(
+          Tree(
+            "a",
+            Tree("b", Tree("c", Tree("d"), Tree("f"), Tree("d"))),
+            Tree("b", Tree("c", Tree("e"))),
+            Tree("b", Tree("c", Tree("e"))),
+            Tree("b", Tree("c", Tree("d")))
+          )
+        )
+
+      tree(
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d")))
+        )
+      ).insertChildrenLaxAt(List(97, 98, 99), List(Tree("d"), Tree("f")), codeF, append = true) shouldBe
+        Right(
+          Tree(
+            "a",
+            Tree("b", Tree("c", Tree("d"))),
+            Tree("b", Tree("c", Tree("e"))),
+            Tree("b", Tree("c", Tree("e"))),
+            Tree("b", Tree("c", Tree("d"), Tree("d"), Tree("f")))
+          )
+        )
     }
 
     // BRANCH INSERTION
@@ -2515,6 +3379,40 @@ class TreeInsertionsSpec extends FunSuite {
         Tree("d", Tree("e", Tree("g"), Tree("f"))),
         Tree("g")
       )
+
+      tree(
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d")))
+        )
+      ).insertBranch(List("a", "b", "c", "d", "e")) shouldBe
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("d", Tree("e")))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d")))
+        )
+
+      tree(
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d")))
+        )
+      ).insertBranch(List("a", "b", "c", "e")) shouldBe
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("e"), Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d")))
+        )
     }
 
     "insert new branch to a tree - append to existing" in {
@@ -2580,12 +3478,48 @@ class TreeInsertionsSpec extends FunSuite {
         Tree("d", Tree("e", Tree("f"), Tree("g"))),
         Tree("g")
       )
+
       tree(Tree("a", Tree("b", Tree("c")), Tree("b", Tree("d")), Tree("b", Tree("e"))))
         .insertBranch(List("a", "b", "f"), append = false) shouldBe
         Tree("a", Tree("b", Tree("f"), Tree("c")), Tree("b", Tree("d")), Tree("b", Tree("e")))
+
       tree(Tree("a", Tree("b", Tree("c")), Tree("b", Tree("d")), Tree("b", Tree("e"))))
         .insertBranch(List("a", "b", "f"), append = true) shouldBe
         Tree("a", Tree("b", Tree("c")), Tree("b", Tree("d")), Tree("b", Tree("e"), Tree("f")))
+
+      tree(
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d")))
+        )
+      ).insertBranch(List("a", "b", "c", "d", "e"), append = true) shouldBe
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d", Tree("e"))))
+        )
+
+      tree(
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d")))
+        )
+      ).insertBranch(List("a", "b", "c", "e"), append = true) shouldBe
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d"), Tree("e")))
+        )
     }
 
   }

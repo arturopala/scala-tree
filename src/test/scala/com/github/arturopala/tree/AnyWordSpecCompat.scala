@@ -18,6 +18,8 @@ package com.github.arturopala.tree
 
 import java.util.concurrent.atomic.AtomicInteger
 
+import munit.TestOptions
+
 import scala.reflect.ClassTag
 
 trait AnyWordSpecCompat extends munit.FunSuite {
@@ -26,6 +28,9 @@ trait AnyWordSpecCompat extends munit.FunSuite {
 
   def test(body: => Unit)(implicit loc: munit.Location): Unit =
     test(s"#${counter.incrementAndGet()} (line ${loc.line})")(body)
+
+  def xtest(body: => Unit)(implicit loc: munit.Location): Unit =
+    test(new TestOptions(name = s"#${counter.incrementAndGet()} (line ${loc.line})", tags = Set(munit.Ignore), loc))(())
 
   implicit class NameExt[T](name: String) {
 
@@ -61,7 +66,7 @@ trait AnyWordSpecCompat extends munit.FunSuite {
     def shouldBe(expected: Iterable[T])(implicit loc: munit.Location): Unit = {
       assert(
         iterable.size == expected.size,
-        s"both collections must have the same size, expected ${expected.toSeq}, but got ${iterable.toSeq}"
+        s"both collections must have the same size,\n expected ${expected.size}: ${expected.toSeq}, but\n received ${iterable.size}: ${iterable.toSeq}"
       )
       iterable.zip(expected).foreach { case (a, b) => assertEquals(a, b) }
     }

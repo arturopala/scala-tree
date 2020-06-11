@@ -437,6 +437,71 @@ class NodeTreeSpec extends AnyWordSpecCompat {
         ), List())
     }
 
+    "insert children distinct before siblings" in {
+      insertChildrenBeforeDistinct(List(Tree("a"), Tree("b")), List(Tree("c"), Tree("d")), true) shouldBe
+        List(Tree("a"), Tree("b"), Tree("c"), Tree("d"))
+      insertChildrenBeforeDistinct(List(Tree("a"), Tree("b")), List(Tree("c"), Tree("b")), true) shouldBe
+        List(Tree("a"), Tree("c"), Tree("b"))
+      insertChildrenBeforeDistinct(
+        List(Tree("a", Tree("b")), Tree("a", Tree("c"))),
+        List(Tree("a", Tree("d")), Tree("a", Tree("e"))),
+        true
+      ) shouldBe
+        List(Tree("a", Tree("b"), Tree("c"), Tree("d")), Tree("a", Tree("e")))
+      insertChildrenBeforeDistinct(
+        List(Tree("a", Tree("b", Tree("c"))), Tree("a", Tree("b", Tree("d")))),
+        List(Tree("a", Tree("b", Tree("e"))), Tree("a", Tree("b", Tree("f")))),
+        true
+      ) shouldBe
+        List(Tree("a", Tree("b", Tree("c"), Tree("d"), Tree("e"))), Tree("a", Tree("b", Tree("f"))))
+      insertChildrenBeforeDistinct(
+        List(Tree("a", Tree("b", Tree("c"))), Tree("a", Tree("b", Tree("d")))),
+        List(Tree("a", Tree("c", Tree("e"))), Tree("a", Tree("b", Tree("f")))),
+        true
+      ) shouldBe
+        List(Tree("a", Tree("b", Tree("c"), Tree("d")), Tree("c", Tree("e"))), Tree("a", Tree("b", Tree("f"))))
+      insertChildrenBeforeDistinct(
+        List(Tree("a", Tree("b", Tree("c"))), Tree("a", Tree("b", Tree("d")))),
+        List(Tree("b", Tree("a", Tree("e"))), Tree("a", Tree("b", Tree("f")))),
+        true
+      ) shouldBe
+        List(Tree("b", Tree("a", Tree("e"))), Tree("a", Tree("b", Tree("c"), Tree("d"), Tree("f"))))
+      insertChildrenBeforeDistinct(
+        List(Tree("b", Tree("c", Tree("e"))), Tree("b", Tree("c", Tree("f")))),
+        List(
+          Tree("b", Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d")))
+        ),
+        true
+      ) shouldBe
+        List(
+          Tree("b", Tree("c", Tree("e"), Tree("f"), Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d")))
+        )
+    }
+
+    "insert children distinct after siblings" in {
+      insertChildrenAfterDistinct(
+        List(
+          Tree("b", Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d")))
+        ),
+        List(Tree("b", Tree("c", Tree("e"))), Tree("b", Tree("c", Tree("f"))))
+      ) shouldBe
+        List(
+          Tree("b", Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d"), Tree("e"), Tree("f")))
+        )
+    }
+
     "insert children distinct" in {
       insertChildrenDistinct("a", List(Tree("b")), List(Tree("c")), List(Tree("d")), false) shouldBe
         Tree("a", Tree("b"), Tree("c"), Tree("d"))

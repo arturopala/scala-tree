@@ -177,6 +177,11 @@ object ArrayTreeFunctions {
       result
     } else IntBuffer.empty
 
+  /** Returns a list of children of a tree represented by the structure and content buffers. */
+  @`inline` final def childrenOf[T](treeStructure: IntBuffer, treeValues: Buffer[T]): Iterator[(IntSlice, Slice[T])] =
+    childrenIndexesIterator(treeStructure.top, treeStructure)
+      .map(treeAt(_, treeStructure, treeValues))
+
   /** Returns a list of children of a tree represented by the structure and content slices. */
   @`inline` final def childrenOf[T](treeStructure: IntSlice, treeValues: Slice[T]): Iterator[(IntSlice, Slice[T])] =
     childrenIndexesIterator(treeStructure.top, treeStructure)
@@ -1334,8 +1339,23 @@ object ArrayTreeFunctions {
     children: Iterable[(IntSlice, Slice[T])],
     structureBuffer: IntBuffer,
     valuesBuffer: Buffer[T]
-  ): Int =
-    insertChildrenDistinct(parentIndex, parentIndex, children.iterator, structureBuffer, valuesBuffer, 0)
+  ): Int = {
+    // consolidate new children first
+    val (sb, vb) = (structureBuffer.emptyCopy, valuesBuffer.emptyCopy)
+    sb.push(0)
+    vb.set(0)
+    insertChildrenDistinct(0, 0, children.iterator, false, sb, vb, 0)
+    // and then insert into buffers
+    insertChildrenDistinct(
+      parentIndex,
+      parentIndex,
+      childrenOf(sb, vb),
+      preserveExisting = true,
+      structureBuffer,
+      valuesBuffer,
+      0
+    )
+  }
 
   /** Inserts new children after an existing children of the parent index.
     * @return buffers length change */
@@ -1396,6 +1416,7 @@ object ArrayTreeFunctions {
       parentIndex,
       bottomIndex(parentIndex, structureBuffer),
       children.iterator,
+      preserveExisting = true,
       structureBuffer,
       valuesBuffer,
       0
@@ -1411,6 +1432,7 @@ object ArrayTreeFunctions {
     insertIndex: Int,
     childStructure: IntSlice,
     childValues: Slice[T],
+    preserveExisting: Boolean,
     structureBuffer: IntBuffer,
     valuesBuffer: Buffer[T]
   ): Int =
@@ -1418,6 +1440,7 @@ object ArrayTreeFunctions {
       parentIndex,
       insertIndex,
       Iterator.single((childStructure, childValues)),
+      preserveExisting,
       structureBuffer,
       valuesBuffer,
       0
@@ -1433,6 +1456,7 @@ object ArrayTreeFunctions {
     parentIndex: Int,
     insertIndex: Int,
     queue: Iterator[(IntSlice, Slice[T])],
+    preserveExisting: Boolean,
     structureBuffer: IntBuffer,
     valuesBuffer: Buffer[T],
     offset: Int
@@ -1442,7 +1466,7 @@ object ArrayTreeFunctions {
       val (structure, values) = queue.next()
 
       if (structure.length == 0)
-        insertChildrenDistinct(parentIndex, insertIndex, queue, structureBuffer, valuesBuffer, offset)
+        insertChildrenDistinct(parentIndex, insertIndex, queue, preserveExisting, structureBuffer, valuesBuffer, offset)
       else {
 
         if (parentIndex >= 0) structureBuffer.increment(parentIndex)
@@ -1463,9 +1487,12 @@ object ArrayTreeFunctions {
         val (delta2, nextInsertIndex) = duplicatedSiblingIndex
           .map { recipient =>
             val donor = Math.max(0, insertIndex + delta1 - 1)
-            val delta = mergeDeeplyTwoTrees(recipient, donor, structureBuffer, valuesBuffer)
+            val (r, d) =
+              if (preserveExisting || recipient >= donor) (recipient, donor)
+              else (donor, recipient)
+            val delta = mergeDeeplyTwoTrees(r, d, structureBuffer, valuesBuffer)
             val index =
-              if (recipient < insertIndex) insertIndex + delta + structure.length
+              if (r < insertIndex) insertIndex + delta + structure.length
               else insertIndex
             (delta, index)
           }
@@ -1475,6 +1502,7 @@ object ArrayTreeFunctions {
           parentIndex + delta1 + delta2,
           nextInsertIndex,
           queue,
+          preserveExisting,
           structureBuffer,
           valuesBuffer,
           offset + delta1 + delta2
@@ -1575,6 +1603,7 @@ object ArrayTreeFunctions {
             insertIndex,
             bottomIndex(insertIndex, structureBuffer),
             childrenOf(treeStructure, treeValues),
+            preserveExisting = true,
             structureBuffer,
             valuesBuffer,
             0

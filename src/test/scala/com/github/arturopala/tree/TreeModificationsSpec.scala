@@ -113,6 +113,27 @@ class TreeModificationsSpec extends FunSuite {
           Tree("d"),
           Tree("c", Tree("h"))
         )
+
+      tree(Tree("a", Tree("b", Tree("c")), Tree("b", Tree("d")), Tree("b", Tree("e"))))
+        .modifyChildValue("b", _ + "x") shouldBe
+        Tree("a", Tree("bx", Tree("c")), Tree("b", Tree("d")), Tree("b", Tree("e")))
+
+      tree(
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("g"))),
+          Tree("b", Tree("c", Tree("h")))
+        )
+      ).modifyChildValue("b", _ + "x") shouldBe
+        Tree(
+          "a",
+          Tree("bx", Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("g"))),
+          Tree("b", Tree("c", Tree("h")))
+        )
     }
 
     "modify lax a child value" in {
@@ -194,9 +215,31 @@ class TreeModificationsSpec extends FunSuite {
           Tree("d"),
           Tree("c", Tree("h"))
         )
+
       tree(Tree("a", Tree("b", Tree("c")), Tree("b", Tree("d")), Tree("b", Tree("e"))))
         .modifyChildValueLax("b", _ => "x") shouldBe
         Tree("a", Tree("x", Tree("c")), Tree("b", Tree("d")), Tree("b", Tree("e")))
+
+      tree(Tree("a", Tree("b", Tree("c")), Tree("b", Tree("d")), Tree("b", Tree("e"))))
+        .modifyChildValueLax("b", _ + "x") shouldBe
+        Tree("a", Tree("bx", Tree("c")), Tree("b", Tree("d")), Tree("b", Tree("e")))
+
+      tree(
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("g"))),
+          Tree("b", Tree("c", Tree("h")))
+        )
+      ).modifyChildValueLax("b", _ + "x") shouldBe
+        Tree(
+          "a",
+          Tree("bx", Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("g"))),
+          Tree("b", Tree("c", Tree("h")))
+        )
     }
 
     "modify distinct a child tree" in {
@@ -226,6 +269,23 @@ class TreeModificationsSpec extends FunSuite {
       tree(Tree("a", Tree("b", Tree("c")), Tree("b", Tree("d")), Tree("b", Tree("e"))))
         .modifyChild("b", _ => Tree("b", Tree("x"))) shouldBe
         Tree("a", Tree("b", Tree("x")), Tree("b", Tree("d")), Tree("b", Tree("e")))
+
+      tree(
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("g"))),
+          Tree("b", Tree("c", Tree("h")))
+        )
+      ).modifyChild("b", t => t.insertLeaf("x")) shouldBe
+        Tree(
+          "a",
+          Tree("b", Tree("x"), Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("g"))),
+          Tree("b", Tree("c", Tree("h")))
+        )
     }
 
     "modify lax a child tree" in {
@@ -254,6 +314,23 @@ class TreeModificationsSpec extends FunSuite {
       tree(Tree("a", Tree("b", Tree("c")), Tree("b", Tree("d")), Tree("b", Tree("e"))))
         .modifyChildLax("b", _ => Tree("b", Tree("x"))) shouldBe
         Tree("a", Tree("b", Tree("x")), Tree("b", Tree("d")), Tree("b", Tree("e")))
+
+      tree(
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("g"))),
+          Tree("b", Tree("c", Tree("h")))
+        )
+      ).modifyChildLax("b", t => t.insertLeaf("x")) shouldBe
+        Tree(
+          "a",
+          Tree("b", Tree("x"), Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("g"))),
+          Tree("b", Tree("c", Tree("h")))
+        )
     }
 
     "modify distinct a value of a node selected by the path in the tree" in {
@@ -341,6 +418,25 @@ class TreeModificationsSpec extends FunSuite {
       tree3_2
         .insertLeafLax("b")
         .modifyValueAt(List("a", "c"), _ => "b") shouldBe Right(Tree("a", Tree("b"), Tree("b")))
+
+      tree(
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d")))
+        )
+      ).modifyValueAt(List("a", "b", "c", "d"), _ + "x") shouldBe
+        Right(
+          Tree(
+            "a",
+            Tree("b", Tree("c", Tree("dx"))),
+            Tree("b", Tree("c", Tree("e"))),
+            Tree("b", Tree("c", Tree("e"))),
+            Tree("b", Tree("c", Tree("d")))
+          )
+        )
     }
 
     "modify lax a value of a node selected by the path in the tree" in {
@@ -427,6 +523,25 @@ class TreeModificationsSpec extends FunSuite {
       tree7.modifyValueLaxAt(List("a", "d", "g"), f) shouldBe Left(tree7)
       tree7.modifyValueLaxAt(List("a", "b", "c", "d"), f) shouldBe Left(tree7)
       tree7.modifyValueLaxAt(List("a", "b", "e"), f) shouldBe Left(tree7)
+
+      tree(
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d")))
+        )
+      ).modifyValueLaxAt(List("a", "b", "c", "d"), _ + "x") shouldBe
+        Right(
+          Tree(
+            "a",
+            Tree("b", Tree("c", Tree("dx"))),
+            Tree("b", Tree("c", Tree("e"))),
+            Tree("b", Tree("c", Tree("e"))),
+            Tree("b", Tree("c", Tree("d")))
+          )
+        )
     }
 
     "modify distinct a value of a node selected by the path in the tree using an extractor function" in {
@@ -504,6 +619,25 @@ class TreeModificationsSpec extends FunSuite {
       tree7.modifyValueAt(List(97, 100, 103), f, e) shouldBe Left(tree7)
       tree7.modifyValueAt(List(97, 98, 99, 100), f, e) shouldBe Left(tree7)
       tree7.modifyValueAt(List(97, 98, 101), f, e) shouldBe Left(tree7)
+
+      tree(
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d")))
+        )
+      ).modifyValueAt(List(97, 98, 99, 100), _ + "x", e) shouldBe
+        Right(
+          Tree(
+            "a",
+            Tree("b", Tree("c", Tree("dx"))),
+            Tree("b", Tree("c", Tree("e"))),
+            Tree("b", Tree("c", Tree("e"))),
+            Tree("b", Tree("c", Tree("d")))
+          )
+        )
     }
 
     "modify lax a value of a node selected by the path in the tree using an extractor function" in {
@@ -581,45 +715,25 @@ class TreeModificationsSpec extends FunSuite {
       tree7.modifyValueLaxAt(List(97, 100, 103), f, e) shouldBe Left(tree7)
       tree7.modifyValueLaxAt(List(97, 98, 99, 100), f, e) shouldBe Left(tree7)
       tree7.modifyValueLaxAt(List(97, 98, 101), f, e) shouldBe Left(tree7)
-    }
 
-    "modify lax a subtree selected by the path" in {
-      tree0.modifyTreeLaxAt(List("a", "b"), _ => tree2) shouldBe Left(tree0)
-      tree1.modifyTreeLaxAt(List("a"), _ => tree2) shouldBe Right(Tree("a", Tree("b")))
-      tree1.modifyTreeLaxAt(List("b"), _ => tree2) shouldBe Left(tree1)
-      tree2.modifyTreeLaxAt(List("a"), _ => tree3_2) shouldBe Right(Tree("a", Tree("b"), Tree("c")))
-      tree2.modifyTreeLaxAt(List("a", "b"), _ => tree3_2) shouldBe Right(Tree("a", Tree("a", Tree("b"), Tree("c"))))
-      tree2.modifyTreeLaxAt(List("a", "c"), _ => tree3_2) shouldBe Left(tree2)
-      tree3_2.modifyTreeLaxAt(List("a", "b"), _ => tree2) shouldBe Right(Tree("a", Tree("a", Tree("b")), Tree("c")))
-      tree3_2.modifyTreeLaxAt(List("a", "b"), _ => tree3_2) shouldBe Right(
-        Tree("a", Tree("a", Tree("b"), Tree("c")), Tree("c"))
-      )
-      tree3_2.modifyTreeLaxAt(List("a", "c"), _ => tree2) shouldBe Right(Tree("a", Tree("b"), Tree("a", Tree("b"))))
-      tree3_2.modifyTreeLaxAt(List("a", "c"), _ => tree3_2) shouldBe Right(
-        Tree("a", Tree("b"), Tree("a", Tree("b"), Tree("c")))
-      )
-      tree3_2.modifyTreeLaxAt(List("a"), _ => tree2) shouldBe Right(tree2)
-      tree3_2.modifyTreeLaxAt(List("a"), _ => tree9) shouldBe Right(tree9)
-      tree3_2.modifyTreeLaxAt(List("a", "a"), _ => tree2) shouldBe Left(tree3_2)
-      tree3_2.modifyTreeLaxAt(List("b", "a"), _ => tree2) shouldBe Left(tree3_2)
-      tree3_2.modifyTreeLaxAt(List("b"), _ => tree2) shouldBe Left(tree3_2)
-      tree3_2.modifyTreeLaxAt(List("b", "b"), _ => tree2) shouldBe Left(tree3_2)
-      tree3_2.modifyTreeLaxAt(List("a", "c"), _ => Tree("b", Tree("d"))) shouldBe Right(
-        Tree("a", Tree("b"), Tree("b", Tree("d")))
-      )
-      tree4_2.modifyTreeLaxAt(List("a", "d"), _ => Tree("b", Tree("c", Tree("e")))) shouldBe Right(
-        Tree("a", Tree("b", Tree("c")), Tree("b", Tree("c", Tree("e"))))
-      )
-      tree4_2.modifyTreeLaxAt(List("a", "b", "c"), _ => Tree("b", Tree("c", Tree("e")))) shouldBe Right(
-        Tree("a", Tree("b", Tree("b", Tree("c", Tree("e")))), Tree("d"))
-      )
-      tree4_2.modifyTreeLaxAt(List("a", "b", "d"), _ => Tree("b", Tree("c", Tree("e")))) shouldBe Left(tree4_2)
-      tree4_2.modifyTreeLaxAt(List("a", "d", "c"), _ => Tree("b", Tree("c", Tree("e")))) shouldBe Left(tree4_2)
-      tree4_2.modifyTreeLaxAt(List("a", "e"), _ => Tree("b", Tree("c", Tree("e")))) shouldBe Left(tree4_2)
-      tree4_2.modifyTreeLaxAt(List("a", "c"), _ => Tree("b", Tree("c", Tree("e")))) shouldBe Left(tree4_2)
-      tree4_2.modifyTreeLaxAt(List("b"), _ => Tree("b", Tree("c", Tree("e")))) shouldBe Left(tree4_2)
-      tree4_2.modifyTreeLaxAt(List("d"), _ => Tree("b", Tree("c", Tree("e")))) shouldBe Left(tree4_2)
-      tree4_2.modifyTreeLaxAt(List("b", "c"), _ => Tree("b", Tree("c", Tree("e")))) shouldBe Left(tree4_2)
+      tree(
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d")))
+        )
+      ).modifyValueLaxAt(List(97, 98, 99, 100), _ + "x", e) shouldBe
+        Right(
+          Tree(
+            "a",
+            Tree("b", Tree("c", Tree("dx"))),
+            Tree("b", Tree("c", Tree("e"))),
+            Tree("b", Tree("c", Tree("e"))),
+            Tree("b", Tree("c", Tree("d")))
+          )
+        )
     }
 
     "modify distinct a subtree selected by the path" in {
@@ -672,6 +786,102 @@ class TreeModificationsSpec extends FunSuite {
         .modifyTreeAt(List("a", "c"), _ => Tree("b", Tree("c"))) shouldBe Right(
         Tree("a", Tree("b"), Tree("b", Tree("c")))
       )
+
+      tree(
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d")))
+        )
+      ).modifyTreeAt(List("a", "b", "c"), _.insertLeaf("x")) shouldBe
+        Right(
+          Tree(
+            "a",
+            Tree("b", Tree("c", Tree("x"), Tree("d"))),
+            Tree("b", Tree("c", Tree("e"))),
+            Tree("b", Tree("c", Tree("e"))),
+            Tree("b", Tree("c", Tree("d")))
+          )
+        )
+    }
+
+    "modify lax a subtree selected by the path" in {
+      tree0.modifyTreeLaxAt(List("a", "b"), _ => tree2) shouldBe Left(tree0)
+      tree1.modifyTreeLaxAt(List("a"), _ => tree2) shouldBe Right(Tree("a", Tree("b")))
+      tree1.modifyTreeLaxAt(List("b"), _ => tree2) shouldBe Left(tree1)
+      tree2.modifyTreeLaxAt(List("a"), _ => tree3_2) shouldBe Right(Tree("a", Tree("b"), Tree("c")))
+      tree2.modifyTreeLaxAt(List("a", "b"), _ => tree3_2) shouldBe Right(Tree("a", Tree("a", Tree("b"), Tree("c"))))
+      tree2.modifyTreeLaxAt(List("a", "c"), _ => tree3_2) shouldBe Left(tree2)
+      tree3_2.modifyTreeLaxAt(List("a", "b"), _ => tree2) shouldBe Right(Tree("a", Tree("a", Tree("b")), Tree("c")))
+      tree3_2.modifyTreeLaxAt(List("a", "b"), _ => tree3_2) shouldBe Right(
+        Tree("a", Tree("a", Tree("b"), Tree("c")), Tree("c"))
+      )
+      tree3_2.modifyTreeLaxAt(List("a", "c"), _ => tree2) shouldBe Right(Tree("a", Tree("b"), Tree("a", Tree("b"))))
+      tree3_2.modifyTreeLaxAt(List("a", "c"), _ => tree3_2) shouldBe Right(
+        Tree("a", Tree("b"), Tree("a", Tree("b"), Tree("c")))
+      )
+      tree3_2.modifyTreeLaxAt(List("a"), _ => tree2) shouldBe Right(tree2)
+      tree3_2.modifyTreeLaxAt(List("a"), _ => tree9) shouldBe Right(tree9)
+      tree3_2.modifyTreeLaxAt(List("a", "a"), _ => tree2) shouldBe Left(tree3_2)
+      tree3_2.modifyTreeLaxAt(List("b", "a"), _ => tree2) shouldBe Left(tree3_2)
+      tree3_2.modifyTreeLaxAt(List("b"), _ => tree2) shouldBe Left(tree3_2)
+      tree3_2.modifyTreeLaxAt(List("b", "b"), _ => tree2) shouldBe Left(tree3_2)
+      tree3_2.modifyTreeLaxAt(List("a", "c"), _ => Tree("b", Tree("d"))) shouldBe Right(
+        Tree("a", Tree("b"), Tree("b", Tree("d")))
+      )
+      tree4_2.modifyTreeLaxAt(List("a", "d"), _ => Tree("b", Tree("c", Tree("e")))) shouldBe Right(
+        Tree("a", Tree("b", Tree("c")), Tree("b", Tree("c", Tree("e"))))
+      )
+      tree4_2.modifyTreeLaxAt(List("a", "b", "c"), _ => Tree("b", Tree("c", Tree("e")))) shouldBe Right(
+        Tree("a", Tree("b", Tree("b", Tree("c", Tree("e")))), Tree("d"))
+      )
+      tree4_2.modifyTreeLaxAt(List("a", "b", "d"), _ => Tree("b", Tree("c", Tree("e")))) shouldBe Left(tree4_2)
+      tree4_2.modifyTreeLaxAt(List("a", "d", "c"), _ => Tree("b", Tree("c", Tree("e")))) shouldBe Left(tree4_2)
+      tree4_2.modifyTreeLaxAt(List("a", "e"), _ => Tree("b", Tree("c", Tree("e")))) shouldBe Left(tree4_2)
+      tree4_2.modifyTreeLaxAt(List("a", "c"), _ => Tree("b", Tree("c", Tree("e")))) shouldBe Left(tree4_2)
+      tree4_2.modifyTreeLaxAt(List("b"), _ => Tree("b", Tree("c", Tree("e")))) shouldBe Left(tree4_2)
+      tree4_2.modifyTreeLaxAt(List("d"), _ => Tree("b", Tree("c", Tree("e")))) shouldBe Left(tree4_2)
+      tree4_2.modifyTreeLaxAt(List("b", "c"), _ => Tree("b", Tree("c", Tree("e")))) shouldBe Left(tree4_2)
+
+      tree(
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d")))
+        )
+      ).modifyTreeLaxAt(List("a", "b", "c"), _.insertLeaf("x")) shouldBe
+        Right(
+          Tree(
+            "a",
+            Tree("b", Tree("c", Tree("x"), Tree("d"))),
+            Tree("b", Tree("c", Tree("e"))),
+            Tree("b", Tree("c", Tree("e"))),
+            Tree("b", Tree("c", Tree("d")))
+          )
+        )
+
+      tree(
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d")))
+        )
+      ).modifyTreeLaxAt(List("a", "b", "c"), _.insertLeafLax("d")) shouldBe
+        Right(
+          Tree(
+            "a",
+            Tree("b", Tree("c", Tree("d"), Tree("d"))),
+            Tree("b", Tree("c", Tree("e"))),
+            Tree("b", Tree("c", Tree("e"))),
+            Tree("b", Tree("c", Tree("d")))
+          )
+        )
     }
 
     "modify distinct a subtree selected by the path using an extractor function" in {
@@ -718,6 +928,25 @@ class TreeModificationsSpec extends FunSuite {
       tree4_2.modifyTreeAt(List(98), _ => Tree("b", Tree("c", Tree("e"))), codeF) shouldBe Left(tree4_2)
       tree4_2.modifyTreeAt(List(100), _ => Tree("b", Tree("c", Tree("e"))), codeF) shouldBe Left(tree4_2)
       tree4_2.modifyTreeAt(List(98, 99), _ => Tree("b", Tree("c", Tree("e"))), codeF) shouldBe Left(tree4_2)
+
+      tree(
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d")))
+        )
+      ).modifyTreeAt(List(97, 98, 99), _.insertLeaf("x"), codeF) shouldBe
+        Right(
+          Tree(
+            "a",
+            Tree("b", Tree("c", Tree("x"), Tree("d"))),
+            Tree("b", Tree("c", Tree("e"))),
+            Tree("b", Tree("c", Tree("e"))),
+            Tree("b", Tree("c", Tree("d")))
+          )
+        )
     }
 
     "modify lax a subtree selected by the path using an extractor function" in {
@@ -764,6 +993,25 @@ class TreeModificationsSpec extends FunSuite {
       tree4_2.modifyTreeLaxAt(List(98), _ => Tree("b", Tree("c", Tree("e"))), codeF) shouldBe Left(tree4_2)
       tree4_2.modifyTreeLaxAt(List(100), _ => Tree("b", Tree("c", Tree("e"))), codeF) shouldBe Left(tree4_2)
       tree4_2.modifyTreeLaxAt(List(98, 99), _ => Tree("b", Tree("c", Tree("e"))), codeF) shouldBe Left(tree4_2)
+
+      tree(
+        Tree(
+          "a",
+          Tree("b", Tree("c", Tree("d"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("e"))),
+          Tree("b", Tree("c", Tree("d")))
+        )
+      ).modifyTreeLaxAt(List(97, 98, 99), _.insertLeaf("x"), codeF) shouldBe
+        Right(
+          Tree(
+            "a",
+            Tree("b", Tree("c", Tree("x"), Tree("d"))),
+            Tree("b", Tree("c", Tree("e"))),
+            Tree("b", Tree("c", Tree("e"))),
+            Tree("b", Tree("c", Tree("d")))
+          )
+        )
     }
 
   }

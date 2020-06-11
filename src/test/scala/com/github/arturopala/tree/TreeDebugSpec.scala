@@ -19,7 +19,7 @@ package com.github.arturopala.tree
 import com.github.arturopala.bufferandslice.{Buffer, IntBuffer, IntSlice, Slice}
 import com.github.arturopala.tree.LaxTreeOps._
 import com.github.arturopala.tree.internal.ArrayTree._
-import com.github.arturopala.tree.internal.ArrayTreeFunctions
+import com.github.arturopala.tree.internal.{ArrayTreeFunctions, NodeTree}
 import com.github.arturopala.tree.internal.ArrayTreeFunctions.{expandValueIntoTreeDistinct, insertBeforeChildDistinct, insertBeforeChildren, insertBetweenChildrenDistinct, makeChildrenDistinct, mergeShallowTwoTrees}
 
 import scala.reflect.ClassTag
@@ -27,7 +27,7 @@ import scala.reflect.ClassTag
 // Special test suite to ease debugging single assertions in an IDE
 class TreeDebugSpec extends FunSuite with TestWithBuffers {
 
-  test(Inflated, new Spec with InflatedTestTrees)
+  //test(Inflated, new Spec with InflatedTestTrees)
   test(Deflated, new Spec with DeflatedTestTrees)
 
   sealed trait Spec extends AnyWordSpecCompat with TestTrees {
@@ -35,11 +35,53 @@ class TreeDebugSpec extends FunSuite with TestWithBuffers {
     def tree[T: ClassTag](t: Tree[T]): Tree[T]
 
     "debug" suite {
+
       test(
-        tree1.insertChildrenLaxAt(List("a", "b"), List(tree0, tree1, tree2, tree3_1, tree3_2), append = false) shouldBe
+        tree(
           Tree(
             "a",
-            Tree("b", Tree("a"), Tree("a", Tree("b")), Tree("a", Tree("b", Tree("c"))), Tree("a", Tree("b"), Tree("c")))
+            Tree("b", Tree("c", Tree("d"))),
+            Tree("b", Tree("c", Tree("e"))),
+            Tree("b", Tree("c", Tree("e"))),
+            Tree("b", Tree("c", Tree("d")))
+          )
+        ).insertChildren(List(Tree("b", Tree("c", Tree("e"))), Tree("b", Tree("c", Tree("f"))))) shouldBe
+          Tree(
+            "a",
+            Tree("b", Tree("c", Tree("e"), Tree("f"), Tree("d"))),
+            Tree("b", Tree("c", Tree("e"))),
+            Tree("b", Tree("c", Tree("e"))),
+            Tree("b", Tree("c", Tree("d")))
+          )
+      )
+
+      test(
+        tree1.insertChildren(List(Tree("a"), Tree("b"), Tree("a"))) shouldBe Tree("a", Tree("a"), Tree("b"))
+      )
+
+      test(
+        tree1.insertChildren(
+          List(Tree("b", Tree("c", Tree("d")), Tree("f")), Tree("b", Tree("c", Tree("e")), Tree("g")))
+        ) shouldBe
+          Tree("a", Tree("b", Tree("c", Tree("d"), Tree("e")), Tree("f"), Tree("g")))
+      )
+
+      test(
+        tree(
+          Tree(
+            "a",
+            Tree("b", Tree("c", Tree("d"))),
+            Tree("b", Tree("c", Tree("e"))),
+            Tree("b", Tree("c", Tree("e"))),
+            Tree("b", Tree("c", Tree("d")))
+          )
+        ).insertChildren(List(Tree("b", Tree("c", Tree("e"))), Tree("b", Tree("c", Tree("f")))), append = true) shouldBe
+          Tree(
+            "a",
+            Tree("b", Tree("c", Tree("d"))),
+            Tree("b", Tree("c", Tree("e"))),
+            Tree("b", Tree("c", Tree("e"))),
+            Tree("b", Tree("c", Tree("d"), Tree("e"), Tree("f")))
           )
       )
     }

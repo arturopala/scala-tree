@@ -993,10 +993,11 @@ object ArrayTree {
     path: Iterable[T1],
     replacement: T1,
     target: ArrayTree[T],
+    rightmost: Boolean,
     keepDistinct: Boolean
   ): Either[Tree[T], Tree[T1]] =
     ArrayTreeFunctions
-      .followEntirePath(path, target.top, target.structure, target.content, rightmost = false)
+      .followEntirePath(path, target.top, target.structure, target.content, rightmost)
       .map(indexes =>
         if (indexes.isEmpty) Left(target)
         else Right(updateValue(indexes.last, replacement, target, keepDistinct))
@@ -1010,10 +1011,11 @@ object ArrayTree {
     replacement: T1,
     target: ArrayTree[T],
     toPathItem: T => K,
+    rightmost: Boolean,
     keepDistinct: Boolean
   ): Either[Tree[T], Tree[T1]] =
     ArrayTreeFunctions
-      .followEntirePath(path, target.top, target.structure, target.content, toPathItem, rightmost = false)
+      .followEntirePath(path, target.top, target.structure, target.content, toPathItem, rightmost)
       .map(indexes =>
         if (indexes.isEmpty) Left(target)
         else Right(updateValue(indexes.last, replacement, target, keepDistinct))
@@ -1038,10 +1040,11 @@ object ArrayTree {
     path: Iterable[T1],
     replacement: Tree[T1],
     target: ArrayTree[T],
+    rightmost: Boolean,
     keepDistinct: Boolean
   ): Either[Tree[T], Tree[T1]] =
     ArrayTreeFunctions
-      .followEntirePath(path, target.top, target.structure, target.content, rightmost = false)
+      .followEntirePath(path, target.top, target.structure, target.content, rightmost)
       .map(indexes =>
         if (indexes.isEmpty) Left(target)
         else Right(updateTree(indexes.last, replacement, target, keepDistinct))
@@ -1055,10 +1058,11 @@ object ArrayTree {
     replacement: Tree[T1],
     target: ArrayTree[T],
     toPathItem: T => K,
+    rightmost: Boolean,
     keepDistinct: Boolean
   ): Either[Tree[T], Tree[T1]] =
     ArrayTreeFunctions
-      .followEntirePath(path, target.top, target.structure, target.content, toPathItem, rightmost = false)
+      .followEntirePath(path, target.top, target.structure, target.content, toPathItem, rightmost)
       .map(indexes =>
         if (indexes.isEmpty) Left(target)
         else Right(updateTree(indexes.last, replacement, target, keepDistinct))
@@ -1097,10 +1101,11 @@ object ArrayTree {
     path: Iterable[T1],
     modify: T => T1,
     target: ArrayTree[T],
+    rightmost: Boolean,
     keepDistinct: Boolean
   ): Either[Tree[T], Tree[T1]] =
     ArrayTreeFunctions
-      .followEntirePath(path, target.top, target.structure, target.content, rightmost = false)
+      .followEntirePath(path, target.top, target.structure, target.content, rightmost)
       .map(indexes =>
         if (indexes.isEmpty) Left(target)
         else Right(modifyValue(indexes.last, modify, target, keepDistinct))
@@ -1114,10 +1119,11 @@ object ArrayTree {
     modify: T => T1,
     target: ArrayTree[T],
     toPathItem: T => K,
+    rightmost: Boolean,
     keepDistinct: Boolean
   ): Either[Tree[T], Tree[T1]] =
     ArrayTreeFunctions
-      .followEntirePath(path, target.top, target.structure, target.content, toPathItem, rightmost = false)
+      .followEntirePath(path, target.top, target.structure, target.content, toPathItem, rightmost)
       .map(indexes =>
         if (indexes.isEmpty) Left(target)
         else Right(modifyValue(indexes.last, modify, target, keepDistinct))
@@ -1157,10 +1163,11 @@ object ArrayTree {
     path: Iterable[T1],
     modify: Tree[T] => Tree[T1],
     target: ArrayTree[T],
+    rightmost: Boolean,
     keepDistinct: Boolean
   ): Either[Tree[T], Tree[T1]] =
     ArrayTreeFunctions
-      .followEntirePath(path, target.top, target.structure, target.content, rightmost = false)
+      .followEntirePath(path, target.top, target.structure, target.content, rightmost)
       .map(indexes =>
         if (indexes.isEmpty) Left(target)
         else Right(modifyTree(indexes.last, modify, target, keepDistinct))
@@ -1174,10 +1181,11 @@ object ArrayTree {
     modify: Tree[T] => Tree[T1],
     target: ArrayTree[T],
     toPathItem: T => K,
+    rightmost: Boolean,
     keepDistinct: Boolean
   ): Either[Tree[T], Tree[T1]] =
     ArrayTreeFunctions
-      .followEntirePath(path, target.top, target.structure, target.content, toPathItem, rightmost = false)
+      .followEntirePath(path, target.top, target.structure, target.content, toPathItem, rightmost)
       .map(indexes =>
         if (indexes.isEmpty) Left(target)
         else Right(modifyTree(indexes.last, modify, target, keepDistinct))
@@ -1239,10 +1247,11 @@ object ArrayTree {
   final def removeValueAt[T: ClassTag, T1 >: T: ClassTag](
     path: Iterable[T1],
     target: ArrayTree[T],
+    rightmost: Boolean,
     keepDistinct: Boolean
   ): Tree[T] =
     ArrayTreeFunctions
-      .followEntirePath(path, target.top, target.structure, target.content, rightmost = false)
+      .followEntirePath(path, target.top, target.structure, target.content, rightmost)
       .map(removeValue(_, target, keepDistinct))
       .getOrElse(target)
 
@@ -1256,10 +1265,11 @@ object ArrayTree {
     path: Iterable[K],
     target: ArrayTree[T],
     toPathItem: T => K,
+    rightmost: Boolean,
     keepDistinct: Boolean
   ): Tree[T] =
     ArrayTreeFunctions
-      .followEntirePath(path, target.top, target.structure, target.content, toPathItem, rightmost = false)
+      .followEntirePath(path, target.top, target.structure, target.content, toPathItem, rightmost)
       .map(removeValue(_, target, keepDistinct))
       .getOrElse(target)
 
@@ -1294,10 +1304,11 @@ object ArrayTree {
     * @return modified tree */
   final def removeTreeAt[T: ClassTag, T1 >: T: ClassTag](
     path: Iterable[T1],
-    target: ArrayTree[T]
+    target: ArrayTree[T],
+    rightmost: Boolean
   ): Tree[T] =
     ArrayTreeFunctions
-      .followEntirePath(path, target.top, target.structure, target.content, rightmost = false)
+      .followEntirePath(path, target.top, target.structure, target.content, rightmost)
       .map(indexes => removeTree(indexes.last, indexes.get(indexes.length - 2), target))
       .getOrElse(target)
 
@@ -1306,10 +1317,11 @@ object ArrayTree {
   final def removeTreeAt[K, T: ClassTag, T1 >: T: ClassTag](
     path: Iterable[K],
     target: ArrayTree[T],
-    toPathItem: T => K
+    toPathItem: T => K,
+    rightmost: Boolean
   ): Tree[T] =
     ArrayTreeFunctions
-      .followEntirePath(path, target.top, target.structure, target.content, toPathItem, rightmost = false)
+      .followEntirePath(path, target.top, target.structure, target.content, toPathItem, rightmost)
       .map(indexes => removeTree(indexes.last, indexes.get(indexes.length - 2), target))
       .getOrElse(target)
 
