@@ -580,7 +580,7 @@ trait TreeLike[+T] {
     * @param branches iterable of iterables of values forming a path from the root to the leaf.
     * @param append whether to append or prepend to the existing children
     * @group insertion */
-  def insertBranches[T1 >: T: ClassTag](branches: Iterable[Iterable[T1]], append: Boolean = false): Tree[T1] = ???
+  def insertBranches[T1 >: T: ClassTag](branches: Iterable[Iterable[T1]], append: Boolean = false): Tree[T1]
 
   // DISTINCT UPDATES
 

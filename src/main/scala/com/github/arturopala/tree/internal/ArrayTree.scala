@@ -882,7 +882,7 @@ object ArrayTree {
       Some(delta)
     }
 
-  /** Inserts a subtree to a tree at an index while keeping children values distinct.
+  /** Inserts a branch to the tree at an index while keeping children values distinct.
     * @return modified tree */
   final def insertBranch[T: ClassTag](
     index: Int,
@@ -900,6 +900,32 @@ object ArrayTree {
         else {
           ArrayTreeFunctions.insertBranch(iterator, index, append, structureBuffer, valuesBuffer, 0).nonZeroIntAsSome
         }
+      }
+    }
+
+  /** Inserts multiple branches to the tree at an index while keeping children values distinct.
+    * @return modified tree */
+  final def insertBranches[T: ClassTag](
+    index: Int,
+    branches: Iterable[Iterable[T]],
+    target: Tree[T],
+    append: Boolean
+  ): Tree[T] =
+    if (branches.isEmpty) target
+    else {
+      assert(index >= 0 && index < target.size, "Insertion index must be within target's tree range [0,length).")
+      transform(target) { (structureBuffer, valuesBuffer) =>
+        branches
+          .foldLeft(0) { (delta, branch) =>
+            val iterator: Iterator[T] = branch.iterator
+            delta +
+              (if (iterator.hasNext && valuesBuffer(index + delta) != iterator.next()) 0
+               else {
+                 ArrayTreeFunctions
+                   .insertBranch(iterator, index + delta, append, structureBuffer, valuesBuffer, 0)
+               })
+          }
+          .intAsSome
       }
     }
 

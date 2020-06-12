@@ -283,6 +283,12 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
   final override def insertBranch[T1 >: T: ClassTag](branch: Iterable[T1], append: Boolean = false): Tree[T1] =
     NodeTree.insertBranch(node, branch.iterator, append).getOrElse(node)
 
+  final override def insertBranches[T1 >: T: ClassTag](
+    branches: Iterable[Iterable[T1]],
+    append: Boolean = false
+  ): Tree[T1] =
+    branches.foldLeft[Tree[T1]](node)((tree, branch) => tree.insertBranch(branch, append))
+
   // DISTINCT UPDATES
 
   final override def updateHead[T1 >: T: ClassTag](replacement: T1): Tree[T1] =

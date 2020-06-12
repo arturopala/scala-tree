@@ -27,7 +27,7 @@ import scala.reflect.ClassTag
 // Special test suite to ease debugging single assertions in an IDE
 class TreeDebugSpec extends FunSuite with TestWithBuffers {
 
-  //test(Inflated, new Spec with InflatedTestTrees)
+  test(Inflated, new Spec with InflatedTestTrees)
   test(Deflated, new Spec with DeflatedTestTrees)
 
   sealed trait Spec extends AnyWordSpecCompat with TestTrees {
@@ -35,54 +35,9 @@ class TreeDebugSpec extends FunSuite with TestWithBuffers {
     def tree[T: ClassTag](t: Tree[T]): Tree[T]
 
     "debug" suite {
-
       test(
-        tree(
-          Tree(
-            "a",
-            Tree("b", Tree("c", Tree("d"))),
-            Tree("b", Tree("c", Tree("e"))),
-            Tree("b", Tree("c", Tree("e"))),
-            Tree("b", Tree("c", Tree("d")))
-          )
-        ).insertChildren(List(Tree("b", Tree("c", Tree("e"))), Tree("b", Tree("c", Tree("f"))))) shouldBe
-          Tree(
-            "a",
-            Tree("b", Tree("c", Tree("e"), Tree("f"), Tree("d"))),
-            Tree("b", Tree("c", Tree("e"))),
-            Tree("b", Tree("c", Tree("e"))),
-            Tree("b", Tree("c", Tree("d")))
-          )
-      )
-
-      test(
-        tree1.insertChildren(List(Tree("a"), Tree("b"), Tree("a"))) shouldBe Tree("a", Tree("a"), Tree("b"))
-      )
-
-      test(
-        tree1.insertChildren(
-          List(Tree("b", Tree("c", Tree("d")), Tree("f")), Tree("b", Tree("c", Tree("e")), Tree("g")))
-        ) shouldBe
-          Tree("a", Tree("b", Tree("c", Tree("d"), Tree("e")), Tree("f"), Tree("g")))
-      )
-
-      test(
-        tree(
-          Tree(
-            "a",
-            Tree("b", Tree("c", Tree("d"))),
-            Tree("b", Tree("c", Tree("e"))),
-            Tree("b", Tree("c", Tree("e"))),
-            Tree("b", Tree("c", Tree("d")))
-          )
-        ).insertChildren(List(Tree("b", Tree("c", Tree("e"))), Tree("b", Tree("c", Tree("f")))), append = true) shouldBe
-          Tree(
-            "a",
-            Tree("b", Tree("c", Tree("d"))),
-            Tree("b", Tree("c", Tree("e"))),
-            Tree("b", Tree("c", Tree("e"))),
-            Tree("b", Tree("c", Tree("d"), Tree("e"), Tree("f")))
-          )
+        tree1.insertBranches(List(List("a", "b", "c"), List("a", "b", "d"), List("a", "b", "e"))) shouldBe
+          Tree("a", Tree("b", Tree("e"), Tree("d"), Tree("c")))
       )
     }
 
