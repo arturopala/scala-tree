@@ -191,6 +191,10 @@ object Tree {
     override def isLeaf: Boolean = true
     override def children: Iterable[Tree[T]] = Iterable.empty[Tree[T]]
     override def childrenCount: Int = 0
+    override def firstChildValue: Option[T] = None
+    override def lastChildValue: Option[T] = None
+    override def firstChild: Option[Tree[T]] = None
+    override def lastChild: Option[Tree[T]] = None
   }
 
   object Leaf {
@@ -207,6 +211,10 @@ object Tree {
     override def isLeaf: Boolean = false
     override def children: Iterable[Tree[T]] = List(child)
     override def childrenCount: Int = 1
+    override def firstChildValue: Option[T] = Some(child.head)
+    override def lastChildValue: Option[T] = Some(child.head)
+    override def firstChild: Option[Tree[T]] = Some(child)
+    override def lastChild: Option[Tree[T]] = Some(child)
   }
 
   object Unary {
@@ -223,6 +231,10 @@ object Tree {
     override def isLeaf: Boolean = false
     override def children: Iterable[Tree[T]] = List(left, right)
     override def childrenCount: Int = 2
+    override def firstChildValue: Option[T] = Some(left.head)
+    override def lastChildValue: Option[T] = Some(right.head)
+    override def firstChild: Option[Tree[T]] = Some(left)
+    override def lastChild: Option[Tree[T]] = Some(right)
   }
 
   object Binary {
@@ -238,6 +250,10 @@ object Tree {
     override val height: Int = 1 + children.maxBy(_.height).height
     override def isLeaf: Boolean = children.isEmpty
     override def childrenCount: Int = children.size
+    override def firstChildValue: Option[T] = Some(children.head.head)
+    override def lastChildValue: Option[T] = Some(children.last.head)
+    override def firstChild: Option[Tree[T]] = Some(children.head)
+    override def lastChild: Option[Tree[T]] = Some(children.last)
   }
 
   object Bunch {

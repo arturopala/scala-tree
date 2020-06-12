@@ -62,8 +62,16 @@ trait EmptyTreeLike extends TreeLike[Nothing] {
   final override val childrenValues: Iterable[Nothing] =
     Iterable.empty
 
+  final override def firstChildValue: Option[Nothing] = None
+
+  final override def lastChildValue: Option[Nothing] = None
+
   final override val children: Iterable[Tree[Nothing]] =
     Iterable.empty
+
+  final override def firstChild: Option[Tree[Nothing]] = None
+
+  final override def lastChild: Option[Tree[Nothing]] = None
 
   final override def trees(mode: TraversingMode = TopDownDepthFirst): Iterable[Tree[Nothing]] =
     Iterable.empty

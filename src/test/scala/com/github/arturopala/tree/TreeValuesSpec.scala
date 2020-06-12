@@ -29,6 +29,63 @@ class TreeValuesSpec extends FunSuite {
 
     def tree[T: ClassTag](t: Tree[T]): Tree[T]
 
+    "get first child value" in {
+      tree0.firstChildValue shouldBe None
+      tree1.firstChildValue shouldBe None
+      tree2.firstChildValue shouldBe Some("b")
+      tree3_1.firstChildValue shouldBe Some("b")
+      tree3_2.firstChildValue shouldBe Some("b")
+      tree4_1.firstChildValue shouldBe Some("b")
+      tree4_2.firstChildValue shouldBe Some("b")
+      tree4_3.firstChildValue shouldBe Some("b")
+      tree7.firstChildValue shouldBe Some("b")
+      tree9.firstChildValue shouldBe Some("b")
+      tree13.firstChildValue shouldBe Some("b")
+    }
+
+    "get first child" in {
+      tree0.firstChild shouldBe None
+      tree1.firstChild shouldBe None
+      tree2.firstChild shouldBe Some(Tree("b"))
+      tree3_1.firstChild shouldBe Some(Tree("b", Tree("c")))
+      tree3_2.firstChild shouldBe Some(Tree("b"))
+      tree4_1.firstChild shouldBe Some(Tree("b", Tree("c", Tree("d"))))
+      tree4_2.firstChild shouldBe Some(Tree("b", Tree("c")))
+      tree4_3.firstChild shouldBe Some(Tree("b"))
+      tree7.firstChild shouldBe Some(Tree("b", Tree("c")))
+      tree9.firstChild shouldBe Some(Tree("b", Tree("c", Tree("d"))))
+      tree13.firstChild shouldBe
+        Some(Tree("b", Tree("c", Tree("d")), Tree("e", Tree("f"), Tree("g")), Tree("h")))
+    }
+
+    "get last child value" in {
+      tree0.lastChildValue shouldBe None
+      tree1.lastChildValue shouldBe None
+      tree2.lastChildValue shouldBe Some("b")
+      tree3_1.lastChildValue shouldBe Some("b")
+      tree3_2.lastChildValue shouldBe Some("c")
+      tree4_1.lastChildValue shouldBe Some("b")
+      tree4_2.lastChildValue shouldBe Some("d")
+      tree4_3.lastChildValue shouldBe Some("d")
+      tree7.lastChildValue shouldBe Some("g")
+      tree9.lastChildValue shouldBe Some("e")
+      tree13.lastChildValue shouldBe Some("j")
+    }
+
+    "get last child" in {
+      tree0.lastChild shouldBe None
+      tree1.lastChild shouldBe None
+      tree2.lastChild shouldBe Some(Tree("b"))
+      tree3_1.lastChild shouldBe Some(Tree("b", Tree("c")))
+      tree3_2.lastChild shouldBe Some(Tree("c"))
+      tree4_1.lastChild shouldBe Some(Tree("b", Tree("c", Tree("d"))))
+      tree4_2.lastChild shouldBe Some(Tree("d"))
+      tree4_3.lastChild shouldBe Some(Tree("d"))
+      tree7.lastChild shouldBe Some(Tree("g"))
+      tree9.lastChild shouldBe Some(Tree("e", Tree("f", Tree("g")), Tree("h", Tree("i"))))
+      tree13.lastChild shouldBe Some(Tree("j", Tree("k", Tree("l")), Tree("m")))
+    }
+
     "list all leaves" in {
       tree0.leaves shouldBe List()
       tree1.leaves shouldBe List("a")

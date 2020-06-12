@@ -92,6 +92,30 @@ abstract class ArrayTreeLike[T: ClassTag] extends TreeLike[T] {
         .map(ArrayTree.treeAt(_, tree.structure, tree.content))
     )
 
+  final override def firstChildValue: Option[T] =
+    if (tree.size <= 1) None
+    else Some(tree.content(tree.top - 1))
+
+  final override def lastChildValue: Option[T] =
+    if (tree.size <= 1) None
+    else {
+      ArrayTreeFunctions
+        .lastChildIndex(tree.top, tree.structure)
+        .map(tree.content)
+    }
+
+  final override def firstChild: Option[Tree[T]] =
+    if (tree.size <= 1) None
+    else Some(ArrayTree.treeAt(tree.top - 1, tree.structure, tree.content))
+
+  final override def lastChild: Option[Tree[T]] =
+    if (tree.size <= 1) None
+    else {
+      ArrayTreeFunctions
+        .lastChildIndex(tree.top, tree.structure)
+        .map(ArrayTree.treeAt(_, tree.structure, tree.content))
+    }
+
   // TREES
 
   final override def trees(mode: TraversingMode = TopDownDepthFirst): Iterable[Tree[T]] =
