@@ -220,7 +220,7 @@ abstract class ArrayTreeLike[T: ClassTag] extends TreeLike[T] {
     ArrayTree.updateValue(tree.structure.top, replacement, tree, keepDistinct = false)
 
   final override def updateChildValue[T1 >: T: ClassTag](existingValue: T1, replacement: T1): Tree[T1] =
-    ArrayTree.updateChildValue(existingValue, replacement, tree, keepDistinct = true)
+    ArrayTree.updateChildValue(existingValue, replacement, tree, rightmost = false, keepDistinct = true)
 
   final override def updateValueAt[T1 >: T: ClassTag](path: Iterable[T1], replacement: T1): Either[Tree[T], Tree[T1]] =
     ArrayTree.updateValueAt(path, replacement, tree, rightmost = false, keepDistinct = true)
@@ -233,7 +233,7 @@ abstract class ArrayTreeLike[T: ClassTag] extends TreeLike[T] {
     ArrayTree.updateValueAt(path, replacement, tree, toPathItem, rightmost = false, keepDistinct = true)
 
   final override def updateChild[T1 >: T: ClassTag](value: T1, replacement: Tree[T1]): Tree[T1] =
-    ArrayTree.updateChild(value, replacement, tree, keepDistinct = true)
+    ArrayTree.updateChild(value, replacement, tree, rightmost = false, keepDistinct = true)
 
   final override def updateTreeAt[T1 >: T: ClassTag](
     path: Iterable[T1],
@@ -254,7 +254,7 @@ abstract class ArrayTreeLike[T: ClassTag] extends TreeLike[T] {
     ArrayTree.modifyValue(tree.structure.top, modify, tree, keepDistinct = false)
 
   final override def modifyChildValue[T1 >: T: ClassTag](value: T1, modify: T => T1): Tree[T1] =
-    ArrayTree.modifyChildValue(value, modify, tree, keepDistinct = true)
+    ArrayTree.modifyChildValue(value, modify, tree, rightmost = false, keepDistinct = true)
 
   final override def modifyValueAt[T1 >: T: ClassTag](
     path: Iterable[T1],
@@ -270,7 +270,7 @@ abstract class ArrayTreeLike[T: ClassTag] extends TreeLike[T] {
     ArrayTree.modifyValueAt(path, modify, tree, toPathItem, rightmost = false, keepDistinct = true)
 
   final override def modifyChild[T1 >: T: ClassTag](value: T1, modify: Tree[T] => Tree[T1]): Tree[T1] =
-    ArrayTree.modifyChild(value, modify, tree, keepDistinct = true)
+    ArrayTree.modifyChild(value, modify, tree, rightmost = false, keepDistinct = true)
 
   final override def modifyChildren[T1 >: T: ClassTag](modify: Iterable[Tree[T]] => Iterable[Tree[T1]]): Tree[T1] =
     ArrayTree.modifyChildren(modify, tree)
@@ -304,7 +304,7 @@ abstract class ArrayTreeLike[T: ClassTag] extends TreeLike[T] {
   // REMOVALS
 
   final override def removeChildValue[T1 >: T: ClassTag](value: T1): Tree[T] =
-    ArrayTree.removeChildValue(value, tree, keepDistinct = true)
+    ArrayTree.removeChildValue(value, tree, rightmost = false, keepDistinct = true)
 
   final override def removeValueAt[T1 >: T: ClassTag](path: Iterable[T1]): Tree[T] =
     ArrayTree.removeValueAt(path, tree, rightmost = false, keepDistinct = true)
@@ -313,13 +313,22 @@ abstract class ArrayTreeLike[T: ClassTag] extends TreeLike[T] {
     ArrayTree.removeValueAt(path, tree, toPathItem, rightmost = false, keepDistinct = true)
 
   final override def removeChild[T1 >: T: ClassTag](value: T1): Tree[T] =
-    ArrayTree.removeChild(tree, value)
+    ArrayTree.removeChild(tree, value, rightmost = false)
+
+  final override def removeChildren[T1 >: T: ClassTag](): Tree[T] =
+    ArrayTree.removeChildren(tree.top, tree)
 
   final override def removeTreeAt[T1 >: T: ClassTag](path: Iterable[T1]): Tree[T] =
     ArrayTree.removeTreeAt(path, tree, rightmost = false)
 
   final override def removeTreeAt[K, T1 >: T: ClassTag](path: Iterable[K], toPathItem: T => K): Tree[T] =
     ArrayTree.removeTreeAt(path, tree, toPathItem, rightmost = false)
+
+  final override def removeChildrenAt[T1 >: T: ClassTag](path: Iterable[T1]): Tree[T] =
+    ArrayTree.removeChildrenAt(path, tree, rightmost = false)
+
+  final override def removeChildrenAt[K, T1 >: T: ClassTag](path: Iterable[K], toPathItem: T => K): Tree[T] =
+    ArrayTree.removeChildrenAt(path, tree, toPathItem, rightmost = false)
 
   // TRANSFORMATIONS
 

@@ -390,11 +390,19 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
   final override def removeChild[T1 >: T: ClassTag](value: T1): Tree[T] =
     NodeTree.removeChild(node, value, rightmost = false)
 
+  final override def removeChildren[T1 >: T: ClassTag](): Tree[T] = Tree.Leaf(node.head)
+
   final override def removeTreeAt[T1 >: T: ClassTag](path: Iterable[T1]): Tree[T] =
     NodeTree.removeTreeAt(node, path.iterator, rightmost = false)
 
   final override def removeTreeAt[K, T1 >: T: ClassTag](path: Iterable[K], toPathItem: T => K): Tree[T] =
     NodeTree.removeTreeAt(node, path.iterator, toPathItem, rightmost = false)
+
+  final override def removeChildrenAt[T1 >: T: ClassTag](path: Iterable[T1]): Tree[T] =
+    NodeTree.removeChildrenAt(node, path.iterator, rightmost = false)
+
+  final override def removeChildrenAt[K, T1 >: T: ClassTag](path: Iterable[K], toPathItem: T => K): Tree[T] =
+    NodeTree.removeChildrenAt(node, path.iterator, toPathItem, rightmost = false)
 
   // TRANSFORMATIONS
 

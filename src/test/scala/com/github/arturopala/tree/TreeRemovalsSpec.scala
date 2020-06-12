@@ -355,6 +355,8 @@ class TreeRemovalsSpec extends FunSuite {
         Tree("a", Tree("b", Tree("c")), Tree("g"))
       tree7.removeChild("g") shouldBe
         Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e", Tree("f"))))
+      tree(Tree("a", Tree("b", Tree("c")), Tree("b", Tree("d")), Tree("b", Tree("e")))).removeChild("b") shouldBe
+        Tree("a", Tree("b", Tree("d")), Tree("b", Tree("e")))
     }
 
     "remove subtree selected by the path" in {
@@ -395,6 +397,9 @@ class TreeRemovalsSpec extends FunSuite {
         Tree("d", Tree("e")),
         Tree("g")
       )
+      tree(Tree("a", Tree("b", Tree("c")), Tree("b", Tree("d")), Tree("b", Tree("e"))))
+        .removeTreeAt(List("a", "b")) shouldBe
+        Tree("a", Tree("b", Tree("d")), Tree("b", Tree("e")))
     }
 
     "remove subtree selected by the path using an extractor function" in {
@@ -438,6 +443,77 @@ class TreeRemovalsSpec extends FunSuite {
         Tree("d", Tree("e")),
         Tree("g")
       )
+    }
+
+    "remove children" in {
+      tree0.removeChildren() shouldBe tree0
+      tree1.removeChildren() shouldBe tree1
+      tree2.removeChildren() shouldBe tree1
+      tree3_1.removeChildren() shouldBe tree1
+      tree3_2.removeChildren() shouldBe tree1
+      tree4_1.removeChildren() shouldBe tree1
+      tree4_2.removeChildren() shouldBe tree1
+      tree4_3.removeChildren() shouldBe tree1
+      tree7.removeChildren() shouldBe tree1
+      tree9.removeChildren() shouldBe tree1
+      tree13.removeChildren() shouldBe tree1
+    }
+
+    "remove children from the node selected by the path" in {
+      tree0.removeChildrenAt(List()) shouldBe tree0
+      tree0.removeChildrenAt(List("a")) shouldBe tree0
+      tree0.removeChildrenAt(List("b")) shouldBe tree0
+      tree1.removeChildrenAt(List()) shouldBe tree1
+      tree1.removeChildrenAt(List("a")) shouldBe tree1
+      tree1.removeChildrenAt(List("b")) shouldBe tree1
+      tree2.removeChildrenAt(List()) shouldBe tree2
+      tree2.removeChildrenAt(List("a")) shouldBe tree1
+      tree2.removeChildrenAt(List("b")) shouldBe tree2
+      tree3_1.removeChildrenAt(List()) shouldBe tree3_1
+      tree3_1.removeChildrenAt(List("a")) shouldBe tree1
+      tree3_1.removeChildrenAt(List("a", "b")) shouldBe tree2
+      tree3_1.removeChildrenAt(List("b")) shouldBe tree3_1
+      tree7.removeChildrenAt(List("a", "d")) shouldBe
+        Tree("a", Tree("b", Tree("c")), Tree("d"), Tree("g"))
+      tree7.removeChildrenAt(List("a")) shouldBe tree1
+      tree(Tree("a", Tree("b", Tree("c"), Tree("d", Tree("e"))), Tree("b", Tree("d")), Tree("b", Tree("e"))))
+        .removeChildrenAt(List("a", "b")) shouldBe
+        Tree("a", Tree("b"), Tree("b", Tree("d")), Tree("b", Tree("e")))
+      tree(Tree("a", Tree("b", Tree("d", Tree("e")), Tree("d", Tree("f"))), Tree("b", Tree("d")), Tree("b", Tree("e"))))
+        .removeChildrenAt(List("a", "b", "d")) shouldBe
+        Tree("a", Tree("b", Tree("d"), Tree("d", Tree("f"))), Tree("b", Tree("d")), Tree("b", Tree("e")))
+      tree(Tree("a", Tree("b", Tree("d", Tree("e")), Tree("d", Tree("f"))), Tree("b", Tree("d")), Tree("b", Tree("e"))))
+        .removeChildrenAt(List("a", "b")) shouldBe
+        Tree("a", Tree("b"), Tree("b", Tree("d")), Tree("b", Tree("e")))
+    }
+
+    "remove children from the node selected by the path using an extractor function" in {
+      val codeF: String => Int = s => s.head.toInt
+      tree0.removeChildrenAt(List(), codeF) shouldBe tree0
+      tree0.removeChildrenAt(List(97), codeF) shouldBe tree0
+      tree0.removeChildrenAt(List(98), codeF) shouldBe tree0
+      tree1.removeChildrenAt(List(), codeF) shouldBe tree1
+      tree1.removeChildrenAt(List(97), codeF) shouldBe tree1
+      tree1.removeChildrenAt(List(98), codeF) shouldBe tree1
+      tree2.removeChildrenAt(List(), codeF) shouldBe tree2
+      tree2.removeChildrenAt(List(97), codeF) shouldBe tree1
+      tree2.removeChildrenAt(List(98), codeF) shouldBe tree2
+      tree3_1.removeChildrenAt(List(), codeF) shouldBe tree3_1
+      tree3_1.removeChildrenAt(List(97), codeF) shouldBe tree1
+      tree3_1.removeChildrenAt(List(97, 98), codeF) shouldBe tree2
+      tree3_1.removeChildrenAt(List(98), codeF) shouldBe tree3_1
+      tree7.removeChildrenAt(List(97, 100), codeF) shouldBe
+        Tree("a", Tree("b", Tree("c")), Tree("d"), Tree("g"))
+      tree7.removeChildrenAt(List(97), codeF) shouldBe tree1
+      tree(Tree("a", Tree("b", Tree("c"), Tree("d", Tree("e"))), Tree("b", Tree("d")), Tree("b", Tree("e"))))
+        .removeChildrenAt(List(97, 98), codeF) shouldBe
+        Tree("a", Tree("b"), Tree("b", Tree("d")), Tree("b", Tree("e")))
+      tree(Tree("a", Tree("b", Tree("d", Tree("e")), Tree("d", Tree("f"))), Tree("b", Tree("d")), Tree("b", Tree("e"))))
+        .removeChildrenAt(List(97, 98, 100), codeF) shouldBe
+        Tree("a", Tree("b", Tree("d"), Tree("d", Tree("f"))), Tree("b", Tree("d")), Tree("b", Tree("e")))
+      tree(Tree("a", Tree("b", Tree("d", Tree("e")), Tree("d", Tree("f"))), Tree("b", Tree("d")), Tree("b", Tree("e"))))
+        .removeChildrenAt(List(97, 98), codeF) shouldBe
+        Tree("a", Tree("b"), Tree("b", Tree("d")), Tree("b", Tree("e")))
     }
 
   }

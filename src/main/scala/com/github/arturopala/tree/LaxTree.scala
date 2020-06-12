@@ -544,10 +544,10 @@ object LaxTreeOps {
         case Tree.empty => empty
 
         case node: NodeTree[T] =>
-          NodeTree.updateChildValue(node, existingValue, replacement, keepDistinct = false, rightmost = false)
+          NodeTree.updateChildValue(node, existingValue, replacement, rightmost = false, keepDistinct = false)
 
         case tree: ArrayTree[T] =>
-          ArrayTree.updateChildValue(existingValue, replacement, tree, keepDistinct = false)
+          ArrayTree.updateChildValue(existingValue, replacement, tree, rightmost = false, keepDistinct = false)
       }
 
     final override def updateValueLaxAt[T1 >: T: ClassTag](
@@ -582,10 +582,10 @@ object LaxTreeOps {
         case Tree.empty => empty
 
         case node: NodeTree[T] =>
-          NodeTree.updateChild(node, value, replacement, keepDistinct = false, rightmost = false)
+          NodeTree.updateChild(node, value, replacement, rightmost = false, keepDistinct = false)
 
         case tree: ArrayTree[T] =>
-          ArrayTree.updateChild(value, replacement, tree, keepDistinct = false)
+          ArrayTree.updateChild(value, replacement, tree, rightmost = false, keepDistinct = false)
       }
 
     final override def updateTreeLaxAt[T1 >: T: ClassTag](
@@ -621,10 +621,10 @@ object LaxTreeOps {
         case Tree.empty => empty
 
         case node: NodeTree[T] =>
-          NodeTree.modifyChildValue(node, value, modify, keepDistinct = false, rightmost = false)
+          NodeTree.modifyChildValue(node, value, modify, rightmost = false, keepDistinct = false)
 
         case tree: ArrayTree[T] =>
-          ArrayTree.modifyChildValue(value, modify, tree, keepDistinct = false)
+          ArrayTree.modifyChildValue(value, modify, tree, rightmost = false, keepDistinct = false)
       }
 
     final override def modifyValueLaxAt[T1 >: T: ClassTag](
@@ -659,10 +659,10 @@ object LaxTreeOps {
         case Tree.empty => empty
 
         case node: NodeTree[T] =>
-          NodeTree.modifyChild(node, value, modify, keepDistinct = false, rightmost = false)
+          NodeTree.modifyChild(node, value, modify, rightmost = false, keepDistinct = false)
 
         case tree: ArrayTree[T] =>
-          ArrayTree.modifyChild(value, modify, tree, keepDistinct = false)
+          ArrayTree.modifyChild(value, modify, tree, rightmost = false, keepDistinct = false)
       }
 
     final override def modifyTreeLaxAt[T1 >: T: ClassTag](
@@ -698,10 +698,10 @@ object LaxTreeOps {
       case Tree.empty => empty
 
       case node: NodeTree[T] =>
-        NodeTree.removeChildValue(node, value, keepDistinct = false, rightmost = false)
+        NodeTree.removeChildValue(node, value, rightmost = false, keepDistinct = false)
 
       case tree: ArrayTree[T] =>
-        ArrayTree.removeChildValue(value, tree, keepDistinct = false)
+        ArrayTree.removeChildValue(value, tree, rightmost = false, keepDistinct = false)
     }
 
     final override def removeValueLaxAt[T1 >: T: ClassTag](path: Iterable[T1]): Tree[T] = t match {

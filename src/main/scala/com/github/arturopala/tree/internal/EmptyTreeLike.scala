@@ -26,7 +26,7 @@ import scala.collection.Iterator
 import scala.reflect.ClassTag
 
 /**
-  * The [[Tree.empty]] final functions set.
+  * The [[empty]] final functions set.
   * Extracted from the [[Tree]] to de-clutter its codebase.
   */
 trait EmptyTreeLike extends TreeLike[Nothing] {
@@ -124,10 +124,10 @@ trait EmptyTreeLike extends TreeLike[Nothing] {
   final override def insertLeaf[T1: ClassTag](value: T1, append: Boolean = false): Tree[T1] = Tree(value)
 
   final override def insertLeaves[T1: ClassTag](values: Iterable[T1], append: Boolean = false): Tree[T1] =
-    if (values.size == 1) Tree(values.head) else Tree.empty
+    if (values.size == 1) Tree(values.head) else empty
 
   final override def insertLeafAt[T1: ClassTag](path: Iterable[T1], value: T1, append: Boolean = false): Tree[T1] =
-    Tree.empty.insertBranch(path.toList :+ value)
+    empty.insertBranch(path.toList :+ value)
 
   final override def insertLeafAt[K, T1: ClassTag](
     path: Iterable[K],
@@ -140,7 +140,7 @@ trait EmptyTreeLike extends TreeLike[Nothing] {
 
   final override def insertChildren[T1: ClassTag](children: Iterable[Tree[T1]], append: Boolean = false): Tree[T1] = {
     val validChildren = children.filterNot(_.isEmpty)
-    if (validChildren.size == 1) validChildren.head else Tree.empty
+    if (validChildren.size == 1) validChildren.head else empty
   }
 
   final override def insertChildAt[T1: ClassTag](
@@ -173,23 +173,23 @@ trait EmptyTreeLike extends TreeLike[Nothing] {
   ): Either[Tree[Nothing], Tree[T1]] = Left(empty)
 
   final override def insertBranch[T1: ClassTag](branch: Iterable[T1], append: Boolean = false): Tree[T1] =
-    if (branch.isEmpty) Tree.empty
+    if (branch.isEmpty) empty
     else TreeBuilder.linearTreeFromSequence(branch.toList)
 
   final override def insertBranches[T1 >: Nothing: ClassTag](
     branches: Iterable[Iterable[T1]],
     append: Boolean = false
   ): Tree[T1] =
-    if (branches.isEmpty) Tree.empty
-    else branches.foldLeft[Tree[T1]](Tree.empty)((tree, branch) => tree.insertBranch(branch, append))
+    if (branches.isEmpty) empty
+    else branches.foldLeft[Tree[T1]](empty)((tree, branch) => tree.insertBranch(branch, append))
 
   // UPDATES
 
   final override def updateHead[T1: ClassTag](replacement: T1): Tree[T1] =
-    Tree.empty
+    empty
 
   final override def updateChildValue[T1: ClassTag](existingValue: T1, replacement: T1): Tree[T1] =
-    Tree.empty
+    empty
 
   final override def updateValueAt[T1: ClassTag](
     path: Iterable[T1],
@@ -204,7 +204,7 @@ trait EmptyTreeLike extends TreeLike[Nothing] {
   ): Either[Tree[Nothing], Tree[T1]] = Left(empty)
 
   final override def updateChild[T1: ClassTag](value: T1, replacement: Tree[T1]): Tree[T1] =
-    Tree.empty
+    empty
 
   final override def updateTreeAt[T1: ClassTag](
     path: Iterable[T1],
@@ -220,10 +220,10 @@ trait EmptyTreeLike extends TreeLike[Nothing] {
   // MODIFICATIONS
 
   final override def modifyHead[T1: ClassTag](modify: Nothing => T1): Tree[T1] =
-    Tree.empty
+    empty
 
   final override def modifyChildValue[T1: ClassTag](value: T1, modify: Nothing => T1): Tree[T1] =
-    Tree.empty
+    empty
 
   final override def modifyValueAt[T1: ClassTag](
     path: Iterable[T1],
@@ -239,10 +239,10 @@ trait EmptyTreeLike extends TreeLike[Nothing] {
     Left(empty)
 
   final override def modifyChild[T1: ClassTag](value: T1, modify: Tree[Nothing] => Tree[T1]): Tree[T1] =
-    Tree.empty
+    empty
 
   final override def modifyChildren[T1: ClassTag](modify: Iterable[Tree[Nothing]] => Iterable[Tree[T1]]): Tree[T1] =
-    Tree.empty
+    empty
 
   final override def modifyTreeAt[T1: ClassTag](
     path: Iterable[T1],
@@ -272,29 +272,34 @@ trait EmptyTreeLike extends TreeLike[Nothing] {
 
   // REMOVALS
 
-  final override def removeChildValue[T1: ClassTag](value: T1): Tree[Nothing] =
-    Tree.empty
+  final override def removeChildValue[T1: ClassTag](value: T1): Tree[Nothing] = empty
 
-  final override def removeValueAt[T1: ClassTag](path: Iterable[T1]): Tree[Nothing] =
-    Tree.empty
+  final override def removeValueAt[T1: ClassTag](path: Iterable[T1]): Tree[Nothing] = empty
 
   final override def removeValueAt[K, T1: ClassTag](
     path: Iterable[K],
     toPathItem: Nothing => K
   ): Tree[Nothing] =
-    Tree.empty
+    empty
 
-  final override def removeChild[T1: ClassTag](value: T1): Tree[Nothing] =
-    Tree.empty
+  final override def removeChild[T1: ClassTag](value: T1): Tree[Nothing] = empty
 
-  final override def removeTreeAt[T1: ClassTag](path: Iterable[T1]): Tree[Nothing] =
-    Tree.empty
+  final override def removeChildren[T1: ClassTag](): Tree[Nothing] = empty
+
+  final override def removeTreeAt[T1: ClassTag](path: Iterable[T1]): Tree[Nothing] = empty
 
   final override def removeTreeAt[K, T1: ClassTag](
     path: Iterable[K],
     toPathItem: Nothing => K
   ): Tree[Nothing] =
-    Tree.empty
+    empty
+
+  final override def removeChildrenAt[T1: ClassTag](path: Iterable[T1]): Tree[Nothing] = empty
+
+  final override def removeChildrenAt[K, T1: ClassTag](path: Iterable[K], toPathItem: Nothing => K): Tree[Nothing] =
+    empty
+
+  // TRANSFORMATIONS
 
   final override def map[K: ClassTag](f: Nothing => K): Tree[K] = empty
 
@@ -317,7 +322,7 @@ trait EmptyTreeLike extends TreeLike[Nothing] {
     maxDepth: Int = Int.MaxValue
   ): String = ""
 
-  final val inflated: Tree[Nothing] = Tree.empty
-  final def deflated[T1](implicit tag: ClassTag[T1]): Tree[T1] = Tree.empty
+  final val inflated: Tree[Nothing] = empty
+  final def deflated[T1](implicit tag: ClassTag[T1]): Tree[T1] = empty
 
 }

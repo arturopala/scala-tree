@@ -1862,4 +1862,31 @@ object NodeTree {
       .map { case (treeSplit, _) => TreeBuilder.fromTreeSplit(treeSplit) }
       .getOrElse(tree)
 
+  /** Removes children of the tree selected by the path. */
+  final def removeChildrenAt[T, T1 >: T](
+    tree: Tree[T],
+    pathIterator: Iterator[T1],
+    rightmost: Boolean
+  ): Tree[T] =
+    splitTreeFollowingEntirePath[T, T1](tree, pathIterator, rightmost)
+      .map {
+        case (treeSplit, selectedTree) =>
+          TreeBuilder.fromChildAndTreeSplit(Tree.Leaf(selectedTree.head), treeSplit)
+      }
+      .getOrElse(tree)
+
+  /** Removes children of the tree selected by the path using an extractor function. */
+  final def removeChildrenAt[K, T](
+    tree: Tree[T],
+    pathIterator: Iterator[K],
+    toPathItem: T => K,
+    rightmost: Boolean
+  ): Tree[T] =
+    splitTreeFollowingEntirePath(tree, pathIterator, toPathItem, rightmost)
+      .map {
+        case (treeSplit, selectedTree) =>
+          TreeBuilder.fromChildAndTreeSplit(Tree.Leaf(selectedTree.head), treeSplit)
+      }
+      .getOrElse(tree)
+
 }

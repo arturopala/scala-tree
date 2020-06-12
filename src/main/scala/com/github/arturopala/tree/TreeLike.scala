@@ -781,7 +781,7 @@ trait TreeLike[+T] {
   /** Removes completely all children.
     * @return modified tree
     * @group removal */
-  def removeChildren[T1 >: T: ClassTag](): Tree[T] = ???
+  def removeChildren[T1 >: T: ClassTag](): Tree[T]
 
   /** Removes the first tree selected by the given path.
     * @param path list of node's values forming a path from the root to the parent node.
@@ -800,14 +800,14 @@ trait TreeLike[+T] {
     * @param path list of node's values forming a path from the root to the parent node.
     * @return modified tree
     * @group removal */
-  def removeChildrenAt[T1 >: T: ClassTag](path: Iterable[T1]): Tree[T] = ???
+  def removeChildrenAt[T1 >: T: ClassTag](path: Iterable[T1]): Tree[T]
 
   /** Removes children of the leftmost tree selected by the given path.
     * @param path list K items forming a path from the root to the parent node.
     * @param toPathItem extractor of the K path item from the tree's node value
     * @return modified tree
     * @group removal */
-  def removeChildrenAt[K, T1 >: T: ClassTag](path: Iterable[K], toPathItem: T => K): Tree[T] = ???
+  def removeChildrenAt[K, T1 >: T: ClassTag](path: Iterable[K], toPathItem: T => K): Tree[T]
 
   // SERIALIZATION
 

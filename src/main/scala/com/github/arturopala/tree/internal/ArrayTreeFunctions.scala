@@ -295,6 +295,20 @@ object ArrayTreeFunctions {
     }
 
   /** Looks for Some index of the child node holding the given value, or None.
+    * @param rightmost whether to select first (false) or last (true) occurrence of the value
+    * @return some first or last index if exists or none */
+  @`inline` final def childHavingValue[T](
+    value: T,
+    parentIndex: Int,
+    size: Int,
+    treeStructure: Int => Int,
+    treeValues: Int => T,
+    rightmost: Boolean
+  ): Option[Int] =
+    if (rightmost) lastChildHavingValue(value, parentIndex, size, treeStructure, treeValues)
+    else firstChildHavingValue(value, parentIndex, size, treeStructure, treeValues)
+
+  /** Looks for Some index of the child node holding the given value, or None.
     * @return some first index if exists or none */
   final def firstChildHavingValue[T](
     value: T,
@@ -1049,12 +1063,12 @@ object ArrayTreeFunctions {
     } else 0
 
   /** Removes all the children of the tree at the index. */
-  final def removeChildren[T](index: Int, parentIndex: Int, structureBuffer: IntBuffer, valuesBuffer: Buffer[T]): Int =
-    if (index >= 0 && index < structureBuffer.length) {
-      val size = treeSize(index, structureBuffer)
-      structureBuffer(index) = 0
-      structureBuffer.removeRange(index - size + 1, index)
-      valuesBuffer.removeRange(index - size + 1, index)
+  final def removeChildren[T](parentIndex: Int, structureBuffer: IntBuffer, valuesBuffer: Buffer[T]): Int =
+    if (parentIndex >= 0 && parentIndex < structureBuffer.length) {
+      val size = treeSize(parentIndex, structureBuffer)
+      structureBuffer(parentIndex) = 0
+      structureBuffer.removeRange(parentIndex - size + 1, parentIndex)
+      valuesBuffer.removeRange(parentIndex - size + 1, parentIndex)
       -size + 1
     } else 0
 
@@ -1073,8 +1087,7 @@ object ArrayTreeFunctions {
     if (branchIterator.hasNext) {
       val value = branchIterator.next()
       val duplicate =
-        if (append) lastChildHavingValue(value, parentIndex, structureBuffer.length, structureBuffer, valuesBuffer)
-        else firstChildHavingValue(value, parentIndex, structureBuffer.length, structureBuffer, valuesBuffer)
+        childHavingValue(value, parentIndex, structureBuffer.length, structureBuffer, valuesBuffer, append)
 
       duplicate match {
         case Some(index) =>
