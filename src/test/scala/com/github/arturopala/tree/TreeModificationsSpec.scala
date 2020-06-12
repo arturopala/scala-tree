@@ -1014,6 +1014,43 @@ class TreeModificationsSpec extends FunSuite {
         )
     }
 
+    "modify children of the tree" in {
+      val f: Iterable[Tree[String]] => Iterable[Tree[String]] = _.toSeq :+ Tree("a")
+      tree0.modifyChildren(f) shouldBe tree0
+      tree1.modifyChildren(f) shouldBe Tree("a", Tree("a"))
+      tree2.modifyChildren(f) shouldBe Tree("a", Tree("b"), Tree("a"))
+      tree3_1.modifyChildren(f) shouldBe Tree("a", Tree("b", Tree("c")), Tree("a"))
+      tree3_2.modifyChildren(f) shouldBe Tree("a", Tree("b"), Tree("c"), Tree("a"))
+      tree3_2.modifyChildren(_.toSeq.reverse) shouldBe Tree("a", Tree("c"), Tree("b"))
+    }
+
+    "modify children of a node at the specified path" in {
+      val f: Iterable[Tree[String]] => Iterable[Tree[String]] = _.toSeq :+ Tree("a")
+      tree0.modifyChildrenAt(List.empty[String], f) shouldBe Left(tree0)
+      tree0.modifyChildrenAt(List("a"), f) shouldBe Left(tree0)
+      tree1.modifyChildrenAt(List.empty[String], f) shouldBe Left(tree1)
+      tree1.modifyChildrenAt(List("a"), f) shouldBe Right(Tree("a", Tree("a")))
+      tree1.modifyChildrenAt(List("a", "b"), f) shouldBe Left(tree1)
+      tree1.modifyChildrenAt(List("b"), f) shouldBe Left(tree1)
+      tree2.modifyChildrenAt(List("a"), f) shouldBe Right(Tree("a", Tree("b"), Tree("a")))
+      tree2.modifyChildrenAt(List("a"), _ => Nil) shouldBe Right(Tree("a"))
+      tree3_2.modifyChildrenAt(List("a"), _.toSeq.reverse) shouldBe Right(Tree("a", Tree("c"), Tree("b")))
+    }
+
+    "modify children of a node at the specified path using an extractor function" in {
+      val f: Iterable[Tree[String]] => Iterable[Tree[String]] = _.toSeq :+ Tree("a")
+      val e: String => Int = _.head.toInt
+      tree0.modifyChildrenAt(List.empty[String], f, e) shouldBe Left(tree0)
+      tree0.modifyChildrenAt(List(97), f, e) shouldBe Left(tree0)
+      tree1.modifyChildrenAt(List.empty[String], f, e) shouldBe Left(tree1)
+      tree1.modifyChildrenAt(List(97), f, e) shouldBe Right(Tree("a", Tree("a")))
+      tree1.modifyChildrenAt(List(97, 98), f, e) shouldBe Left(tree1)
+      tree1.modifyChildrenAt(List(98), f, e) shouldBe Left(tree1)
+      tree2.modifyChildrenAt(List(97), f, e) shouldBe Right(Tree("a", Tree("b"), Tree("a")))
+      tree2.modifyChildrenAt(List(97), _ => Nil, e) shouldBe Right(Tree("a"))
+      tree3_2.modifyChildrenAt(List(97), _.toSeq.reverse, e) shouldBe Right(Tree("a", Tree("c"), Tree("b")))
+    }
+
   }
 
 }

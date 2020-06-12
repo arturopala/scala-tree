@@ -272,6 +272,9 @@ abstract class ArrayTreeLike[T: ClassTag] extends TreeLike[T] {
   final override def modifyChild[T1 >: T: ClassTag](value: T1, modify: Tree[T] => Tree[T1]): Tree[T1] =
     ArrayTree.modifyChild(value, modify, tree, keepDistinct = true)
 
+  final override def modifyChildren[T1 >: T: ClassTag](modify: Iterable[Tree[T]] => Iterable[Tree[T1]]): Tree[T1] =
+    ArrayTree.modifyChildren(modify, tree)
+
   final override def modifyTreeAt[T1 >: T: ClassTag](
     path: Iterable[T1],
     modify: Tree[T] => Tree[T1]
@@ -284,6 +287,19 @@ abstract class ArrayTreeLike[T: ClassTag] extends TreeLike[T] {
     toPathItem: T => K
   ): Either[Tree[T], Tree[T1]] =
     ArrayTree.modifyTreeAt(path, modify, tree, toPathItem, rightmost = false, keepDistinct = true)
+
+  final override def modifyChildrenAt[T1 >: T: ClassTag](
+    path: Iterable[T1],
+    modify: Iterable[Tree[T]] => Iterable[Tree[T1]]
+  ): Either[Tree[T], Tree[T1]] =
+    ArrayTree.modifyChildrenAt(path, modify, tree, rightmost = false, keepDistinct = true)
+
+  final override def modifyChildrenAt[K, T1 >: T: ClassTag](
+    path: Iterable[K],
+    modify: Iterable[Tree[T]] => Iterable[Tree[T1]],
+    toPathItem: T => K
+  ): Either[Tree[T], Tree[T1]] =
+    ArrayTree.modifyChildrenAt(path, modify, tree, toPathItem, rightmost = false, keepDistinct = true)
 
   // REMOVALS
 

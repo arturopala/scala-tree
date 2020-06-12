@@ -241,6 +241,9 @@ trait EmptyTreeLike extends TreeLike[Nothing] {
   final override def modifyChild[T1: ClassTag](value: T1, modify: Tree[Nothing] => Tree[T1]): Tree[T1] =
     Tree.empty
 
+  final override def modifyChildren[T1: ClassTag](modify: Iterable[Tree[Nothing]] => Iterable[Tree[T1]]): Tree[T1] =
+    Tree.empty
+
   final override def modifyTreeAt[T1: ClassTag](
     path: Iterable[T1],
     modify: Tree[Nothing] => Tree[T1]
@@ -250,6 +253,19 @@ trait EmptyTreeLike extends TreeLike[Nothing] {
   final override def modifyTreeAt[K, T1: ClassTag](
     path: Iterable[K],
     modify: Tree[Nothing] => Tree[T1],
+    toPathItem: Nothing => K
+  ): Either[Tree[Nothing], Tree[T1]] =
+    Left(empty)
+
+  final override def modifyChildrenAt[T1 >: Nothing: ClassTag](
+    path: Iterable[T1],
+    modify: Iterable[Tree[Nothing]] => Iterable[Tree[T1]]
+  ): Either[Tree[Nothing], Tree[T1]] =
+    Left(empty)
+
+  final override def modifyChildrenAt[K, T1 >: Nothing: ClassTag](
+    path: Iterable[K],
+    modify: Iterable[Tree[Nothing]] => Iterable[Tree[T1]],
     toPathItem: Nothing => K
   ): Either[Tree[Nothing], Tree[T1]] =
     Left(empty)

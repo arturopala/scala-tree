@@ -928,8 +928,8 @@ object NodeTree {
   final def insertChildDistinct[T, T1 >: T](tree: Tree[T], newChild: Tree[T1], append: Boolean): Tree[T1] =
     Tree(
       tree.head,
-      if (append) insertDistinctBetweenSiblings(tree.children, newChild, Nil, preserveExisting = true)
-      else insertDistinctBetweenSiblings(Nil, newChild, tree.children, preserveExisting = true)
+      if (append) insertChildrenAfterDistinct(tree.children, List(newChild))
+      else insertChildrenBeforeDistinct(List(newChild), tree.children, preserveExisting = true)
     )
 
   /** Ensures that a child at an index position is distinct,
@@ -971,7 +971,8 @@ object NodeTree {
         insert(queue, newLeft, newRight)
       } else (left, right)
 
-    Tree(head, insert(newChildren.iterator, leftSiblings, rightSiblings))
+    val consolidatedNewChildren = insertChildrenAfterDistinct(Vector.empty[Tree[T]], newChildren)
+    Tree(head, insert(consolidatedNewChildren.iterator, leftSiblings, rightSiblings))
   }
 
   /** Inserts new child distinct between left and right siblings.
@@ -1000,7 +1001,7 @@ object NodeTree {
     splitSequenceWhen[Tree[T]](_.head == child.head, leftSiblings, rightmost = true) match {
       case Some((left, duplicateOnLeft, right)) =>
         val mergedNode =
-          insertChildrenDistinct(child.head, duplicateOnLeft.children, child.children, Nil, preserveExisting)
+          Tree(child.head, insertChildrenAfterDistinct(duplicateOnLeft.children, child.children))
         (left ++: mergedNode +: right, rightSiblings)
 
       case None =>
@@ -1010,12 +1011,13 @@ object NodeTree {
 
           case Some((left, duplicateOnRight, right)) =>
             val mergedNode =
-              insertChildrenDistinct(
+              Tree(
                 child.head,
-                Nil,
-                child.children,
-                duplicateOnRight.children,
-                preserveExisting
+                insertChildrenBeforeDistinct(
+                  child.children,
+                  duplicateOnRight.children,
+                  preserveExisting = false
+                )
               )
             if (preserveExisting) (leftSiblings, left ++: mergedNode +: right)
             else (leftSiblings.toVector :+ mergedNode, left ++: right)
@@ -1421,11 +1423,11 @@ object NodeTree {
   /** Updates a value of a child, and builds a tree back from the treeSplit. */
   final def updateChildValueInSplit[T, T1 >: T: ClassTag](
     treeSplit: Vector[TreeSplit[T]],
-    child: Tree[T],
-    replacement: T1,
+    existingChild: Tree[T],
+    replacementValue: T1,
     keepDistinct: Boolean
   ): Tree[T1] = {
-    val modifiedChild = Tree(replacement, child.children)
+    val modifiedChild = Tree(replacementValue, existingChild.children)
     if (keepDistinct && treeSplit.nonEmpty) {
       val (left, head, right) = treeSplit.head
       val newHead = insertChildDistinct(head, left, modifiedChild, right, preserveExisting = false)
@@ -1435,28 +1437,28 @@ object NodeTree {
     }
   }
 
-  /** Updates a child, and builds a tree back from the treeSplit. */
+  /** Updates a child, and builds a tree back from the treeSplit.
+    * @param existingChild existing child
+    * @param replacementChild replacement child
+    */
   final def updateChildInSplit[T, T1 >: T: ClassTag](
     treeSplit: Vector[TreeSplit[T]],
-    child: Tree[T],
-    replacement: Tree[T1],
+    existingChild: Tree[T],
+    replacementChild: Tree[T1],
     keepDistinct: Boolean
   ): Tree[T1] =
-    replacement match {
+    replacementChild match {
       case Tree.empty =>
         TreeBuilder.fromTreeSplit[T1](treeSplit)
 
-      case tree: Tree.NodeTree[T1] =>
-        if (keepDistinct && treeSplit.nonEmpty && tree.head != child.head) {
+      case tree: Tree[T1] =>
+        if (keepDistinct && treeSplit.nonEmpty && tree.head != existingChild.head) {
           val (left, head, right) = treeSplit.head
           val newHead = insertChildDistinct(head, left, tree, right, preserveExisting = false)
           TreeBuilder.fromChildAndTreeSplit(newHead, treeSplit.tail)
         } else {
           TreeBuilder.fromChildAndTreeSplit(tree, treeSplit)
         }
-
-      case tree: Tree.ArrayTree[T1] =>
-        ArrayTree.buildFromChildAndTreeSplit(tree, treeSplit.tail)
     }
 
   /** Updates value of the child holding the value. */
@@ -1699,6 +1701,47 @@ object NodeTree {
           val replacement = modify(recipientTree)
           if (replacement != recipientTree)
             Right(updateChildInSplit(treeSplit, recipientTree, replacement, keepDistinct))
+          else Right(tree)
+      }
+      .getOrElse(Left(tree))
+
+  /** Modifies children of the node selected by the path. */
+  final def modifyChildrenAt[T, T1 >: T: ClassTag](
+    tree: Tree[T],
+    pathIterator: Iterator[T1],
+    modify: Iterable[Tree[T]] => Iterable[Tree[T1]],
+    rightmost: Boolean,
+    keepDistinct: Boolean
+  ): Either[Tree[T], Tree[T1]] =
+    splitTreeFollowingEntirePath[T, T1](tree, pathIterator, rightmost)
+      .map {
+        case (treeSplit, recipientTree) =>
+          val replacementChildren = modify(recipientTree.children)
+          if (replacementChildren != recipientTree.children)
+            Right(
+              updateChildInSplit(treeSplit, recipientTree, Tree(recipientTree.head, replacementChildren), keepDistinct)
+            )
+          else Right(tree)
+      }
+      .getOrElse(Left(tree))
+
+  /** Modifies children of the node selected by the path using path item extractor. */
+  final def modifyChildrenAt[K, T, T1 >: T: ClassTag](
+    tree: Tree[T],
+    pathIterator: Iterator[K],
+    toPathItem: T => K,
+    modify: Iterable[Tree[T]] => Iterable[Tree[T1]],
+    rightmost: Boolean,
+    keepDistinct: Boolean
+  ): Either[Tree[T], Tree[T1]] =
+    splitTreeFollowingEntirePath(tree, pathIterator, toPathItem, rightmost)
+      .map {
+        case (treeSplit, recipientTree) =>
+          val replacementChildren = modify(recipientTree.children)
+          if (replacementChildren != recipientTree.children)
+            Right(
+              updateChildInSplit(treeSplit, recipientTree, Tree(recipientTree.head, replacementChildren), keepDistinct)
+            )
           else Right(tree)
       }
       .getOrElse(Left(tree))

@@ -34,12 +34,7 @@ class TreeDebugSpec extends FunSuite with TestWithBuffers {
 
     def tree[T: ClassTag](t: Tree[T]): Tree[T]
 
-    "debug" suite {
-      test(
-        tree1.insertBranches(List(List("a", "b", "c"), List("a", "b", "d"), List("a", "b", "e"))) shouldBe
-          Tree("a", Tree("b", Tree("e"), Tree("d"), Tree("c")))
-      )
-    }
+    "debug" suite {}
 
   }
 
