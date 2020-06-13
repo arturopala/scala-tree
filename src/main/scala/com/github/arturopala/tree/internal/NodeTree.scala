@@ -581,6 +581,55 @@ object NodeTree {
       else contains(nextOpt.get, path.tail, requiresFullMatch, toPathItem)
     }
 
+  /** Returns true if branch or path fulfilling the predicate exists in the tree. */
+  final def existsBranch[T](
+    pred: Iterable[T] => Boolean,
+    node: Tree[T],
+    partialPaths: Boolean
+  ): Boolean = {
+
+    type Queue = Vector[(Vector[T], Tree[T])]
+
+    @tailrec
+    def seekNext(q: Queue): Queue =
+      if (q.isEmpty) q
+      else {
+        val (acc, Tree(head: T, children: Iterable[Tree[T]])) = q.head
+        val path = acc :+ head
+        children match {
+          case ch if (partialPaths || ch.isEmpty) && pred(path) => q
+          case _                                                => seekNext(children.map((path, _)) ++: q.safeTail)
+        }
+      }
+
+    seekNext(Vector((Vector.empty, node))).nonEmpty
+  }
+
+  /** Returns true if branch or path fulfilling the predicate exists in the tree. */
+  final def existsBranch[K, T](
+    pred: Iterable[K] => Boolean,
+    node: Tree[T],
+    partialPaths: Boolean,
+    toPathItem: T => K
+  ): Boolean = {
+
+    type Queue = Vector[(Vector[K], Tree[T])]
+
+    @tailrec
+    def seekNext(q: Queue): Queue =
+      if (q.isEmpty) q
+      else {
+        val (acc, Tree(head: T, children: Iterable[Tree[T]])) = q.head
+        val path = acc :+ toPathItem(head)
+        children match {
+          case ch if (partialPaths || ch.isEmpty) && pred(path) => q
+          case _                                                => seekNext(children.map((path, _)) ++: q.safeTail)
+        }
+      }
+
+    seekNext(Vector((Vector.empty, node))).nonEmpty
+  }
+
   /** Prepends children of the tree with the new child. */
   final def prependChild[T, T1 >: T: ClassTag](tree: Tree[T], child: Tree[T1]): Tree[T1] = tree match {
     case Tree.Leaf(head)                    => Tree.Unary(head, child)

@@ -27,14 +27,18 @@ import scala.reflect.ClassTag
 // Special test suite to ease debugging single assertions in an IDE
 class TreeDebugSpec extends FunSuite with TestWithBuffers {
 
-  test(Inflated, new Spec with InflatedTestTrees)
+  //test(Inflated, new Spec with InflatedTestTrees)
   test(Deflated, new Spec with DeflatedTestTrees)
 
   sealed trait Spec extends AnyWordSpecCompat with TestTrees {
 
     def tree[T: ClassTag](t: Tree[T]): Tree[T]
 
-    "debug" suite {}
+    "debug" suite {
+      test(
+        tree1.existsBranch(_.toList == List("a")) shouldBe true
+      )
+    }
 
   }
 

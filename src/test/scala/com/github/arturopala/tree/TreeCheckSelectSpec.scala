@@ -359,6 +359,394 @@ class TreeCheckSelectSpec extends FunSuite {
         Some(Tree("e"))
     }
 
+    "check if the tree contains value" in {
+      tree0.containsValue("a") shouldBe false
+      tree1.containsValue("a") shouldBe true
+      tree1.containsValue("b") shouldBe false
+      tree2.containsValue("a") shouldBe true
+      tree2.containsValue("b") shouldBe true
+      tree3_1.containsValue("a") shouldBe true
+      tree3_1.containsValue("b") shouldBe true
+      tree3_1.containsValue("c") shouldBe true
+      tree3_1.containsValue("d") shouldBe false
+      tree3_2.containsValue("a") shouldBe true
+      tree3_2.containsValue("b") shouldBe true
+      tree3_2.containsValue("c") shouldBe true
+      tree3_2.containsValue("d") shouldBe false
+      tree4_1.containsValue("a") shouldBe true
+      tree4_1.containsValue("b") shouldBe true
+      tree4_1.containsValue("c") shouldBe true
+      tree4_1.containsValue("d") shouldBe true
+      tree4_1.containsValue("e") shouldBe false
+      tree4_2.containsValue("a") shouldBe true
+      tree4_2.containsValue("b") shouldBe true
+      tree4_2.containsValue("c") shouldBe true
+      tree4_2.containsValue("d") shouldBe true
+      tree4_2.containsValue("e") shouldBe false
+      tree4_3.containsValue("a") shouldBe true
+      tree4_3.containsValue("b") shouldBe true
+      tree4_3.containsValue("c") shouldBe true
+      tree4_3.containsValue("d") shouldBe true
+      tree4_3.containsValue("e") shouldBe false
+      tree7.containsValue("a") shouldBe true
+      tree7.containsValue("b") shouldBe true
+      tree7.containsValue("c") shouldBe true
+      tree7.containsValue("d") shouldBe true
+      tree7.containsValue("e") shouldBe true
+      tree7.containsValue("f") shouldBe true
+      tree7.containsValue("g") shouldBe true
+      tree7.containsValue("h") shouldBe false
+    }
+
+    "check if value fulfilling the predicate exists" in {
+      tree0.existsValue(_ == "a") shouldBe false
+      tree1.existsValue(_ == "a") shouldBe true
+      tree1.existsValue(_ == "b") shouldBe false
+      tree2.existsValue(_ == "a") shouldBe true
+      tree2.existsValue(_ == "b") shouldBe true
+      tree3_1.existsValue(_ == "a") shouldBe true
+      tree3_1.existsValue(_ == "b") shouldBe true
+      tree3_1.existsValue(_ == "c") shouldBe true
+      tree3_1.existsValue(_ == "d") shouldBe false
+      tree3_2.existsValue(_ == "a") shouldBe true
+      tree3_2.existsValue(_ == "b") shouldBe true
+      tree3_2.existsValue(_ == "c") shouldBe true
+      tree3_2.existsValue(_ == "d") shouldBe false
+      tree4_1.existsValue(_ == "a") shouldBe true
+      tree4_1.existsValue(_ == "b") shouldBe true
+      tree4_1.existsValue(_ == "c") shouldBe true
+      tree4_1.existsValue(_ == "d") shouldBe true
+      tree4_1.existsValue(_ == "e") shouldBe false
+      tree4_2.existsValue(_ == "a") shouldBe true
+      tree4_2.existsValue(_ == "b") shouldBe true
+      tree4_2.existsValue(_ == "c") shouldBe true
+      tree4_2.existsValue(_ == "d") shouldBe true
+      tree4_2.existsValue(_ == "e") shouldBe false
+      tree4_3.existsValue(_ == "a") shouldBe true
+      tree4_3.existsValue(_ == "b") shouldBe true
+      tree4_3.existsValue(_ == "c") shouldBe true
+      tree4_3.existsValue(_ == "d") shouldBe true
+      tree4_3.existsValue(_ == "e") shouldBe false
+      tree7.existsValue(_ == "a") shouldBe true
+      tree7.existsValue(_ == "b") shouldBe true
+      tree7.existsValue(_ == "c") shouldBe true
+      tree7.existsValue(_ == "d") shouldBe true
+      tree7.existsValue(_ == "e") shouldBe true
+      tree7.existsValue(_ == "f") shouldBe true
+      tree7.existsValue(_ == "g") shouldBe true
+      tree7.existsValue(_ == "h") shouldBe false
+    }
+
+    "check if tree contains child holding a value" in {
+      tree0.containsChildValue("a") shouldBe false
+      tree1.containsChildValue("a") shouldBe false
+      tree1.containsChildValue("b") shouldBe false
+      tree2.containsChildValue("a") shouldBe false
+      tree2.containsChildValue("b") shouldBe true
+      tree2.containsChildValue("c") shouldBe false
+      tree3_1.containsChildValue("a") shouldBe false
+      tree3_1.containsChildValue("b") shouldBe true
+      tree3_1.containsChildValue("c") shouldBe false
+      tree3_2.containsChildValue("a") shouldBe false
+      tree3_2.containsChildValue("b") shouldBe true
+      tree3_2.containsChildValue("c") shouldBe true
+      tree4_1.containsChildValue("a") shouldBe false
+      tree4_1.containsChildValue("b") shouldBe true
+      tree4_1.containsChildValue("c") shouldBe false
+      tree4_1.containsChildValue("d") shouldBe false
+      tree4_2.containsChildValue("a") shouldBe false
+      tree4_2.containsChildValue("b") shouldBe true
+      tree4_2.containsChildValue("c") shouldBe false
+      tree4_2.containsChildValue("d") shouldBe true
+      tree4_3.containsChildValue("a") shouldBe false
+      tree4_3.containsChildValue("b") shouldBe true
+      tree4_3.containsChildValue("c") shouldBe true
+      tree4_3.containsChildValue("d") shouldBe true
+    }
+
+    "check if tree contains child with a value fulfilling the predicate" in {
+      tree0.existsChildValue(_ == "a") shouldBe false
+      tree1.existsChildValue(_ == "a") shouldBe false
+      tree1.existsChildValue(_ == "b") shouldBe false
+      tree2.existsChildValue(_ == "a") shouldBe false
+      tree2.existsChildValue(_ == "b") shouldBe true
+      tree2.existsChildValue(_ == "c") shouldBe false
+      tree3_1.existsChildValue(_ == "a") shouldBe false
+      tree3_1.existsChildValue(_ == "b") shouldBe true
+      tree3_1.existsChildValue(_ == "c") shouldBe false
+      tree3_2.existsChildValue(_ == "a") shouldBe false
+      tree3_2.existsChildValue(_ == "b") shouldBe true
+      tree3_2.existsChildValue(_ == "c") shouldBe true
+      tree4_1.existsChildValue(_ == "a") shouldBe false
+      tree4_1.existsChildValue(_ == "b") shouldBe true
+      tree4_1.existsChildValue(_ == "c") shouldBe false
+      tree4_1.existsChildValue(_ == "d") shouldBe false
+      tree4_2.existsChildValue(_ == "a") shouldBe false
+      tree4_2.existsChildValue(_ == "b") shouldBe true
+      tree4_2.existsChildValue(_ == "c") shouldBe false
+      tree4_2.existsChildValue(_ == "d") shouldBe true
+      tree4_3.existsChildValue(_ == "a") shouldBe false
+      tree4_3.existsChildValue(_ == "b") shouldBe true
+      tree4_3.existsChildValue(_ == "c") shouldBe true
+      tree4_3.existsChildValue(_ == "d") shouldBe true
+    }
+
+    "check if tree contains given child" in {
+      tree0.containsChild(Tree("a")) shouldBe false
+      tree1.containsChild(Tree("a")) shouldBe false
+      tree1.containsChild(Tree("b")) shouldBe false
+      tree2.containsChild(Tree("a")) shouldBe false
+      tree2.containsChild(Tree("b")) shouldBe true
+      tree2.containsChild(Tree("c")) shouldBe false
+      tree3_1.containsChild(Tree("a")) shouldBe false
+      tree3_1.containsChild(Tree("b", Tree("c"))) shouldBe true
+      tree3_1.containsChild(Tree("c")) shouldBe false
+      tree3_2.containsChild(Tree("a")) shouldBe false
+      tree3_2.containsChild(Tree("b")) shouldBe true
+      tree3_2.containsChild(Tree("c")) shouldBe true
+      tree4_1.containsChild(Tree("a")) shouldBe false
+      tree4_1.containsChild(Tree("b", Tree("c", Tree("d")))) shouldBe true
+      tree4_1.containsChild(Tree("c", Tree("d"))) shouldBe false
+      tree4_1.containsChild(Tree("d")) shouldBe false
+      tree4_2.containsChild(Tree("a")) shouldBe false
+      tree4_2.containsChild(Tree("b", Tree("c"))) shouldBe true
+      tree4_2.containsChild(Tree("c")) shouldBe false
+      tree4_2.containsChild(Tree("d")) shouldBe true
+      tree4_3.containsChild(Tree("a")) shouldBe false
+      tree4_3.containsChild(Tree("b")) shouldBe true
+      tree4_3.containsChild(Tree("c")) shouldBe true
+      tree4_3.containsChild(Tree("d")) shouldBe true
+    }
+
+    "check if tree contains child fulfilling the predicate" in {
+      tree0.existsChild(_ == Tree("a")) shouldBe false
+      tree1.existsChild(_ == Tree("a")) shouldBe false
+      tree1.existsChild(_ == Tree("b")) shouldBe false
+      tree2.existsChild(_ == Tree("a")) shouldBe false
+      tree2.existsChild(_ == Tree("b")) shouldBe true
+      tree2.existsChild(_ == Tree("c")) shouldBe false
+      tree3_1.existsChild(_ == Tree("a")) shouldBe false
+      tree3_1.existsChild(_ == Tree("b", Tree("c"))) shouldBe true
+      tree3_1.existsChild(_ == Tree("c")) shouldBe false
+      tree3_2.existsChild(_ == Tree("a")) shouldBe false
+      tree3_2.existsChild(_ == Tree("b")) shouldBe true
+      tree3_2.existsChild(_ == Tree("c")) shouldBe true
+      tree4_1.existsChild(_ == Tree("a")) shouldBe false
+      tree4_1.existsChild(_ == Tree("b", Tree("c", Tree("d")))) shouldBe true
+      tree4_1.existsChild(_ == Tree("c")) shouldBe false
+      tree4_1.existsChild(_ == Tree("d")) shouldBe false
+      tree4_2.existsChild(_ == Tree("a")) shouldBe false
+      tree4_2.existsChild(_ == Tree("b", Tree("c"))) shouldBe true
+      tree4_2.existsChild(_ == Tree("c")) shouldBe false
+      tree4_2.existsChild(_ == Tree("d")) shouldBe true
+      tree4_3.existsChild(_ == Tree("a")) shouldBe false
+      tree4_3.existsChild(_ == Tree("b")) shouldBe true
+      tree4_3.existsChild(_ == Tree("c")) shouldBe true
+      tree4_3.existsChild(_ == Tree("d")) shouldBe true
+
+      tree0.existsChild(_.size > 2) shouldBe false
+      tree1.existsChild(_.size > 2) shouldBe false
+      tree2.existsChild(_.size > 2) shouldBe false
+      tree3_1.existsChild(_.size > 2) shouldBe false
+      tree3_2.existsChild(_.size > 2) shouldBe false
+      tree4_1.existsChild(_.size > 2) shouldBe true
+      tree4_2.existsChild(_.size > 2) shouldBe false
+      tree4_3.existsChild(_.size > 2) shouldBe false
+      tree7.existsChild(_.size > 2) shouldBe true
+      tree9.existsChild(_.size > 2) shouldBe true
+      tree13.existsChild(_.size > 2) shouldBe true
+
+      tree0.existsChild(_.size   % 2 != 0) shouldBe false
+      tree1.existsChild(_.size   % 2 != 0) shouldBe false
+      tree2.existsChild(_.size   % 2 != 0) shouldBe true
+      tree3_1.existsChild(_.size % 2 != 0) shouldBe false
+      tree3_2.existsChild(_.size % 2 != 0) shouldBe true
+      tree4_1.existsChild(_.size % 2 != 0) shouldBe true
+      tree4_2.existsChild(_.size % 2 != 0) shouldBe true
+      tree4_3.existsChild(_.size % 2 != 0) shouldBe true
+      tree7.existsChild(_.size   % 2 != 0) shouldBe true
+      tree9.existsChild(_.size   % 2 != 0) shouldBe true
+      tree13.existsChild(_.size  % 2 != 0) shouldBe true
+    }
+
+    "check if the tree contains a branch fulfilling the predicate" in {
+      tree0.existsBranch(_.toList == List()) shouldBe false
+      tree0.existsBranch(_.toList == List("a")) shouldBe false
+      tree0.existsBranch(_.toList == List("a", "b")) shouldBe false
+      tree1.existsBranch(_.toList == List("a")) shouldBe true
+      tree1.existsBranch(_.toList == List("b")) shouldBe false
+      tree1.existsBranch(_.toList == List("a", "b")) shouldBe false
+      tree2.existsBranch(_.toList == List("a")) shouldBe false
+      tree2.existsBranch(_.toList == List("a", "b")) shouldBe true
+      tree2.existsBranch(_.toList == List("a", "c")) shouldBe false
+      tree2.existsBranch(_.toList == List("a", "b", "c")) shouldBe false
+      tree3_1.existsBranch(_.toList == List("a", "b", "c")) shouldBe true
+      tree3_1.existsBranch(_.toList == List("a", "b")) shouldBe false
+      tree3_1.existsBranch(_.toList == List("a", "c")) shouldBe false
+      tree3_1.existsBranch(_.toList == List("a")) shouldBe false
+      tree3_1.existsBranch(_.toList == List("b")) shouldBe false
+      tree3_1.existsBranch(_.toList == List("b", "c")) shouldBe false
+      tree3_2.existsBranch(_.toList == List("a", "b")) shouldBe true
+      tree3_2.existsBranch(_.toList == List("a", "c")) shouldBe true
+      tree3_2.existsBranch(_.toList == List("a", "a")) shouldBe false
+      tree3_2.existsBranch(_.toList == List("a")) shouldBe false
+      tree3_2.existsBranch(_.toList == List("b")) shouldBe false
+      tree3_2.existsBranch(_.toList == List("c")) shouldBe false
+      tree3_2.existsBranch(_.toList == List("a", "b", "c")) shouldBe false
+      tree3_2.existsBranch(_.toList == List("a", "c", "b")) shouldBe false
+      tree3_2.existsBranch(_.toList == List("a", "c", "e")) shouldBe false
+      tree4_1.existsBranch(_.toList == List("a", "b", "c", "d")) shouldBe true
+      tree4_1.existsBranch(_.toList == List("a", "b", "c", "d", "e")) shouldBe false
+      tree4_1.existsBranch(_.toList == List("a", "b", "c")) shouldBe false
+      tree4_1.existsBranch(_.toList == List("a", "b")) shouldBe false
+      tree4_1.existsBranch(_.toList == List("a")) shouldBe false
+      tree4_2.existsBranch(_.toList == List("a", "b", "c")) shouldBe true
+      tree4_2.existsBranch(_.toList == List("a", "d")) shouldBe true
+      tree4_2.existsBranch(_.toList == List("a", "b", "c", "d")) shouldBe false
+      tree4_2.existsBranch(_.toList == List("a", "a", "a")) shouldBe false
+      tree4_2.existsBranch(_.toList == List("c", "b", "a")) shouldBe false
+      tree4_2.existsBranch(_.toList == List("d", "a")) shouldBe false
+      tree9.existsBranch(_.toList == List("a", "b", "c")) shouldBe false
+      tree9.existsBranch(_.toList == List("a", "e", "h", "i")) shouldBe true
+      tree9.existsBranch(_.toList == List("a", "e", "c")) shouldBe false
+      tree9.existsBranch(_.toList == List("a", "e", "f")) shouldBe false
+      tree9.existsBranch(_.toList == List("a", "e", "h")) shouldBe false
+    }
+
+    "check if the tree contains a path fulfilling the predicate" in {
+      tree0.existsPath(_.toList == List()) shouldBe false
+      tree0.existsPath(_.toList == List("a")) shouldBe false
+      tree0.existsPath(_.toList == List("a", "b")) shouldBe false
+      tree1.existsPath(_.toList == List("a")) shouldBe true
+      tree1.existsPath(_.toList == List("b")) shouldBe false
+      tree1.existsPath(_.toList == List("a", "b")) shouldBe false
+      tree2.existsPath(_.toList == List("a")) shouldBe true
+      tree2.existsPath(_.toList == List("a", "b")) shouldBe true
+      tree2.existsPath(_.toList == List("a", "c")) shouldBe false
+      tree2.existsPath(_.toList == List("a", "b", "c")) shouldBe false
+      tree3_1.existsPath(_.toList == List("a", "b", "c")) shouldBe true
+      tree3_1.existsPath(_.toList == List("a", "b")) shouldBe true
+      tree3_1.existsPath(_.toList == List("a", "c")) shouldBe false
+      tree3_1.existsPath(_.toList == List("a")) shouldBe true
+      tree3_1.existsPath(_.toList == List("b")) shouldBe false
+      tree3_1.existsPath(_.toList == List("b", "c")) shouldBe false
+      tree3_2.existsPath(_.toList == List("a", "b")) shouldBe true
+      tree3_2.existsPath(_.toList == List("a", "c")) shouldBe true
+      tree3_2.existsPath(_.toList == List("a", "a")) shouldBe false
+      tree3_2.existsPath(_.toList == List("a")) shouldBe true
+      tree3_2.existsPath(_.toList == List("b")) shouldBe false
+      tree3_2.existsPath(_.toList == List("c")) shouldBe false
+      tree3_2.existsPath(_.toList == List("a", "b", "c")) shouldBe false
+      tree3_2.existsPath(_.toList == List("a", "c", "b")) shouldBe false
+      tree3_2.existsPath(_.toList == List("a", "c", "e")) shouldBe false
+      tree4_1.existsPath(_.toList == List("a", "b", "c", "d")) shouldBe true
+      tree4_1.existsPath(_.toList == List("a", "b", "c", "d", "e")) shouldBe false
+      tree4_1.existsPath(_.toList == List("a", "b", "c")) shouldBe true
+      tree4_1.existsPath(_.toList == List("a", "b")) shouldBe true
+      tree4_1.existsPath(_.toList == List("a")) shouldBe true
+      tree4_2.existsPath(_.toList == List("a", "b", "c")) shouldBe true
+      tree4_2.existsPath(_.toList == List("a", "d")) shouldBe true
+      tree4_2.existsPath(_.toList == List("a", "b", "c", "d")) shouldBe false
+      tree4_2.existsPath(_.toList == List("a", "a", "a")) shouldBe false
+      tree4_2.existsPath(_.toList == List("c", "b", "a")) shouldBe false
+      tree4_2.existsPath(_.toList == List("d", "a")) shouldBe false
+      tree9.existsPath(_.toList == List("a", "b", "c")) shouldBe true
+      tree9.existsPath(_.toList == List("a", "e", "h", "i")) shouldBe true
+      tree9.existsPath(_.toList == List("a", "e", "c")) shouldBe false
+      tree9.existsPath(_.toList == List("a", "e", "f")) shouldBe true
+      tree9.existsPath(_.toList == List("a", "e", "h")) shouldBe true
+    }
+
+    "check if the tree contains a branch fulfilling the predicate - using item extractor function" in {
+      val codeF: String => Int = _.head.toInt
+      tree0.existsBranch[Int](_.toList == List(), codeF) shouldBe false
+      tree0.existsBranch[Int](_.toList == List(97), codeF) shouldBe false
+      tree0.existsBranch[Int](_.toList == List(97, 98), codeF) shouldBe false
+      tree1.existsBranch[Int](_.toList == List(97), codeF) shouldBe true
+      tree1.existsBranch[Int](_.toList == List(98), codeF) shouldBe false
+      tree1.existsBranch[Int](_.toList == List(97, 98), codeF) shouldBe false
+      tree2.existsBranch[Int](_.toList == List(97), codeF) shouldBe false
+      tree2.existsBranch[Int](_.toList == List(97, 98), codeF) shouldBe true
+      tree2.existsBranch[Int](_.toList == List(97, 99), codeF) shouldBe false
+      tree2.existsBranch[Int](_.toList == List(97, 98, 99), codeF) shouldBe false
+      tree3_1.existsBranch[Int](_.toList == List(97, 98, 99), codeF) shouldBe true
+      tree3_1.existsBranch[Int](_.toList == List(97, 98), codeF) shouldBe false
+      tree3_1.existsBranch[Int](_.toList == List(97, 99), codeF) shouldBe false
+      tree3_1.existsBranch[Int](_.toList == List(97), codeF) shouldBe false
+      tree3_1.existsBranch[Int](_.toList == List(98), codeF) shouldBe false
+      tree3_1.existsBranch[Int](_.toList == List(98, 99), codeF) shouldBe false
+      tree3_2.existsBranch[Int](_.toList == List(97, 98), codeF) shouldBe true
+      tree3_2.existsBranch[Int](_.toList == List(97, 99), codeF) shouldBe true
+      tree3_2.existsBranch[Int](_.toList == List(97, 97), codeF) shouldBe false
+      tree3_2.existsBranch[Int](_.toList == List(97), codeF) shouldBe false
+      tree3_2.existsBranch[Int](_.toList == List(98), codeF) shouldBe false
+      tree3_2.existsBranch[Int](_.toList == List(99), codeF) shouldBe false
+      tree3_2.existsBranch[Int](_.toList == List(97, 98, 99), codeF) shouldBe false
+      tree3_2.existsBranch[Int](_.toList == List(97, 99, 98), codeF) shouldBe false
+      tree3_2.existsBranch[Int](_.toList == List(97, 99, 101), codeF) shouldBe false
+      tree4_1.existsBranch[Int](_.toList == List(97, 98, 99, 100), codeF) shouldBe true
+      tree4_1.existsBranch[Int](_.toList == List(97, 98, 99, 100, 101), codeF) shouldBe false
+      tree4_1.existsBranch[Int](_.toList == List(97, 98, 99), codeF) shouldBe false
+      tree4_1.existsBranch[Int](_.toList == List(97, 98), codeF) shouldBe false
+      tree4_1.existsBranch[Int](_.toList == List(97), codeF) shouldBe false
+      tree4_2.existsBranch[Int](_.toList == List(97, 98, 99), codeF) shouldBe true
+      tree4_2.existsBranch[Int](_.toList == List(97, 100), codeF) shouldBe true
+      tree4_2.existsBranch[Int](_.toList == List(97, 98, 99, 100), codeF) shouldBe false
+      tree4_2.existsBranch[Int](_.toList == List(97, 97, 97), codeF) shouldBe false
+      tree4_2.existsBranch[Int](_.toList == List(99, 98, 97), codeF) shouldBe false
+      tree4_2.existsBranch[Int](_.toList == List(100, 97), codeF) shouldBe false
+      tree9.existsBranch[Int](_.toList == List(97, 98, 99), codeF) shouldBe false
+      tree9.existsBranch[Int](_.toList == List(97, 101, 104, 105), codeF) shouldBe true
+      tree9.existsBranch[Int](_.toList == List(97, 101, 99), codeF) shouldBe false
+      tree9.existsBranch[Int](_.toList == List(97, 101, 102), codeF) shouldBe false
+      tree9.existsBranch[Int](_.toList == List(97, 101, 104), codeF) shouldBe false
+    }
+
+    "check if the tree contains a path fulfilling the predicate - using item extractor function" in {
+      val codeF: String => Int = _.head.toInt
+      tree0.existsPath[Int](_.toList == List(), codeF) shouldBe false
+      tree0.existsPath[Int](_.toList == List(97), codeF) shouldBe false
+      tree0.existsPath[Int](_.toList == List(97, 98), codeF) shouldBe false
+      tree1.existsPath[Int](_.toList == List(97), codeF) shouldBe true
+      tree1.existsPath[Int](_.toList == List(98), codeF) shouldBe false
+      tree1.existsPath[Int](_.toList == List(97, 98), codeF) shouldBe false
+      tree2.existsPath[Int](_.toList == List(97), codeF) shouldBe true
+      tree2.existsPath[Int](_.toList == List(97, 98), codeF) shouldBe true
+      tree2.existsPath[Int](_.toList == List(97, 99), codeF) shouldBe false
+      tree2.existsPath[Int](_.toList == List(97, 98, 99), codeF) shouldBe false
+      tree3_1.existsPath[Int](_.toList == List(97, 98, 99), codeF) shouldBe true
+      tree3_1.existsPath[Int](_.toList == List(97, 98), codeF) shouldBe true
+      tree3_1.existsPath[Int](_.toList == List(97, 99), codeF) shouldBe false
+      tree3_1.existsPath[Int](_.toList == List(97), codeF) shouldBe true
+      tree3_1.existsPath[Int](_.toList == List(98), codeF) shouldBe false
+      tree3_1.existsPath[Int](_.toList == List(98, 99), codeF) shouldBe false
+      tree3_2.existsPath[Int](_.toList == List(97, 98), codeF) shouldBe true
+      tree3_2.existsPath[Int](_.toList == List(97, 99), codeF) shouldBe true
+      tree3_2.existsPath[Int](_.toList == List(97, 97), codeF) shouldBe false
+      tree3_2.existsPath[Int](_.toList == List(97), codeF) shouldBe true
+      tree3_2.existsPath[Int](_.toList == List(98), codeF) shouldBe false
+      tree3_2.existsPath[Int](_.toList == List(99), codeF) shouldBe false
+      tree3_2.existsPath[Int](_.toList == List(97, 98, 99), codeF) shouldBe false
+      tree3_2.existsPath[Int](_.toList == List(97, 99, 98), codeF) shouldBe false
+      tree3_2.existsPath[Int](_.toList == List(97, 99, 101), codeF) shouldBe false
+      tree4_1.existsPath[Int](_.toList == List(97, 98, 99, 100), codeF) shouldBe true
+      tree4_1.existsPath[Int](_.toList == List(97, 98, 99, 100, 101), codeF) shouldBe false
+      tree4_1.existsPath[Int](_.toList == List(97, 98, 99), codeF) shouldBe true
+      tree4_1.existsPath[Int](_.toList == List(97, 98), codeF) shouldBe true
+      tree4_1.existsPath[Int](_.toList == List(97), codeF) shouldBe true
+      tree4_2.existsPath[Int](_.toList == List(97, 98, 99), codeF) shouldBe true
+      tree4_2.existsPath[Int](_.toList == List(97, 100), codeF) shouldBe true
+      tree4_2.existsPath[Int](_.toList == List(97, 98, 99, 100), codeF) shouldBe false
+      tree4_2.existsPath[Int](_.toList == List(97, 97, 97), codeF) shouldBe false
+      tree4_2.existsPath[Int](_.toList == List(99, 98, 97), codeF) shouldBe false
+      tree4_2.existsPath[Int](_.toList == List(100, 97), codeF) shouldBe false
+      tree9.existsPath[Int](_.toList == List(97, 98, 99), codeF) shouldBe true
+      tree9.existsPath[Int](_.toList == List(97, 101, 104, 105), codeF) shouldBe true
+      tree9.existsPath[Int](_.toList == List(97, 101, 99), codeF) shouldBe false
+      tree9.existsPath[Int](_.toList == List(97, 101, 102), codeF) shouldBe true
+      tree9.existsPath[Int](_.toList == List(97, 101, 104), codeF) shouldBe true
+    }
+
   }
 
 }

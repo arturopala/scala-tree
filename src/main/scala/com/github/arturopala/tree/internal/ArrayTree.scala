@@ -46,7 +46,7 @@ object ArrayTree {
   /** Iterates over all values of the tree rooted at startIndex.
     * @param depthFirst if true, enumerates values depth-first,
     *                   if false, breadth-first. */
-  final def valuesIterator[T: ClassTag](
+  final def valuesIterator[T](
     startIndex: Int,
     treeStructure: Int => Int,
     treeValues: Int => T,
@@ -59,7 +59,7 @@ object ArrayTree {
   /** Iterates over filtered values of the tree.
     * @param depthFirst if true, enumerates values depth-first,
     *                   if false, breadth-first. */
-  final def valuesIteratorWithLimit[T: ClassTag](
+  final def valuesIteratorWithLimit[T](
     startIndex: Int,
     treeStructure: Int => Int,
     treeValues: Int => T,
@@ -77,7 +77,7 @@ object ArrayTree {
   /** Iterates over filtered tuples of (level, value, isLeaf) of the tree.
     * @param depthFirst if true, enumerates values depth-first,
     *                   if false, breadth-first. */
-  final def valuesAndLevelsIteratorWithLimit[T: ClassTag](
+  final def valuesAndLevelsIteratorWithLimit[T](
     startIndex: Int,
     treeStructure: Int => Int,
     treeValues: Int => T,
@@ -95,7 +95,7 @@ object ArrayTree {
     )
 
   /** Iterates over all paths of the tree. */
-  final def pathsIterator[T: ClassTag](
+  final def pathsIterator[T](
     startIndex: Int,
     treeStructure: Int => Int,
     treeValues: Int => T
@@ -105,7 +105,7 @@ object ArrayTree {
       .map(_.map(treeValues))
 
   /** Iterates over filtered tree's paths. */
-  final def pathsIteratorWithFilter[T: ClassTag](
+  final def pathsIteratorWithFilter[T](
     startIndex: Int,
     treeStructure: Int => Int,
     treeValues: Int => T,
@@ -118,7 +118,7 @@ object ArrayTree {
     )
 
   /** Iterates over filtered tree's path with depth limit. */
-  final def pathsIteratorWithLimit[T: ClassTag](
+  final def pathsIteratorWithLimit[T](
     startIndex: Int,
     treeStructure: Int => Int,
     treeValues: Int => T,
@@ -132,7 +132,7 @@ object ArrayTree {
     )
 
   /** Iterates over all branches of the tree. */
-  final def branchesIterator[T: ClassTag](
+  final def branchesIterator[T](
     startIndex: Int,
     treeStructure: Int => Int,
     treeValues: Int => T
@@ -142,7 +142,7 @@ object ArrayTree {
       .map(_.map(treeValues))
 
   /** Iterates over filtered tree's branches. */
-  final def branchesIteratorWithFilter[T: ClassTag](
+  final def branchesIteratorWithFilter[T](
     startIndex: Int,
     treeStructure: Int => Int,
     treeValues: Int => T,
@@ -155,7 +155,7 @@ object ArrayTree {
     )
 
   /** Iterates over filtered tree's branches with depth limit. */
-  final def branchesIteratorWithLimit[T: ClassTag](
+  final def branchesIteratorWithLimit[T](
     startIndex: Int,
     treeStructure: Int => Int,
     treeValues: Int => T,
@@ -283,8 +283,8 @@ object ArrayTree {
   ): (IntSlice, Option[K], Iterator[K], Boolean) =
     ArrayTreeFunctions.followPath(path, tree.top, tree.structure, tree.content, toPathItem, rightmost)
 
-  /** Checks if the tree contains given direct child value. */
-  @`inline` final def containsChild[T, T1 >: T](
+  /** Checks if the tree starting at parentIndex contains given direct child value. */
+  @`inline` final def containsChildValue[T, T1 >: T](
     value: T1,
     parentIndex: Int,
     treeStructure: Int => Int,
@@ -294,7 +294,40 @@ object ArrayTree {
       .childrenIndexesIterator(parentIndex, treeStructure)
       .exists(i => treeValues(i) == value)
 
-  /** Checks if the tree contains given branch. */
+  /** Checks if the tree starting at parentIndex contains given direct child. */
+  @`inline` final def containsChild[T: ClassTag, T1 >: T](
+    child: Tree[T1],
+    parentIndex: Int,
+    treeStructure: IntSlice,
+    treeValues: Slice[T]
+  ): Boolean =
+    ArrayTreeFunctions
+      .childrenIndexesIterator(parentIndex, treeStructure)
+      .exists(i => treeAt(i, treeStructure, treeValues) == child)
+
+  /** Checks if the tree starting at parentIndex contains direct child value fulfilling the predicate. */
+  @`inline` final def existsChildValue[T, T1 >: T](
+    pred: T1 => Boolean,
+    parentIndex: Int,
+    treeStructure: Int => Int,
+    treeValues: Int => T
+  ): Boolean =
+    ArrayTreeFunctions
+      .childrenIndexesIterator(parentIndex, treeStructure)
+      .exists(i => pred(treeValues(i)))
+
+  /** Checks if the tree starting at parentIndex contains direct child fulfilling the predicate. */
+  @`inline` final def existsChild[T: ClassTag, T1 >: T](
+    pred: Tree[T1] => Boolean,
+    parentIndex: Int,
+    treeStructure: IntSlice,
+    treeValues: Slice[T]
+  ): Boolean =
+    ArrayTreeFunctions
+      .childrenIndexesIterator(parentIndex, treeStructure)
+      .exists(i => pred(treeAt(i, treeStructure, treeValues)))
+
+  /** Checks if the tree starting at parentIndex contains given branch. */
   @`inline` final def containsBranch[T, T1 >: T](
     branch: Iterable[T1],
     startIndex: Int,
@@ -303,19 +336,6 @@ object ArrayTree {
   ): Boolean = {
     val (_, unmatched, _, fullMatch) =
       ArrayTreeFunctions.followPath(branch, startIndex, treeStructure, treeValues, rightmost = false)
-    fullMatch && unmatched.isEmpty
-  }
-
-  /** Checks if the tree contains given branch. */
-  @`inline` final def containsBranch[T, K](
-    branch: Iterable[K],
-    startIndex: Int,
-    treeStructure: Int => Int,
-    treeValues: Int => T,
-    toPathItem: T => K
-  ): Boolean = {
-    val (_, unmatched, _, fullMatch) =
-      ArrayTreeFunctions.followPath(branch, startIndex, treeStructure, treeValues, toPathItem, rightmost = false)
     fullMatch && unmatched.isEmpty
   }
 
@@ -333,7 +353,7 @@ object ArrayTree {
       (a: Int, branch: IntSlice, _: Int) => a + (if (pred(branch.reverseIterator.map(treeValues).toIterable)) 1 else 0)
     )
 
-  /** Checks if the tree contains given path (as a branch prefix). */
+  /** Checks if the tree starting at parentIndex contains given path (a branch prefix). */
   @`inline` final def containsPath[T, T1 >: T](
     path: Iterable[T1],
     startIndex: Int,
@@ -341,18 +361,6 @@ object ArrayTree {
     treeValues: Int => T
   ): Boolean =
     ArrayTreeFunctions.followEntirePath(path, startIndex, treeStructure, treeValues, rightmost = false).isDefined
-
-  /** Checks if the tree contains given path (as a branch prefix). */
-  @`inline` final def containsPath[T, K](
-    path: Iterable[K],
-    startIndex: Int,
-    treeStructure: Int => Int,
-    treeValues: Int => T,
-    toPathItem: T => K
-  ): Boolean =
-    ArrayTreeFunctions
-      .followEntirePath(path, startIndex, treeStructure, treeValues, toPathItem, rightmost = false)
-      .isDefined
 
   /** Selects node's value accessible by path using item extractor function. */
   @`inline` final def selectValue[T, K](

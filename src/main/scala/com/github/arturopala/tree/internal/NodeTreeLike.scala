@@ -127,7 +127,17 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
   final override def selectTree[K](path: Iterable[K], toPathItem: T => K, rightmost: Boolean): Option[Tree[T]] =
     NodeTree.select(node, path, (n: Tree[T]) => n, toPathItem, rightmost)
 
-  final override def containsChild[T1 >: T](value: T1): Boolean = node.children.exists(_.head == value)
+  final override def containsValue[T1 >: T](value: T1): Boolean = values().iterator.contains(value)
+
+  final override def existsValue(pred: T => Boolean): Boolean = values().iterator.exists(pred)
+
+  final override def containsChildValue[T1 >: T](value: T1): Boolean = node.children.exists(_.head == value)
+
+  final override def existsChildValue(pred: T => Boolean): Boolean = node.children.exists(c => pred(c.head))
+
+  final override def containsChild[T1 >: T](child: Tree[T1]): Boolean = node.children.exists(_ == child)
+
+  final override def existsChild[T1 >: T](pred: Tree[T1] => Boolean): Boolean = node.children.exists(pred)
 
   final override def containsBranch[T1 >: T](branch: Iterable[T1]): Boolean =
     NodeTree.containsBranch(node, branch)
@@ -135,10 +145,22 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
   final override def containsBranch[K](branch: Iterable[K], toPathItem: T => K): Boolean =
     NodeTree.containsBranch(node, branch, toPathItem)
 
+  final override def existsBranch(pred: Iterable[T] => Boolean): Boolean =
+    NodeTree.existsBranch(pred, node, partialPaths = false)
+
+  final override def existsBranch[K](pred: Iterable[K] => Boolean, toPathItem: T => K): Boolean =
+    NodeTree.existsBranch(pred, node, partialPaths = false, toPathItem)
+
   final override def containsPath[T1 >: T](path: Iterable[T1]): Boolean = NodeTree.containsPath(node, path)
 
   final override def containsPath[K](path: Iterable[K], toPathItem: T => K): Boolean =
     NodeTree.containsPath(node, path, toPathItem)
+
+  final override def existsPath(pred: Iterable[T] => Boolean): Boolean =
+    NodeTree.existsBranch(pred, node, partialPaths = true)
+
+  final override def existsPath[K](pred: Iterable[K] => Boolean, toPathItem: T => K): Boolean =
+    NodeTree.existsBranch(pred, node, partialPaths = true, toPathItem)
 
   // DISTINCT INSERTIONS
 
@@ -151,7 +173,7 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
   final override def insertLeaves[T1 >: T: ClassTag](values: Iterable[T1], append: Boolean = false): Tree[T1] =
     if (values.isEmpty) node
     else {
-      val distinctLeafs = values.filterNot(node.containsChild)
+      val distinctLeafs = values.filterNot(node.containsChildValue)
       if (distinctLeafs.isEmpty) node
       else
         Tree(

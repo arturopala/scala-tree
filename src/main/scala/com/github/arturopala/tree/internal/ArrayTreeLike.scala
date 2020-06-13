@@ -383,20 +383,49 @@ abstract class ArrayTreeLike[T: ClassTag] extends TreeLike[T] {
   final override def selectTree[K](path: Iterable[K], toPathItem: T => K, rightmost: Boolean): Option[Tree[T]] =
     ArrayTree.selectTree(path, tree.structure.top, tree.structure, tree.content, toPathItem, rightmost)
 
-  final override def containsChild[T1 >: T](value: T1): Boolean =
-    ArrayTree.containsChild(value, tree.structure.top, tree.structure, tree.content)
+  final override def containsValue[T1 >: T](value: T1): Boolean =
+    tree.content.reverseIterator.contains(value)
+
+  final override def existsValue(pred: T => Boolean): Boolean =
+    tree.content.reverseIterator.exists(pred)
+
+  final override def containsChildValue[T1 >: T](value: T1): Boolean =
+    ArrayTree.containsChildValue(value, tree.structure.top, tree.structure, tree.content)
+
+  final override def existsChildValue(pred: T => Boolean): Boolean =
+    ArrayTree.existsChildValue(pred, tree.structure.top, tree.structure, tree.content)
+
+  final override def containsChild[T1 >: T](child: Tree[T1]): Boolean =
+    ArrayTree.containsChild(child, tree.structure.top, tree.structure, tree.content)
+
+  final override def existsChild[T1 >: T](pred: Tree[T1] => Boolean): Boolean =
+    ArrayTree.existsChild(pred, tree.structure.top, tree.structure, tree.content)
 
   final override def containsBranch[T1 >: T](branch: Iterable[T1]): Boolean =
     ArrayTree.containsBranch(branch, tree.structure.top, tree.structure, tree.content)
 
   final override def containsBranch[K](branch: Iterable[K], toPathItem: T => K): Boolean =
-    ArrayTree.containsBranch(branch, tree.structure.top, tree.structure, tree.content, toPathItem)
+    ArrayTree.containsBranch(branch, tree.structure.top, tree.structure, tree.content.map(toPathItem))
+
+  final override def existsBranch(pred: Iterable[T] => Boolean): Boolean =
+    ArrayTree.branchesIteratorWithFilter(tree.structure.top, tree.structure, tree.content, pred).nonEmpty
+
+  final override def existsBranch[K](pred: Iterable[K] => Boolean, toPathItem: T => K): Boolean =
+    ArrayTree
+      .branchesIteratorWithFilter(tree.structure.top, tree.structure, tree.content.map(toPathItem), pred)
+      .nonEmpty
 
   final override def containsPath[T1 >: T](path: Iterable[T1]): Boolean =
     ArrayTree.containsPath(path, tree.structure.top, tree.structure, tree.content)
 
   final override def containsPath[K](path: Iterable[K], toPathItem: T => K): Boolean =
-    ArrayTree.containsPath(path, tree.structure.top, tree.structure, tree.content, toPathItem)
+    ArrayTree.containsPath(path, tree.structure.top, tree.structure, tree.content.map(toPathItem))
+
+  final override def existsPath(pred: Iterable[T] => Boolean): Boolean =
+    ArrayTree.pathsIteratorWithFilter(tree.structure.top, tree.structure, tree.content, pred).nonEmpty
+
+  final override def existsPath[K](pred: Iterable[K] => Boolean, toPathItem: T => K): Boolean =
+    ArrayTree.pathsIteratorWithFilter(tree.structure.top, tree.structure, tree.content.map(toPathItem), pred).nonEmpty
 
   final override def toPairsIterator: Iterator[(Int, T)] = tree.structure.iterator.zip(tree.content.iterator)
 
