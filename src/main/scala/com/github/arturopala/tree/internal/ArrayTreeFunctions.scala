@@ -621,6 +621,51 @@ object ArrayTreeFunctions {
         } else throw new NoSuchElementException
     }
 
+  /** Iterates over tree's paths as index lists, depth first. */
+  final def pathsIndexListIterator(
+    startIndex: Int,
+    treeStructure: Int => Int,
+    maxDepth: Int = Int.MaxValue
+  ): Iterator[IntBuffer] =
+    new Iterator[IntBuffer] {
+
+      var hasNext: Boolean = false
+      private var array: IntBuffer = IntBuffer.empty
+
+      private val counters = new IntBuffer(8)
+      private val indexes = new IntBuffer(8)
+
+      if (maxDepth > 0) {
+        indexes.push(startIndex)
+        seekNext(false)
+      }
+
+      final override def next(): IntBuffer =
+        if (hasNext) {
+          val result = array
+          seekNext(true)
+          result
+        } else throw new NoSuchElementException
+
+      final def seekNext(check: Boolean): Unit =
+        if (check && counters.isEmpty) { hasNext = false }
+        else {
+          val i = indexes.peek
+          if (i < 0) { hasNext = false }
+          else {
+            val c = treeStructure(i)
+            array = BranchIteratorUtils.readBranch(counters, indexes).push(i)
+            hasNext = true
+            if (c == 0 || counters.length >= maxDepth - 1) {
+              BranchIteratorUtils.retract(counters, indexes)
+            } else {
+              counters.push(c)
+              writeChildrenIndexesToBuffer(i, treeStructure, indexes, indexes.length, reverse = true)
+            }
+          }
+        }
+    }
+
   /** Iterates over tree's branches as index lists, depth first. */
   final def branchesIndexListIterator(
     startIndex: Int,

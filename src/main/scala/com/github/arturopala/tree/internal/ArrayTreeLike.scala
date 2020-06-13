@@ -152,6 +152,19 @@ abstract class ArrayTreeLike[T: ClassTag] extends TreeLike[T] {
 
   // BRANCHES
 
+  final override def paths: Iterable[Iterable[T]] =
+    iterableFrom(ArrayTree.pathsIterator(tree.structure.top, tree.structure, tree.content))
+
+  final override def pathsWithFilter(
+    pred: Iterable[T] => Boolean,
+    maxDepth: Int = Int.MaxValue
+  ): Iterable[Iterable[T]] =
+    iterableFrom(
+      if (maxDepth >= height)
+        ArrayTree.pathsIteratorWithFilter(tree.structure.top, tree.structure, tree.content, pred)
+      else ArrayTree.pathsIteratorWithLimit(tree.structure.top, tree.structure, tree.content, pred, maxDepth)
+    )
+
   final override def branches: Iterable[Iterable[T]] =
     iterableFrom(ArrayTree.branchesIterator(tree.structure.top, tree.structure, tree.content))
 

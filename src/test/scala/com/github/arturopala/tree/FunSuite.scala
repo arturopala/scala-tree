@@ -27,6 +27,9 @@ class FunSuite extends munit.FunSuite {
   val even: String => Boolean = s => s.head.toInt % 2 == 0
   val odd: String => Boolean = s => s.head.toInt  % 2 != 0
 
+  val evenSize: Iterable[String] => Boolean = _.size % 2 == 0
+  val oddSize: Iterable[String] => Boolean = _.size  % 2 != 0
+
   def test(suiteName: String, suite: munit.FunSuite): Unit =
     this.munitTestsBuffer.appendAll(
       suite

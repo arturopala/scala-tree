@@ -94,7 +94,44 @@ object ArrayTree {
       (t: (Int, T, Boolean)) => pred(t._2)
     )
 
-  /** Iterates over filtered tree's branches. */
+  /** Iterates over all paths of the tree. */
+  final def pathsIterator[T: ClassTag](
+    startIndex: Int,
+    treeStructure: Int => Int,
+    treeValues: Int => T
+  ): Iterator[Iterable[T]] =
+    ArrayTreeFunctions
+      .pathsIndexListIterator(startIndex, treeStructure)
+      .map(_.map(treeValues))
+
+  /** Iterates over filtered tree's paths. */
+  final def pathsIteratorWithFilter[T: ClassTag](
+    startIndex: Int,
+    treeStructure: Int => Int,
+    treeValues: Int => T,
+    pred: Iterable[T] => Boolean
+  ): Iterator[Iterable[T]] =
+    new MapFilterIterator[IntBuffer, Iterable[T]](
+      ArrayTreeFunctions.pathsIndexListIterator(startIndex, treeStructure),
+      _.map(treeValues),
+      pred
+    )
+
+  /** Iterates over filtered tree's path with depth limit. */
+  final def pathsIteratorWithLimit[T: ClassTag](
+    startIndex: Int,
+    treeStructure: Int => Int,
+    treeValues: Int => T,
+    pred: Iterable[T] => Boolean,
+    maxDepth: Int
+  ): Iterator[Iterable[T]] =
+    new MapFilterIterator[IntBuffer, Iterable[T]](
+      ArrayTreeFunctions.pathsIndexListIterator(startIndex, treeStructure, maxDepth),
+      _.map(treeValues),
+      pred
+    )
+
+  /** Iterates over all branches of the tree. */
   final def branchesIterator[T: ClassTag](
     startIndex: Int,
     treeStructure: Int => Int,

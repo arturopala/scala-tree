@@ -346,9 +346,9 @@ object NodeTree {
         if (queue.isEmpty) throw new NoSuchElementException()
         else {
           val (acc, Tree(head: T, children: Iterable[Tree[T]])) = queue.next
-          val branch = acc :+ head
-          queue = children.map((branch, _)) ++: queue.trim
-          branch
+          val path = acc :+ head
+          queue = children.map((path, _)) ++: queue.trim
+          path
         }
     }
 
@@ -384,7 +384,11 @@ object NodeTree {
     }
 
   /** Returns an iterator over filtered branches of the tree. */
-  final def branchesIteratorWithFilter[T](pred: Iterable[T] => Boolean, node: Tree[T]): Iterator[Iterable[T]] =
+  final def branchesIteratorWithFilter[T](
+    pred: Iterable[T] => Boolean,
+    node: Tree[T],
+    partialPaths: Boolean
+  ): Iterator[Iterable[T]] =
     new Iterator[Iterable[T]] {
 
       type Queue = Vector[(Vector[T], Tree[T])]
@@ -396,9 +400,9 @@ object NodeTree {
         if (queue.isEmpty) throw new NoSuchElementException()
         else {
           val (acc, Tree(head: T, children: Iterable[Tree[T]])) = queue.head
-          val branch = acc :+ head
-          queue = seekNext(children.map((branch, _)) ++: queue.safeTail)
-          branch
+          val path = acc :+ head
+          queue = seekNext(children.map((path, _)) ++: queue.safeTail)
+          path
         }
 
       @tailrec
@@ -406,10 +410,10 @@ object NodeTree {
         if (q.isEmpty) q
         else {
           val (acc, Tree(head: T, children: Iterable[Tree[T]])) = q.head
-          val branch = acc :+ head
+          val path = acc :+ head
           children match {
-            case Nil if pred(branch) => q
-            case _                   => seekNext(children.map((branch, _)) ++: q.safeTail)
+            case ch if (partialPaths || ch.isEmpty) && pred(path) => q
+            case _                                                => seekNext(children.map((path, _)) ++: q.safeTail)
           }
         }
     }
@@ -418,7 +422,8 @@ object NodeTree {
   final def branchesIteratorWithLimit[T](
     pred: Iterable[T] => Boolean,
     node: Tree[T],
-    maxDepth: Int
+    maxDepth: Int,
+    partialPaths: Boolean
   ): Iterator[Iterable[T]] =
     new Iterator[Iterable[T]] {
 
@@ -433,11 +438,11 @@ object NodeTree {
         if (queue.isEmpty) throw new NoSuchElementException()
         else {
           val (acc, Tree(head: T, children: Iterable[Tree[T]])) = queue.head
-          val branch = acc :+ head
+          val path = acc :+ head
           queue =
-            if (branch.length < maxDepth) seekNext(children.map((branch, _)) ++: queue.safeTail)
+            if (path.length < maxDepth) seekNext(children.map((path, _)) ++: queue.safeTail)
             else seekNext(queue.safeTail)
-          branch
+          path
         }
 
       @tailrec
@@ -445,11 +450,11 @@ object NodeTree {
         if (q.isEmpty) q
         else {
           val (acc, Tree(head: T, children: Iterable[Tree[T]])) = q.head
-          val branch = acc :+ head
+          val path = acc :+ head
           children match {
-            case s if (s.isEmpty || branch.length >= maxDepth) && pred(branch) => q
+            case s if (partialPaths || s.isEmpty || path.length >= maxDepth) && pred(path) => q
             case _ =>
-              if (branch.length < maxDepth) seekNext(children.map((branch, _)) ++: q.safeTail)
+              if (path.length < maxDepth) seekNext(children.map((path, _)) ++: q.safeTail)
               else seekNext(q.safeTail)
           }
         }

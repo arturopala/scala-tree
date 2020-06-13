@@ -133,7 +133,7 @@ trait TreeLike[+T] {
     * @group values */
   def leaves: Iterable[T]
 
-  /** Iterates over filtered node's values, top-down, depth-first.
+  /** Iterates over pre-filtered node's values, top-down, depth-first.
     * @param pred return true to include the value in the result, false otherwise.
     * @param mode tree traversing mode, either depth-first or breadth-first
     * @param maxDepth number of levels to go inside the tree, default to max
@@ -144,7 +144,7 @@ trait TreeLike[+T] {
     maxDepth: Int = Int.MaxValue
   ): Iterable[T]
 
-  /** Iterates over filtered node's values, paired with the node's level and isLeaf flag.
+  /** Iterates over pre-filtered node's values, paired with the node's level and isLeaf flag.
     * @param pred return true to include the value in the result, false otherwise.
     * @param mode tree traversing mode, either depth-first or breadth-first
     * @param maxDepth number of levels to go inside the tree, default to max
@@ -175,7 +175,7 @@ trait TreeLike[+T] {
     * @group sub-trees */
   def trees(mode: TraversingMode = TopDownDepthFirst): Iterable[Tree[T]]
 
-  /** Iterates over filtered trees in this tree inclusive.
+  /** Iterates over pre-filtered trees in this tree inclusive.
     * @param pred return true to include the tree in the result, false otherwise.
     * @param mode tree traversing mode, either depth-first or breadth-first
     * @param maxDepth number of levels to go inside the tree, default to max
@@ -186,7 +186,7 @@ trait TreeLike[+T] {
     maxDepth: Int = Int.MaxValue
   ): Iterable[Tree[T]]
 
-  /** Iterates over filtered trees in this tree inclusive, paired with the node's level.
+  /** Iterates over pre-filtered trees in this tree inclusive, paired with the node's level.
     * @param pred return true to include the tree in the result, false otherwise.
     * @param mode tree traversing mode, either depth-first or breadth-first
     * @param maxDepth number of levels to go inside the tree, default to max
@@ -201,13 +201,20 @@ trait TreeLike[+T] {
 
   /** Iterates over all the possible paths in this tree.
     * @group branches */
-  def paths: Iterable[Iterable[T]] = ???
+  def paths: Iterable[Iterable[T]]
 
-  /** Iterates over all the branches existing in this tree.
+  /** Iterates over pre-filtered paths of this tree.
+    * @param pred return true to include the path in the result, false otherwise.
+    * @param maxDepth maximum length of the returned paths, default to max
+    * @group branches
+    */
+  def pathsWithFilter(pred: Iterable[T] => Boolean, maxDepth: Int = Int.MaxValue): Iterable[Iterable[T]]
+
+  /** Iterates over all the branches in this tree.
     * @group branches */
   def branches: Iterable[Iterable[T]]
 
-  /** Iterates over filtered branches in this tree.
+  /** Iterates over pre-filtered branches of this tree.
     * @param pred return true to include the branch in the result, false otherwise.
     * @param maxDepth maximum length of the returned branches, default to max
     * @group branches

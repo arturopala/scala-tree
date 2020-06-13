@@ -89,15 +89,28 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
 
   // BRANCHES
 
-  final override def branches: Iterable[Iterable[T]] = iterableFrom(NodeTree.branchesIterator(node))
+  final override def paths: Iterable[Iterable[T]] =
+    iterableFrom(NodeTree.pathsIterator(node))
+
+  final override def pathsWithFilter(
+    pred: Iterable[T] => Boolean,
+    maxDepth: Int = Int.MaxValue
+  ): Iterable[Iterable[T]] =
+    iterableFrom {
+      if (maxDepth >= height) NodeTree.branchesIteratorWithFilter(pred, node, partialPaths = true)
+      else NodeTree.branchesIteratorWithLimit(pred, node, maxDepth, partialPaths = true)
+    }
+
+  final override def branches: Iterable[Iterable[T]] =
+    iterableFrom(NodeTree.branchesIterator(node))
 
   final override def branchesWithFilter(
     pred: Iterable[T] => Boolean,
     maxDepth: Int = Int.MaxValue
   ): Iterable[Iterable[T]] =
     iterableFrom {
-      if (maxDepth >= height) NodeTree.branchesIteratorWithFilter(pred, node)
-      else NodeTree.branchesIteratorWithLimit(pred, node, maxDepth)
+      if (maxDepth >= height) NodeTree.branchesIteratorWithFilter(pred, node, partialPaths = false)
+      else NodeTree.branchesIteratorWithLimit(pred, node, maxDepth, partialPaths = false)
     }
 
   final override def countBranches(pred: Iterable[T] => Boolean): Int =

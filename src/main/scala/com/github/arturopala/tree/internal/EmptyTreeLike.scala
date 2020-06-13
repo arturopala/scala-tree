@@ -45,7 +45,7 @@ trait EmptyTreeLike extends TreeLike[Nothing] {
   final override def values(mode: TraversingMode = TopDownDepthFirst): Iterable[Nothing] =
     Iterable.empty
 
-  final override def leaves: Iterable[Nothing] = Iterable.empty
+  final override val leaves: Iterable[Nothing] = Iterable.empty
 
   def valuesWithFilter(
     pred: Nothing => Boolean,
@@ -59,19 +59,17 @@ trait EmptyTreeLike extends TreeLike[Nothing] {
     maxDepth: Int = Int.MaxValue
   ): Iterable[(Int, Nothing, Boolean)] = Iterable.empty
 
-  final override val childrenValues: Iterable[Nothing] =
-    Iterable.empty
+  final override val childrenValues: Iterable[Nothing] = Iterable.empty
 
-  final override def firstChildValue: Option[Nothing] = None
+  final override val firstChildValue: Option[Nothing] = None
 
-  final override def lastChildValue: Option[Nothing] = None
+  final override val lastChildValue: Option[Nothing] = None
 
-  final override val children: Iterable[Tree[Nothing]] =
-    Iterable.empty
+  final override val children: Iterable[Tree[Nothing]] = Iterable.empty
 
-  final override def firstChild: Option[Tree[Nothing]] = None
+  final override val firstChild: Option[Tree[Nothing]] = None
 
-  final override def lastChild: Option[Tree[Nothing]] = None
+  final override val lastChild: Option[Tree[Nothing]] = None
 
   final override def trees(mode: TraversingMode = TopDownDepthFirst): Iterable[Tree[Nothing]] =
     Iterable.empty
@@ -88,8 +86,15 @@ trait EmptyTreeLike extends TreeLike[Nothing] {
     maxDepth: Int = Int.MaxValue
   ): Iterable[(Int, Tree[Nothing])] = Iterable.empty
 
-  final override val branches: Iterable[Iterable[Nothing]] =
+  final override val paths: Iterable[Iterable[Nothing]] = Iterable.empty
+
+  final override def pathsWithFilter(
+    pred: Iterable[Nothing] => Boolean,
+    maxDepth: Int = Int.MaxValue
+  ): Iterable[Iterable[Nothing]] =
     Iterable.empty
+
+  final override val branches: Iterable[Iterable[Nothing]] = Iterable.empty
 
   final override def branchesWithFilter(
     pred: Iterable[Nothing] => Boolean,

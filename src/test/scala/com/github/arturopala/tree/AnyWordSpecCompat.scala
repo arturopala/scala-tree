@@ -68,7 +68,12 @@ trait AnyWordSpecCompat extends munit.FunSuite {
         iterable.size == expected.size,
         s"both collections must have the same size,\n expected ${expected.size}: ${expected.toSeq}, but\n received ${iterable.size}: ${iterable.toSeq}"
       )
-      iterable.zip(expected).foreach { case (a, b) => assertEquals(a, b) }
+      iterable.zip(expected).foreach {
+        case (a, b) =>
+          if (a.isInstanceOf[Iterable[T]] && b.isInstanceOf[Iterable[T]])
+            IterableExt(a.asInstanceOf[Iterable[T]]).shouldBe(b.asInstanceOf[Iterable[T]])
+          else assertEquals(a, b)
+      }
     }
   }
 
