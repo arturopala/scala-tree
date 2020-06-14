@@ -439,8 +439,8 @@ abstract class ArrayTreeLike[T: ClassTag] extends TreeLike[T] {
 
   @`inline` final override def toBuffers[T1 >: T: ClassTag]: (IntBuffer, Buffer[T1]) =
     if (implicitly[ClassTag[T]].runtimeClass.equals(implicitly[ClassTag[T1]].runtimeClass))
-      (tree.structure.toBuffer, tree.content.toBuffer.asInstanceOf[Buffer[T1]])
-    else (tree.structure.toBuffer, Buffer(tree.content.toArray[T1]))
+      (tree.structure.asBuffer, tree.content.asBuffer.asInstanceOf[Buffer[T1]])
+    else (tree.structure.asBuffer, tree.content.toBuffer[T1])
 
   @`inline` final override def toStructureArray: Array[Int] = tree.structure.toArray
 

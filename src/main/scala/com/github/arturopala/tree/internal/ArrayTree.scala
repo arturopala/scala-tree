@@ -455,7 +455,7 @@ object ArrayTree {
 
     assert(treeStructure.length == treeValues.length, "Structure and values arrays of the tree MUST be the same size.")
 
-    val structureBuffer = treeStructure.toBuffer
+    val structureBuffer = treeStructure.asBuffer
     val valuesBuffer = new ArrayBuffer[K](new Array[K](treeValues.length))
 
     var index = 0
@@ -491,7 +491,7 @@ object ArrayTree {
 
     assert(treeStructure.length == treeValues.length, "Structure and values arrays of the tree MUST be the same size.")
 
-    val structureBuffer = treeStructure.toBuffer
+    val structureBuffer = treeStructure.asBuffer
     val valuesBuffer = Buffer.ofSize[K](treeValues.length)
 
     var index = 0
