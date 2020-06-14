@@ -34,11 +34,7 @@ class TreeDebugSpec extends FunSuite with TestWithBuffers {
 
     def tree[T: ClassTag](t: Tree[T]): Tree[T]
 
-    "debug" suite {
-      test(
-        tree1.existsBranch(_.toList == List("a")) shouldBe true
-      )
-    }
+    "debug" suite {}
 
   }
 

@@ -121,7 +121,7 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
   final override def selectValue[K](path: Iterable[K], toPathItem: T => K, rightmost: Boolean = false): Option[T] =
     NodeTree.select(node, path, (n: Tree[T]) => n.head, toPathItem, rightmost = rightmost)
 
-  final override def selectTree[T1 >: T: ClassTag](path: Iterable[T1], rightmost: Boolean = false): Option[Tree[T]] =
+  final override def selectTree[T1 >: T](path: Iterable[T1], rightmost: Boolean = false): Option[Tree[T]] =
     NodeTree.select(node, path, (n: Tree[T]) => n, rightmost = rightmost)
 
   final override def selectTree[K](path: Iterable[K], toPathItem: T => K, rightmost: Boolean): Option[Tree[T]] =
@@ -413,40 +413,40 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
 
   // DISTINCT REMOVALS
 
-  final override def removeChildValue[T1 >: T: ClassTag](value: T1): Tree[T] =
+  final override def removeChildValue[T1 >: T](value: T1): Tree[T] =
     NodeTree.removeChildValue(node, value, keepDistinct = true, rightmost = false)
 
-  final override def removeValueAt[T1 >: T: ClassTag](path: Iterable[T1]): Tree[T] =
+  final override def removeValueAt[T1 >: T](path: Iterable[T1]): Tree[T] =
     NodeTree.removeValueAt(node, path.iterator, keepDistinct = true, rightmost = false)
 
-  final override def removeValueAt[K, T1 >: T: ClassTag](path: Iterable[K], toPathItem: T => K): Tree[T] =
+  final override def removeValueAt[K](path: Iterable[K], toPathItem: T => K): Tree[T] =
     NodeTree.removeValueAt(node, path.iterator, toPathItem, keepDistinct = true, rightmost = false)
 
-  final override def removeChild[T1 >: T: ClassTag](value: T1): Tree[T] =
+  final override def removeChild[T1 >: T](value: T1): Tree[T] =
     NodeTree.removeChild(node, value, rightmost = false)
 
-  final override def removeChildren[T1 >: T: ClassTag](): Tree[T] = Tree.Leaf(node.head)
+  final override def removeChildren[T1 >: T](): Tree[T] = Tree.Leaf(node.head)
 
-  final override def removeTreeAt[T1 >: T: ClassTag](path: Iterable[T1]): Tree[T] =
+  final override def removeTreeAt[T1 >: T](path: Iterable[T1]): Tree[T] =
     NodeTree.removeTreeAt(node, path.iterator, rightmost = false)
 
-  final override def removeTreeAt[K, T1 >: T: ClassTag](path: Iterable[K], toPathItem: T => K): Tree[T] =
+  final override def removeTreeAt[K](path: Iterable[K], toPathItem: T => K): Tree[T] =
     NodeTree.removeTreeAt(node, path.iterator, toPathItem, rightmost = false)
 
-  final override def removeChildrenAt[T1 >: T: ClassTag](path: Iterable[T1]): Tree[T] =
+  final override def removeChildrenAt[T1 >: T](path: Iterable[T1]): Tree[T] =
     NodeTree.removeChildrenAt(node, path.iterator, rightmost = false)
 
-  final override def removeChildrenAt[K, T1 >: T: ClassTag](path: Iterable[K], toPathItem: T => K): Tree[T] =
+  final override def removeChildrenAt[K](path: Iterable[K], toPathItem: T => K): Tree[T] =
     NodeTree.removeChildrenAt(node, path.iterator, toPathItem, rightmost = false)
 
   // TRANSFORMATIONS
 
-  final override def map[K: ClassTag](f: T => K): Tree[K] = {
+  final override def map[K](f: T => K): Tree[K] = {
     val (structure, values) = NodeTree.arrayMap(f, node)
     TreeBuilder.fromIterators(structure.iterator, values.iterator).headOption.getOrElse(empty)
   }
 
-  final def mapUnsafe[K: ClassTag](f: T => K): Tree[K] = {
+  final def mapUnsafe[K](f: T => K): Tree[K] = {
     def mapNodeUnsafe(n: Tree[T]): Tree[K] = Tree(f(n.head), n.children.map(mapNodeUnsafe))
     mapNodeUnsafe(node)
   }

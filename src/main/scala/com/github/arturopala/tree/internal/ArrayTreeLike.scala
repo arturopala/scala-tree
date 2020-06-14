@@ -30,7 +30,7 @@ import scala.reflect.ClassTag
   * The [[Tree.ArrayTree]] final functions set.
   * Extracted from the [[Tree]] to de-clutter its codebase.
   */
-abstract class ArrayTreeLike[T: ClassTag] extends TreeLike[T] {
+abstract class ArrayTreeLike[T] extends TreeLike[T] {
 
   protected val tree: ArrayTree[T]
 
@@ -340,36 +340,36 @@ abstract class ArrayTreeLike[T: ClassTag] extends TreeLike[T] {
 
   // REMOVALS
 
-  final override def removeChildValue[T1 >: T: ClassTag](value: T1): Tree[T] =
+  final override def removeChildValue[T1 >: T](value: T1): Tree[T] =
     ArrayTree.removeChildValue(value, tree, rightmost = false, keepDistinct = true)
 
-  final override def removeValueAt[T1 >: T: ClassTag](path: Iterable[T1]): Tree[T] =
+  final override def removeValueAt[T1 >: T](path: Iterable[T1]): Tree[T] =
     ArrayTree.removeValueAt(path, tree, rightmost = false, keepDistinct = true)
 
-  final override def removeValueAt[K, T1 >: T: ClassTag](path: Iterable[K], toPathItem: T => K): Tree[T] =
+  final override def removeValueAt[K](path: Iterable[K], toPathItem: T => K): Tree[T] =
     ArrayTree.removeValueAt(path, tree, toPathItem, rightmost = false, keepDistinct = true)
 
-  final override def removeChild[T1 >: T: ClassTag](value: T1): Tree[T] =
+  final override def removeChild[T1 >: T](value: T1): Tree[T] =
     ArrayTree.removeChild(tree, value, rightmost = false)
 
-  final override def removeChildren[T1 >: T: ClassTag](): Tree[T] =
+  final override def removeChildren[T1 >: T](): Tree[T] =
     ArrayTree.removeChildren(tree.top, tree)
 
-  final override def removeTreeAt[T1 >: T: ClassTag](path: Iterable[T1]): Tree[T] =
+  final override def removeTreeAt[T1 >: T](path: Iterable[T1]): Tree[T] =
     ArrayTree.removeTreeAt(path, tree, rightmost = false)
 
-  final override def removeTreeAt[K, T1 >: T: ClassTag](path: Iterable[K], toPathItem: T => K): Tree[T] =
+  final override def removeTreeAt[K](path: Iterable[K], toPathItem: T => K): Tree[T] =
     ArrayTree.removeTreeAt(path, tree, toPathItem, rightmost = false)
 
-  final override def removeChildrenAt[T1 >: T: ClassTag](path: Iterable[T1]): Tree[T] =
+  final override def removeChildrenAt[T1 >: T](path: Iterable[T1]): Tree[T] =
     ArrayTree.removeChildrenAt(path, tree, rightmost = false)
 
-  final override def removeChildrenAt[K, T1 >: T: ClassTag](path: Iterable[K], toPathItem: T => K): Tree[T] =
+  final override def removeChildrenAt[K](path: Iterable[K], toPathItem: T => K): Tree[T] =
     ArrayTree.removeChildrenAt(path, tree, toPathItem, rightmost = false)
 
   // TRANSFORMATIONS
 
-  final override def map[K: ClassTag](f: T => K): Tree[K] =
+  final override def map[K](f: T => K): Tree[K] =
     new ArrayTree[K](tree.structure, tree.content.map(f), tree.width, tree.height)
 
   // PATH-BASED OPERATIONS
@@ -377,7 +377,7 @@ abstract class ArrayTreeLike[T: ClassTag] extends TreeLike[T] {
   final override def selectValue[K](path: Iterable[K], toPathItem: T => K, rightmost: Boolean = false): Option[T] =
     ArrayTree.selectValue(path, tree.structure.top, tree.structure, tree.content, toPathItem, rightmost)
 
-  final override def selectTree[T1 >: T: ClassTag](path: Iterable[T1], rightmost: Boolean = false): Option[Tree[T]] =
+  final override def selectTree[T1 >: T](path: Iterable[T1], rightmost: Boolean = false): Option[Tree[T]] =
     ArrayTree.selectTree(path, tree.structure.top, tree.structure, tree.content, rightmost)
 
   final override def selectTree[K](path: Iterable[K], toPathItem: T => K, rightmost: Boolean): Option[Tree[T]] =
@@ -432,15 +432,18 @@ abstract class ArrayTreeLike[T: ClassTag] extends TreeLike[T] {
   @`inline` final override def toArrays[T1 >: T: ClassTag]: (Array[Int], Array[T1]) =
     (tree.structure.toArray, tree.content.toArray[T1])
 
-  @`inline` final def toSlices[T1 >: T: ClassTag]: (IntSlice, Slice[T1]) =
-    if (implicitly[ClassTag[T]].runtimeClass.equals(implicitly[ClassTag[T1]].runtimeClass))
-      (tree.structure, tree.content.asInstanceOf[Slice[T1]])
-    else (tree.structure, Slice.of(tree.content.toArray[T1]))
+  @`inline` final override def toSlices[T1 >: T: ClassTag]: (IntSlice, Slice[T1]) =
+    tree.content.headOption.map(_.getClass) match {
+      case Some(clazz) if clazz.equals(implicitly[ClassTag[T1]].runtimeClass) =>
+        (tree.structure, tree.content.asInstanceOf[Slice[T1]])
+      case _ =>
+        (tree.structure, Slice.of(tree.content.toArray[T1]))
+    }
+
+  final def asSlices: (IntSlice, Slice[T]) = (tree.structure, tree.content)
 
   @`inline` final override def toBuffers[T1 >: T: ClassTag]: (IntBuffer, Buffer[T1]) =
-    if (implicitly[ClassTag[T]].runtimeClass.equals(implicitly[ClassTag[T1]].runtimeClass))
-      (tree.structure.asBuffer, tree.content.asBuffer.asInstanceOf[Buffer[T1]])
-    else (tree.structure.asBuffer, tree.content.toBuffer[T1])
+    (tree.structure.asBuffer, tree.content.toBuffer[T1])
 
   @`inline` final override def toStructureArray: Array[Int] = tree.structure.toArray
 
@@ -465,15 +468,5 @@ abstract class ArrayTreeLike[T: ClassTag] extends TreeLike[T] {
         maxDepth
       )
       .toString()
-
-  final def inflated: Tree[T] =
-    TreeBuilder.fromIterators(tree.structure.iterator, tree.content.iterator).headOption.getOrElse(Tree.empty)
-
-  final def deflated[T1 >: T](implicit tag: ClassTag[T1]): ArrayTree[T1] =
-    (if (implicitly[ClassTag[T]].runtimeClass.equals(tag.runtimeClass)) tree
-     else {
-       val (structure, values) = tree.toBuffers[T1]
-       ArrayTree.fromBuffers[T1](structure, values)
-     }).asInstanceOf[ArrayTree[T1]]
 
 }

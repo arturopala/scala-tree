@@ -310,7 +310,7 @@ trait TreeLike[+T] {
   /** Selects a first tree anchored at the node reachable by the provided path, if any.
     * @param path list of node's values forming a path from the root to the node.
     * @group selection */
-  def selectTree[T1 >: T: ClassTag](path: Iterable[T1], rightmost: Boolean = false): Option[Tree[T]]
+  def selectTree[T1 >: T](path: Iterable[T1], rightmost: Boolean = false): Option[Tree[T]]
 
   /** Selects a first tree anchored at the node reachable by the provided path, if any.
     * @param path list of K path items forming a path from the root to the node.
@@ -330,7 +330,7 @@ trait TreeLike[+T] {
 
   /** Maps every node of the tree using provided function and returns a new tree.
     * @group transformation */
-  def map[K: ClassTag](f: T => K): Tree[K]
+  def map[K](f: T => K): Tree[K]
 
   /** Flat-maps every node of the tree using provided function and returns a new tree.
     * @note This method tries to keep children values unique by merging modified tree (and only that) when needed.
@@ -769,7 +769,7 @@ trait TreeLike[+T] {
     * @note This method tries to keep children values unique by merging modified tree (and only that) when needed.
     * @return modified tree
     * @group removal */
-  def removeChildValue[T1 >: T: ClassTag](value: T1): Tree[T]
+  def removeChildValue[T1 >: T](value: T1): Tree[T]
 
   /** Removes the first value selected by the given path, inserts nested children into the parent,
     * and returns a whole tree updated.
@@ -780,7 +780,7 @@ trait TreeLike[+T] {
     * @param path list of node's values forming a path from the root to the parent node.
     * @return modified tree
     * @group removal */
-  def removeValueAt[T1 >: T: ClassTag](path: Iterable[T1]): Tree[T]
+  def removeValueAt[T1 >: T](path: Iterable[T1]): Tree[T]
 
   /** Removes the first value selected by the given path, merges node's children with remaining siblings,
     * and returns a whole tree updated.
@@ -788,43 +788,43 @@ trait TreeLike[+T] {
     * @param toPathItem extractor of the K path item from the tree's node value
     * @return modified tree
     * @group removal */
-  def removeValueAt[K, T1 >: T: ClassTag](path: Iterable[K], toPathItem: T => K): Tree[T]
+  def removeValueAt[K](path: Iterable[K], toPathItem: T => K): Tree[T]
 
   /** Removes completely first direct child node holding a value.
     * @return modified tree
     * @group removal */
-  def removeChild[T1 >: T: ClassTag](value: T1): Tree[T]
+  def removeChild[T1 >: T](value: T1): Tree[T]
 
   /** Removes completely all children.
     * @return modified tree
     * @group removal */
-  def removeChildren[T1 >: T: ClassTag](): Tree[T]
+  def removeChildren[T1 >: T](): Tree[T]
 
   /** Removes the first tree selected by the given path.
     * @param path list of node's values forming a path from the root to the parent node.
     * @return modified tree
     * @group removal */
-  def removeTreeAt[T1 >: T: ClassTag](path: Iterable[T1]): Tree[T]
+  def removeTreeAt[T1 >: T](path: Iterable[T1]): Tree[T]
 
   /** Removes the first tree selected by the given path.
     * @param path list K items forming a path from the root to the parent node.
     * @param toPathItem extractor of the K path item from the tree's node value
     * @return modified tree
     * @group removal */
-  def removeTreeAt[K, T1 >: T: ClassTag](path: Iterable[K], toPathItem: T => K): Tree[T]
+  def removeTreeAt[K](path: Iterable[K], toPathItem: T => K): Tree[T]
 
   /** Removes children of the leftmost tree selected by the given path.
     * @param path list of node's values forming a path from the root to the parent node.
     * @return modified tree
     * @group removal */
-  def removeChildrenAt[T1 >: T: ClassTag](path: Iterable[T1]): Tree[T]
+  def removeChildrenAt[T1 >: T](path: Iterable[T1]): Tree[T]
 
   /** Removes children of the leftmost tree selected by the given path.
     * @param path list K items forming a path from the root to the parent node.
     * @param toPathItem extractor of the K path item from the tree's node value
     * @return modified tree
     * @group removal */
-  def removeChildrenAt[K, T1 >: T: ClassTag](path: Iterable[K], toPathItem: T => K): Tree[T]
+  def removeChildrenAt[K](path: Iterable[K], toPathItem: T => K): Tree[T]
 
   // SERIALIZATION
 

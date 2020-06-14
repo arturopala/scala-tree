@@ -19,7 +19,7 @@ package com.github.arturopala.tree.internal
 import java.util.NoSuchElementException
 
 import com.github.arturopala.tree.{Tree, TreeBuilder}
-import com.github.arturopala.bufferandslice.{Buffer, IntBuffer, IntSlice, Slice}
+import com.github.arturopala.bufferandslice.{ArrayOps, Buffer, IntBuffer, IntSlice, Slice}
 import com.github.arturopala.tree.internal.VectorOps._
 import com.github.arturopala.tree.internal.IteratorOps._
 
@@ -822,12 +822,11 @@ object NodeTree {
           listMap(f, result, queue.safeTail)
       }
 
-  @`inline` final def arrayMap[T, K](f: T => K, node: Tree[T])(
-    implicit tag: ClassTag[K]
-  ): (Array[Int], Array[K]) = {
+  @`inline` final def arrayMap[T, K](f: T => K, node: Tree[T]): (Array[Int], Array[K]) = {
     val queue = new Array[Tree[T]](Math.max(node.width, node.height))
     queue(0) = node
-    arrayMap(f, new Array[Int](node.size), new Array[K](node.size), queue, node.size - 1, 0)
+    val valuesArray = ArrayOps.newArray(f(node.head), node.size)
+    arrayMap(f, new Array[Int](node.size), valuesArray, queue, node.size - 1, 0)
   }
 
   @tailrec

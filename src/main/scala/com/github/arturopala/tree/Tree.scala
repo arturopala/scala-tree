@@ -265,7 +265,7 @@ object Tree {
     * A Tree represented internally by two array slices,
     * one encoding the structure, the other holding node's values.
     */
-  final class ArrayTree[T: ClassTag] private[tree] (
+  final class ArrayTree[T] private[tree] (
     val structure: IntSlice,
     val content: Slice[T],
     delayedWidth: => Int,
@@ -289,24 +289,17 @@ object Tree {
     override def isLeaf: Boolean = size == 1
     override def isEmpty: Boolean = size == 0
     override def childrenCount: Int = tree.structure.last
-  }
 
-  /** Deflates the tree, if inflated, otherwise returns as is.
-    * @group Utilities */
-  final def deflate[T: ClassTag](tree: Tree[T]): Tree[T] = tree match {
-    case `empty`                 => Tree.empty
-    case arrayTree: ArrayTree[T] => arrayTree
-    case _ =>
-      val (structure, values) = tree.toArrays
-      new ArrayTree[T](IntSlice.of(structure), Slice.of(values), tree.width, tree.height)
-  }
+    override def inflated: Tree[T] =
+      TreeBuilder.fromIterators(structure.iterator, content.iterator).headOption.getOrElse(Tree.empty)
 
-  /** Inflates the tree, if deflated, otherwise returns as is.
-    * @group Utilities */
-  final def inflate[T](tree: Tree[T]): Tree[T] = tree match {
-    case `empty`                 => Tree.empty
-    case arrayTree: ArrayTree[T] => arrayTree.inflated
-    case _                       => tree
+    override def deflated[T1 >: T](implicit tag: ClassTag[T1]): Tree[T1] =
+      tree.content.headOption.map(_.getClass) match {
+        case Some(clazz) if clazz.equals(implicitly[ClassTag[T1]].runtimeClass) =>
+          this.asInstanceOf[ArrayTree[T1]]
+        case None =>
+          ArrayTree.fromSlices(tree.structure, Slice.of(tree.content.toArray[T1]))
+      }
   }
 
   /** Arbitrary number for inflate-deflate heuristics. */

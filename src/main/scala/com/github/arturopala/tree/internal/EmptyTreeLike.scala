@@ -113,7 +113,7 @@ trait EmptyTreeLike extends TreeLike[Nothing] {
     rightmost: Boolean = false
   ): Option[T] = None
 
-  final override def selectTree[T1: ClassTag](path: Iterable[T1], rightmost: Boolean = false): Option[Tree[T]] =
+  final override def selectTree[T1](path: Iterable[T1], rightmost: Boolean = false): Option[Tree[T]] =
     None
 
   final override def selectTree[K](
@@ -305,36 +305,36 @@ trait EmptyTreeLike extends TreeLike[Nothing] {
 
   // REMOVALS
 
-  final override def removeChildValue[T1: ClassTag](value: T1): Tree[T] = empty
+  final override def removeChildValue[T1](value: T1): Tree[T] = empty
 
-  final override def removeValueAt[T1: ClassTag](path: Iterable[T1]): Tree[T] = empty
+  final override def removeValueAt[T1](path: Iterable[T1]): Tree[T] = empty
 
-  final override def removeValueAt[K, T1: ClassTag](
+  final override def removeValueAt[K](
     path: Iterable[K],
     toPathItem: T => K
   ): Tree[T] =
     empty
 
-  final override def removeChild[T1: ClassTag](value: T1): Tree[T] = empty
+  final override def removeChild[T1](value: T1): Tree[T] = empty
 
-  final override def removeChildren[T1: ClassTag](): Tree[T] = empty
+  final override def removeChildren[T1](): Tree[T] = empty
 
-  final override def removeTreeAt[T1: ClassTag](path: Iterable[T1]): Tree[T] = empty
+  final override def removeTreeAt[T1](path: Iterable[T1]): Tree[T] = empty
 
-  final override def removeTreeAt[K, T1: ClassTag](
+  final override def removeTreeAt[K](
     path: Iterable[K],
     toPathItem: T => K
   ): Tree[T] =
     empty
 
-  final override def removeChildrenAt[T1: ClassTag](path: Iterable[T1]): Tree[T] = empty
+  final override def removeChildrenAt[T1](path: Iterable[T1]): Tree[T] = empty
 
-  final override def removeChildrenAt[K, T1: ClassTag](path: Iterable[K], toPathItem: T => K): Tree[T] =
+  final override def removeChildrenAt[K](path: Iterable[K], toPathItem: T => K): Tree[T] =
     empty
 
   // TRANSFORMATIONS
 
-  final override def map[K: ClassTag](f: T => K): Tree[K] = empty
+  final override def map[K](f: T => K): Tree[K] = empty
 
   final override def toPairsIterator: Iterator[(Int, T)] = Iterator.empty
 
