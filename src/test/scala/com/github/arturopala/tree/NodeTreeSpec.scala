@@ -27,6 +27,18 @@ class NodeTreeSpec extends AnyWordSpecCompat {
 
   s"NodeTree" should {
 
+    "convert NodeTree to arrays" in {
+      val (s1, v1) = Tree("a").toArrays
+      s1 shouldBe Array(0)
+      v1 shouldBe Array("a")
+      val (s2, v2) = Tree(1, Tree(2, Tree(3), Tree(4)), Tree(5)).toArrays
+      s2 shouldBe Array(0, 0, 0, 2, 2)
+      v2 shouldBe Array(5, 4, 3, 2, 1)
+      val (s3, v3) = Tree(1d, Tree(4d), Tree(2d, Tree(3d)), Tree(5d)).toArrays
+      s3 shouldBe Array(0, 0, 1, 0, 3)
+      v3 shouldBe Array(5d, 3d, 2d, 4d, 1d)
+    }
+
     "insert branch" in {
       insertBranch(
         Tree("a", Tree("b"), Tree("c"), Tree("d", Tree("e"))),

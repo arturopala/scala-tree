@@ -34,7 +34,12 @@ class TreeDebugSpec extends FunSuite with TestWithBuffers {
 
     def tree[T: ClassTag](t: Tree[T]): Tree[T]
 
-    "debug" suite {}
+    "debug" suite {
+      val f3: String => Tree[Int] = _ => Tree.empty
+      test(
+        flatMapDistinct(IntSlice(0), Slice("a"), f3) shouldBe Tree.empty
+      )
+    }
 
   }
 

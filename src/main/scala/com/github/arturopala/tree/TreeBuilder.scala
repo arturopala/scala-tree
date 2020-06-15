@@ -105,7 +105,7 @@ object TreeBuilder {
   final def fromSlices[T: ClassTag](structure: IntSlice, content: Slice[T]): List[Tree[T]] = {
     assert(
       structure.length == content.length,
-      "When constructing Tree from slices, structure and values must be of the same size."
+      "When constructing a Tree from slices, structure slice and values slice must be of the same size."
     )
 
     if (structure.isEmpty) List(Tree.empty)

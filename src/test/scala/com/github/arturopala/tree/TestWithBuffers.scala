@@ -18,9 +18,11 @@ package com.github.arturopala.tree
 
 import com.github.arturopala.bufferandslice.{Buffer, IntBuffer}
 
+import scala.reflect.ClassTag
+
 trait TestWithBuffers {
 
-  final def testWithBuffers[T, R](test: (IntBuffer, Buffer[T]) => R, structure: IntBuffer, values: Buffer[T])(
+  final def testWithBuffers[T: ClassTag, R](test: (IntBuffer, Buffer[T]) => R, structure: IntBuffer, values: Buffer[T])(
     assert: (Array[Int], Array[T], R) => Unit
   ): Unit = {
     val result = test(structure, values)

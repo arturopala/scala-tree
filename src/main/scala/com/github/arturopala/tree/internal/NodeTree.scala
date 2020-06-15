@@ -715,19 +715,22 @@ object NodeTree {
     (IntSlice.of(structure), Slice.of(values))
   }
 
-  final def toBuffers[T: ClassTag](node: Tree[T]): (IntBuffer, Buffer[T]) = {
+  final def toBuffers[T](node: Tree[T]): (IntBuffer, Buffer[T]) = {
     val (structure, values) = toArrays(node)
     (IntBuffer(structure), Buffer(values))
   }
 
-  final def toArrays[T: ClassTag](node: Tree[T]): (Array[Int], Array[T]) = {
-    val queue = new Array[Tree[T]](Math.max(node.width, node.height))
-    queue(0) = node
-    toArrays(new Array[Int](node.size), new Array[T](node.size), queue, node.size - 1, 0)
-  }
+  final def toArrays[T](node: Tree[T]): (Array[Int], Array[T]) =
+    if (node.isEmpty)
+      (Array.empty[Int], Array.empty[AnyRef].asInstanceOf[Array[T]])
+    else {
+      val queue = new Array[Tree[T]](Math.max(node.width, node.height))
+      queue(0) = node
+      toArrays(new Array[Int](node.size), ArrayOps.newArray(node.head, node.size), queue, node.size - 1, 0)
+    }
 
   @tailrec
-  private final def toArrays[T: ClassTag](
+  private final def toArrays[T](
     structure: Array[Int],
     values: Array[T],
     queue: Array[Tree[T]],

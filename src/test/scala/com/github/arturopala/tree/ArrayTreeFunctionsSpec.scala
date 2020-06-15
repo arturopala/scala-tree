@@ -532,8 +532,8 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
     "list indexes of children's nodes holding a value" in {
       childrenHavingValue(1, 2, Array(0, 0, 2, 1), Array(1, 1, 1, 1)) shouldBe IntSlice(1, 0)
       childrenHavingValue(1, 2, Array(0, 0, 2, 1), Array(1, 1, 1, 1)) shouldBe IntSlice(1, 0)
-      childrenHavingValue(2, 3, Array(0, 0, 0, 3), Array(1, 1, 1, 1)) shouldBe IntSlice()
-      childrenHavingValue(2, -1, Array(0, 0, 0, 3), Array(1, 1, 1, 1)) shouldBe IntSlice()
+      childrenHavingValue(2, 3, Array(0, 0, 0, 3), Array(1, 1, 1, 1)) shouldBe IntSlice.empty
+      childrenHavingValue(2, -1, Array(0, 0, 0, 3), Array(1, 1, 1, 1)) shouldBe IntSlice.empty
     }
 
     "find parent index" in {
@@ -1894,7 +1894,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
 
     "insert new child distinct before existing children" in {
       testWithBuffers[String, Int](
-        insertBeforeChildDistinct(-1, IntSlice(), Slice.empty[String], _, _),
+        insertBeforeChildDistinct(-1, IntSlice.empty, Slice.empty[String], _, _),
         IntBuffer.empty,
         Buffer.empty[String]
       ) {
@@ -2037,7 +2037,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
 
     "insert new child distinct after existing children" in {
       testWithBuffers[String, Int](
-        insertAfterChildDistinct(-1, IntSlice(), Slice.empty[String], _, _),
+        insertAfterChildDistinct(-1, IntSlice.empty, Slice.empty[String], _, _),
         IntBuffer.empty,
         Buffer.empty[String]
       ) {
@@ -2248,7 +2248,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe 4
       }
       testWithBuffers[String, Int](
-        insertBeforeChildrenDistinct(1, List((IntSlice(), Slice.empty[String])), _, _),
+        insertBeforeChildrenDistinct(1, List((IntSlice.empty, Slice.empty[String])), _, _),
         IntBuffer(0, 1),
         Buffer("b", "a")
       ) {
@@ -2329,7 +2329,7 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
           delta shouldBe 4
       }
       testWithBuffers[String, Int](
-        insertAfterChildrenDistinct(1, List((IntSlice(), Slice.empty[String])), _, _),
+        insertAfterChildrenDistinct(1, List((IntSlice.empty, Slice.empty[String])), _, _),
         IntBuffer(0, 1),
         Buffer("b", "a")
       ) {
