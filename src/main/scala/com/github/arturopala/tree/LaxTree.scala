@@ -19,9 +19,6 @@ package com.github.arturopala.tree
 import com.github.arturopala.tree.Tree.{ArrayTree, NodeTree, empty}
 import com.github.arturopala.tree.internal.{ArrayTree, NodeTree}
 
-import scala.annotation.tailrec
-import scala.reflect.ClassTag
-
 /** Extension methods providing lax modifications of the Tree.
   *
   * @note The [[Tree]] does not mandate children to be unique
@@ -46,7 +43,7 @@ trait LaxTree[T] {
   /** Flat-maps all nodes of the tree using provided function and returns a new tree.
     * @note This is a lax method, it doesn't preserve children values uniqueness.
     * @group laxTransformation */
-  def flatMapLax[K: ClassTag](f: T => Tree[K]): Tree[K]
+  def flatMapLax[K](f: T => Tree[K]): Tree[K]
 
   // LAX INSERTIONS
 
@@ -55,14 +52,14 @@ trait LaxTree[T] {
     * @param append whether to append or prepend to the existing children
     * @note This is a lax method, it doesn't preserve children values uniqueness.
     * @group laxInsertion */
-  def insertLeafLax[T1 >: T: ClassTag](value: T1, append: Boolean = false): Tree[T1]
+  def insertLeafLax[T1 >: T](value: T1, append: Boolean = false): Tree[T1]
 
   /** Inserts new leaf-type children and returns updated tree.
     * @param values values of the new children leaves
     * @param append whether to append or prepend to the existing children
     * @note This is a lax method, it doesn't preserve children values uniqueness.
     * @group laxInsertion */
-  def insertLeavesLax[T1 >: T: ClassTag](values: Iterable[T1], append: Boolean = false): Tree[T1]
+  def insertLeavesLax[T1 >: T](values: Iterable[T1], append: Boolean = false): Tree[T1]
 
   /** Inserts, at the given path, a new child node holding the value and returns a whole tree updated.
     * If path doesn't fully exist in the tree then remaining suffix will be created.
@@ -70,7 +67,7 @@ trait LaxTree[T] {
     * @param path list of node's values forming a path from the root to the parent node.
     * @param value a value to insert as a new child
     * @group laxInsertion */
-  def insertLeafLaxAt[T1 >: T: ClassTag](path: Iterable[T1], value: T1, append: Boolean = false): Tree[T1]
+  def insertLeafLaxAt[T1 >: T](path: Iterable[T1], value: T1, append: Boolean = false): Tree[T1]
 
   /** Attempts to insert, at the given path, a new child node holding the value and returns a whole tree updated.
     * If path doesn't fully exist in the tree then the tree will remain intact.
@@ -79,7 +76,7 @@ trait LaxTree[T] {
     * @param toPathItem extractor of the K path item from the tree's node value
     * @return either right of modified tree or left with existing unmodified tree
     * @group laxInsertion */
-  def insertLeafLaxAt[K, T1 >: T: ClassTag](
+  def insertLeafLaxAt[K, T1 >: T](
     path: Iterable[K],
     value: T1,
     toPathItem: T => K,
@@ -89,19 +86,19 @@ trait LaxTree[T] {
   /** Inserts a new sub-tree and returns updated tree.
     * @note This is a lax method, it doesn't preserve children values uniqueness.
     * @group laxInsertion */
-  def insertChildLax[T1 >: T: ClassTag](child: Tree[T1], append: Boolean = false): Tree[T1]
+  def insertChildLax[T1 >: T](child: Tree[T1], append: Boolean = false): Tree[T1]
 
   /** Inserts new children and returns updated tree.
     * @note This is a lax method, it doesn't preserve children values uniqueness.
     * @group laxInsertion */
-  def insertChildrenLax[T1 >: T: ClassTag](children: Iterable[Tree[T1]], append: Boolean = false): Tree[T1]
+  def insertChildrenLax[T1 >: T](children: Iterable[Tree[T1]], append: Boolean = false): Tree[T1]
 
   /** Inserts, at the given path, a new child and returns a whole tree updated.
     * If path doesn't fully exist in the tree then remaining suffix will be created.
     * @note This is a lax method, it doesn't preserve children values uniqueness.
     * @param path list of node's values forming a path from the root to the parent node.
     * @group laxInsertion */
-  def insertChildLaxAt[T1 >: T: ClassTag](path: Iterable[T1], subtree: Tree[T1], append: Boolean = false): Tree[T1]
+  def insertChildLaxAt[T1 >: T](path: Iterable[T1], subtree: Tree[T1], append: Boolean = false): Tree[T1]
 
   /** Attempts to insert, at the given path, a new child and return a whole tree updated.
     * If path doesn't fully exist in the tree then the tree will remain intact.
@@ -109,7 +106,7 @@ trait LaxTree[T] {
     * @param path list K items forming a path from the root to the parent node.
     * @return either right of modified tree or left with existing unmodified tree
     * @group laxInsertion */
-  def insertChildLaxAt[K, T1 >: T: ClassTag](
+  def insertChildLaxAt[K, T1 >: T](
     path: Iterable[K],
     subtree: Tree[T1],
     toPathItem: T => K,
@@ -121,7 +118,7 @@ trait LaxTree[T] {
     * @note This is a lax method, it doesn't preserve children values uniqueness.
     * @param path list of node's values forming a path from the root to the parent node.
     * @group laxInsertion */
-  def insertChildrenLaxAt[T1 >: T: ClassTag](
+  def insertChildrenLaxAt[T1 >: T](
     path: Iterable[T1],
     children: Iterable[Tree[T1]],
     append: Boolean = false
@@ -133,7 +130,7 @@ trait LaxTree[T] {
     * @param path list K items forming a path from the root to the parent node.
     * @return either right of modified tree or left with existing unmodified tree
     * @group laxInsertion */
-  def insertChildrenLaxAt[K, T1 >: T: ClassTag](
+  def insertChildrenLaxAt[K, T1 >: T](
     path: Iterable[K],
     children: Iterable[Tree[T1]],
     toPathItem: T => K,
@@ -148,7 +145,7 @@ trait LaxTree[T] {
     * @param replacement replacement value
     * @return modified tree if contains the value
     * @group laxUpdate */
-  def updateChildValueLax[T1 >: T: ClassTag](existingValue: T1, replacement: T1): Tree[T1]
+  def updateChildValueLax[T1 >: T](existingValue: T1, replacement: T1): Tree[T1]
 
   /** Updates the first value selected by the given path, and returns a whole tree updated.
     * @note This is a lax method, it doesn't preserve children values uniqueness.
@@ -156,7 +153,7 @@ trait LaxTree[T] {
     * @param replacement replacement value
     * @return either right of modified tree or left with the tree intact
     * @group laxUpdate */
-  def updateValueLaxAt[T1 >: T: ClassTag](path: Iterable[T1], replacement: T1): Either[Tree[T], Tree[T1]]
+  def updateValueLaxAt[T1 >: T](path: Iterable[T1], replacement: T1): Either[Tree[T], Tree[T1]]
 
   /** Updates the first value selected by the given path, and returns a whole tree updated.
     * @note This is a lax method, it doesn't preserve children values uniqueness.
@@ -165,7 +162,7 @@ trait LaxTree[T] {
     * @param toPathItem extractor of the K path item from the tree's node value
     * @return either right of modified tree or left with the tree intact
     * @group laxUpdate */
-  def updateValueLaxAt[K, T1 >: T: ClassTag](
+  def updateValueLaxAt[K, T1 >: T](
     path: Iterable[K],
     replacement: T1,
     toPathItem: T => K
@@ -177,7 +174,7 @@ trait LaxTree[T] {
     * @param replacement replacement tree
     * @return modified tree if contains the value
     * @group laxUpdate */
-  def updateChildLax[T1 >: T: ClassTag](value: T1, replacement: Tree[T1]): Tree[T1]
+  def updateChildLax[T1 >: T](value: T1, replacement: Tree[T1]): Tree[T1]
 
   /** Updates the first tree selected by the given path, and returns a whole tree updated.
     * @note This is a lax method, it doesn't preserve children values uniqueness.
@@ -185,7 +182,7 @@ trait LaxTree[T] {
     * @param replacement replacement tree
     * @return either right of modified tree or left with the tree intact
     * @group laxUpdate */
-  def updateTreeLaxAt[T1 >: T: ClassTag](
+  def updateTreeLaxAt[T1 >: T](
     path: Iterable[T1],
     replacement: Tree[T1]
   ): Either[Tree[T], Tree[T1]]
@@ -197,7 +194,7 @@ trait LaxTree[T] {
     * @param toPathItem extractor of the K path item from the tree's node value
     * @return either right of modified tree or left with the tree intact
     * @group laxUpdate */
-  def updateTreeLaxAt[K, T1 >: T: ClassTag](
+  def updateTreeLaxAt[K, T1 >: T](
     path: Iterable[K],
     replacement: Tree[T1],
     toPathItem: T => K
@@ -211,7 +208,7 @@ trait LaxTree[T] {
     * @param modify function to modify the value
     * @return modified tree if contains the value
     * @group laxModification */
-  def modifyChildValueLax[T1 >: T: ClassTag](value: T1, modify: T => T1): Tree[T1]
+  def modifyChildValueLax[T1 >: T](value: T1, modify: T => T1): Tree[T1]
 
   /** Modifies the value selected by the given path, and returns a whole tree updated.
     * @note This is a lax method, it doesn't preserve children values uniqueness.
@@ -219,7 +216,7 @@ trait LaxTree[T] {
     * @param modify function to modify the value
     * @return either right of modified tree or left with the tree intact
     * @group laxModification */
-  def modifyValueLaxAt[T1 >: T: ClassTag](path: Iterable[T1], modify: T => T1): Either[Tree[T], Tree[T1]]
+  def modifyValueLaxAt[T1 >: T](path: Iterable[T1], modify: T => T1): Either[Tree[T], Tree[T1]]
 
   /** Modifies the value selected by the given path, and returns a whole tree updated.
     * @note This is a lax method, it doesn't preserve children values uniqueness.
@@ -228,7 +225,7 @@ trait LaxTree[T] {
     * @param toPathItem extractor of the K path item from the tree's node value
     * @return either right of modified tree or left with the tree intact
     * @group laxModification */
-  def modifyValueLaxAt[K, T1 >: T: ClassTag](
+  def modifyValueLaxAt[K, T1 >: T](
     path: Iterable[K],
     modify: T => T1,
     toPathItem: T => K
@@ -240,7 +237,7 @@ trait LaxTree[T] {
     * @param modify function to modify the value
     * @return modified tree if contains the value
     * @group laxModification */
-  def modifyChildLax[T1 >: T: ClassTag](value: T1, modify: Tree[T] => Tree[T1]): Tree[T1]
+  def modifyChildLax[T1 >: T](value: T1, modify: Tree[T] => Tree[T1]): Tree[T1]
 
   /** Modifies the tree selected by the given path, and returns a whole tree updated.
     * @note This is a lax method, it doesn't preserve children values uniqueness.
@@ -248,7 +245,7 @@ trait LaxTree[T] {
     * @param modify function transforming the tree
     * @return either right of modified tree or left with the tree intact
     * @group laxModification */
-  def modifyTreeLaxAt[T1 >: T: ClassTag](path: Iterable[T1], modify: Tree[T] => Tree[T1]): Either[Tree[T], Tree[T1]]
+  def modifyTreeLaxAt[T1 >: T](path: Iterable[T1], modify: Tree[T] => Tree[T1]): Either[Tree[T], Tree[T1]]
 
   /** Modifies the tree selected by the given path, and returns a whole tree updated.
     * @note This is a lax method, it doesn't preserve children values uniqueness.
@@ -257,7 +254,7 @@ trait LaxTree[T] {
     * @param toPathItem extractor of the K path item from the tree's node value
     * @return either right of modified tree or left with the tree intact
     * @group laxModification */
-  def modifyTreeLaxAt[K, T1 >: T: ClassTag](
+  def modifyTreeLaxAt[K, T1 >: T](
     path: Iterable[K],
     modify: Tree[T] => Tree[T1],
     toPathItem: T => K
@@ -269,7 +266,7 @@ trait LaxTree[T] {
     * @note This is a lax method, it doesn't preserve children values uniqueness.
     * @return modified tree
     * @group laxRemoval */
-  def removeChildValueLax[T1 >: T: ClassTag](value: T1): Tree[T]
+  def removeChildValueLax[T1 >: T](value: T1): Tree[T]
 
   /** Removes the value selected by the given path, merges node's children with remaining siblings,
     * and returns a whole tree updated.
@@ -277,7 +274,7 @@ trait LaxTree[T] {
     * @param path list of node's values forming a path from the root to the parent node.
     * @return modified tree
     * @group laxRemoval */
-  def removeValueLaxAt[T1 >: T: ClassTag](path: Iterable[T1]): Tree[T]
+  def removeValueLaxAt[T1 >: T](path: Iterable[T1]): Tree[T]
 
   /** Removes the value selected by the given path, merges node's children with remaining siblings,
     * and returns a whole tree updated.
@@ -286,7 +283,7 @@ trait LaxTree[T] {
     * @param toPathItem extractor of the K path item from the tree's node value
     * @return modified tree
     * @group laxRemoval */
-  def removeValueLaxAt[K, T1 >: T: ClassTag](path: Iterable[K], toPathItem: T => K): Tree[T]
+  def removeValueLaxAt[K, T1 >: T](path: Iterable[K], toPathItem: T => K): Tree[T]
 
 }
 
@@ -294,9 +291,9 @@ trait LaxTree[T] {
 object LaxTreeOps {
 
   /** [[LaxTree]] extensions for a [[Tree]]. */
-  implicit class LaxTreeExt[T: ClassTag](val t: Tree[T]) extends LaxTree[T] {
+  implicit class LaxTreeExt[T](val t: Tree[T]) extends LaxTree[T] {
 
-    final override def flatMapLax[K: ClassTag](f: T => Tree[K]): Tree[K] = t match {
+    final override def flatMapLax[K](f: T => Tree[K]): Tree[K] = t match {
       case Tree.empty => Tree.empty
 
       case node: NodeTree[T] =>
@@ -312,7 +309,7 @@ object LaxTreeOps {
         ArrayTree.flatMapLax(tree.structure, tree.content, f)
     }
 
-    final override def insertLeafLax[T1 >: T: ClassTag](value: T1, append: Boolean = false): Tree[T1] = t match {
+    final override def insertLeafLax[T1 >: T](value: T1, append: Boolean = false): Tree[T1] = t match {
       case Tree.empty => Tree(value)
 
       case node: NodeTree[T] =>
@@ -322,7 +319,7 @@ object LaxTreeOps {
         ArrayTree.insertLeaf(tree.structure.length - 1, value, tree, append, keepDistinct = false)
     }
 
-    final override def insertLeavesLax[T1 >: T: ClassTag](values: Iterable[T1], append: Boolean = false): Tree[T1] =
+    final override def insertLeavesLax[T1 >: T](values: Iterable[T1], append: Boolean = false): Tree[T1] =
       t match {
         case Tree.empty => if (values.size == 1) Tree(values.head) else Tree.empty
 
@@ -337,7 +334,7 @@ object LaxTreeOps {
           ArrayTree.insertLeaves(tree.structure.length - 1, values, tree, append, keepDistinct = false)
       }
 
-    final override def insertLeafLaxAt[T1 >: T: ClassTag](
+    final override def insertLeafLaxAt[T1 >: T](
       path: Iterable[T1],
       value: T1,
       append: Boolean = false
@@ -352,7 +349,7 @@ object LaxTreeOps {
         ArrayTree.insertLeafAt(path, value, tree, append, keepDistinct = false)
     }
 
-    final override def insertLeafLaxAt[K, T1 >: T: ClassTag](
+    final override def insertLeafLaxAt[K, T1 >: T](
       path: Iterable[K],
       value: T1,
       toPathItem: T => K,
@@ -367,7 +364,7 @@ object LaxTreeOps {
         ArrayTree.insertLeafAt(path, value, tree, toPathItem, append, keepDistinct = false)
     }
 
-    final override def insertChildLax[T1 >: T: ClassTag](child: Tree[T1], append: Boolean = false): Tree[T1] =
+    final override def insertChildLax[T1 >: T](child: Tree[T1], append: Boolean = false): Tree[T1] =
       t match {
         case Tree.empty => child
 
@@ -383,7 +380,7 @@ object LaxTreeOps {
                   if (append) node.children.toSeq :+ tree.inflated.asInstanceOf[NodeTree[T1]]
                   else tree.inflated.asInstanceOf[NodeTree[T1]] +: node.children.toSeq
                 )
-              else node.deflated[T1].insertChildLax(tree, append)
+              else node.deflated.insertChildLax(tree, append)
           }
 
         case tree: ArrayTree[T] =>
@@ -391,7 +388,7 @@ object LaxTreeOps {
           ArrayTree.insertTreeAtIndex(insertIndex, tree.structure.top, child, tree)
       }
 
-    final override def insertChildrenLax[T1 >: T: ClassTag](
+    final override def insertChildrenLax[T1 >: T](
       children: Iterable[Tree[T1]],
       append: Boolean = false
     ): Tree[T1] = {
@@ -417,7 +414,7 @@ object LaxTreeOps {
       }
     }
 
-    final override def insertChildLaxAt[T1 >: T: ClassTag](
+    final override def insertChildLaxAt[T1 >: T](
       path: Iterable[T1],
       child: Tree[T1],
       append: Boolean = false
@@ -443,14 +440,14 @@ object LaxTreeOps {
                   keepDistinct = false
                 )
                 .getOrElse(node)
-            else node.deflated[T1].insertChildLaxAt(path, tree, append)
+            else node.deflated.insertChildLaxAt(path, tree, append)
         }
 
       case tree: ArrayTree[T] =>
         ArrayTree.insertChildAt(path, child, tree, append, keepDistinct = false)
     }
 
-    final override def insertChildLaxAt[K, T1 >: T: ClassTag](
+    final override def insertChildLaxAt[K, T1 >: T](
       path: Iterable[K],
       child: Tree[T1],
       toPathItem: T => K,
@@ -480,7 +477,7 @@ object LaxTreeOps {
         ArrayTree.insertChildAt(path, child, tree, toPathItem, append, keepDistinct = false)
     }
 
-    final override def insertChildrenLaxAt[T1 >: T: ClassTag](
+    final override def insertChildrenLaxAt[T1 >: T](
       path: Iterable[T1],
       children: Iterable[Tree[T1]],
       append: Boolean = false
@@ -503,14 +500,14 @@ object LaxTreeOps {
               )
               .getOrElse(node)
           else
-            ArrayTree.insertChildrenAt(path, validChildren, node.deflated[T1], append, keepDistinct = false)
+            ArrayTree.insertChildrenAt(path, validChildren, node.deflated, append, keepDistinct = false)
 
         case tree: ArrayTree[T] =>
           ArrayTree.insertChildrenAt(path, validChildren, tree, append, keepDistinct = false)
       }
     }
 
-    final override def insertChildrenLaxAt[K, T1 >: T: ClassTag](
+    final override def insertChildrenLaxAt[K, T1 >: T](
       path: Iterable[K],
       children: Iterable[Tree[T1]],
       toPathItem: T => K,
@@ -539,7 +536,7 @@ object LaxTreeOps {
       }
     }
 
-    final override def updateChildValueLax[T1 >: T: ClassTag](existingValue: T1, replacement: T1): Tree[T1] =
+    final override def updateChildValueLax[T1 >: T](existingValue: T1, replacement: T1): Tree[T1] =
       t match {
         case Tree.empty => empty
 
@@ -550,7 +547,7 @@ object LaxTreeOps {
           ArrayTree.updateChildValue(existingValue, replacement, tree, rightmost = false, keepDistinct = false)
       }
 
-    final override def updateValueLaxAt[T1 >: T: ClassTag](
+    final override def updateValueLaxAt[T1 >: T](
       path: Iterable[T1],
       replacement: T1
     ): Either[Tree[T], Tree[T1]] = t match {
@@ -563,7 +560,7 @@ object LaxTreeOps {
         ArrayTree.updateValueAt(path, replacement, tree, rightmost = false, keepDistinct = false)
     }
 
-    final override def updateValueLaxAt[K, T1 >: T: ClassTag](
+    final override def updateValueLaxAt[K, T1 >: T](
       path: Iterable[K],
       replacement: T1,
       toPathItem: T => K
@@ -577,7 +574,7 @@ object LaxTreeOps {
         ArrayTree.updateValueAt(path, replacement, tree, toPathItem, rightmost = false, keepDistinct = false)
     }
 
-    final override def updateChildLax[T1 >: T: ClassTag](value: T1, replacement: Tree[T1]): Tree[T1] =
+    final override def updateChildLax[T1 >: T](value: T1, replacement: Tree[T1]): Tree[T1] =
       t match {
         case Tree.empty => empty
 
@@ -588,7 +585,7 @@ object LaxTreeOps {
           ArrayTree.updateChild(value, replacement, tree, rightmost = false, keepDistinct = false)
       }
 
-    final override def updateTreeLaxAt[T1 >: T: ClassTag](
+    final override def updateTreeLaxAt[T1 >: T](
       path: Iterable[T1],
       replacement: Tree[T1]
     ): Either[Tree[T], Tree[T1]] = t match {
@@ -602,7 +599,7 @@ object LaxTreeOps {
 
     }
 
-    final override def updateTreeLaxAt[K, T1 >: T: ClassTag](
+    final override def updateTreeLaxAt[K, T1 >: T](
       path: Iterable[K],
       replacement: Tree[T1],
       toPathItem: T => K
@@ -616,7 +613,7 @@ object LaxTreeOps {
         ArrayTree.updateTreeAt(path, replacement, tree, toPathItem, rightmost = false, keepDistinct = false)
     }
 
-    final override def modifyChildValueLax[T1 >: T: ClassTag](value: T1, modify: T => T1): Tree[T1] =
+    final override def modifyChildValueLax[T1 >: T](value: T1, modify: T => T1): Tree[T1] =
       t match {
         case Tree.empty => empty
 
@@ -627,7 +624,7 @@ object LaxTreeOps {
           ArrayTree.modifyChildValue(value, modify, tree, rightmost = false, keepDistinct = false)
       }
 
-    final override def modifyValueLaxAt[T1 >: T: ClassTag](
+    final override def modifyValueLaxAt[T1 >: T](
       path: Iterable[T1],
       modify: T => T1
     ): Either[Tree[T], Tree[T1]] = t match {
@@ -640,7 +637,7 @@ object LaxTreeOps {
         ArrayTree.modifyValueAt(path, modify, tree, rightmost = false, keepDistinct = false)
     }
 
-    final override def modifyValueLaxAt[K, T1 >: T: ClassTag](
+    final override def modifyValueLaxAt[K, T1 >: T](
       path: Iterable[K],
       modify: T => T1,
       toPathItem: T => K
@@ -654,7 +651,7 @@ object LaxTreeOps {
         ArrayTree.modifyValueAt(path, modify, tree, toPathItem, rightmost = false, keepDistinct = false)
     }
 
-    final override def modifyChildLax[T1 >: T: ClassTag](value: T1, modify: Tree[T] => Tree[T1]): Tree[T1] =
+    final override def modifyChildLax[T1 >: T](value: T1, modify: Tree[T] => Tree[T1]): Tree[T1] =
       t match {
         case Tree.empty => empty
 
@@ -665,7 +662,7 @@ object LaxTreeOps {
           ArrayTree.modifyChild(value, modify, tree, rightmost = false, keepDistinct = false)
       }
 
-    final override def modifyTreeLaxAt[T1 >: T: ClassTag](
+    final override def modifyTreeLaxAt[T1 >: T](
       path: Iterable[T1],
       modify: Tree[T] => Tree[T1]
     ): Either[Tree[T], Tree[T1]] = t match {
@@ -679,7 +676,7 @@ object LaxTreeOps {
 
     }
 
-    final override def modifyTreeLaxAt[K, T1 >: T: ClassTag](
+    final override def modifyTreeLaxAt[K, T1 >: T](
       path: Iterable[K],
       modify: Tree[T] => Tree[T1],
       toPathItem: T => K
@@ -694,7 +691,7 @@ object LaxTreeOps {
 
     }
 
-    final override def removeChildValueLax[T1 >: T: ClassTag](value: T1): Tree[T] = t match {
+    final override def removeChildValueLax[T1 >: T](value: T1): Tree[T] = t match {
       case Tree.empty => empty
 
       case node: NodeTree[T] =>
@@ -704,7 +701,7 @@ object LaxTreeOps {
         ArrayTree.removeChildValue(value, tree, rightmost = false, keepDistinct = false)
     }
 
-    final override def removeValueLaxAt[T1 >: T: ClassTag](path: Iterable[T1]): Tree[T] = t match {
+    final override def removeValueLaxAt[T1 >: T](path: Iterable[T1]): Tree[T] = t match {
       case Tree.empty => empty
 
       case node: NodeTree[T] =>
@@ -714,7 +711,7 @@ object LaxTreeOps {
         ArrayTree.removeValueAt(path, tree, rightmost = false, keepDistinct = false)
     }
 
-    final override def removeValueLaxAt[K, T1 >: T: ClassTag](path: Iterable[K], toPathItem: T => K): Tree[T] =
+    final override def removeValueLaxAt[K, T1 >: T](path: Iterable[K], toPathItem: T => K): Tree[T] =
       t match {
         case Tree.empty => empty
 

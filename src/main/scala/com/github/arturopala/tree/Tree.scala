@@ -19,8 +19,6 @@ package com.github.arturopala.tree
 import com.github.arturopala.bufferandslice.{IntSlice, Slice}
 import com.github.arturopala.tree.internal.{Compare, _}
 
-import scala.reflect.ClassTag
-
 /**
   * A general-purpose, covariant, immutable, low overhead,
   * efficient, monadic tree-like data structure with comprehensive API.
@@ -64,7 +62,7 @@ sealed trait Tree[+T] extends TreeLike[T] {
     * to be represented internally by two linear arrays.
     * @group optimization
     */
-  def deflated[T1 >: T](implicit tag: ClassTag[T1]): Tree[T1]
+  def deflated: Tree[T]
 
   // EQUALITY, HASH CODE, AND TO_STRING
 
@@ -170,6 +168,8 @@ object Tree {
     */
   final case object empty extends Tree[Nothing] with EmptyTreeLike {
     override val toString: String = "Tree.empty"
+    override val inflated: Tree[T] = this
+    override val deflated: Tree[T] = this
   }
 
   /**
@@ -179,7 +179,14 @@ object Tree {
     * Concrete, specialized node types are [[Leaf]], [[Unary]], [[Binary]], and [[Bunch]].
     */
   sealed trait NodeTree[+T] extends Tree[T] with NodeTreeLike[T] {
+
     final override protected val node: NodeTree[T] = this
+    final override val inflated: Tree[T] = this
+
+    final override def deflated: Tree[T] = {
+      val (structure, values) = node.toBuffers
+      new ArrayTree[T](structure.asSlice, values.asSlice, node.width, node.height)
+    }
   }
 
   /** Concrete node of the Tree, consisting of a value and no subtrees. */
@@ -293,13 +300,7 @@ object Tree {
     override def inflated: Tree[T] =
       TreeBuilder.fromIterators(structure.iterator, content.iterator).headOption.getOrElse(Tree.empty)
 
-    override def deflated[T1 >: T](implicit tag: ClassTag[T1]): Tree[T1] =
-      tree.content.headOption.map(_.getClass) match {
-        case Some(clazz) if clazz.equals(implicitly[ClassTag[T1]].runtimeClass) =>
-          this.asInstanceOf[ArrayTree[T1]]
-        case None =>
-          ArrayTree.fromSlices(tree.structure, Slice.of(tree.content.toArray[T1]))
-      }
+    override val deflated: Tree[T] = this
   }
 
   /** Arbitrary number for inflate-deflate heuristics. */

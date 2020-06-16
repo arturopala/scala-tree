@@ -102,7 +102,7 @@ object TreeBuilder {
     *
     * @note Both slices have to return data following rules set in [[Tree.toArrays]].
     */
-  final def fromSlices[T: ClassTag](structure: IntSlice, content: Slice[T]): List[Tree[T]] = {
+  final def fromSlices[T](structure: IntSlice, content: Slice[T]): List[Tree[T]] = {
     assert(
       structure.length == content.length,
       "When constructing a Tree from slices, structure slice and values slice must be of the same size."
@@ -203,7 +203,7 @@ object TreeBuilder {
     *
     * @note Both buffers have to follow rules set in [[Tree.toArrays]].
     */
-  @`inline` final def fromBuffersHead[T: ClassTag](structureBuffer: IntBuffer, valuesBuffer: Buffer[T]): Tree[T] =
+  @`inline` final def fromBuffersHead[T](structureBuffer: IntBuffer, valuesBuffer: Buffer[T]): Tree[T] =
     fromBuffers(structureBuffer, valuesBuffer).head
 
   /** Builds a list of trees from a pair of buffers.
@@ -212,11 +212,11 @@ object TreeBuilder {
     *
     * @note Both buffers have to follow rules set in [[Tree.toArrays]].
     */
-  @`inline` final def fromBuffers[T: ClassTag](structureBuffer: IntBuffer, valuesBuffer: Buffer[T]): List[Tree[T]] =
+  @`inline` final def fromBuffers[T](structureBuffer: IntBuffer, valuesBuffer: Buffer[T]): List[Tree[T]] =
     fromSlices(structureBuffer.asSlice, valuesBuffer.asSlice)
 
   /** Builds a single-branch tree from a sequence of values. */
-  final def linearTreeFromSequence[T: ClassTag](seq: Seq[T]): Tree[T] = {
+  final def linearTreeFromSequence[T](seq: Seq[T]): Tree[T] = {
     val iterator = seq.reverseIterator
     if (iterator.hasNext) {
       val leaf = Tree(iterator.next())
@@ -226,7 +226,7 @@ object TreeBuilder {
 
   /** Builds a single-branch tree from a reverse iterator over node's values. */
   @tailrec
-  final def linearTreeFromReverseValueIterator[T: ClassTag](iterator: Iterator[T], child: Tree[T]): Tree[T] =
+  final def linearTreeFromReverseValueIterator[T](iterator: Iterator[T], child: Tree[T]): Tree[T] =
     if (iterator.hasNext) {
       linearTreeFromReverseValueIterator(iterator, Tree(iterator.next(), child))
     } else {
@@ -234,20 +234,20 @@ object TreeBuilder {
     }
 
   /** Builds a main-branch tree from a list of trees. */
-  final def fromTreeSequence[T: ClassTag](seq: Seq[Tree[T]]): Tree[T] =
+  final def fromTreeSequence[T](seq: Seq[Tree[T]]): Tree[T] =
     fromReverseTreeIterator(seq.reverseIterator, Tree.empty)
 
   /** Builds a main-branch tree from a list of trees. */
-  final def fromTreeSequence[T: ClassTag](seq: Seq[Tree[T]], lastChild: Tree[T]): Tree[T] =
+  final def fromTreeSequence[T](seq: Seq[Tree[T]], lastChild: Tree[T]): Tree[T] =
     fromReverseTreeIterator(seq.reverseIterator, lastChild)
 
   /** Builds a main-branch tree from a list of trees. */
-  final def fromTreeSequence[T: ClassTag](head: T, seq: Seq[Tree[T]], lastChild: Tree[T]): Tree[T] =
+  final def fromTreeSequence[T](head: T, seq: Seq[Tree[T]], lastChild: Tree[T]): Tree[T] =
     Tree(head, fromReverseTreeIterator(seq.reverseIterator, lastChild))
 
   /** Builds a single-branch tree from a reverse iterator over child trees */
   @tailrec
-  final def fromReverseTreeIterator[T: ClassTag](iterator: Iterator[Tree[T]], lastChild: Tree[T]): Tree[T] =
+  final def fromReverseTreeIterator[T](iterator: Iterator[Tree[T]], lastChild: Tree[T]): Tree[T] =
     if (iterator.hasNext) {
       val tree = iterator.next().insertChild(lastChild)
       fromReverseTreeIterator(iterator, tree)

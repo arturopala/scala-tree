@@ -631,7 +631,7 @@ object NodeTree {
   }
 
   /** Prepends children of the tree with the new child. */
-  final def prependChild[T, T1 >: T: ClassTag](tree: Tree[T], child: Tree[T1]): Tree[T1] = tree match {
+  final def prependChild[T, T1 >: T](tree: Tree[T], child: Tree[T1]): Tree[T1] = tree match {
     case Tree.Leaf(head)                    => Tree.Unary(head, child)
     case Tree.Unary(head, existingChild)    => Tree.Binary(head, child, existingChild)
     case Tree.Binary(head, left, right)     => Tree.Bunch(head, List(child, left, right))
@@ -641,7 +641,7 @@ object NodeTree {
   }
 
   /** Appends new child to the children of the tree. */
-  final def appendChild[T, T1 >: T: ClassTag](tree: Tree[T], child: Tree[T1]): Tree[T1] = tree match {
+  final def appendChild[T, T1 >: T](tree: Tree[T], child: Tree[T1]): Tree[T1] = tree match {
     case Tree.Leaf(head)                    => Tree.Unary(head, child)
     case Tree.Unary(head, existingChild)    => Tree.Binary(head, existingChild, child)
     case Tree.Binary(head, left, right)     => Tree.Bunch(head, List(left, right, child))
@@ -651,12 +651,12 @@ object NodeTree {
   }
 
   /** Inserts branch to the tree using unsafe recursion. */
-  final def insertBranchUnsafe[T, T1 >: T: ClassTag](tree: Tree[T], branchIterator: Iterator[T1]): Option[Tree[T1]] =
+  final def insertBranchUnsafe[T, T1 >: T](tree: Tree[T], branchIterator: Iterator[T1]): Option[Tree[T1]] =
     if (tree.nonEmpty && branchIterator.hasNext && branchIterator.next == tree.head) {
       Some(Tree(tree.head, insertBranchUnsafe(branchIterator.next, Vector.empty, tree.children, branchIterator)))
     } else None
 
-  private def insertBranchUnsafe[T, T1 >: T: ClassTag](
+  private def insertBranchUnsafe[T, T1 >: T](
     branchHead: T1,
     subtreesLeft: Vector[Tree[T]],
     subtreesRight: Iterable[Tree[T]],
@@ -678,7 +678,7 @@ object NodeTree {
       }
     }
 
-  final def insertBranch[T, T1 >: T: ClassTag](
+  final def insertBranch[T, T1 >: T](
     tree: Tree[T],
     branchIterator: Iterator[T1],
     append: Boolean
@@ -1203,7 +1203,7 @@ object NodeTree {
           buildTreeFromPartials(queue.safeTail, node +: result.drop(numberOfChildrenToCollect), prepend)
       }
 
-  final def insertChildAt[T, T1 >: T: ClassTag](
+  final def insertChildAt[T, T1 >: T](
     tree: Tree[T],
     pathIterator: Iterator[T1],
     nodeToInsert: Tree[T1],
@@ -1229,7 +1229,7 @@ object NodeTree {
         Some(TreeBuilder.fromChildAndTreeSplit(newNode, treeSplit))
     }
 
-  final def insertChildAt[T, T1 >: T: ClassTag, K](
+  final def insertChildAt[T, T1 >: T, K](
     tree: Tree[T],
     pathIterator: Iterator[K],
     toPathItem: T => K,
@@ -1251,7 +1251,7 @@ object NodeTree {
       .getOrElse(Left(tree))
 
   /** Inserts new children at the specified path. */
-  final def insertChildrenAt[T, T1 >: T: ClassTag](
+  final def insertChildrenAt[T, T1 >: T](
     tree: Tree[T],
     pathIterator: Iterator[T1],
     children: Iterable[Tree[T1]],
@@ -1286,7 +1286,7 @@ object NodeTree {
     }
 
   /** Inserts new children at the specified path. */
-  final def insertChildrenAt[T, T1 >: T: ClassTag, K](
+  final def insertChildrenAt[T, T1 >: T, K](
     tree: Tree[T],
     pathIterator: Iterator[K],
     toPathItem: T => K,
@@ -1472,7 +1472,7 @@ object NodeTree {
   @`inline` final def join[T](split: TreeSplit[T]): Tree[T] = Tree(split._2, split._1 ++ split._3)
 
   /** Updates a value of a child, and builds a tree back from the treeSplit. */
-  final def updateChildValueInSplit[T, T1 >: T: ClassTag](
+  final def updateChildValueInSplit[T, T1 >: T](
     treeSplit: Vector[TreeSplit[T]],
     existingChild: Tree[T],
     replacementValue: T1,
@@ -1492,7 +1492,7 @@ object NodeTree {
     * @param existingChild existing child
     * @param replacementChild replacement child
     */
-  final def updateChildInSplit[T, T1 >: T: ClassTag](
+  final def updateChildInSplit[T, T1 >: T](
     treeSplit: Vector[TreeSplit[T]],
     existingChild: Tree[T],
     replacementChild: Tree[T1],
@@ -1513,7 +1513,7 @@ object NodeTree {
     }
 
   /** Updates value of the child holding the value. */
-  final def updateChildValue[T, T1 >: T: ClassTag](
+  final def updateChildValue[T, T1 >: T](
     tree: Tree[T],
     value: T1,
     replacement: T1,
@@ -1533,7 +1533,7 @@ object NodeTree {
     }
 
   /** Updates value of the node selected by the path. */
-  final def updateValueAt[T, T1 >: T: ClassTag](
+  final def updateValueAt[T, T1 >: T](
     tree: Tree[T],
     pathIterator: Iterator[T1],
     replacement: T1,
@@ -1550,7 +1550,7 @@ object NodeTree {
       .getOrElse(Left(tree))
 
   /** Updates value of the node selected by the path using a path item extractor. */
-  final def updateValueAt[K, T, T1 >: T: ClassTag](
+  final def updateValueAt[K, T, T1 >: T](
     tree: Tree[T],
     pathIterator: Iterator[K],
     toPathItem: T => K,
@@ -1568,7 +1568,7 @@ object NodeTree {
       .getOrElse(Left(tree))
 
   /** Updates the child tree holding the value at head. */
-  final def updateChild[T, T1 >: T: ClassTag](
+  final def updateChild[T, T1 >: T](
     tree: Tree[T],
     value: T1,
     replacement: Tree[T1],
@@ -1597,7 +1597,7 @@ object NodeTree {
     }
 
   /** Updates a subtree selected by the path. */
-  final def updateTreeAt[T, T1 >: T: ClassTag](
+  final def updateTreeAt[T, T1 >: T](
     tree: Tree[T],
     pathIterator: Iterator[T1],
     replacement: Tree[T1],
@@ -1614,7 +1614,7 @@ object NodeTree {
       .getOrElse(Left(tree))
 
   /** Updates a subtree selected by the path using path item extractor. */
-  final def updateTreeAt[K, T, T1 >: T: ClassTag](
+  final def updateTreeAt[K, T, T1 >: T](
     tree: Tree[T],
     pathIterator: Iterator[K],
     toPathItem: T => K,
@@ -1632,7 +1632,7 @@ object NodeTree {
       .getOrElse(Left(tree))
 
   /** Modifies value of the node holding the value. */
-  final def modifyChildValue[T, T1 >: T: ClassTag](
+  final def modifyChildValue[T, T1 >: T](
     tree: Tree[T],
     value: T1,
     modify: T => T1,
@@ -1652,7 +1652,7 @@ object NodeTree {
     }
 
   /** Modifies value of the node selected by the path. */
-  final def modifyValueAt[T, T1 >: T: ClassTag](
+  final def modifyValueAt[T, T1 >: T](
     tree: Tree[T],
     pathIterator: Iterator[T1],
     modify: T => T1,
@@ -1670,7 +1670,7 @@ object NodeTree {
       .getOrElse(Left(tree))
 
   /** Modifies value of the node selected by the path using path item extractor. */
-  final def modifyValueAt[K, T, T1 >: T: ClassTag](
+  final def modifyValueAt[K, T, T1 >: T](
     tree: Tree[T],
     pathIterator: Iterator[K],
     toPathItem: T => K,
@@ -1689,7 +1689,7 @@ object NodeTree {
       .getOrElse(Left(tree))
 
   /** Modifies the child tree holding the value at head. */
-  final def modifyChild[T, T1 >: T: ClassTag](
+  final def modifyChild[T, T1 >: T](
     tree: Tree[T],
     value: T1,
     modify: Tree[T] => Tree[T1],
@@ -1720,7 +1720,7 @@ object NodeTree {
     }
 
   /** Modifies a subtree selected by the path. */
-  final def modifyTreeAt[T, T1 >: T: ClassTag](
+  final def modifyTreeAt[T, T1 >: T](
     tree: Tree[T],
     pathIterator: Iterator[T1],
     modify: Tree[T] => Tree[T1],
@@ -1738,7 +1738,7 @@ object NodeTree {
       .getOrElse(Left(tree))
 
   /** Modifies a subtree selected by the path using path item extractor. */
-  final def modifyTreeAt[K, T, T1 >: T: ClassTag](
+  final def modifyTreeAt[K, T, T1 >: T](
     tree: Tree[T],
     pathIterator: Iterator[K],
     toPathItem: T => K,
@@ -1757,7 +1757,7 @@ object NodeTree {
       .getOrElse(Left(tree))
 
   /** Modifies children of the node selected by the path. */
-  final def modifyChildrenAt[T, T1 >: T: ClassTag](
+  final def modifyChildrenAt[T, T1 >: T](
     tree: Tree[T],
     pathIterator: Iterator[T1],
     modify: Iterable[Tree[T]] => Iterable[Tree[T1]],
@@ -1777,7 +1777,7 @@ object NodeTree {
       .getOrElse(Left(tree))
 
   /** Modifies children of the node selected by the path using path item extractor. */
-  final def modifyChildrenAt[K, T, T1 >: T: ClassTag](
+  final def modifyChildrenAt[K, T, T1 >: T](
     tree: Tree[T],
     pathIterator: Iterator[K],
     toPathItem: T => K,

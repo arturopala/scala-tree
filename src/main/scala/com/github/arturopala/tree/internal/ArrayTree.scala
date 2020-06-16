@@ -23,7 +23,6 @@ import com.github.arturopala.tree.{Tree, TreeBuilder}
 import com.github.arturopala.tree.internal.IntOps._
 
 import scala.collection.Iterator.continually
-import scala.reflect.ClassTag
 
 /**
   * Collection of high-level operations on the linear encoding of the tree.
@@ -478,7 +477,7 @@ object ArrayTree {
       )
 
   /** FlatMaps the tree without checking for duplicated children. */
-  final def flatMapLax[T, K: ClassTag](
+  final def flatMapLax[T, K](
     treeStructure: IntSlice,
     treeValues: Slice[T],
     f: T => Tree[K]
@@ -487,7 +486,7 @@ object ArrayTree {
     assert(treeStructure.length == treeValues.length, "Structure and values arrays of the tree MUST be the same size.")
 
     val structureBuffer = treeStructure.asBuffer
-    val valuesBuffer = new ArrayBuffer[K](new Array[K](treeValues.length))
+    val valuesBuffer = Buffer.ofSize[K](treeValues.length)
 
     var index = 0
     var offset = 0
@@ -509,12 +508,15 @@ object ArrayTree {
       index = index + 1
     }
 
-    val trees = TreeBuilder.fromArrays(structureBuffer.toArray, valuesBuffer.toArray)
-    if (trees.size == 1) trees.head else Tree.empty
+    if (structureBuffer.length == 0) Tree.empty
+    else {
+      val trees = TreeBuilder.fromSlices(structureBuffer.asSlice, valuesBuffer.asSlice)
+      if (trees.size == 1) trees.head else Tree.empty
+    }
   }
 
   /** FlatMaps the tree while keeping children distinct. */
-  final def flatMapDistinct[T, K: ClassTag](
+  final def flatMapDistinct[T, K](
     treeStructure: IntSlice,
     treeValues: Slice[T],
     f: T => Tree[K]
@@ -544,8 +546,11 @@ object ArrayTree {
       index = index + 1
     }
 
-    val trees = TreeBuilder.fromArrays(structureBuffer.toArray, valuesBuffer.toArray)
-    if (trees.size == 1) trees.head else Tree.empty
+    if (structureBuffer.length == 0) Tree.empty
+    else {
+      val trees = TreeBuilder.fromSlices(structureBuffer.asSlice, valuesBuffer.asSlice)
+      if (trees.size == 1) trees.head else Tree.empty
+    }
   }
 
   /** Inserts a value to a sub-tree rooted at the path.
@@ -554,7 +559,7 @@ object ArrayTree {
     * @param target whole tree
     * @param keepDistinct if true keeps children distinct
     * @return modified tree */
-  final def insertLeafAt[T, T1 >: T: ClassTag](
+  final def insertLeafAt[T, T1 >: T](
     path: Iterable[T1],
     value: T1,
     target: Tree[T],
@@ -581,7 +586,7 @@ object ArrayTree {
 
   /** Inserts a value to a tree at a path using an extractor function.
     * @return modified tree */
-  final def insertLeafAt[T, T1 >: T: ClassTag, K](
+  final def insertLeafAt[T, T1 >: T, K](
     path: Iterable[K],
     value: T1,
     target: Tree[T],
@@ -608,7 +613,7 @@ object ArrayTree {
       ArrayTreeFunctions.firstChildHavingValue(value, index, t.size, t.structure, t.content).isDefined
   }
 
-  final def prepend[T, T1 >: T: ClassTag](value: T1, tree: ArrayTree[T]): ArrayTree[T1] =
+  final def prepend[T, T1 >: T](value: T1, tree: ArrayTree[T]): ArrayTree[T1] =
     transform[T, T1](tree) { (structureBuffer, valuesBuffer) =>
       structureBuffer.push(1)
       valuesBuffer.push(value)
@@ -623,7 +628,7 @@ object ArrayTree {
     * @param keepDistinct if true keeps children distinct
     * @return modified tree
     */
-  final def insertLeaf[T, T1 >: T: ClassTag](
+  final def insertLeaf[T, T1 >: T](
     parentIndex: Int,
     value: T1,
     target: Tree[T],
@@ -654,7 +659,7 @@ object ArrayTree {
     * @param keepDistinct if true keeps children distinct
     * @return modified tree
     */
-  final def insertLeaves[T, T1 >: T: ClassTag](
+  final def insertLeaves[T, T1 >: T](
     parentIndex: Int,
     values: Iterable[T1],
     target: Tree[T],
@@ -685,7 +690,7 @@ object ArrayTree {
 
   /** Inserts a subtree to a tree at a path.
     * @return modified tree */
-  final def insertChildAt[T, T1 >: T: ClassTag](
+  final def insertChildAt[T, T1 >: T](
     path: Iterable[T1],
     child: Tree[T1],
     target: Tree[T],
@@ -731,7 +736,7 @@ object ArrayTree {
 
   /** Inserts a subtree to a tree at a path using an extractor function.
     * @return either modified tree or an existing */
-  final def insertChildAt[T, T1 >: T: ClassTag, K](
+  final def insertChildAt[T, T1 >: T, K](
     path: Iterable[K],
     child: Tree[T1],
     target: Tree[T],
@@ -756,7 +761,7 @@ object ArrayTree {
 
   /** Inserts a subtree to a tree at a path.
     * @return modified tree */
-  final def insertChildrenAt[T, T1 >: T: ClassTag](
+  final def insertChildrenAt[T, T1 >: T](
     path: Iterable[T1],
     children: Iterable[Tree[T1]],
     target: Tree[T],
@@ -803,7 +808,7 @@ object ArrayTree {
 
   /** Inserts a subtree to a tree at a path.
     * @return modified tree */
-  final def insertChildrenAt[T, T1 >: T: ClassTag, K](
+  final def insertChildrenAt[T, T1 >: T, K](
     path: Iterable[K],
     children: Iterable[Tree[T1]],
     target: Tree[T],
@@ -825,16 +830,16 @@ object ArrayTree {
   }
 
   /** Prepends children with the new child without checking for duplicates. */
-  final def prependChild[T, T1 >: T: ClassTag](tree: ArrayTree[T], child: Tree[T1]): Tree[T1] =
+  final def prependChild[T, T1 >: T](tree: ArrayTree[T], child: Tree[T1]): Tree[T1] =
     insertTreeAtIndex(tree.top, tree.top, child, tree)
 
   /** Appends children with the new child without checking for duplicates. */
-  final def appendChild[T, T1 >: T: ClassTag](tree: ArrayTree[T], child: Tree[T1]): Tree[T1] =
+  final def appendChild[T, T1 >: T](tree: ArrayTree[T], child: Tree[T1]): Tree[T1] =
     insertTreeAtIndex(0, tree.top, child, tree)
 
   /** Inserts a subtree to a tree at an index.
     * @return modified tree */
-  final def insertTreeAtIndex[T, T1 >: T: ClassTag](
+  final def insertTreeAtIndex[T, T1 >: T](
     index: Int,
     parentIndex: Int,
     child: Tree[T1],
@@ -853,7 +858,7 @@ object ArrayTree {
 
   /** Inserts a subtree to a tree at an index while keeping children values distinct.
     * @return modified tree */
-  final def insertChildDistinct[T, T1 >: T: ClassTag](
+  final def insertChildDistinct[T, T1 >: T](
     index: Int,
     child: Tree[T1],
     target: Tree[T],
@@ -875,7 +880,7 @@ object ArrayTree {
     }
 
   /** Inserts multiple children before the existing children. */
-  final def insertBeforeChildren[T, T1 >: T: ClassTag](
+  final def insertBeforeChildren[T, T1 >: T](
     target: Tree[T],
     children: Iterable[Tree[T1]],
     keepDistinct: Boolean
@@ -896,7 +901,7 @@ object ArrayTree {
       }
 
   /** Inserts multiple children after the existing children. */
-  final def insertAfterChildren[T, T1 >: T: ClassTag](
+  final def insertAfterChildren[T, T1 >: T](
     target: Tree[T],
     children: Iterable[Tree[T1]],
     keepDistinct: Boolean
@@ -917,7 +922,7 @@ object ArrayTree {
       }
 
   /** Inserts multiple children before and after the existing children. */
-  final def insertChildren[T, T1 >: T: ClassTag](
+  final def insertChildren[T, T1 >: T](
     target: Tree[T],
     before: Iterable[Tree[T1]],
     after: Iterable[Tree[T1]],
@@ -956,7 +961,7 @@ object ArrayTree {
 
   /** Inserts a branch to the tree at an index while keeping children values distinct.
     * @return modified tree */
-  final def insertBranch[T, T1 >: T: ClassTag](
+  final def insertBranch[T, T1 >: T](
     index: Int,
     branch: Iterable[T1],
     target: Tree[T],
@@ -977,7 +982,7 @@ object ArrayTree {
 
   /** Inserts multiple branches to the tree at an index while keeping children values distinct.
     * @return modified tree */
-  final def insertBranches[T, T1 >: T: ClassTag](
+  final def insertBranches[T, T1 >: T](
     index: Int,
     branches: Iterable[Iterable[T1]],
     target: Tree[T],
@@ -1003,7 +1008,7 @@ object ArrayTree {
 
   /** Updates value of the node at the index.
     * @return updated tree */
-  final def updateValue[T, T1 >: T: ClassTag](
+  final def updateValue[T, T1 >: T](
     index: Int,
     replacement: T1,
     tree: Tree[T],
@@ -1026,7 +1031,7 @@ object ArrayTree {
 
   /** Updates tree at the index.
     * @return updated tree */
-  final def updateTree[T, T1 >: T: ClassTag](
+  final def updateTree[T, T1 >: T](
     index: Int,
     replacement: Tree[T1],
     tree: Tree[T],
@@ -1076,7 +1081,7 @@ object ArrayTree {
     }
 
   /** Updates value of the child node holding the given value. */
-  final def updateChildValue[T, T1 >: T: ClassTag](
+  final def updateChildValue[T, T1 >: T](
     value: T1,
     replacement: T1,
     target: Tree[T],
@@ -1093,7 +1098,7 @@ object ArrayTree {
 
   /** Updates value of the node selected by the path.
     * @return either modified tree or an existing */
-  final def updateValueAt[T, T1 >: T: ClassTag](
+  final def updateValueAt[T, T1 >: T](
     path: Iterable[T1],
     replacement: T1,
     target: Tree[T],
@@ -1109,7 +1114,7 @@ object ArrayTree {
 
   /** Updates value of the node selected by the path.
     * @return either modified tree or an existing */
-  final def updateValueAt[K, T, T1 >: T: ClassTag](
+  final def updateValueAt[K, T, T1 >: T](
     path: Iterable[K],
     replacement: T1,
     target: Tree[T],
@@ -1125,7 +1130,7 @@ object ArrayTree {
       .getOrElse(Left(target))
 
   /** Updates the child node holding the given value. */
-  final def updateChild[T, T1 >: T: ClassTag](
+  final def updateChild[T, T1 >: T](
     value: T1,
     replacement: Tree[T1],
     target: Tree[T],
@@ -1141,7 +1146,7 @@ object ArrayTree {
 
   /** Updates a subtree selected by the path.
     * @return either modified tree or an existing */
-  final def updateTreeAt[T, T1 >: T: ClassTag](
+  final def updateTreeAt[T, T1 >: T](
     path: Iterable[T1],
     replacement: Tree[T1],
     target: Tree[T],
@@ -1157,7 +1162,7 @@ object ArrayTree {
 
   /** Updates a subtree selected by the path.
     * @return either modified tree or an existing */
-  final def updateTreeAt[K, T, T1 >: T: ClassTag](
+  final def updateTreeAt[K, T, T1 >: T](
     path: Iterable[K],
     replacement: Tree[T1],
     target: Tree[T],
@@ -1174,7 +1179,7 @@ object ArrayTree {
 
   /** Modifies value of the node at the index.
     * @return modified tree */
-  final def modifyValue[T, T1 >: T: ClassTag](
+  final def modifyValue[T, T1 >: T](
     index: Int,
     modify: T => T1,
     target: Tree[T],
@@ -1187,7 +1192,7 @@ object ArrayTree {
     }
 
   /** Modifies value of the child node holding the given value. */
-  final def modifyChildValue[T, T1 >: T: ClassTag](
+  final def modifyChildValue[T, T1 >: T](
     value: T1,
     modify: T => T1,
     target: Tree[T],
@@ -1203,7 +1208,7 @@ object ArrayTree {
 
   /** Modifies value of the node selected by the path.
     * @return either modified tree or an existing */
-  final def modifyValueAt[T, T1 >: T: ClassTag](
+  final def modifyValueAt[T, T1 >: T](
     path: Iterable[T1],
     modify: T => T1,
     target: Tree[T],
@@ -1219,7 +1224,7 @@ object ArrayTree {
 
   /** Modifies value of the node selected by the path.
     * @return either modified tree or an existing */
-  final def modifyValueAt[K, T, T1 >: T: ClassTag](
+  final def modifyValueAt[K, T, T1 >: T](
     path: Iterable[K],
     modify: T => T1,
     target: Tree[T],
@@ -1236,7 +1241,7 @@ object ArrayTree {
 
   /** Modifies the tree at the index.
     * @return modified tree */
-  final def modifyTree[T, T1 >: T: ClassTag](
+  final def modifyTree[T, T1 >: T](
     index: Int,
     modify: Tree[T] => Tree[T1],
     tree: Tree[T],
@@ -1248,7 +1253,7 @@ object ArrayTree {
 
   /** Modifies children of the tree at the index.
     * @return modified tree */
-  final def modifyChildren[T, T1 >: T: ClassTag](
+  final def modifyChildren[T, T1 >: T](
     index: Int,
     modify: Iterable[Tree[T]] => Iterable[Tree[T1]],
     tree: Tree[T],
@@ -1260,7 +1265,7 @@ object ArrayTree {
 
   /** Modifies the child node holding the given value.
     * @return modified tree */
-  final def modifyChild[T, T1 >: T: ClassTag](
+  final def modifyChild[T, T1 >: T](
     value: T1,
     modify: Tree[T] => Tree[T1],
     target: Tree[T],
@@ -1276,7 +1281,7 @@ object ArrayTree {
 
   /** Modifies children of this tree.
     * @return modified tree */
-  final def modifyChildren[T, T1 >: T: ClassTag](
+  final def modifyChildren[T, T1 >: T](
     modify: Iterable[Tree[T]] => Iterable[Tree[T1]],
     target: Tree[T]
   ): Tree[T1] =
@@ -1297,7 +1302,7 @@ object ArrayTree {
 
   /** Modifies a subtree selected by the path.
     * @return either modified tree or an existing */
-  final def modifyTreeAt[T, T1 >: T: ClassTag](
+  final def modifyTreeAt[T, T1 >: T](
     path: Iterable[T1],
     modify: Tree[T] => Tree[T1],
     target: Tree[T],
@@ -1316,7 +1321,7 @@ object ArrayTree {
 
   /** Modifies a subtree selected by the path.
     * @return either modified tree or an existing */
-  final def modifyTreeAt[K, T, T1 >: T: ClassTag](
+  final def modifyTreeAt[K, T, T1 >: T](
     path: Iterable[K],
     modify: Tree[T] => Tree[T1],
     target: Tree[T],
@@ -1336,7 +1341,7 @@ object ArrayTree {
 
   /** Modifies children of a node selected by the path.
     * @return either modified tree or an existing */
-  final def modifyChildrenAt[T, T1 >: T: ClassTag](
+  final def modifyChildrenAt[T, T1 >: T](
     path: Iterable[T1],
     modify: Iterable[Tree[T]] => Iterable[Tree[T1]],
     target: Tree[T],
@@ -1355,7 +1360,7 @@ object ArrayTree {
 
   /** Modifies children of a node selected by the path.
     * @return either modified tree or an existing */
-  final def modifyChildrenAt[K, T, T1 >: T: ClassTag](
+  final def modifyChildrenAt[K, T, T1 >: T](
     path: Iterable[K],
     modify: Iterable[Tree[T]] => Iterable[Tree[T1]],
     target: Tree[T],

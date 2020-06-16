@@ -168,18 +168,18 @@ object TestTrees {
 
 trait InflatedTestTrees extends TestTrees {
 
-  final override val tree0: Tree[String] = TestTrees.tree0
-  final override val tree1: Tree[String] = TestTrees.tree1
-  final override val tree2: Tree[String] = TestTrees.tree2
-  final override val tree3_1: Tree[String] = TestTrees.tree3_1
-  final override val tree3_2: Tree[String] = TestTrees.tree3_2
-  final override val tree4_1: Tree[String] = TestTrees.tree4_1
-  final override val tree4_2: Tree[String] = TestTrees.tree4_2
-  final override val tree4_3: Tree[String] = TestTrees.tree4_3
-  final override val tree7: Tree[String] = TestTrees.tree7
-  final override val tree9: Tree[String] = TestTrees.tree9
-  final override val tree13: Tree[String] = TestTrees.tree13
-  final override val allTrees: Seq[Tree[String]] = TestTrees.allTrees
+  final val tree0: Tree[String] = TestTrees.tree0
+  final val tree1: Tree[String] = TestTrees.tree1
+  final val tree2: Tree[String] = TestTrees.tree2
+  final val tree3_1: Tree[String] = TestTrees.tree3_1
+  final val tree3_2: Tree[String] = TestTrees.tree3_2
+  final val tree4_1: Tree[String] = TestTrees.tree4_1
+  final val tree4_2: Tree[String] = TestTrees.tree4_2
+  final val tree4_3: Tree[String] = TestTrees.tree4_3
+  final val tree7: Tree[String] = TestTrees.tree7
+  final val tree9: Tree[String] = TestTrees.tree9
+  final val tree13: Tree[String] = TestTrees.tree13
+  final val allTrees: Seq[Tree[String]] = TestTrees.allTrees
 
   final def tree[T: ClassTag](t: Tree[T]): Tree[T] = t.inflated
 
@@ -187,18 +187,18 @@ trait InflatedTestTrees extends TestTrees {
 
 trait DeflatedTestTrees extends TestTrees {
 
-  final override val tree0: Tree[String] = TestTrees.tree0.deflated
-  final override val tree1: Tree[String] = TestTrees.tree1.deflated
-  final override val tree2: Tree[String] = TestTrees.tree2.deflated
-  final override val tree3_1: Tree[String] = TestTrees.tree3_1.deflated
-  final override val tree3_2: Tree[String] = TestTrees.tree3_2.deflated
-  final override val tree4_1: Tree[String] = TestTrees.tree4_1.deflated
-  final override val tree4_2: Tree[String] = TestTrees.tree4_2.deflated
-  final override val tree4_3: Tree[String] = TestTrees.tree4_3.deflated
-  final override val tree7: Tree[String] = TestTrees.tree7.deflated
-  final override val tree9: Tree[String] = TestTrees.tree9.deflated
-  final override val tree13: Tree[String] = TestTrees.tree13.deflated
-  final override val allTrees: Seq[Tree[String]] = TestTrees.allTrees.map(_.deflated)
+  val tree0: Tree[String] = TestTrees.tree0.deflated
+  val tree1: Tree[String] = TestTrees.tree1.deflated
+  val tree2: Tree[String] = TestTrees.tree2.deflated
+  val tree3_1: Tree[String] = TestTrees.tree3_1.deflated
+  val tree3_2: Tree[String] = TestTrees.tree3_2.deflated
+  val tree4_1: Tree[String] = TestTrees.tree4_1.deflated
+  val tree4_2: Tree[String] = TestTrees.tree4_2.deflated
+  val tree4_3: Tree[String] = TestTrees.tree4_3.deflated
+  val tree7: Tree[String] = TestTrees.tree7.deflated
+  val tree9: Tree[String] = TestTrees.tree9.deflated
+  val tree13: Tree[String] = TestTrees.tree13.deflated
+  val allTrees: Seq[Tree[String]] = TestTrees.allTrees.map(_.deflated)
 
   final def tree[T: ClassTag](t: Tree[T]): Tree[T] = t.deflated
 }
