@@ -16,8 +16,6 @@
 
 package com.github.arturopala.tree
 
-import scala.language.implicitConversions
-
 import com.github.arturopala.tree.internal.ArrayTree._
 import com.github.arturopala.bufferandslice.{IntSlice, Slice}
 import com.github.arturopala.tree.LaxTreeOps._
@@ -34,7 +32,7 @@ class ArrayTreeSpec extends AnyWordSpecCompat {
 
   final val id: String => String = x => x
 
-  final implicit def asArrayTree[T: ClassTag](tree: Tree[T]): Tree.ArrayTree[T] =
+  final def asArrayTree[T: ClassTag](tree: Tree[T]): Tree.ArrayTree[T] =
     tree.deflated.asInstanceOf[Tree.ArrayTree[T]]
 
   class A
@@ -72,6 +70,10 @@ class ArrayTreeSpec extends AnyWordSpecCompat {
       val (s, v) = asArrayTree(Tree(b1, Tree(b2, Tree(b3), Tree(b4)), Tree(b5))).toBuffers
       s.toArray shouldBe Array(0, 0, 0, 2, 2)
       v.toArray shouldBe Array(b5, b4, b3, b2, b1)
+
+      val (s1, v1) = asArrayTree(Tree(b1, Tree(b2, Tree(b3), Tree(b4)), Tree(b5))).toBuffers[A]
+      s1.toArray shouldBe Array(0, 0, 0, 2, 2)
+      v1.toArray shouldBe Array(b5, b4, b3, b2, b1)
     }
 
     "convert ArrayTree of non-primitive type to slices" in {
