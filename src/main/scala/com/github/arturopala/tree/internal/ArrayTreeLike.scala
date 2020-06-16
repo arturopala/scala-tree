@@ -432,17 +432,12 @@ abstract class ArrayTreeLike[T] extends TreeLike[T] {
   @`inline` final override def toArrays[T1 >: T: ClassTag]: (Array[Int], Array[T1]) =
     (tree.structure.toArray, tree.content.toArray[T1])
 
-  @`inline` final override def toSlices[T1 >: T: ClassTag]: (IntSlice, Slice[T1]) =
-    tree.content.headOption.map(_.getClass) match {
-      case Some(clazz) if clazz.equals(implicitly[ClassTag[T1]].runtimeClass) =>
-        (tree.structure, tree.content.asInstanceOf[Slice[T1]])
-      case _ =>
-        (tree.structure, Slice.of(tree.content.toArray[T1]))
-    }
+  @`inline` final override def toSlices[T1 >: T]: (IntSlice, Slice[T1]) =
+    (tree.structure, tree.content.asInstanceOf[Slice[T1]]) // safe cast as Slice is read-only structure
 
   final def asSlices: (IntSlice, Slice[T]) = (tree.structure, tree.content)
 
-  @`inline` final override def toBuffers[T1 >: T: ClassTag]: (IntBuffer, Buffer[T1]) =
+  @`inline` final override def toBuffers[T1 >: T]: (IntBuffer, Buffer[T1]) =
     (tree.structure.asBuffer, tree.content.toBuffer[T1])
 
   @`inline` final override def toStructureArray: Array[Int] = tree.structure.toArray

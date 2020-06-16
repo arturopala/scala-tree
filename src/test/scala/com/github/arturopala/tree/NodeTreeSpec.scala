@@ -25,6 +25,9 @@ class NodeTreeSpec extends AnyWordSpecCompat {
   val even: String => Boolean = s => s.head.toInt % 2 == 0
   val odd: String => Boolean = s => s.head.toInt  % 2 != 0
 
+  class A
+  class B() extends A
+
   s"NodeTree" should {
 
     "convert NodeTree to arrays" in {
@@ -37,6 +40,39 @@ class NodeTreeSpec extends AnyWordSpecCompat {
       val (s3, v3) = Tree(1d, Tree(4d), Tree(2d, Tree(3d)), Tree(5d)).toArrays
       s3 shouldBe Array(0, 0, 1, 0, 3)
       v3 shouldBe Array(5d, 3d, 2d, 4d, 1d)
+    }
+
+    "convert NodeTree of to structure array" in {
+      Tree("a").toStructureArray shouldBe Array(0)
+      Tree(1, Tree(2, Tree(3), Tree(4)), Tree(5)).toStructureArray shouldBe Array(0, 0, 0, 2, 2)
+      Tree(1d, Tree(4d), Tree(2d, Tree(3d)), Tree(5d)).toStructureArray shouldBe Array(0, 0, 1, 0, 3)
+    }
+
+    "convert NodeTree of non-primitive type to arrays" in {
+      val b1 = new B; val b2 = new B; val b3 = new B; val b4 = new B; val b5 = new B;
+      val (s, v) = Tree(b1, Tree(b2, Tree(b3), Tree(b4)), Tree(b5)).toArrays
+      s shouldBe Array(0, 0, 0, 2, 2)
+      v shouldBe Array(b5, b4, b3, b2, b1)
+    }
+
+    "convert NodeTree of non-primitive type to buffers" in {
+      val b1 = new B; val b2 = new B; val b3 = new B; val b4 = new B; val b5 = new B;
+      val (s, v) = Tree(b1, Tree(b2, Tree(b3), Tree(b4)), Tree(b5)).toBuffers
+      s.toArray shouldBe Array(0, 0, 0, 2, 2)
+      v.toArray shouldBe Array(b5, b4, b3, b2, b1)
+    }
+
+    "convert NodeTree of non-primitive type to slices" in {
+      val b1 = new B; val b2 = new B; val b3 = new B; val b4 = new B; val b5 = new B;
+      val (s, v) = Tree(b1, Tree(b2, Tree(b3), Tree(b4)), Tree(b5)).toSlices
+      s.toArray shouldBe Array(0, 0, 0, 2, 2)
+      v.toArray shouldBe Array(b5, b4, b3, b2, b1)
+    }
+
+    "convert NodeTree of non-primitive type to structure array" in {
+      val b1 = new B; val b2 = new B; val b3 = new B; val b4 = new B; val b5 = new B;
+      val arr = Tree(b1, Tree(b2, Tree(b3), Tree(b4)), Tree(b5)).toStructureArray
+      arr shouldBe Array(0, 0, 0, 2, 2)
     }
 
     "insert branch" in {

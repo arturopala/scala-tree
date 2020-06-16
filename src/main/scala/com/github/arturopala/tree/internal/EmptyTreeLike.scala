@@ -340,9 +340,9 @@ trait EmptyTreeLike extends TreeLike[Nothing] {
 
   final override def toArrays[T1: ClassTag]: (Array[Int], Array[T1]) = (Array.empty[Int], Array.empty[T1])
 
-  final override def toSlices[T1: ClassTag]: (IntSlice, Slice[T1]) = (IntSlice.empty, Slice.empty[T1])
+  final override def toSlices[T1]: (IntSlice, Slice[T1]) = (IntSlice.empty, Slice.empty[T1])
 
-  final override def toBuffers[T1: ClassTag]: (IntBuffer, Buffer[T1]) = (IntBuffer.empty, Buffer.empty[T1])
+  final override def toBuffers[T1]: (IntBuffer, Buffer[T1]) = (IntBuffer.empty, Buffer.empty[T1])
 
   final override val toStructureArray: Array[Int] = Array.empty[Int]
 

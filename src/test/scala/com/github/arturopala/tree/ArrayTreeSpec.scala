@@ -37,7 +37,55 @@ class ArrayTreeSpec extends AnyWordSpecCompat {
   final implicit def asArrayTree[T: ClassTag](tree: Tree[T]): Tree.ArrayTree[T] =
     tree.deflated.asInstanceOf[Tree.ArrayTree[T]]
 
+  class A
+  class B() extends A
+
   "ArrayTree" should {
+
+    "convert ArrayTree to arrays" in {
+      val (s1, v1) = asArrayTree(Tree("a")).toArrays
+      s1 shouldBe Array(0)
+      v1 shouldBe Array("a")
+      val (s2, v2) = asArrayTree(Tree(1, Tree(2, Tree(3), Tree(4)), Tree(5))).toArrays
+      s2 shouldBe Array(0, 0, 0, 2, 2)
+      v2 shouldBe Array(5, 4, 3, 2, 1)
+      val (s3, v3) = asArrayTree(Tree(1d, Tree(4d), Tree(2d, Tree(3d)), Tree(5d))).toArrays
+      s3 shouldBe Array(0, 0, 1, 0, 3)
+      v3 shouldBe Array(5d, 3d, 2d, 4d, 1d)
+    }
+
+    "convert ArrayTree of to structure array" in {
+      asArrayTree(Tree("a")).toStructureArray shouldBe Array(0)
+      asArrayTree(Tree(1, Tree(2, Tree(3), Tree(4)), Tree(5))).toStructureArray shouldBe Array(0, 0, 0, 2, 2)
+      asArrayTree(Tree(1d, Tree(4d), Tree(2d, Tree(3d)), Tree(5d))).toStructureArray shouldBe Array(0, 0, 1, 0, 3)
+    }
+
+    "convert ArrayTree of non-primitive type to arrays" in {
+      val b1 = new B; val b2 = new B; val b3 = new B; val b4 = new B; val b5 = new B;
+      val (s, v) = asArrayTree(Tree(b1, Tree(b2, Tree(b3), Tree(b4)), Tree(b5))).toArrays
+      s shouldBe Array(0, 0, 0, 2, 2)
+      v shouldBe Array(b5, b4, b3, b2, b1)
+    }
+
+    "convert ArrayTree of non-primitive type to buffers" in {
+      val b1 = new B; val b2 = new B; val b3 = new B; val b4 = new B; val b5 = new B;
+      val (s, v) = asArrayTree(Tree(b1, Tree(b2, Tree(b3), Tree(b4)), Tree(b5))).toBuffers
+      s.toArray shouldBe Array(0, 0, 0, 2, 2)
+      v.toArray shouldBe Array(b5, b4, b3, b2, b1)
+    }
+
+    "convert ArrayTree of non-primitive type to slices" in {
+      val b1 = new B; val b2 = new B; val b3 = new B; val b4 = new B; val b5 = new B;
+      val (s, v) = asArrayTree(Tree(b1, Tree(b2, Tree(b3), Tree(b4)), Tree(b5))).toSlices
+      s.toArray shouldBe Array(0, 0, 0, 2, 2)
+      v.toArray shouldBe Array(b5, b4, b3, b2, b1)
+    }
+
+    "convert ArrayTree of non-primitive type to structure array" in {
+      val b1 = new B; val b2 = new B; val b3 = new B; val b4 = new B; val b5 = new B;
+      val arr = asArrayTree(Tree(b1, Tree(b2, Tree(b3), Tree(b4)), Tree(b5))).toStructureArray
+      arr shouldBe Array(0, 0, 0, 2, 2)
+    }
 
     "insert multiple children at once" in {
       insertChildren(

@@ -710,40 +710,33 @@ object NodeTree {
           toPairsList(result, queue.safeTail)
       }
 
-  final def toSlices[T: ClassTag](node: Tree[T]): (IntSlice, Slice[T]) = {
-    val (structure, values) = toArrays(node)
-    (IntSlice.of(structure), Slice.of(values))
+  final def toSlices[T](node: Tree[T]): (IntSlice, Slice[T]) = {
+    val (structure, values) = toBuffers(node)
+    (structure.asSlice, values.asSlice)
   }
 
-  final def toBuffers[T](node: Tree[T]): (IntBuffer, Buffer[T]) = {
-    val (structure, values) = toArrays(node)
-    (IntBuffer(structure), Buffer(values))
-  }
-
-  final def toArrays[T](node: Tree[T]): (Array[Int], Array[T]) =
-    if (node.isEmpty)
-      (Array.empty[Int], Array.empty[AnyRef].asInstanceOf[Array[T]])
+  final def toBuffers[T](node: Tree[T]): (IntBuffer, Buffer[T]) =
+    if (node.isEmpty) (IntBuffer.empty, Buffer.empty[T])
     else {
-      val queue = new Array[Tree[T]](Math.max(node.width, node.height))
-      queue(0) = node
-      toArrays(new Array[Int](node.size), ArrayOps.newArray(node.head, node.size), queue, node.size - 1, 0)
+      val queue = Buffer(node)
+      toBuffers(new IntBuffer(node.size), Buffer.ofSize[T](node.size), queue, node.size - 1, 0)
     }
 
   @tailrec
-  private final def toArrays[T](
-    structure: Array[Int],
-    values: Array[T],
-    queue: Array[Tree[T]],
+  private final def toBuffers[T](
+    structure: IntBuffer,
+    values: Buffer[T],
+    queue: Buffer[Tree[T]],
     position: Int,
     queuePosition: Int
-  ): (Array[Int], Array[T]) =
+  ): (IntBuffer, Buffer[T]) =
     if (position < 0) (structure, values)
     else
       queue(queuePosition) match {
         case Tree.Leaf(head) =>
           structure.update(position, 0)
           values.update(position, head)
-          toArrays(structure, values, queue, position - 1, queuePosition - 1)
+          toBuffers(structure, values, queue, position - 1, queuePosition - 1)
 
         case Tree(head: T, children: Iterable[Tree[T]]) =>
           structure.update(position, children.size)
@@ -753,31 +746,33 @@ object NodeTree {
             queue(rp) = child
             rp = rp - 1
           }
-          toArrays(structure, values, queue, position - 1, queuePosition + children.size - 1)
+          toBuffers(structure, values, queue, position - 1, queuePosition + children.size - 1)
 
         case _ =>
-          toArrays(structure, values, queue, position, queuePosition - 1)
+          toBuffers(structure, values, queue, position, queuePosition - 1)
       }
 
-  @`inline` final def toStructureArray[T](node: Tree[T]): Array[Int] = {
-    val queue = new Array[Tree[T]](Math.max(node.width, node.height))
-    queue(0) = node
-    toStructureArray(new Array[Int](node.size), queue, node.size - 1, 0)
+  final def toArrays[T: ClassTag](node: Tree[T]): (Array[Int], Array[T]) = {
+    val (structure, values) = toBuffers(node)
+    (structure.toArray, values.toArray)
   }
 
+  @`inline` final def toStructureArray[T](node: Tree[T]): Array[Int] =
+    toStructureBuffer(new IntBuffer(node.size), Buffer(node), node.size - 1, 0).asArray
+
   @tailrec
-  private final def toStructureArray[T](
-    structure: Array[Int],
-    queue: Array[Tree[T]],
+  private final def toStructureBuffer[T](
+    structure: IntBuffer,
+    queue: Buffer[Tree[T]],
     position: Int,
     queuePosition: Int
-  ): Array[Int] =
+  ): IntBuffer =
     if (position < 0) structure
     else
       queue(queuePosition) match {
         case Tree.Leaf(_) =>
           structure.update(position, 0)
-          toStructureArray(structure, queue, position - 1, queuePosition - 1)
+          toStructureBuffer(structure, queue, position - 1, queuePosition - 1)
 
         case Tree(_, children: Iterable[Tree[T]]) =>
           structure.update(position, children.size)
@@ -786,10 +781,10 @@ object NodeTree {
             queue(rp) = child
             rp = rp - 1
           }
-          toStructureArray(structure, queue, position - 1, queuePosition + children.size - 1)
+          toStructureBuffer(structure, queue, position - 1, queuePosition + children.size - 1)
 
         case _ =>
-          toStructureArray(structure, queue, position, queuePosition - 1)
+          toStructureBuffer(structure, queue, position, queuePosition - 1)
       }
 
   @tailrec

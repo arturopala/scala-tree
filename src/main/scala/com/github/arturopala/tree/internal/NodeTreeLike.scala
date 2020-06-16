@@ -455,9 +455,9 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
 
   final override def toArrays[T1 >: T: ClassTag]: (Array[Int], Array[T1]) = NodeTree.toArrays(node)
 
-  final override def toSlices[T1 >: T: ClassTag]: (IntSlice, Slice[T1]) = NodeTree.toSlices(node)
+  final override def toSlices[T1 >: T]: (IntSlice, Slice[T1]) = NodeTree.toSlices(node)
 
-  final override def toBuffers[T1 >: T: ClassTag]: (IntBuffer, Buffer[T1]) = NodeTree.toBuffers(node)
+  final override def toBuffers[T1 >: T]: (IntBuffer, Buffer[T1]) = NodeTree.toBuffers(node)
 
   final override def toStructureArray: Array[Int] = NodeTree.toStructureArray(node)
 
@@ -482,8 +482,8 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
   final def inflated: Tree[T] = node
 
   final def deflated[T1 >: T](implicit tag: ClassTag[T1]): ArrayTree[T1] = {
-    val (structure, values) = node.toSlices[T1]
-    new ArrayTree[T1](structure, values, node.width, node.height)
+    val (structure, values) = node.toBuffers[T1]
+    new ArrayTree[T1](structure.asSlice, values.asSlice, node.width, node.height)
   }
 
 }
