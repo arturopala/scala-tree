@@ -1412,12 +1412,12 @@ object ArrayTree {
     *       - otherwise if the tree has a single child, returns that child,
     *       - otherwise if the tree has more children, returns the tree unmodified.
     * @return modified tree */
-  final def removeChildValue[T, T1 >: T](
+  final def removeChildValue[F[_]: Transformer, T, T1 >: T](
     value: T1,
-    target: Tree[T],
+    target: F[T],
     rightmost: Boolean,
     keepDistinct: Boolean
-  ): Tree[T] =
+  ): F[T] =
     transform(target) { (structureBuffer, valuesBuffer) =>
       ArrayTreeFunctions
         .childHavingValue(value, structureBuffer.top, structureBuffer.length, structureBuffer, valuesBuffer, rightmost)
@@ -1432,12 +1432,12 @@ object ArrayTree {
     *       - otherwise if the tree has a single child, returns that child,
     *       - otherwise if the tree has more children, returns the tree unmodified.
     * @return modified tree */
-  final def removeValueAt[T, T1 >: T](
+  final def removeValueAt[F[_]: Transformer, T, T1 >: T](
     path: Iterable[T1],
-    target: Tree[T],
+    target: F[T],
     rightmost: Boolean,
     keepDistinct: Boolean
-  ): Tree[T] =
+  ): F[T] =
     followEntirePath(path, target, rightmost)
       .map(removeValue(_, target, keepDistinct))
       .getOrElse(target)
