@@ -39,6 +39,10 @@ object ArrayTreeFunctions {
 
   @`inline` private def identity[T, T1 >: T]: T => T1 = x => x
 
+  /** Checks if the buffer represents valid tree structure linearisation. */
+  @`inline` def hasValidTreeStructure(structure: IntBuffer): Boolean =
+    structure.iterator.sum == (structure.length - 1)
+
   /** Finds an index of the parent node of the given node.
     * @note If index > size - 1 then returns -1.  */
   @`inline` final def parentIndex(index: Int, treeStructure: IntBuffer): Int =
@@ -1527,7 +1531,7 @@ object ArrayTreeFunctions {
         insertChildrenDistinct(parentIndex, insertIndex, queue, preserveExisting, structureBuffer, valuesBuffer, offset)
       else {
 
-        if (parentIndex >= 0) structureBuffer.increment(parentIndex)
+        if (parentIndex >= 0 && structureBuffer.nonEmpty) structureBuffer.increment(parentIndex)
         val delta1 = insertSlice(insertIndex, structure, values, structureBuffer, valuesBuffer)
 
         val duplicatedSiblingIndex =

@@ -141,8 +141,10 @@ class TreeInsertionsSpec extends FunSuite {
     }
 
     "insert distinct new leaves into the tree - prepend to existing" in {
+      tree0.insertLeaves(List()) shouldBe tree0
       tree0.insertLeaves(List("a", "b", "c")) shouldBe tree0
       tree0.insertLeaves(List("a")) shouldBe Tree("a")
+      tree1.insertLeaves(List()) shouldBe tree1
       tree1.insertLeaves(List("a", "b", "c")) shouldBe Tree("a", Tree("a"), Tree("b"), Tree("c"))
       tree2.insertLeaves(List("a", "b", "c")) shouldBe Tree("a", Tree("a"), Tree("c"), Tree("b"))
       tree3_1.insertLeaves(List("a", "b", "c")) shouldBe Tree("a", Tree("a"), Tree("c"), Tree("b", Tree("c")))

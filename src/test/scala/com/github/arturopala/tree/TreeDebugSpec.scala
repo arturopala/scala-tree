@@ -30,15 +30,17 @@ class TreeDebugSpec extends FunSuite with TestWithBuffers {
   //test(Inflated, new Spec with InflatedTestTrees)
   test(Deflated, new Spec with DeflatedTestTrees)
 
+  def treeFrom[T](structure: IntSlice, values: Slice[T]): Tree[T] =
+    Tree.TreeTransformer.fromSlices(structure, values)
+
   sealed trait Spec extends AnyWordSpecCompat with TestTrees {
 
     def tree[T: ClassTag](t: Tree[T]): Tree[T]
 
     "debug" suite {
-      val f3: String => Tree[Int] = _ => Tree.empty
-      test(
-        flatMapDistinct(IntSlice(0), Slice("a"), f3) shouldBe Tree.empty
-      )
+      val f4: String => Tree[Int] = s => if (s == "a") Tree.empty else Tree(s.length, Tree(s.length * 2))
+
+      test(flatMapDistinct(treeFrom(IntSlice(0, 0, 2), Slice("aaa", "aa", "a")), f4) shouldBe Tree.empty)
     }
 
   }

@@ -305,8 +305,8 @@ object LaxTreeOps {
           .headOption
           .getOrElse(empty)
 
-      case tree: ArrayTree[T] =>
-        ArrayTree.flatMapLax(tree.structure, tree.content, f)
+      case tree =>
+        ArrayTree.flatMapLax(tree, f)
     }
 
     final override def insertLeafLax[T1 >: T](value: T1, append: Boolean = false): Tree[T1] = t match {
@@ -405,12 +405,12 @@ object LaxTreeOps {
               if (append) node.children ++ validChildren.asInstanceOf[Iterable[NodeTree[T1]]]
               else validChildren.asInstanceOf[Iterable[NodeTree[T1]]] ++ node.children
             )
-          else if (append) ArrayTree.insertAfterChildren(node, validChildren, keepDistinct = false)
-          else ArrayTree.insertBeforeChildren(node, validChildren, keepDistinct = false)
+          else if (append) ArrayTree.insertAfterChildren[Tree, T, T1](node, validChildren, keepDistinct = false)
+          else ArrayTree.insertBeforeChildren[Tree, T, T1](node, validChildren, keepDistinct = false)
 
         case tree =>
-          if (append) ArrayTree.insertAfterChildren(tree, validChildren, keepDistinct = false)
-          else ArrayTree.insertBeforeChildren(tree, validChildren, keepDistinct = false)
+          if (append) ArrayTree.insertAfterChildren[Tree, T, T1](tree, validChildren, keepDistinct = false)
+          else ArrayTree.insertBeforeChildren[Tree, T, T1](tree, validChildren, keepDistinct = false)
       }
     }
 

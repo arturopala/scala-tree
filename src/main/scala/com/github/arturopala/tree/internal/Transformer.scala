@@ -19,7 +19,7 @@ package com.github.arturopala.tree.internal
 import com.github.arturopala.bufferandslice.{Buffer, IntBuffer, IntSlice, Slice}
 
 /** Interface of transformations to and from tree linearisation. */
-trait Transformer[F[_]] {
+trait Transformer[F[+_]] {
 
   /** Outputs tree linearisation as a pair of slices. */
   def toSlices[T](target: F[T]): (IntSlice, Slice[T])

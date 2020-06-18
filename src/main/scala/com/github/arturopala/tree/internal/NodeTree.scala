@@ -636,7 +636,7 @@ object NodeTree {
     case Tree.Unary(head, existingChild)    => Tree.Binary(head, child, existingChild)
     case Tree.Binary(head, left, right)     => Tree.Bunch(head, List(child, left, right))
     case Tree.Bunch(head, existingChildren) => Tree.Bunch(head, child +: existingChildren)
-    case tree: Tree.ArrayTree[T]            => ArrayTree.prependChild(tree, child)
+    case tree: Tree.ArrayTree[T]            => ArrayTree.prependChild(tree.asInstanceOf[Tree[T]], child)
     case _                                  => Tree.empty
   }
 
@@ -646,7 +646,7 @@ object NodeTree {
     case Tree.Unary(head, existingChild)    => Tree.Binary(head, existingChild, child)
     case Tree.Binary(head, left, right)     => Tree.Bunch(head, List(left, right, child))
     case Tree.Bunch(head, existingChildren) => Tree.Bunch(head, existingChildren :+ child)
-    case tree: Tree.ArrayTree[T]            => ArrayTree.appendChild(tree, child)
+    case tree: Tree.ArrayTree[T]            => ArrayTree.appendChild(tree.asInstanceOf[Tree[T]], child)
     case _                                  => Tree.empty
   }
 
@@ -1588,7 +1588,7 @@ object NodeTree {
               Tree(tree.head, left ++: t +: right)
             }
 
-          case t: Tree.ArrayTree[T1] =>
+          case t =>
             ArrayTree
               .insertChildren(ArrayTree.prepend(tree.head, t), left, right, keepDistinct && t.head != node.head)
         }
@@ -1713,7 +1713,7 @@ object NodeTree {
                 Tree(tree.head, left ++: t +: right)
               }
 
-            case t: Tree.ArrayTree[T1] =>
+            case t =>
               ArrayTree
                 .insertChildren(ArrayTree.prepend(tree.head, t), left, right, keepDistinct && t.head != node.head)
           }

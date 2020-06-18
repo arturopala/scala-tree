@@ -17,10 +17,9 @@
 package com.github.arturopala.tree.internal
 
 import com.github.arturopala.bufferandslice._
-import com.github.arturopala.tree.Tree.ArrayTree
-import com.github.arturopala.tree.internal.ArrayTreeFunctions.bottomIndex
-import com.github.arturopala.tree.{Tree, TreeBuilder}
 import com.github.arturopala.tree.internal.IntOps._
+import com.github.arturopala.tree.internal.IterableOps.iterableFrom
+import com.github.arturopala.tree.{Tree, TreeBuilder}
 
 import scala.collection.Iterator.continually
 
@@ -184,7 +183,7 @@ object ArrayTree {
        ArrayTreeFunctions
          .nodesIndexIteratorDepthFirst(startIndex, treeStructure)
      else ArrayTreeFunctions.nodesIndexIteratorBreadthFirst(startIndex, treeStructure))
-      .map(treeAt[Tree, T](_, treeStructure, treeValues))
+      .map(treeAt2(_, treeStructure, treeValues))
   }
 
   /** Iterates over filtered subtrees (including the tree itself).
@@ -205,7 +204,7 @@ object ArrayTree {
       if (depthFirst)
         ArrayTreeFunctions.nodesIndexIteratorDepthFirst(startIndex, treeStructure)
       else ArrayTreeFunctions.nodesIndexIteratorBreadthFirst(startIndex, treeStructure),
-      treeAt[Tree, T](_, treeStructure, treeValues),
+      treeAt2(_, treeStructure, treeValues),
       pred
     )
   }
@@ -228,7 +227,7 @@ object ArrayTree {
     new MapFilterIterator[Int, Tree[T]](
       if (depthFirst) ArrayTreeFunctions.nodesIndexIteratorDepthFirstWithLimit(startIndex, treeStructure, maxDepth)
       else ArrayTreeFunctions.nodesIndexIteratorBreadthFirstWithLimit(startIndex, treeStructure, maxDepth),
-      treeAt[Tree, T](_, treeStructure, treeValues),
+      treeAt2(_, treeStructure, treeValues),
       pred
     )
   }
@@ -249,7 +248,7 @@ object ArrayTree {
         ArrayTreeFunctions.nodesIndexAndLevelIteratorDepthFirstWithLimit(startIndex, treeStructure, maxDepth)
       else
         ArrayTreeFunctions.nodesIndexAndLevelIteratorBreadthFirstWithLimit(startIndex, treeStructure, maxDepth),
-      { case (level: Int, index: Int) => (level, treeAt[Tree, T](index, treeStructure, treeValues)) },
+      { case (level: Int, index: Int) => (level, treeAt2(index, treeStructure, treeValues)) },
       (t: (Int, Tree[T])) => pred(t._2)
     )
 
@@ -260,12 +259,12 @@ object ArrayTree {
     *         - remaining path iterator,
     *         - flag set to true if path matched an entire branch.
     */
-  @`inline` final def followPath[T, T1 >: T](
+  @`inline` final def followPath[F[+_]: Transformer, T, T1 >: T](
     path: Iterable[T1],
-    tree: Tree[T],
+    target: F[T],
     rightmost: Boolean
   ): (IntSlice, Option[T1], Iterator[T1], Boolean) = {
-    val (structure, values) = tree.toSlices
+    val (structure, values) = toSlices(target)
     ArrayTreeFunctions.followPath(path, structure.top, structure, values, rightmost)
   }
 
@@ -276,38 +275,38 @@ object ArrayTree {
     *         - remaining path iterator,
     *         - flag set to true if path matched an entire branch.
     */
-  @`inline` final def followPath[T, K](
+  @`inline` final def followPath[F[+_]: Transformer, T, K](
     path: Iterable[K],
-    tree: Tree[T],
+    target: F[T],
     toPathItem: T => K,
     rightmost: Boolean
   ): (IntSlice, Option[K], Iterator[K], Boolean) = {
-    val (structure, values) = tree.toSlices
+    val (structure, values) = toSlices(target)
     ArrayTreeFunctions.followPath(path, structure.top, structure, values, toPathItem, rightmost)
   }
 
   /** Follows the entire path of values into the tree.
     * @return a Some of an array of travelled indexes, or None if path doesn't exist.
     */
-  @`inline` final def followEntirePath[F[_]: Transformer, T, T1 >: T](
+  @`inline` final def followEntirePath[F[+_]: Transformer, T, T1 >: T](
     path: Iterable[T1],
     target: F[T],
     rightmost: Boolean
   ): Option[IntSlice] = {
-    val (structure, values) = implicitly[Transformer[F]].toSlices(target)
+    val (structure, values) = toSlices(target)
     ArrayTreeFunctions.followEntirePath(path, structure.top, structure, values, rightmost)
   }
 
   /** Follows the entire path of into the tree using a path item extractor function.
     * @return a Some of an array of travelled indexes, or None if path doesn't exist.
     */
-  @`inline` final def followEntirePath[F[_]: Transformer, T, K](
+  @`inline` final def followEntirePath[F[+_]: Transformer, T, K](
     path: Iterable[K],
     target: F[T],
     toPathItem: T => K,
     rightmost: Boolean
   ): Option[IntSlice] = {
-    val (structure, values) = implicitly[Transformer[F]].toSlices(target)
+    val (structure, values) = toSlices(target)
     ArrayTreeFunctions.followEntirePath(path, structure.top, structure, values, toPathItem, rightmost)
   }
 
@@ -331,7 +330,7 @@ object ArrayTree {
   ): Boolean =
     ArrayTreeFunctions
       .childrenIndexesIterator(parentIndex, treeStructure)
-      .exists(i => treeAt[Tree, T](i, treeStructure, treeValues) == child)
+      .exists(i => treeAt2(i, treeStructure, treeValues) == child)
 
   /** Checks if the tree starting at parentIndex contains direct child value fulfilling the predicate. */
   @`inline` final def existsChildValue[T, T1 >: T](
@@ -353,7 +352,7 @@ object ArrayTree {
   ): Boolean =
     ArrayTreeFunctions
       .childrenIndexesIterator(parentIndex, treeStructure)
-      .exists(i => pred(treeAt[Tree, T](i, treeStructure, treeValues)))
+      .exists(i => pred(treeAt2(i, treeStructure, treeValues)))
 
   /** Checks if the tree starting at parentIndex contains given branch. */
   @`inline` final def containsBranch[T, T1 >: T](
@@ -413,7 +412,7 @@ object ArrayTree {
   ): Option[Tree[T]] =
     ArrayTreeFunctions
       .followEntirePath(path, startIndex, treeStructure, treeValues, rightmost)
-      .map(indexes => treeAt[Tree, T](indexes.last, treeStructure, treeValues))
+      .map(indexes => treeAt2(indexes.last, treeStructure, treeValues))
 
   /** Selects tree accessible by path using item extractor function. */
   @`inline` final def selectTree[T, K](
@@ -426,22 +425,31 @@ object ArrayTree {
   ): Option[Tree[T]] =
     ArrayTreeFunctions
       .followEntirePath(path, startIndex, treeStructure, treeValues, toPathItem, rightmost)
-      .map(indexes => treeAt[Tree, T](indexes.last, treeStructure, treeValues))
+      .map(indexes => treeAt2(indexes.last, treeStructure, treeValues))
+
+  // TRANSFORMATIONS
 
   /** Returns tree rooted at the given index. */
-  final def treeAt[F[_]: Transformer, T](index: Int, target: F[T]): F[T] = {
-    val (treeStructure, treeValues) = implicitly[Transformer[F]].toSlices(target)
-    if (index == treeStructure.top) target
-    else {
-      val (childStructure, childValues) = ArrayTreeFunctions.treeAt(index, treeStructure, treeValues)
-      implicitly[Transformer[F]].fromSlices(childStructure, childValues)
-    }
+  final def treeAt[F[+_]: Transformer, T](index: Int, target: F[T]): Tree[T] = {
+    val (treeStructure, treeValues) = toSlices(target)
+    val (childStructure, childValues) = ArrayTreeFunctions.treeAt(index, treeStructure, treeValues)
+    Tree.TreeTransformer.fromSlices(childStructure, childValues)
   }
 
   /** Returns tree rooted at the given index. */
-  final def treeAt[F[_]: Transformer, T](index: Int, treeStructure: IntSlice, treeValues: Slice[T]): F[T] = {
+  final def treeAt2[T](index: Int, treeStructure: IntSlice, treeValues: Slice[T]): Tree[T] = {
     val (structure, values) = ArrayTreeFunctions.treeAt(index, treeStructure, treeValues)
-    fromSlices(structure, values)
+    Tree.TreeTransformer.fromSlices(structure, values)
+  }
+
+  /** Returns instance rooted at the given index. */
+  final def instanceAt[F[+_]: Transformer, T](index: Int, target: F[T]): F[T] = {
+    val (treeStructure, treeValues) = toSlices(target)
+    if (index == treeStructure.top) target
+    else {
+      val (childStructure, childValues) = ArrayTreeFunctions.treeAt(index, treeStructure, treeValues)
+      fromSlices(childStructure, childValues)
+    }
   }
 
   /** Transforms the tree using provided function, or returns unmodified if result in None.
@@ -449,25 +457,31 @@ object ArrayTree {
     * @tparam T type of the input tree values
     * @tparam T1 type of the output tree values
     */
-  final def transform[F[_]: Transformer, T, T1 >: T](
+  private final def transform[F[+_]: Transformer, T, T1 >: T](
     target: F[T]
   )(modify: (IntBuffer, Buffer[T1]) => Option[Int]): F[T1] = {
     val (structureBuffer, valuesBuffer) = implicitly[Transformer[F]].toBuffers[T, T1](target)
     modify(structureBuffer, valuesBuffer) match {
-      case None    => target.asInstanceOf[F[T1]]
+      case None    => target
       case Some(_) => implicitly[Transformer[F]].fromBuffers(structureBuffer, valuesBuffer)
     }
   }
 
-  final def fromSlices[F[_]: Transformer, T](structure: IntSlice, values: Slice[T]): F[T] =
+  /** Creates an instance from a pair of slices. */
+  @`inline` private final def fromSlices[F[+_]: Transformer, T](structure: IntSlice, values: Slice[T]): F[T] =
     implicitly[Transformer[F]].fromSlices(structure, values)
 
+  /** Outputs tree linearisation as a pair of slices. */
+  @`inline` private final def toSlices[F[+_]: Transformer, T](target: F[T]): (IntSlice, Slice[T]) =
+    implicitly[Transformer[F]].toSlices(target)
+
   /** FlatMaps the tree without checking for duplicated children. */
-  final def flatMapLax[T, K](
-    treeStructure: IntSlice,
-    treeValues: Slice[T],
+  final def flatMapLax[F[+_]: Transformer, T, K](
+    target: F[T],
     f: T => Tree[K]
-  ): Tree[K] = {
+  ): F[K] = {
+
+    val (treeStructure, treeValues) = toSlices(target)
 
     assert(treeStructure.length == treeValues.length, "Structure and values arrays of the tree MUST be the same size.")
 
@@ -494,19 +508,19 @@ object ArrayTree {
       index = index + 1
     }
 
-    if (structureBuffer.length == 0) Tree.empty
-    else {
-      val trees = TreeBuilder.fromSlices(structureBuffer.asSlice, valuesBuffer.asSlice)
-      if (trees.size == 1) trees.head else Tree.empty
-    }
+    if (ArrayTreeFunctions.hasValidTreeStructure(structureBuffer))
+      fromSlices(structureBuffer.asSlice, valuesBuffer.asSlice)
+    else
+      implicitly[Transformer[F]].empty
   }
 
   /** FlatMaps the tree while keeping children distinct. */
-  final def flatMapDistinct[T, K](
-    treeStructure: IntSlice,
-    treeValues: Slice[T],
+  final def flatMapDistinct[F[+_]: Transformer, T, K](
+    target: F[T],
     f: T => Tree[K]
-  ): Tree[K] = {
+  ): F[K] = {
+
+    val (treeStructure, treeValues) = toSlices(target)
 
     assert(treeStructure.length == treeValues.length, "Structure and values arrays of the tree MUST be the same size.")
 
@@ -532,11 +546,10 @@ object ArrayTree {
       index = index + 1
     }
 
-    if (structureBuffer.length == 0) Tree.empty
-    else {
-      val trees = TreeBuilder.fromSlices(structureBuffer.asSlice, valuesBuffer.asSlice)
-      if (trees.size == 1) trees.head else Tree.empty
-    }
+    if (ArrayTreeFunctions.hasValidTreeStructure(structureBuffer))
+      fromSlices(structureBuffer.asSlice, valuesBuffer.asSlice)
+    else
+      implicitly[Transformer[F]].empty
   }
 
   /** Inserts a value to a sub-tree rooted at the path.
@@ -545,14 +558,14 @@ object ArrayTree {
     * @param target whole tree
     * @param keepDistinct if true keeps children distinct
     * @return modified tree */
-  final def insertLeafAt[T, T1 >: T](
+  final def insertLeafAt[F[+_]: Transformer, T, T1 >: T](
     path: Iterable[T1],
     value: T1,
-    target: Tree[T],
+    target: F[T],
     append: Boolean,
     keepDistinct: Boolean
-  ): Tree[T1] = {
-    val (structure, values) = target.toSlices
+  ): F[T1] = {
+    val (structure, values) = toSlices(target)
     val (indexes, unmatched, remaining, _) =
       ArrayTreeFunctions.followPath(path, structure.top, structure, values, append)
     indexes.lastOption match {
@@ -562,7 +575,7 @@ object ArrayTree {
           case Some(item) =>
             val valueSequence = remaining.toVector.+:(item).:+(value)
             val newNode: Tree[T1] = TreeBuilder.linearTreeFromSequence(valueSequence)
-            val insertIndex = if (append) bottomIndex(index, structure) else index
+            val insertIndex = if (append) ArrayTreeFunctions.bottomIndex(index, structure) else index
             insertTreeAtIndex(insertIndex, index, newNode, target)
           case None =>
             insertLeaf(index, value, target, append, keepDistinct)
@@ -572,14 +585,14 @@ object ArrayTree {
 
   /** Inserts a value to a tree at a path using an extractor function.
     * @return modified tree */
-  final def insertLeafAt[T, T1 >: T, K](
+  final def insertLeafAt[F[+_]: Transformer, T, T1 >: T, K](
     path: Iterable[K],
     value: T1,
-    target: Tree[T],
+    target: F[T],
     toPathItem: T => K,
     append: Boolean,
     keepDistinct: Boolean
-  ): Either[Tree[T], Tree[T1]] = {
+  ): Either[F[T], F[T1]] = {
     val (indexes, unmatched, _, _) = followPath(path, target, toPathItem, append)
     indexes.lastOption match {
       case None => Left(target)
@@ -592,15 +605,14 @@ object ArrayTree {
   }
 
   /** Checks if children of the tree rooted at the index contains the given value. */
-  final def hasChildValue[T](index: Int, value: T, tree: Tree[T]): Boolean = tree match {
-    case Tree.empty          => false
-    case t: Tree.NodeTree[T] => t.children.exists(_.head == value)
-    case t: ArrayTree[T] =>
-      ArrayTreeFunctions.firstChildHavingValue(value, index, t.size, t.structure, t.content).isDefined
+  final def hasChildValue[F[+_]: Transformer, T](index: Int, value: T, target: F[T]): Boolean = {
+    val (structure, values) = toSlices(target)
+    ArrayTreeFunctions.firstChildHavingValue(value, index, structure.length, structure, values).isDefined
   }
 
-  final def prepend[T, T1 >: T](value: T1, tree: Tree[T]): Tree[T1] =
-    transform[Tree, T, T1](tree) { (structureBuffer, valuesBuffer) =>
+  /** Prepends tree with the new head value. */
+  final def prepend[F[+_]: Transformer, T, T1 >: T](value: T1, target: F[T]): F[T1] =
+    transform[F, T, T1](target) { (structureBuffer, valuesBuffer) =>
       structureBuffer.push(1)
       valuesBuffer.push(value)
       Some(1)
@@ -614,28 +626,21 @@ object ArrayTree {
     * @param keepDistinct if true keeps children distinct
     * @return modified tree
     */
-  final def insertLeaf[T, T1 >: T](
+  final def insertLeaf[F[+_]: Transformer, T, T1 >: T](
     parentIndex: Int,
     value: T1,
-    target: Tree[T],
+    target: F[T],
     append: Boolean,
     keepDistinct: Boolean
-  ): Tree[T1] =
-    if (target.isEmpty) Tree.Leaf(value)
-    else {
-      assert(
-        parentIndex >= 0 && parentIndex < target.size,
-        "Insertion index must be within target's tree range [0,length)."
-      )
-      if (keepDistinct && hasChildValue(parentIndex, value, target)) target
-      else
-        transform[Tree, T, T1](target) { (structureBuffer, valuesBuffer) =>
-          val insertIndex =
-            if (append) bottomIndex(parentIndex, structureBuffer)
-            else parentIndex
-          ArrayTreeFunctions.insertValue(insertIndex, parentIndex, value, structureBuffer, valuesBuffer).intAsSome
-        }
-    }
+  ): F[T1] =
+    if (keepDistinct && hasChildValue(parentIndex, value, target)) target
+    else
+      transform[F, T, T1](target) { (structureBuffer, valuesBuffer) =>
+        val insertIndex =
+          if (append) ArrayTreeFunctions.bottomIndex(parentIndex, structureBuffer)
+          else parentIndex
+        ArrayTreeFunctions.insertValue(insertIndex, parentIndex, value, structureBuffer, valuesBuffer).intAsSome
+      }
 
   /** Inserts new leaves to a tree at an index.
     * @param parentIndex index of the tree where to insert children
@@ -645,45 +650,43 @@ object ArrayTree {
     * @param keepDistinct if true keeps children distinct
     * @return modified tree
     */
-  final def insertLeaves[T, T1 >: T](
+  final def insertLeaves[F[+_]: Transformer, T, T1 >: T](
     parentIndex: Int,
     values: Iterable[T1],
-    target: Tree[T],
+    target: F[T],
     append: Boolean,
     keepDistinct: Boolean
-  ): Tree[T1] =
-    if (target.isEmpty || values.isEmpty) if (values.size == 1) Tree(values.head) else Tree.empty
-    else
-      transform[Tree, T, T1](target) { (structureBuffer, valuesBuffer) =>
-        val toInsert = if (keepDistinct) {
-          val existing = ArrayTreeFunctions.childrenIndexes(parentIndex, structureBuffer).map(valuesBuffer)
-          values.filterNot(value => existing.exists(_ == value))
-        } else values
-        val size = toInsert.size
-        val insertIndex = if (append) bottomIndex(parentIndex, structureBuffer) else parentIndex
-        structureBuffer.modify(parentIndex, _ + size)
-        ArrayTreeFunctions
-          .insertFromIteratorReverse(
-            insertIndex,
-            size,
-            continually(0),
-            toInsert.iterator,
-            structureBuffer,
-            valuesBuffer
-          )
-          .nonZeroIntAsSome
-      }
+  ): F[T1] =
+    transform[F, T, T1](target) { (structureBuffer, valuesBuffer) =>
+      val toInsert = if (keepDistinct) {
+        val existing = ArrayTreeFunctions.childrenIndexes(parentIndex, structureBuffer).map(valuesBuffer)
+        values.filterNot(value => existing.exists(_ == value))
+      } else values
+      val size = toInsert.size
+      val insertIndex = if (append) ArrayTreeFunctions.bottomIndex(parentIndex, structureBuffer) else parentIndex
+      structureBuffer.modify(parentIndex, _ + size)
+      ArrayTreeFunctions
+        .insertFromIteratorReverse(
+          insertIndex,
+          size,
+          continually(0),
+          toInsert.iterator,
+          structureBuffer,
+          valuesBuffer
+        )
+        .nonZeroIntAsSome
+    }
 
   /** Inserts a subtree to a tree at a path.
     * @return modified tree */
-  final def insertChildAt[T, T1 >: T](
+  final def insertChildAt[F[+_]: Transformer, T, T1 >: T](
     path: Iterable[T1],
     child: Tree[T1],
-    target: Tree[T],
+    target: F[T],
     append: Boolean,
     keepDistinct: Boolean
-  ): Tree[T1] = {
-    val (structure, values) = target.toSlices
+  ): F[T1] = {
+    val (structure, values) = toSlices(target)
     val (indexes, unmatched, remaining, _) =
       ArrayTreeFunctions.followPath(path, structure.top, structure, values, append)
     indexes.lastOption match {
@@ -691,9 +694,11 @@ object ArrayTree {
       case Some(index) =>
         unmatched match {
           case Some(item) => {
-            transform[Tree, T, T1](target) { (structureBuffer, valuesBuffer) =>
+            transform[F, T, T1](target) { (structureBuffer, valuesBuffer) =>
               val branch = item +: remaining.toVector
-              val insertIndex = if (append) bottomIndex(index, structureBuffer) else index
+              val insertIndex =
+                if (append) ArrayTreeFunctions.bottomIndex(index, structureBuffer)
+                else index
               structureBuffer.increment(index)
               val delta1 = ArrayTreeFunctions
                 .insertFromIteratorReverse(
@@ -713,7 +718,9 @@ object ArrayTree {
           case None =>
             if (keepDistinct) insertChildDistinct(index, child, target, append)
             else {
-              val insertIndex = if (append) bottomIndex(index, structure) else index
+              val insertIndex =
+                if (append) ArrayTreeFunctions.bottomIndex(index, structure)
+                else index
               insertTreeAtIndex(insertIndex, index, child, target)
             }
         }
@@ -722,15 +729,15 @@ object ArrayTree {
 
   /** Inserts a subtree to a tree at a path using an extractor function.
     * @return either modified tree or an existing */
-  final def insertChildAt[T, T1 >: T, K](
+  final def insertChildAt[F[+_]: Transformer, T, T1 >: T, K](
     path: Iterable[K],
     child: Tree[T1],
-    target: Tree[T],
+    target: F[T],
     toPathItem: T => K,
     append: Boolean,
     keepDistinct: Boolean
-  ): Either[Tree[T], Tree[T1]] = {
-    val (structure, values) = target.toSlices
+  ): Either[F[T], F[T1]] = {
+    val (structure, values) = toSlices(target)
     val (indexes, unmatched, _, _) =
       ArrayTreeFunctions.followPath(path, structure.top, structure, values, toPathItem, append)
     indexes.lastOption match {
@@ -739,7 +746,9 @@ object ArrayTree {
         if (unmatched.isDefined) Left(target)
         else if (keepDistinct) Right(insertChildDistinct(index, child, target, append))
         else {
-          val insertIndex = if (append) bottomIndex(index, structure) else index
+          val insertIndex =
+            if (append) ArrayTreeFunctions.bottomIndex(index, structure)
+            else index
           Right(insertTreeAtIndex(insertIndex, index, child, target))
         }
     }
@@ -747,22 +756,24 @@ object ArrayTree {
 
   /** Inserts a subtree to a tree at a path.
     * @return modified tree */
-  final def insertChildrenAt[T, T1 >: T](
+  final def insertChildrenAt[F[+_]: Transformer, T, T1 >: T](
     path: Iterable[T1],
     children: Iterable[Tree[T1]],
-    target: Tree[T],
+    target: F[T],
     append: Boolean,
     keepDistinct: Boolean
-  ): Tree[T1] = {
+  ): F[T1] = {
     val (indexes, unmatched, remaining, _) = followPath(path, target, append)
     indexes.lastOption match {
       case None => target
       case Some(index) =>
-        transform[Tree, T, T1](target) { (structureBuffer, valuesBuffer) =>
+        transform[F, T, T1](target) { (structureBuffer, valuesBuffer) =>
           val (delta1, index2) = unmatched
             .map { item =>
               val branch = item +: remaining.toVector
-              val insertIndex = if (append) bottomIndex(index, structureBuffer) else index
+              val insertIndex =
+                if (append) ArrayTreeFunctions.bottomIndex(index, structureBuffer)
+                else index
               structureBuffer.increment(index)
               val delta = ArrayTreeFunctions
                 .insertFromIteratorReverse(
@@ -794,18 +805,18 @@ object ArrayTree {
 
   /** Inserts a subtree to a tree at a path.
     * @return modified tree */
-  final def insertChildrenAt[T, T1 >: T, K](
+  final def insertChildrenAt[F[+_]: Transformer, T, T1 >: T, K](
     path: Iterable[K],
     children: Iterable[Tree[T1]],
-    target: Tree[T],
+    target: F[T],
     toPathItem: T => K,
     append: Boolean,
     keepDistinct: Boolean
-  ): Either[Tree[T], Tree[T1]] = {
+  ): Either[F[T], F[T1]] = {
     val (indexes, unmatched, _, _) = followPath(path, target, toPathItem, append)
     indexes.lastOption match {
       case Some(index) if unmatched.isEmpty =>
-        Right(transform[Tree, T, T1](target) { (structureBuffer, valuesBuffer) =>
+        Right(transform[F, T, T1](target) { (structureBuffer, valuesBuffer) =>
           ArrayTreeFunctions
             .insertChildren(index, children.map(_.toSlices), structureBuffer, valuesBuffer, append, keepDistinct)
             .intAsSome
@@ -816,45 +827,45 @@ object ArrayTree {
   }
 
   /** Prepends children with the new child without checking for duplicates. */
-  final def prependChild[T, T1 >: T](tree: ArrayTree[T], child: Tree[T1]): Tree[T1] =
-    insertTreeAtIndex(tree.top, tree.top, child, tree)
+  final def prependChild[F[+_]: Transformer, T, T1 >: T](target: F[T], child: Tree[T1]): F[T1] = {
+    val (structure, _) = toSlices(target)
+    insertTreeAtIndex(structure.top, structure.top, child, target)
+  }
 
   /** Appends children with the new child without checking for duplicates. */
-  final def appendChild[T, T1 >: T](tree: ArrayTree[T], child: Tree[T1]): Tree[T1] =
-    insertTreeAtIndex(0, tree.top, child, tree)
+  final def appendChild[F[+_]: Transformer, T, T1 >: T](target: F[T], child: Tree[T1]): F[T1] = {
+    val (structure, _) = toSlices(target)
+    insertTreeAtIndex(0, structure.top, child, target)
+  }
 
   /** Inserts a subtree to a tree at an index.
     * @return modified tree */
-  final def insertTreeAtIndex[T, T1 >: T](
+  final def insertTreeAtIndex[F[+_]: Transformer, T, T1 >: T](
     index: Int,
     parentIndex: Int,
     child: Tree[T1],
-    target: Tree[T]
-  ): Tree[T1] =
+    target: F[T]
+  ): F[T1] =
     if (child.isEmpty) target
-    else if (target.isEmpty) child
     else {
-      assert(index >= 0 && index < target.size, "Insertion index must be within target's tree range [0,length).")
-      transform[Tree, T, T1](target) { (structureBuffer, valuesBuffer) =>
+      transform[F, T, T1](target) { (structureBuffer, valuesBuffer) =>
         val (structure, values) = child.toSlices
-        if (parentIndex >= 0) structureBuffer.increment(parentIndex)
+        if (parentIndex >= 0 && structureBuffer.nonEmpty) structureBuffer.increment(parentIndex)
         ArrayTreeFunctions.insertSlice(index, structure, values, structureBuffer, valuesBuffer).intAsSome
       }
     }
 
   /** Inserts a subtree to a tree at an index while keeping children values distinct.
     * @return modified tree */
-  final def insertChildDistinct[T, T1 >: T](
+  final def insertChildDistinct[F[+_]: Transformer, T, T1 >: T](
     index: Int,
     child: Tree[T1],
-    target: Tree[T],
+    target: F[T],
     append: Boolean
-  ): Tree[T1] =
+  ): F[T1] =
     if (child.isEmpty) target
-    else if (target.isEmpty) child
     else {
-      assert(index >= 0 && index < target.size, "Insertion index must be within target's tree range [0,length).")
-      transform[Tree, T, T1](target) { (structureBuffer, valuesBuffer) =>
+      transform[F, T, T1](target) { (structureBuffer, valuesBuffer) =>
         val (structure, values) = child.toSlices
         (if (append)
            ArrayTreeFunctions
@@ -866,100 +877,104 @@ object ArrayTree {
     }
 
   /** Inserts multiple children before the existing children. */
-  final def insertBeforeChildren[T, T1 >: T](
-    target: Tree[T],
+  final def insertBeforeChildren[F[+_]: Transformer, T, T1 >: T](
+    target: F[T],
     children: Iterable[Tree[T1]],
     keepDistinct: Boolean
-  ): Tree[T1] =
-    if (target.isEmpty) Tree.empty
-    else if (children.isEmpty) target
+  ): F[T1] =
+    if (children.isEmpty) target
     else
-      transform[Tree, T, T1](target) { (structureBuffer, valuesBuffer) =>
-        ArrayTreeFunctions
-          .insertBeforeChildren(
-            structureBuffer.top,
-            children.map(_.toSlices),
-            structureBuffer,
-            valuesBuffer,
-            keepDistinct
-          )
-          .intAsSome
+      transform[F, T, T1](target) { (structureBuffer, valuesBuffer) =>
+        if (structureBuffer.isEmpty) None
+        else {
+          ArrayTreeFunctions
+            .insertBeforeChildren(
+              structureBuffer.top,
+              children.map(_.toSlices),
+              structureBuffer,
+              valuesBuffer,
+              keepDistinct
+            )
+            .intAsSome
+        }
       }
 
   /** Inserts multiple children after the existing children. */
-  final def insertAfterChildren[T, T1 >: T](
-    target: Tree[T],
+  final def insertAfterChildren[F[+_]: Transformer, T, T1 >: T](
+    target: F[T],
     children: Iterable[Tree[T1]],
     keepDistinct: Boolean
-  ): Tree[T1] =
-    if (target.isEmpty) Tree.empty
-    else if (children.isEmpty) target
+  ): F[T1] =
+    if (children.isEmpty) target
     else
-      transform[Tree, T, T1](target) { (structureBuffer, valuesBuffer) =>
-        ArrayTreeFunctions
-          .insertAfterChildren(
-            structureBuffer.top,
-            children.map(_.toSlices),
-            structureBuffer,
-            valuesBuffer,
-            keepDistinct
-          )
-          .intAsSome
+      transform[F, T, T1](target) { (structureBuffer, valuesBuffer) =>
+        if (structureBuffer.isEmpty) None
+        else {
+          ArrayTreeFunctions
+            .insertAfterChildren(
+              structureBuffer.top,
+              children.map(_.toSlices),
+              structureBuffer,
+              valuesBuffer,
+              keepDistinct
+            )
+            .intAsSome
+        }
       }
 
   /** Inserts multiple children before and after the existing children. */
-  final def insertChildren[T, T1 >: T](
-    target: Tree[T],
+  final def insertChildren[F[+_]: Transformer, T, T1 >: T](
+    target: F[T],
     before: Iterable[Tree[T1]],
     after: Iterable[Tree[T1]],
     keepDistinct: Boolean
-  ): Tree[T1] =
-    if (target.isEmpty) Tree.empty
-    else if (before.isEmpty && after.isEmpty) target
+  ): F[T1] =
+    if (before.isEmpty && after.isEmpty) target
     else
-      transform[Tree, T, T1](target) { (structureBuffer, valuesBuffer) =>
-        val delta1 =
-          if (before.isEmpty) 0
-          else
-            ArrayTreeFunctions
-              .insertBeforeChildren(
-                structureBuffer.top,
-                before.map(_.toSlices),
-                structureBuffer,
-                valuesBuffer,
-                keepDistinct
-              )
+      transform[F, T, T1](target) { (structureBuffer, valuesBuffer) =>
+        if (structureBuffer.isEmpty) None
+        else {
+          val delta1 =
+            if (before.isEmpty) 0
+            else
+              ArrayTreeFunctions
+                .insertBeforeChildren(
+                  structureBuffer.top,
+                  before.map(_.toSlices),
+                  structureBuffer,
+                  valuesBuffer,
+                  keepDistinct
+                )
 
-        val delta2 =
-          if (after.isEmpty) 0
-          else
-            ArrayTreeFunctions
-              .insertAfterChildren(
-                structureBuffer.top,
-                after.map(_.toSlices),
-                structureBuffer,
-                valuesBuffer,
-                keepDistinct
-              )
+          val delta2 =
+            if (after.isEmpty) 0
+            else
+              ArrayTreeFunctions
+                .insertAfterChildren(
+                  structureBuffer.top,
+                  after.map(_.toSlices),
+                  structureBuffer,
+                  valuesBuffer,
+                  keepDistinct
+                )
 
-        Some(delta1 + delta2)
+          Some(delta1 + delta2)
+        }
       }
 
   /** Inserts a branch to the tree at an index while keeping children values distinct.
     * @return modified tree */
-  final def insertBranch[T, T1 >: T](
+  final def insertBranch[F[+_]: Transformer, T, T1 >: T](
     index: Int,
     branch: Iterable[T1],
-    target: Tree[T],
+    target: F[T],
     append: Boolean
-  ): Tree[T1] =
+  ): F[T1] =
     if (branch.isEmpty) target
-    else if (target.isEmpty) TreeBuilder.linearTreeFromSequence(branch.toSeq)
     else {
-      assert(index >= 0 && index < target.size, "Insertion index must be within target's tree range [0,length).")
       val iterator: Iterator[T1] = branch.iterator
-      transform[Tree, T, T1](target) { (structureBuffer, valuesBuffer) =>
-        if (iterator.hasNext && valuesBuffer(index) != iterator.next()) None
+      transform[F, T, T1](target) { (structureBuffer, valuesBuffer) =>
+        if (iterator.hasNext && valuesBuffer.nonEmpty && valuesBuffer(index) != iterator.next()) None
         else {
           ArrayTreeFunctions.insertBranch(iterator, index, append, structureBuffer, valuesBuffer, 0).nonZeroIntAsSome
         }
@@ -994,15 +1009,15 @@ object ArrayTree {
 
   /** Updates value of the node at the index.
     * @return updated tree */
-  final def updateValue[T, T1 >: T](
+  final def updateValue[F[+_]: Transformer, T, T1 >: T](
     index: Int,
     replacement: T1,
-    tree: Tree[T],
+    tree: F[T],
     keepDistinct: Boolean
-  ): Tree[T1] =
+  ): F[T1] =
     if (index < 0) tree
     else {
-      transform[Tree, T, T1](tree) { (structureBuffer, valuesBuffer) =>
+      transform[F, T, T1](tree) { (structureBuffer, valuesBuffer) =>
         if (replacement == valuesBuffer(index)) None
         else {
           valuesBuffer(index) = replacement
@@ -1017,66 +1032,63 @@ object ArrayTree {
 
   /** Updates tree at the index.
     * @return updated tree */
-  final def updateTree[T, T1 >: T](
+  final def updateTree[F[+_]: Transformer, T, T1 >: T](
     index: Int,
     replacement: Tree[T1],
-    tree: Tree[T],
+    tree: F[T],
     keepDistinct: Boolean
-  ): Tree[T1] =
-    if (index < 0 || index >= tree.size) tree
-    else {
-      transform[Tree, T, T1](tree) { (structureBuffer, valuesBuffer) =>
-        val parentIndex = ArrayTreeFunctions.parentIndex(index, structureBuffer)
-        if (replacement.isEmpty) {
-          ArrayTreeFunctions.removeTree(index, parentIndex, structureBuffer, valuesBuffer).intAsSome
-        } else {
-          val hasSameHeadValue = keepDistinct && replacement.head == valuesBuffer(index)
-          val delta1 = ArrayTreeFunctions.removeChildren(index, structureBuffer, valuesBuffer)
-          val (structure, values) = replacement.toSlices
-          val indexesToTrack = IntBuffer(index + delta1)
-          val delta2 =
-            if (keepDistinct)
-              ArrayTreeFunctions
-                .insertBetweenChildrenDistinct(
-                  index + delta1,
-                  structure,
-                  values,
-                  insertAfter = false,
-                  structureBuffer,
-                  valuesBuffer,
-                  indexesToTrack
-                )
-            else {
-              if (parentIndex + delta1 >= 0) {
-                structureBuffer.increment(parentIndex + delta1)
-              }
-              IndexTracker.trackShiftRight(Math.max(0, index + delta1), structure.length, indexesToTrack)
-              ArrayTreeFunctions
-                .insertSlice(Math.max(0, index + delta1), structure, values, structureBuffer, valuesBuffer)
+  ): F[T1] =
+    transform[F, T, T1](tree) { (structureBuffer, valuesBuffer) =>
+      val parentIndex = ArrayTreeFunctions.parentIndex(index, structureBuffer)
+      val (structure, values) = toSlices(replacement)
+      if (structure.isEmpty) {
+        ArrayTreeFunctions.removeTree(index, parentIndex, structureBuffer, valuesBuffer).intAsSome
+      } else {
+        val hasSameHeadValue = keepDistinct && values.last == valuesBuffer(index)
+        val delta1 = ArrayTreeFunctions.removeChildren(index, structureBuffer, valuesBuffer)
+        val indexesToTrack = IntBuffer(index + delta1)
+        val delta2 =
+          if (keepDistinct)
+            ArrayTreeFunctions
+              .insertBetweenChildrenDistinct(
+                index + delta1,
+                structure,
+                values,
+                insertAfter = false,
+                structureBuffer,
+                valuesBuffer,
+                indexesToTrack
+              )
+          else {
+            if (parentIndex + delta1 >= 0) {
+              structureBuffer.increment(parentIndex + delta1)
             }
+            IndexTracker.trackShiftRight(Math.max(0, index + delta1), structure.length, indexesToTrack)
+            ArrayTreeFunctions
+              .insertSlice(Math.max(0, index + delta1), structure, values, structureBuffer, valuesBuffer)
+          }
 
-          val delta3 = if (!hasSameHeadValue) {
-            val p = if (parentIndex >= 0) parentIndex + delta1 + delta2 else parentIndex
-            val i = indexesToTrack.peek
-            ArrayTreeFunctions.removeValue(i, p, structureBuffer, valuesBuffer)
-          } else 0
+        val delta3 = if (!hasSameHeadValue) {
+          val p = if (parentIndex >= 0) parentIndex + delta1 + delta2 else parentIndex
+          val i = indexesToTrack.peek
+          ArrayTreeFunctions.removeValue(i, p, structureBuffer, valuesBuffer)
+        } else 0
 
-          Some(delta1 + delta2 + delta3)
-        }
+        Some(delta1 + delta2 + delta3)
       }
     }
 
   /** Updates value of the child node holding the given value. */
-  final def updateChildValue[T, T1 >: T](
+  final def updateChildValue[F[+_]: Transformer, T, T1 >: T](
     value: T1,
     replacement: T1,
-    target: Tree[T],
+    target: F[T],
     rightmost: Boolean,
     keepDistinct: Boolean
-  ): Tree[T1] = {
-    val (structure, values) = target.toSlices
+  ): F[T1] = {
+    val (structure, values) = toSlices(target)
     ArrayTreeFunctions
-      .childHavingValue(value, structure.top, target.size, structure, values, rightmost)
+      .childHavingValue(value, structure.top, structure.length, structure, values, rightmost)
       .filterNot(values(_) == replacement)
       .map(updateValue(_, replacement, target, keepDistinct))
       .getOrElse(target)
@@ -1084,13 +1096,13 @@ object ArrayTree {
 
   /** Updates value of the node selected by the path.
     * @return either modified tree or an existing */
-  final def updateValueAt[T, T1 >: T](
+  final def updateValueAt[F[+_]: Transformer, T, T1 >: T](
     path: Iterable[T1],
     replacement: T1,
-    target: Tree[T],
+    target: F[T],
     rightmost: Boolean,
     keepDistinct: Boolean
-  ): Either[Tree[T], Tree[T1]] =
+  ): Either[F[T], F[T1]] =
     followEntirePath(path, target, rightmost)
       .map(indexes =>
         if (indexes.isEmpty) Left(target)
@@ -1100,14 +1112,14 @@ object ArrayTree {
 
   /** Updates value of the node selected by the path.
     * @return either modified tree or an existing */
-  final def updateValueAt[K, T, T1 >: T](
+  final def updateValueAt[F[+_]: Transformer, K, T, T1 >: T](
     path: Iterable[K],
     replacement: T1,
-    target: Tree[T],
+    target: F[T],
     toPathItem: T => K,
     rightmost: Boolean,
     keepDistinct: Boolean
-  ): Either[Tree[T], Tree[T1]] =
+  ): Either[F[T], F[T1]] =
     followEntirePath(path, target, toPathItem, rightmost)
       .map(indexes =>
         if (indexes.isEmpty) Left(target)
@@ -1116,29 +1128,29 @@ object ArrayTree {
       .getOrElse(Left(target))
 
   /** Updates the child node holding the given value. */
-  final def updateChild[T, T1 >: T](
+  final def updateChild[F[+_]: Transformer, T, T1 >: T](
     value: T1,
     replacement: Tree[T1],
-    target: Tree[T],
+    target: F[T],
     rightmost: Boolean,
     keepDistinct: Boolean
-  ): Tree[T1] = {
-    val (structure, values) = target.toSlices
+  ): F[T1] = {
+    val (structure, values) = toSlices(target)
     ArrayTreeFunctions
-      .childHavingValue(value, structure.top, target.size, structure, values, rightmost)
+      .childHavingValue(value, structure.top, structure.length, structure, values, rightmost)
       .map(updateTree(_, replacement, target, keepDistinct))
       .getOrElse(target)
   }
 
   /** Updates a subtree selected by the path.
     * @return either modified tree or an existing */
-  final def updateTreeAt[T, T1 >: T](
+  final def updateTreeAt[F[+_]: Transformer, T, T1 >: T](
     path: Iterable[T1],
     replacement: Tree[T1],
-    target: Tree[T],
+    target: F[T],
     rightmost: Boolean,
     keepDistinct: Boolean
-  ): Either[Tree[T], Tree[T1]] =
+  ): Either[F[T], F[T1]] =
     followEntirePath(path, target, rightmost)
       .map(indexes =>
         if (indexes.isEmpty) Left(target)
@@ -1148,14 +1160,14 @@ object ArrayTree {
 
   /** Updates a subtree selected by the path.
     * @return either modified tree or an existing */
-  final def updateTreeAt[K, T, T1 >: T](
+  final def updateTreeAt[F[+_]: Transformer, K, T, T1 >: T](
     path: Iterable[K],
     replacement: Tree[T1],
-    target: Tree[T],
+    target: F[T],
     toPathItem: T => K,
     rightmost: Boolean,
     keepDistinct: Boolean
-  ): Either[Tree[T], Tree[T1]] =
+  ): Either[F[T], F[T1]] =
     followEntirePath(path, target, toPathItem, rightmost)
       .map(indexes =>
         if (indexes.isEmpty) Left(target)
@@ -1165,42 +1177,42 @@ object ArrayTree {
 
   /** Modifies value of the node at the index.
     * @return modified tree */
-  final def modifyValue[T, T1 >: T](
+  final def modifyValue[F[+_]: Transformer, T, T1 >: T](
     index: Int,
     modify: T => T1,
-    target: Tree[T],
+    target: F[T],
     keepDistinct: Boolean
-  ): Tree[T1] =
+  ): F[T1] =
     if (index < 0) target
     else {
-      val (_, values) = target.toSlices
+      val (_, values) = toSlices(target)
       updateValue(index, modify(values(index)), target, keepDistinct)
     }
 
   /** Modifies value of the child node holding the given value. */
-  final def modifyChildValue[T, T1 >: T](
+  final def modifyChildValue[F[+_]: Transformer, T, T1 >: T](
     value: T1,
     modify: T => T1,
-    target: Tree[T],
+    target: F[T],
     rightmost: Boolean,
     keepDistinct: Boolean
-  ): Tree[T1] = {
-    val (structure, values) = target.toSlices
+  ): F[T1] = {
+    val (structure, values) = toSlices(target)
     ArrayTreeFunctions
-      .childHavingValue(value, structure.top, target.size, structure, values, rightmost)
+      .childHavingValue(value, structure.top, structure.length, structure, values, rightmost)
       .map(modifyValue(_, modify, target, keepDistinct))
       .getOrElse(target)
   }
 
   /** Modifies value of the node selected by the path.
     * @return either modified tree or an existing */
-  final def modifyValueAt[T, T1 >: T](
+  final def modifyValueAt[F[+_]: Transformer, T, T1 >: T](
     path: Iterable[T1],
     modify: T => T1,
-    target: Tree[T],
+    target: F[T],
     rightmost: Boolean,
     keepDistinct: Boolean
-  ): Either[Tree[T], Tree[T1]] =
+  ): Either[F[T], F[T1]] =
     followEntirePath(path, target, rightmost)
       .map(indexes =>
         if (indexes.isEmpty) Left(target)
@@ -1210,14 +1222,14 @@ object ArrayTree {
 
   /** Modifies value of the node selected by the path.
     * @return either modified tree or an existing */
-  final def modifyValueAt[K, T, T1 >: T](
+  final def modifyValueAt[F[+_]: Transformer, K, T, T1 >: T](
     path: Iterable[K],
     modify: T => T1,
-    target: Tree[T],
+    target: F[T],
     toPathItem: T => K,
     rightmost: Boolean,
     keepDistinct: Boolean
-  ): Either[Tree[T], Tree[T1]] =
+  ): Either[F[T], F[T1]] =
     followEntirePath(path, target, toPathItem, rightmost)
       .map(indexes =>
         if (indexes.isEmpty) Left(target)
@@ -1227,52 +1239,63 @@ object ArrayTree {
 
   /** Modifies the tree at the index.
     * @return modified tree */
-  final def modifyTree[T, T1 >: T](
+  final def modifyTree[F[+_]: Transformer, T, T1 >: T](
     index: Int,
     modify: Tree[T] => Tree[T1],
-    tree: Tree[T],
+    target: F[T],
     keepDistinct: Boolean
-  ): Tree[T1] =
-    if (index < 0) tree
-    else
-      updateTree(index, modify(treeAt(index, tree)), tree, keepDistinct)
+  ): F[T1] =
+    if (index < 0) target
+    else updateTree(index, modify(treeAt(index, target)), target, keepDistinct)
 
   /** Modifies children of the tree at the index.
     * @return modified tree */
-  final def modifyChildren[T, T1 >: T](
+  final def modifyChildren[F[+_]: Transformer, T, T1 >: T](
     index: Int,
     modify: Iterable[Tree[T]] => Iterable[Tree[T1]],
-    tree: Tree[T],
+    target: F[T],
     keepDistinct: Boolean
-  ): Tree[T1] =
-    if (index < 0) tree
-    else
-      updateTree(index, treeAt(index, tree).modifyChildren(modify), tree, keepDistinct)
+  ): F[T1] =
+    if (index < 0) target
+    else updateTree(index, modifyChildren(modify, treeAt(index, target)), target, keepDistinct)
+
+  /** Looks for Some index of the child node holding the given value, or None.
+    * @param rightmost whether to select first (false) or last (true) occurrence of the value
+    * @return some first or last index if exists or none */
+  private final def childHavingValue[F[+_]: Transformer, T](value: T, target: F[T], rightmost: Boolean): Option[Int] = {
+    val (structure, values) = toSlices(target)
+    ArrayTreeFunctions
+      .childHavingValue(value, structure.top, structure.length, structure, values, rightmost)
+  }
 
   /** Modifies the child node holding the given value.
     * @return modified tree */
-  final def modifyChild[T, T1 >: T](
+  final def modifyChild[F[+_]: Transformer, T, T1 >: T](
     value: T1,
     modify: Tree[T] => Tree[T1],
-    target: Tree[T],
+    target: F[T],
     rightmost: Boolean,
     keepDistinct: Boolean
-  ): Tree[T1] = {
-    val (structure, values) = target.toSlices
-    ArrayTreeFunctions
-      .childHavingValue(value, structure.top, target.size, structure, values, rightmost)
+  ): F[T1] =
+    childHavingValue(value, target, rightmost)
       .map(modifyTree(_, modify, target, keepDistinct))
       .getOrElse(target)
-  }
 
   /** Modifies children of this tree.
     * @return modified tree */
-  final def modifyChildren[T, T1 >: T](
+  final def modifyChildren[F[+_]: Transformer, T, T1 >: T](
     modify: Iterable[Tree[T]] => Iterable[Tree[T1]],
-    target: Tree[T]
-  ): Tree[T1] =
-    transform[Tree, T, T1](target) { (structureBuffer, valuesBuffer) =>
-      val newChildren = modify(target.children)
+    target: F[T]
+  ): F[T1] =
+    transform[F, T, T1](target) { (structureBuffer, valuesBuffer) =>
+      val (structure, values) = toSlices(target)
+      val newChildren = modify(
+        iterableFrom(
+          ArrayTreeFunctions
+            .childrenIndexesIterator(structureBuffer.top, structureBuffer)
+            .map(treeAt2(_, structure, values))
+        )
+      )
       val delta1 = ArrayTreeFunctions.removeChildren(structureBuffer.top, structureBuffer, valuesBuffer)
       val delta2 = ArrayTreeFunctions
         .insertChildren(
@@ -1288,14 +1311,14 @@ object ArrayTree {
 
   /** Modifies a subtree selected by the path.
     * @return either modified tree or an existing */
-  final def modifyTreeAt[T, T1 >: T](
+  final def modifyTreeAt[F[+_]: Transformer, T, T1 >: T](
     path: Iterable[T1],
     modify: Tree[T] => Tree[T1],
-    target: Tree[T],
+    target: F[T],
     rightmost: Boolean,
     keepDistinct: Boolean
-  ): Either[Tree[T], Tree[T1]] = {
-    val (structure, values) = target.toSlices
+  ): Either[F[T], F[T1]] = {
+    val (structure, values) = toSlices(target)
     ArrayTreeFunctions
       .followEntirePath(path, structure.top, structure, values, rightmost)
       .map(indexes =>
@@ -1307,15 +1330,15 @@ object ArrayTree {
 
   /** Modifies a subtree selected by the path.
     * @return either modified tree or an existing */
-  final def modifyTreeAt[K, T, T1 >: T](
+  final def modifyTreeAt[F[+_]: Transformer, K, T, T1 >: T](
     path: Iterable[K],
     modify: Tree[T] => Tree[T1],
-    target: Tree[T],
+    target: F[T],
     toPathItem: T => K,
     rightmost: Boolean,
     keepDistinct: Boolean
-  ): Either[Tree[T], Tree[T1]] = {
-    val (structure, values) = target.toSlices
+  ): Either[F[T], F[T1]] = {
+    val (structure, values) = toSlices(target)
     ArrayTreeFunctions
       .followEntirePath(path, structure.top, structure, values, toPathItem, rightmost)
       .map(indexes =>
@@ -1327,14 +1350,14 @@ object ArrayTree {
 
   /** Modifies children of a node selected by the path.
     * @return either modified tree or an existing */
-  final def modifyChildrenAt[T, T1 >: T](
+  final def modifyChildrenAt[F[+_]: Transformer, T, T1 >: T](
     path: Iterable[T1],
     modify: Iterable[Tree[T]] => Iterable[Tree[T1]],
-    target: Tree[T],
+    target: F[T],
     rightmost: Boolean,
     keepDistinct: Boolean
-  ): Either[Tree[T], Tree[T1]] = {
-    val (structure, values) = target.toSlices
+  ): Either[F[T], F[T1]] = {
+    val (structure, values) = toSlices(target)
     ArrayTreeFunctions
       .followEntirePath(path, structure.top, structure, values, rightmost)
       .map(indexes =>
@@ -1346,14 +1369,14 @@ object ArrayTree {
 
   /** Modifies children of a node selected by the path.
     * @return either modified tree or an existing */
-  final def modifyChildrenAt[K, T, T1 >: T](
+  final def modifyChildrenAt[F[+_]: Transformer, K, T, T1 >: T](
     path: Iterable[K],
     modify: Iterable[Tree[T]] => Iterable[Tree[T1]],
-    target: Tree[T],
+    target: F[T],
     toPathItem: T => K,
     rightmost: Boolean,
     keepDistinct: Boolean
-  ): Either[Tree[T], Tree[T1]] =
+  ): Either[F[T], F[T1]] =
     followEntirePath(path, target, toPathItem, rightmost)
       .map(indexes =>
         if (indexes.isEmpty) Left(target)
@@ -1363,7 +1386,7 @@ object ArrayTree {
 
   /** Removes node at the index and merges children to parent.
     * @return updated tree */
-  final def removeValue[F[_]: Transformer, T](
+  final def removeValue[F[+_]: Transformer, T](
     index: Int,
     parentIndexOpt: Option[Int],
     target: F[T],
@@ -1382,13 +1405,13 @@ object ArrayTree {
       }
 
   /** Removes the node addressed by the last index, inserts children into the parent. */
-  private def removeValue[F[_]: Transformer, T](indexes: IntSlice, target: F[T], keepDistinct: Boolean): F[T] =
+  private def removeValue[F[+_]: Transformer, T](indexes: IntSlice, target: F[T], keepDistinct: Boolean): F[T] =
     if (indexes.isEmpty) target
     else {
-      val (structure, values) = implicitly[Transformer[F]].toSlices(target)
+      val (structure, values) = toSlices(target)
       if (indexes.last == structure.top) {
         if (structure.length == 1) implicitly[Transformer[F]].empty
-        else if (structure.last == 1) treeAt(structure.top - 1, target)
+        else if (structure.last == 1) instanceAt(structure.top - 1, target)
         else target
       } else {
         val structureBuffer = structure.asBuffer
@@ -1412,7 +1435,7 @@ object ArrayTree {
     *       - otherwise if the tree has a single child, returns that child,
     *       - otherwise if the tree has more children, returns the tree unmodified.
     * @return modified tree */
-  final def removeChildValue[F[_]: Transformer, T, T1 >: T](
+  final def removeChildValue[F[+_]: Transformer, T, T1 >: T](
     value: T1,
     target: F[T],
     rightmost: Boolean,
@@ -1432,7 +1455,7 @@ object ArrayTree {
     *       - otherwise if the tree has a single child, returns that child,
     *       - otherwise if the tree has more children, returns the tree unmodified.
     * @return modified tree */
-  final def removeValueAt[F[_]: Transformer, T, T1 >: T](
+  final def removeValueAt[F[+_]: Transformer, T, T1 >: T](
     path: Iterable[T1],
     target: F[T],
     rightmost: Boolean,
@@ -1448,7 +1471,7 @@ object ArrayTree {
     *       - otherwise if the tree has a single child, returns that child,
     *       - otherwise if the tree has more children, returns the tree unmodified.
     * @return modified tree */
-  final def removeValueAt[F[_]: Transformer, K, T](
+  final def removeValueAt[F[+_]: Transformer, K, T](
     path: Iterable[K],
     target: F[T],
     toPathItem: T => K,
@@ -1461,7 +1484,7 @@ object ArrayTree {
 
   /** Removes the tree at the index.
     * @return updated tree */
-  final def removeTree[F[_]: Transformer, T](
+  final def removeTree[F[+_]: Transformer, T](
     index: Int,
     parentIndexOpt: Option[Int],
     target: F[T]
@@ -1476,7 +1499,7 @@ object ArrayTree {
 
   /** Removes the direct child of the node, holding the value.
     * @return modified tree */
-  final def removeChild[F[_]: Transformer, T, T1 >: T](
+  final def removeChild[F[+_]: Transformer, T, T1 >: T](
     target: F[T],
     value: T1,
     rightmost: Boolean
@@ -1489,7 +1512,7 @@ object ArrayTree {
 
   /** Removes the direct children of the node.
     * @return modified tree */
-  final def removeChildren[F[_]: Transformer, T](
+  final def removeChildren[F[+_]: Transformer, T](
     parentIndex: Int,
     target: F[T]
   ): F[T] =
@@ -1499,7 +1522,7 @@ object ArrayTree {
 
   /** Removes the tree selected by the path.
     * @return modified tree */
-  final def removeTreeAt[F[_]: Transformer, T, T1 >: T](
+  final def removeTreeAt[F[+_]: Transformer, T, T1 >: T](
     path: Iterable[T1],
     target: F[T],
     rightmost: Boolean
@@ -1510,7 +1533,7 @@ object ArrayTree {
 
   /** Removes the tree selected by the path using an extractor function.
     * @return modified tree */
-  final def removeTreeAt[F[_]: Transformer, K, T](
+  final def removeTreeAt[F[+_]: Transformer, K, T](
     path: Iterable[K],
     target: F[T],
     toPathItem: T => K,
@@ -1522,7 +1545,7 @@ object ArrayTree {
 
   /** Removes children of the tree selected by the path.
     * @return modified tree */
-  final def removeChildrenAt[F[_]: Transformer, T, T1 >: T](
+  final def removeChildrenAt[F[+_]: Transformer, T, T1 >: T](
     path: Iterable[T1],
     target: F[T],
     rightmost: Boolean
@@ -1533,7 +1556,7 @@ object ArrayTree {
 
   /** Removes children of the tree selected by the path using an extractor function.
     * @return modified tree */
-  final def removeChildrenAt[F[_]: Transformer, K, T](
+  final def removeChildrenAt[F[+_]: Transformer, K, T](
     path: Iterable[K],
     target: F[T],
     toPathItem: T => K,

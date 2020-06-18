@@ -97,7 +97,7 @@ abstract class ArrayTreeLike[T] extends TreeLike[T] {
     iterableFrom(
       ArrayTreeFunctions
         .childrenIndexesIterator(arrayTree.structure.top, arrayTree.structure)
-        .map(ArrayTree.treeAt[Tree, T](_, arrayTree.structure, arrayTree.content))
+        .map(ArrayTree.treeAt2(_, arrayTree.structure, arrayTree.content))
     )
 
   final override def firstChildValue: Option[T] =
@@ -114,14 +114,14 @@ abstract class ArrayTreeLike[T] extends TreeLike[T] {
 
   final override def firstChild: Option[Tree[T]] =
     if (tree.size <= 1) None
-    else Some(ArrayTree.treeAt[Tree, T](arrayTree.top - 1, arrayTree.structure, arrayTree.content))
+    else Some(ArrayTree.treeAt2(arrayTree.top - 1, arrayTree.structure, arrayTree.content))
 
   final override def lastChild: Option[Tree[T]] =
     if (tree.size <= 1) None
     else {
       ArrayTreeFunctions
         .lastChildIndex(arrayTree.top, arrayTree.structure)
-        .map(ArrayTree.treeAt[Tree, T](_, arrayTree.structure, arrayTree.content))
+        .map(ArrayTree.treeAt2(_, arrayTree.structure, arrayTree.content))
     }
 
   // TREES
@@ -217,7 +217,9 @@ abstract class ArrayTreeLike[T] extends TreeLike[T] {
     ArrayTree.insertLeaf(arrayTree.structure.top, value, tree, append, keepDistinct = true)
 
   final override def insertLeaves[T1 >: T](values: Iterable[T1], append: Boolean = false): Tree[T1] =
-    ArrayTree.insertLeaves(arrayTree.structure.top, values, tree, append, keepDistinct = true)
+    if (values.isEmpty) arrayTree
+    else if (values.size == 1) Tree(values.head)
+    else ArrayTree.insertLeaves(arrayTree.structure.top, values, tree, append, keepDistinct = true)
 
   final override def insertLeafAt[T1 >: T](path: Iterable[T1], value: T1, append: Boolean = false): Tree[T1] =
     ArrayTree.insertLeafAt(path, value, tree, append, keepDistinct = true)

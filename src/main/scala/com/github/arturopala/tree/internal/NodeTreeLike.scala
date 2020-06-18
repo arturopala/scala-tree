@@ -229,9 +229,9 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
           )
         )
     else if (append)
-      ArrayTree.insertAfterChildren(node, children, keepDistinct = true)
+      ArrayTree.insertAfterChildren[Tree, T, T1](node, children, keepDistinct = true)
     else
-      ArrayTree.insertBeforeChildren(node, children, keepDistinct = true)
+      ArrayTree.insertBeforeChildren[Tree, T, T1](node, children, keepDistinct = true)
   }
 
   final override def insertChildAt[T1 >: T](
