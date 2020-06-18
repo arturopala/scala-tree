@@ -16,8 +16,8 @@
 
 package com.github.arturopala.tree
 
-import com.github.arturopala.bufferandslice.{IntSlice, Slice}
-import com.github.arturopala.tree.internal.{Compare, _}
+import com.github.arturopala.bufferandslice.{Buffer, IntBuffer, IntSlice, Slice}
+import com.github.arturopala.tree.internal.{ArrayTree, Compare, _}
 
 /**
   * A general-purpose, covariant, immutable, low overhead,
@@ -285,17 +285,17 @@ object Tree {
       "When creating an ArrayTree, `structure` and `values` must be of the same size."
     )
 
-    override protected val tree: ArrayTree[T] = this
+    override protected val arrayTree: ArrayTree[T] = this
 
     /** Top index of the buffers. */
-    def top: Int = tree.structure.top
+    def top: Int = structure.top
 
-    override val size: Int = tree.structure.length
+    override val size: Int = structure.length
     override lazy val width: Int = delayedWidth
     override lazy val height: Int = delayedHeight
     override def isLeaf: Boolean = size == 1
     override def isEmpty: Boolean = size == 0
-    override def childrenCount: Int = tree.structure.last
+    override def childrenCount: Int = structure.last
 
     override def inflated: Tree[T] =
       TreeBuilder.fromIterators(structure.iterator, content.iterator).headOption.getOrElse(Tree.empty)
@@ -308,5 +308,31 @@ object Tree {
 
   @`inline` final def preferInflated[T, T1 >: T](node: Tree.NodeTree[T], tree: Tree.ArrayTree[T1]): Boolean =
     tree.size < Tree.DEFLATE_SIZE_THRESHOLD || tree.size <= node.size
+
+  /** Transformer instance for the Tree. */
+  implicit object TreeTransformer extends Transformer[Tree] {
+
+    final override def toSlices[T](target: Tree[T]): (IntSlice, Slice[T]) =
+      target.toSlices
+
+    /** Creates a tree from a pair of slices. */
+    override def fromSlices[T](structure: IntSlice, values: Slice[T]): Tree[T] =
+      if (structure.length == 0) Tree.empty
+      else
+        new ArrayTree[T](
+          structure,
+          values,
+          ArrayTreeFunctions.calculateWidth(structure),
+          ArrayTreeFunctions.calculateHeight(structure)
+        )
+
+    /** Outputs tree linearisation as a pair of buffers. */
+    override def toBuffers[T, T1 >: T](target: Tree[T]): (IntBuffer, Buffer[T1]) =
+      target.toBuffers
+
+    /** Creates a tree from a pair of buffers. */
+    override def fromBuffers[T](structureBuffer: IntBuffer, valuesBuffer: Buffer[T]): Tree[T] =
+      fromSlices(structureBuffer.asSlice, valuesBuffer.asSlice)
+  }
 
 }

@@ -285,12 +285,12 @@ class ArrayTreeSpec extends AnyWordSpecCompat {
     }
 
     "access a tree at the index" in {
-      treeAt(0, IntSlice(0), Slice("a")).height shouldBe 1
-      treeAt(1, IntSlice(0, 1), Slice("a", "b")).height shouldBe 2
-      treeAt(0, IntSlice(0, 1), Slice("a", "b")).height shouldBe 1
-      treeAt(2, IntSlice(0, 1, 1), Slice("a", "b", "c")).height shouldBe 3
-      treeAt(1, IntSlice(0, 1, 1), Slice("a", "b", "c")).height shouldBe 2
-      treeAt(0, IntSlice(0, 1, 1), Slice("a", "b", "c")).height shouldBe 1
+      treeAt[Tree, String](0, IntSlice(0), Slice("a")).height shouldBe 1
+      treeAt[Tree, String](1, IntSlice(0, 1), Slice("a", "b")).height shouldBe 2
+      treeAt[Tree, String](0, IntSlice(0, 1), Slice("a", "b")).height shouldBe 1
+      treeAt[Tree, String](2, IntSlice(0, 1, 1), Slice("a", "b", "c")).height shouldBe 3
+      treeAt[Tree, String](1, IntSlice(0, 1, 1), Slice("a", "b", "c")).height shouldBe 2
+      treeAt[Tree, String](0, IntSlice(0, 1, 1), Slice("a", "b", "c")).height shouldBe 1
     }
 
     "iterate over all trees depth-first" in {
