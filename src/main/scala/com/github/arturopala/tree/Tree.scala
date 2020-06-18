@@ -333,6 +333,9 @@ object Tree {
     /** Creates a tree from a pair of buffers. */
     override def fromBuffers[T](structureBuffer: IntBuffer, valuesBuffer: Buffer[T]): Tree[T] =
       fromSlices(structureBuffer.asSlice, valuesBuffer.asSlice)
+
+    /** Returns an empty instance. */
+    override def empty[T]: Tree[T] = Tree.empty
   }
 
 }

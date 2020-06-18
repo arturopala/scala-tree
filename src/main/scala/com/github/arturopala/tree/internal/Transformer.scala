@@ -32,4 +32,7 @@ trait Transformer[F[_]] {
 
   /** Creates an instance from a pair of buffers. */
   def fromBuffers[T](structureBuffer: IntBuffer, valuesBuffer: Buffer[T]): F[T]
+
+  /** Returns an empty instance. */
+  def empty[T]: F[T]
 }

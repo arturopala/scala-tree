@@ -719,7 +719,7 @@ object LaxTreeOps {
           NodeTree.removeValueAt(node, path.iterator, toPathItem, rightmost = false, keepDistinct = false)
 
         case tree: ArrayTree[T] =>
-          ArrayTree.removeValueAt(path, tree, toPathItem, rightmost = false, keepDistinct = false)
+          ArrayTree.removeValueAt[Tree, K, T](path, tree, toPathItem, rightmost = false, keepDistinct = false)
       }
 
   }

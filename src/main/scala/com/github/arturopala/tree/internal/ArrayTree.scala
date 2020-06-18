@@ -1363,30 +1363,48 @@ object ArrayTree {
 
   /** Removes node at the index and merges children to parent.
     * @return updated tree */
-  final def removeValue[T](
+  final def removeValue[F[_]: Transformer, T](
     index: Int,
     parentIndexOpt: Option[Int],
-    tree: Tree[T],
+    target: F[T],
     keepDistinct: Boolean
-  ): Tree[T] =
-    if (index < 0) tree
-    else if (index == tree.size - 1 && tree.childrenCount > 1)
-      throw new RuntimeException("Cannot remove top tree node having more than a single child")
+  ): F[T] =
+    if (index < 0) target
     else
-      transform(tree) { (structureBuffer, valuesBuffer) =>
-        val parentIndex = parentIndexOpt
-          .getOrElse(ArrayTreeFunctions.parentIndex(index, structureBuffer))
-        ArrayTreeFunctions.removeValue(index, parentIndex, structureBuffer, valuesBuffer, keepDistinct).intAsSome
+      transform(target) { (structureBuffer, valuesBuffer) =>
+        if (index == structureBuffer.top && structureBuffer(index) > 1)
+          throw new RuntimeException("Cannot remove top tree node having more than a single child.")
+        else {
+          val parentIndex = parentIndexOpt
+            .getOrElse(ArrayTreeFunctions.parentIndex(index, structureBuffer))
+          ArrayTreeFunctions.removeValue(index, parentIndex, structureBuffer, valuesBuffer, keepDistinct).intAsSome
+        }
       }
 
   /** Removes the node addressed by the last index, inserts children into the parent. */
-  private def removeValue[T](indexes: IntSlice, target: Tree[T], keepDistinct: Boolean): Tree[T] =
+  private def removeValue[F[_]: Transformer, T](indexes: IntSlice, target: F[T], keepDistinct: Boolean): F[T] =
     if (indexes.isEmpty) target
-    else if (indexes.last == target.size - 1) {
-      if (target.isLeaf) Tree.empty
-      else if (target.childrenCount == 1) treeAt(target.size - 2, target)
-      else target
-    } else removeValue(indexes.last, indexes.get(indexes.length - 2), target, keepDistinct)
+    else {
+      val (structure, values) = implicitly[Transformer[F]].toSlices(target)
+      if (indexes.last == structure.top) {
+        if (structure.length == 1) implicitly[Transformer[F]].empty
+        else if (structure.last == 1) treeAt(structure.top - 1, target)
+        else target
+      } else {
+        val structureBuffer = structure.asBuffer
+        val valuesBuffer = values.asBuffer
+        val index = indexes.last
+        if (index == structureBuffer.top && structureBuffer(index) > 1)
+          throw new RuntimeException("Cannot remove top tree node having more than a single child.")
+        else {
+          val parentIndex = indexes
+            .get(indexes.length - 2)
+            .getOrElse(ArrayTreeFunctions.parentIndex(index, structureBuffer))
+          ArrayTreeFunctions.removeValue(index, parentIndex, structureBuffer, valuesBuffer, keepDistinct)
+          implicitly[Transformer[F]].fromBuffers(structureBuffer, valuesBuffer)
+        }
+      }
+    }
 
   /** Removes the direct child node holding the value, and inserts children into the parent.
     * @note when removing the top node, the following special rules apply:
@@ -1430,13 +1448,13 @@ object ArrayTree {
     *       - otherwise if the tree has a single child, returns that child,
     *       - otherwise if the tree has more children, returns the tree unmodified.
     * @return modified tree */
-  final def removeValueAt[K, T](
+  final def removeValueAt[F[_]: Transformer, K, T](
     path: Iterable[K],
-    target: Tree[T],
+    target: F[T],
     toPathItem: T => K,
     rightmost: Boolean,
     keepDistinct: Boolean
-  ): Tree[T] =
+  ): F[T] =
     followEntirePath(path, target, toPathItem, rightmost)
       .map(removeValue(_, target, keepDistinct))
       .getOrElse(target)
