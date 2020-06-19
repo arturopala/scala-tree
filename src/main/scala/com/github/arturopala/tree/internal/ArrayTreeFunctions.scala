@@ -40,8 +40,15 @@ object ArrayTreeFunctions {
   @`inline` private def identity[T, T1 >: T]: T => T1 = x => x
 
   /** Checks if the buffer represents valid tree structure linearisation. */
-  @`inline` def hasValidTreeStructure(structure: IntBuffer): Boolean =
-    structure.iterator.sum == (structure.length - 1)
+  final def hasValidTreeStructure(structure: IntBuffer): Boolean = {
+    var i = structure.top
+    var a = structure(i)
+    while (a > 0 && i > 0) {
+      i = i - 1
+      a = a - 1 + structure(i)
+    }
+    i == 0 && a == 0
+  }
 
   /** Finds an index of the parent node of the given node.
     * @note If index > size - 1 then returns -1.  */

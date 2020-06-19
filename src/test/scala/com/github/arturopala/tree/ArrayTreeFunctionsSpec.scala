@@ -23,6 +23,26 @@ class ArrayTreeFunctionsSpec extends AnyWordSpecCompat with TestWithBuffers {
 
   "ArrayTreeFunctions" should {
 
+    "check valid tree structure" in {
+      hasValidTreeStructure(IntBuffer(0)) shouldBe true
+      hasValidTreeStructure(IntBuffer(1)) shouldBe false
+      hasValidTreeStructure(IntBuffer(0, 1)) shouldBe true
+      hasValidTreeStructure(IntBuffer(1, 0)) shouldBe false
+      hasValidTreeStructure(IntBuffer(0, 0)) shouldBe false
+      hasValidTreeStructure(IntBuffer(1, 1)) shouldBe false
+      hasValidTreeStructure(IntBuffer(0, 1, 1)) shouldBe true
+      hasValidTreeStructure(IntBuffer(1, 0, 1)) shouldBe false
+      hasValidTreeStructure(IntBuffer(0, 0, 2)) shouldBe true
+      hasValidTreeStructure(IntBuffer(0, 2, 0)) shouldBe false
+      hasValidTreeStructure(IntBuffer(2, 0, 0)) shouldBe false
+      hasValidTreeStructure(IntBuffer(0, 1, 1, 0, 0, 2, 2)) shouldBe true
+      hasValidTreeStructure(IntBuffer(0, 1, 1, 0, 0, 1, 2)) shouldBe false
+      hasValidTreeStructure(IntBuffer(0, 1, 1, 0, 0, 2, 1)) shouldBe false
+      hasValidTreeStructure(IntBuffer(0, 1, 1, 0, 2, 2)) shouldBe false
+      hasValidTreeStructure(IntBuffer(0, 0, 1, 1, 0, 2, 2)) shouldBe true
+      hasValidTreeStructure(IntBuffer(0, 1, 1, 0, 2, 2)) shouldBe false
+    }
+
     "insert child distinct" in {
       testWithBuffers[String, Int](
         insertBetweenChildrenDistinct(4, IntSlice(0, 1, 1), Slice("g", "e", "d"), false, _, _),
