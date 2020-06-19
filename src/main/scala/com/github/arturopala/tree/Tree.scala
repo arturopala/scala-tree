@@ -279,10 +279,11 @@ object Tree {
     delayedHeight: => Int
   ) extends ArrayTreeLike[T] with Tree[T] {
 
-    assert(content.nonEmpty, "When creating an ArrayTree, `values` must not be empty.")
+    assert(structure.nonEmpty, "When creating an ArrayTree, structure slice must not be empty.")
+    assert(content.nonEmpty, "When creating an ArrayTree, content slice must not be empty.")
     assert(
-      content.length == structure.length,
-      "When creating an ArrayTree, `structure` and `values` must be of the same size."
+      content.length == structure.length || content.length == Int.MaxValue,
+      "When creating an ArrayTree, structure and content slices must be of the same size."
     )
 
     override protected val arrayTree: ArrayTree[T] = this

@@ -31,7 +31,8 @@ import scala.collection.Iterator.continually
 object ArrayTree {
 
   /** Iterates right-to-left over all leaves of the tree rooted at startIndex. */
-  def leavesIterator[T](startIndex: Int, treeStructure: IntSlice, treeValues: Int => T): Iterator[T] = {
+  def leavesIterator[F[+_]: Transformer, T](startIndex: Int, target: F[T]): Iterator[T] = {
+    val (treeStructure, treeValues) = toSlices(target)
     val treeSize =
       if (startIndex == treeStructure.top) treeStructure.length
       else ArrayTreeFunctions.treeSize(startIndex, treeStructure)
@@ -44,45 +45,47 @@ object ArrayTree {
   /** Iterates over all values of the tree rooted at startIndex.
     * @param depthFirst if true, enumerates values depth-first,
     *                   if false, breadth-first. */
-  final def valuesIterator[T](
+  final def valuesIterator[F[+_]: Transformer, T](
     startIndex: Int,
-    treeStructure: Int => Int,
-    treeValues: Int => T,
+    target: F[T],
     depthFirst: Boolean
-  ): Iterator[T] =
+  ): Iterator[T] = {
+    val (treeStructure, treeValues) = toSlices(target)
     (if (depthFirst) ArrayTreeFunctions.nodesIndexIteratorDepthFirst(startIndex, treeStructure)
      else ArrayTreeFunctions.nodesIndexIteratorBreadthFirst(startIndex, treeStructure))
       .map(treeValues)
+  }
 
   /** Iterates over filtered values of the tree.
     * @param depthFirst if true, enumerates values depth-first,
     *                   if false, breadth-first. */
-  final def valuesIteratorWithLimit[T](
+  final def valuesIteratorWithLimit[F[+_]: Transformer, T](
     startIndex: Int,
-    treeStructure: Int => Int,
-    treeValues: Int => T,
+    target: F[T],
     pred: T => Boolean,
     maxDepth: Int,
     depthFirst: Boolean
-  ): Iterator[T] =
+  ): Iterator[T] = {
+    val (treeStructure, treeValues) = toSlices(target)
     new MapFilterIterator[Int, T](
       if (depthFirst) ArrayTreeFunctions.nodesIndexIteratorDepthFirstWithLimit(startIndex, treeStructure, maxDepth)
       else ArrayTreeFunctions.nodesIndexIteratorBreadthFirstWithLimit(startIndex, treeStructure, maxDepth),
       treeValues,
       pred
     )
+  }
 
   /** Iterates over filtered tuples of (level, value, isLeaf) of the tree.
     * @param depthFirst if true, enumerates values depth-first,
     *                   if false, breadth-first. */
-  final def valuesAndLevelsIteratorWithLimit[T](
+  final def valuesAndLevelsIteratorWithLimit[F[+_]: Transformer, T](
     startIndex: Int,
-    treeStructure: Int => Int,
-    treeValues: Int => T,
+    target: F[T],
     pred: T => Boolean,
     maxDepth: Int,
     depthFirst: Boolean
-  ): Iterator[(Int, T, Boolean)] =
+  ): Iterator[(Int, T, Boolean)] = {
+    val (treeStructure, treeValues) = toSlices(target)
     new MapFilterIterator[(Int, Int), (Int, T, Boolean)](
       if (depthFirst)
         ArrayTreeFunctions.nodesIndexAndLevelIteratorDepthFirstWithLimit(startIndex, treeStructure, maxDepth)
@@ -91,80 +94,87 @@ object ArrayTree {
       { case (level: Int, index: Int) => (level, treeValues(index), treeStructure(index) == 0) },
       (t: (Int, T, Boolean)) => pred(t._2)
     )
+  }
 
   /** Iterates over all paths of the tree. */
-  final def pathsIterator[T](
+  final def pathsIterator[F[+_]: Transformer, T](
     startIndex: Int,
-    treeStructure: Int => Int,
-    treeValues: Int => T
-  ): Iterator[Iterable[T]] =
+    target: F[T]
+  ): Iterator[Iterable[T]] = {
+    val (treeStructure, treeValues) = toSlices(target)
     ArrayTreeFunctions
       .pathsIndexListIterator(startIndex, treeStructure)
       .map(_.map(treeValues))
+  }
 
   /** Iterates over filtered tree's paths. */
-  final def pathsIteratorWithFilter[T](
+  final def pathsIteratorWithFilter[F[+_]: Transformer, T](
     startIndex: Int,
-    treeStructure: Int => Int,
-    treeValues: Int => T,
+    target: F[T],
     pred: Iterable[T] => Boolean
-  ): Iterator[Iterable[T]] =
+  ): Iterator[Iterable[T]] = {
+    val (treeStructure, treeValues) = toSlices(target)
     new MapFilterIterator[IntBuffer, Iterable[T]](
       ArrayTreeFunctions.pathsIndexListIterator(startIndex, treeStructure),
       _.map(treeValues),
       pred
     )
+  }
 
   /** Iterates over filtered tree's path with depth limit. */
-  final def pathsIteratorWithLimit[T](
+  final def pathsIteratorWithLimit[F[+_]: Transformer, T](
     startIndex: Int,
-    treeStructure: Int => Int,
-    treeValues: Int => T,
+    target: F[T],
     pred: Iterable[T] => Boolean,
     maxDepth: Int
-  ): Iterator[Iterable[T]] =
+  ): Iterator[Iterable[T]] = {
+    val (treeStructure, treeValues) = toSlices(target)
     new MapFilterIterator[IntBuffer, Iterable[T]](
       ArrayTreeFunctions.pathsIndexListIterator(startIndex, treeStructure, maxDepth),
       _.map(treeValues),
       pred
     )
+  }
 
   /** Iterates over all branches of the tree. */
-  final def branchesIterator[T](
+  final def branchesIterator[F[+_]: Transformer, T](
     startIndex: Int,
-    treeStructure: Int => Int,
-    treeValues: Int => T
-  ): Iterator[Iterable[T]] =
+    target: F[T]
+  ): Iterator[Iterable[T]] = {
+    val (treeStructure, treeValues) = toSlices(target)
     ArrayTreeFunctions
       .branchesIndexListIterator(startIndex, treeStructure)
       .map(_.map(treeValues))
+  }
 
   /** Iterates over filtered tree's branches. */
-  final def branchesIteratorWithFilter[T](
+  final def branchesIteratorWithFilter[F[+_]: Transformer, T](
     startIndex: Int,
-    treeStructure: Int => Int,
-    treeValues: Int => T,
+    target: F[T],
     pred: Iterable[T] => Boolean
-  ): Iterator[Iterable[T]] =
+  ): Iterator[Iterable[T]] = {
+    val (treeStructure, treeValues) = toSlices(target)
     new MapFilterIterator[IntBuffer, Iterable[T]](
       ArrayTreeFunctions.branchesIndexListIterator(startIndex, treeStructure),
       _.map(treeValues),
       pred
     )
+  }
 
   /** Iterates over filtered tree's branches with depth limit. */
-  final def branchesIteratorWithLimit[T](
+  final def branchesIteratorWithLimit[F[+_]: Transformer, T](
     startIndex: Int,
-    treeStructure: Int => Int,
-    treeValues: Int => T,
+    target: F[T],
     pred: Iterable[T] => Boolean,
     maxDepth: Int
-  ): Iterator[Iterable[T]] =
+  ): Iterator[Iterable[T]] = {
+    val (treeStructure, treeValues) = toSlices(target)
     new MapFilterIterator[IntBuffer, Iterable[T]](
       ArrayTreeFunctions.branchesIndexListIterator(startIndex, treeStructure, maxDepth),
       _.map(treeValues),
       pred
     )
+  }
 
   /** Iterates over all subtrees (including the tree itself).
     * @param depthFirst if true, enumerates values depth-first,
@@ -175,31 +185,24 @@ object ArrayTree {
     depthFirst: Boolean
   ): Iterator[Tree[T]] = {
     val (treeStructure, treeValues) = toSlices(target)
-    assert(
-      treeStructure.length == treeValues.length,
-      "When iterating over the tree's subtrees, structure and values mst be the same size."
-    )
     (if (depthFirst)
        ArrayTreeFunctions
          .nodesIndexIteratorDepthFirst(startIndex, treeStructure)
-     else ArrayTreeFunctions.nodesIndexIteratorBreadthFirst(startIndex, treeStructure))
+     else
+       ArrayTreeFunctions.nodesIndexIteratorBreadthFirst(startIndex, treeStructure))
       .map(treeAt2(_, treeStructure, treeValues))
   }
 
   /** Iterates over filtered subtrees (including the tree itself).
     * @param depthFirst if true, enumerates values depth-first,
     *                   if false, breadth-first. */
-  final def treesIteratorWithFilter[T](
+  final def treesIteratorWithFilter[F[+_]: Transformer, T](
     startIndex: Int,
-    treeStructure: IntSlice,
-    treeValues: Slice[T],
+    target: F[T],
     pred: Tree[T] => Boolean,
     depthFirst: Boolean
   ): Iterator[Tree[T]] = {
-    assert(
-      treeStructure.length == treeValues.length,
-      "When iterating over the tree's subtrees, structure and values mst be the same size."
-    )
+    val (treeStructure, treeValues) = toSlices(target)
     new MapFilterIterator[Int, Tree[T]](
       if (depthFirst)
         ArrayTreeFunctions.nodesIndexIteratorDepthFirst(startIndex, treeStructure)
@@ -212,18 +215,14 @@ object ArrayTree {
   /** Iterates over filtered subtrees (including the tree itself) with depth limit.
     * @param depthFirst if true, enumerates values depth-first,
     *                   if false, breadth-first. */
-  final def treesIteratorWithLimit[T](
+  final def treesIteratorWithLimit[F[+_]: Transformer, T](
     startIndex: Int,
-    treeStructure: IntSlice,
-    treeValues: Slice[T],
+    target: F[T],
     pred: Tree[T] => Boolean,
     maxDepth: Int,
     depthFirst: Boolean
   ): Iterator[Tree[T]] = {
-    assert(
-      treeStructure.length == treeValues.length,
-      "When iterating over the tree's subtrees, structure and values mst be the same size."
-    )
+    val (treeStructure, treeValues) = toSlices(target)
     new MapFilterIterator[Int, Tree[T]](
       if (depthFirst) ArrayTreeFunctions.nodesIndexIteratorDepthFirstWithLimit(startIndex, treeStructure, maxDepth)
       else ArrayTreeFunctions.nodesIndexIteratorBreadthFirstWithLimit(startIndex, treeStructure, maxDepth),
@@ -235,14 +234,14 @@ object ArrayTree {
   /** Iterates over filtered pairs of (level, tree) of the tree.
     * @param depthFirst if true, enumerates values depth-first,
     *                   if false, breadth-first. */
-  final def treesAndLevelsIteratorWithLimit[T](
+  final def treesAndLevelsIteratorWithLimit[F[+_]: Transformer, T](
     startIndex: Int,
-    treeStructure: IntSlice,
-    treeValues: Slice[T],
+    target: F[T],
     pred: Tree[T] => Boolean,
     maxDepth: Int,
     depthFirst: Boolean
-  ): Iterator[(Int, Tree[T])] =
+  ): Iterator[(Int, Tree[T])] = {
+    val (treeStructure, treeValues) = toSlices(target)
     new MapFilterIterator[(Int, Int), (Int, Tree[T])](
       if (depthFirst)
         ArrayTreeFunctions.nodesIndexAndLevelIteratorDepthFirstWithLimit(startIndex, treeStructure, maxDepth)
@@ -251,6 +250,7 @@ object ArrayTree {
       { case (level: Int, index: Int) => (level, treeAt2(index, treeStructure, treeValues)) },
       (t: (Int, Tree[T])) => pred(t._2)
     )
+  }
 
   /** Follows the given path of values into the tree.
     * @return a tuple consisting of:
@@ -311,121 +311,130 @@ object ArrayTree {
   }
 
   /** Checks if the tree starting at parentIndex contains given direct child value. */
-  @`inline` final def containsChildValue[T, T1 >: T](
+  @`inline` final def containsChildValue[F[+_]: Transformer, T, T1 >: T](
     value: T1,
     parentIndex: Int,
-    treeStructure: Int => Int,
-    treeValues: Int => T
-  ): Boolean =
+    target: F[T]
+  ): Boolean = {
+    val (treeStructure, treeValues) = toSlices(target)
     ArrayTreeFunctions
       .childrenIndexesIterator(parentIndex, treeStructure)
       .exists(i => treeValues(i) == value)
+  }
 
   /** Checks if the tree starting at parentIndex contains given direct child. */
-  @`inline` final def containsChild[T, T1 >: T](
+  @`inline` final def containsChild[F[+_]: Transformer, T, T1 >: T](
     child: Tree[T1],
     parentIndex: Int,
-    treeStructure: IntSlice,
-    treeValues: Slice[T]
-  ): Boolean =
+    target: F[T]
+  ): Boolean = {
+    val (treeStructure, treeValues) = toSlices(target)
     ArrayTreeFunctions
       .childrenIndexesIterator(parentIndex, treeStructure)
       .exists(i => treeAt2(i, treeStructure, treeValues) == child)
+  }
 
   /** Checks if the tree starting at parentIndex contains direct child value fulfilling the predicate. */
-  @`inline` final def existsChildValue[T, T1 >: T](
+  @`inline` final def existsChildValue[F[+_]: Transformer, T, T1 >: T](
     pred: T1 => Boolean,
     parentIndex: Int,
-    treeStructure: Int => Int,
-    treeValues: Int => T
-  ): Boolean =
+    target: F[T]
+  ): Boolean = {
+    val (treeStructure, treeValues) = toSlices(target)
     ArrayTreeFunctions
       .childrenIndexesIterator(parentIndex, treeStructure)
       .exists(i => pred(treeValues(i)))
+  }
 
   /** Checks if the tree starting at parentIndex contains direct child fulfilling the predicate. */
-  @`inline` final def existsChild[T, T1 >: T](
+  @`inline` final def existsChild[F[+_]: Transformer, T, T1 >: T](
     pred: Tree[T1] => Boolean,
     parentIndex: Int,
-    treeStructure: IntSlice,
-    treeValues: Slice[T]
-  ): Boolean =
+    target: F[T]
+  ): Boolean = {
+    val (treeStructure, treeValues) = toSlices(target)
     ArrayTreeFunctions
       .childrenIndexesIterator(parentIndex, treeStructure)
       .exists(i => pred(treeAt2(i, treeStructure, treeValues)))
+  }
 
   /** Checks if the tree starting at parentIndex contains given branch. */
-  @`inline` final def containsBranch[T, T1 >: T](
+  @`inline` final def containsBranch[F[+_]: Transformer, T, T1 >: T](
     branch: Iterable[T1],
     startIndex: Int,
-    treeStructure: Int => Int,
-    treeValues: Int => T
+    target: F[T]
   ): Boolean = {
+    val (treeStructure, treeValues) = toSlices(target)
     val (_, unmatched, _, fullMatch) =
       ArrayTreeFunctions.followPath(branch, startIndex, treeStructure, treeValues, rightmost = false)
     fullMatch && unmatched.isEmpty
   }
 
   /** Count branches starting at index fulfilling the predicate. */
-  final def countBranches[T](
+  final def countBranches[F[+_]: Transformer, T](
     startIndex: Int,
-    treeStructure: Int => Int,
-    treeValues: Int => T,
+    target: F[T],
     pred: Iterable[T] => Boolean
-  ): Int =
+  ): Int = {
+    val (treeStructure, treeValues) = toSlices(target)
     ArrayTreeFunctions.foldLeftBranchesIndexLists(
       startIndex,
       treeStructure,
       0,
       (a: Int, branch: IntSlice, _: Int) => a + (if (pred(branch.map(treeValues).asIterable)) 1 else 0)
     )
+  }
 
   /** Checks if the tree starting at parentIndex contains given path (a branch prefix). */
-  @`inline` final def containsPath[T, T1 >: T](
+  @`inline` final def containsPath[F[+_]: Transformer, T, T1 >: T](
     path: Iterable[T1],
     startIndex: Int,
-    treeStructure: Int => Int,
-    treeValues: Int => T
-  ): Boolean =
+    target: F[T]
+  ): Boolean = {
+    val (treeStructure, treeValues) = toSlices(target)
     ArrayTreeFunctions.followEntirePath(path, startIndex, treeStructure, treeValues, rightmost = false).isDefined
+  }
 
   /** Selects node's value accessible by path using item extractor function. */
-  @`inline` final def selectValue[T, K](
+  @`inline` final def selectValue[F[+_]: Transformer, T, K](
     path: Iterable[K],
     startIndex: Int,
-    treeStructure: Int => Int,
-    treeValues: Int => T,
+    target: F[T],
     toPathItem: T => K,
     rightmost: Boolean
-  ): Option[T] =
+  ): Option[T] = {
+    val (treeStructure, treeValues) = toSlices(target)
     ArrayTreeFunctions
       .followEntirePath(path, startIndex, treeStructure, treeValues, toPathItem, rightmost)
       .map(indexes => treeValues(indexes.last))
+  }
 
   /** Selects tree accessible by path. */
-  @`inline` final def selectTree[T, T1 >: T](
+  @`inline` final def selectTree[F[+_]: Transformer, T, T1 >: T](
     path: Iterable[T1],
     startIndex: Int,
-    treeStructure: IntSlice,
-    treeValues: Slice[T],
+    target: F[T],
     rightmost: Boolean
-  ): Option[Tree[T]] =
+  ): Option[Tree[T]] = {
+    val (treeStructure, treeValues) = toSlices(target)
     ArrayTreeFunctions
       .followEntirePath(path, startIndex, treeStructure, treeValues, rightmost)
       .map(indexes => treeAt2(indexes.last, treeStructure, treeValues))
+  }
 
   /** Selects tree accessible by path using item extractor function. */
-  @`inline` final def selectTree[T, K](
+  @`inline` final def selectTree[F[+_]: Transformer, T, K](
     path: Iterable[K],
     startIndex: Int,
-    treeStructure: IntSlice,
-    treeValues: Slice[T],
+    target: F[T],
     toPathItem: T => K,
     rightmost: Boolean
-  ): Option[Tree[T]] =
+  ): Option[Tree[T]] = {
+    val (treeStructure, treeValues) = toSlices(target)
     ArrayTreeFunctions
       .followEntirePath(path, startIndex, treeStructure, treeValues, toPathItem, rightmost)
       .map(indexes => treeAt2(indexes.last, treeStructure, treeValues))
+  }
 
   // TRANSFORMATIONS
 
