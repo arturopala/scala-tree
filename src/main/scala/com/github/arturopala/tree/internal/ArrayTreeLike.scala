@@ -127,9 +127,7 @@ abstract class ArrayTreeLike[T] extends TreeLike[T] {
   // TREES
 
   final override def trees(mode: TraversingMode = TopDownDepthFirst): Iterable[Tree[T]] =
-    iterableFrom(
-      ArrayTree.treesIterator(arrayTree.structure.top, arrayTree.structure, arrayTree.content, mode.isDepthFirst)
-    )
+    iterableFrom(ArrayTree.treesIterator(arrayTree.structure.top, tree, mode.isDepthFirst))
 
   final override def treesWithFilter(
     pred: Tree[T] => Boolean,

@@ -298,32 +298,32 @@ class ArrayTreeSpec extends AnyWordSpecCompat {
 
     "iterate over all trees depth-first" in {
       val f: Tree[String] => Boolean = _ => true
-      val l = treesIterator(0, IntSlice(0), Slice("a"), true).toList
+      val l = treesIterator(0, treeFrom(IntSlice(0), Slice("a")), true).toList
       l shouldBe List(Tree("a"))
       l should not be List(Tree("b"))
       l should not be List(Tree("a", Tree("b")))
       l should not be Nil
-      treesIterator(1, IntSlice(0, 1), Slice("b", "a"), true).toList shouldBe List(
+      treesIterator(1, treeFrom(IntSlice(0, 1), Slice("b", "a")), true).toList shouldBe List(
         Tree("a", Tree("b")),
         Tree("b")
       )
-      treesIterator(2, IntSlice(0, 1, 1), Slice("c", "b", "a"), true).toList shouldBe List(
+      treesIterator(2, treeFrom(IntSlice(0, 1, 1), Slice("c", "b", "a")), true).toList shouldBe List(
         Tree("a", Tree("b", Tree("c"))),
         Tree("b", Tree("c")),
         Tree("c")
       )
-      treesIterator(1, IntSlice(0, 1, 1), Slice("c", "b", "a"), true).toList shouldBe List(
+      treesIterator(1, treeFrom(IntSlice(0, 1, 1), Slice("c", "b", "a")), true).toList shouldBe List(
         Tree("b", Tree("c")),
         Tree("c")
       )
-      treesIterator(2, IntSlice(0, 0, 2), Slice("c", "b", "a"), true).toList shouldBe List(
+      treesIterator(2, treeFrom(IntSlice(0, 0, 2), Slice("c", "b", "a")), true).toList shouldBe List(
         Tree("a", Tree("b"), Tree("c")),
         Tree("b"),
         Tree("c")
       )
-      treesIterator(1, IntSlice(0, 0, 2), Slice("c", "b", "a"), true).toList shouldBe List(Tree("b"))
-      treesIterator(0, IntSlice(0, 0, 2), Slice("c", "b", "a"), true).toList shouldBe List(Tree("c"))
-      treesIterator(2, IntSlice(0, 0, 1, 2, 1), Slice("e", "d", "c", "b", "a"), true).toList shouldBe List(
+      treesIterator(1, treeFrom(IntSlice(0, 0, 2), Slice("c", "b", "a")), true).toList shouldBe List(Tree("b"))
+      treesIterator(0, treeFrom(IntSlice(0, 0, 2), Slice("c", "b", "a")), true).toList shouldBe List(Tree("c"))
+      treesIterator(2, treeFrom(IntSlice(0, 0, 1, 2, 1), Slice("e", "d", "c", "b", "a")), true).toList shouldBe List(
         Tree("c", Tree("d")),
         Tree("d")
       )
@@ -331,32 +331,32 @@ class ArrayTreeSpec extends AnyWordSpecCompat {
 
     "iterate over all trees breadth-first" in {
       val f: Tree[String] => Boolean = _ => true
-      val l = treesIterator(0, IntSlice(0), Slice("a"), false).toList
+      val l = treesIterator(0, treeFrom(IntSlice(0), Slice("a")), false).toList
       l shouldBe List(Tree("a"))
       l should not be List(Tree("b"))
       l should not be List(Tree("a", Tree("b")))
       l should not be Nil
-      treesIterator(1, IntSlice(0, 1), Slice("b", "a"), false).toList shouldBe List(
+      treesIterator(1, treeFrom(IntSlice(0, 1), Slice("b", "a")), false).toList shouldBe List(
         Tree("a", Tree("b")),
         Tree("b")
       )
-      treesIterator(2, IntSlice(0, 1, 1), Slice("c", "b", "a"), false).toList shouldBe List(
+      treesIterator(2, treeFrom(IntSlice(0, 1, 1), Slice("c", "b", "a")), false).toList shouldBe List(
         Tree("a", Tree("b", Tree("c"))),
         Tree("b", Tree("c")),
         Tree("c")
       )
-      treesIterator(1, IntSlice(0, 1, 1), Slice("c", "b", "a"), false).toList shouldBe List(
+      treesIterator(1, treeFrom(IntSlice(0, 1, 1), Slice("c", "b", "a")), false).toList shouldBe List(
         Tree("b", Tree("c")),
         Tree("c")
       )
-      treesIterator(2, IntSlice(0, 0, 2), Slice("c", "b", "a"), false).toList shouldBe List(
+      treesIterator(2, treeFrom(IntSlice(0, 0, 2), Slice("c", "b", "a")), false).toList shouldBe List(
         Tree("a", Tree("b"), Tree("c")),
         Tree("b"),
         Tree("c")
       )
-      treesIterator(1, IntSlice(0, 0, 2), Slice("c", "b", "a"), false).toList shouldBe List(Tree("b"))
-      treesIterator(0, IntSlice(0, 0, 2), Slice("c", "b", "a"), false).toList shouldBe List(Tree("c"))
-      treesIterator(2, IntSlice(0, 0, 1, 2, 1), Slice("e", "d", "c", "b", "a"), false).toList shouldBe List(
+      treesIterator(1, treeFrom(IntSlice(0, 0, 2), Slice("c", "b", "a")), false).toList shouldBe List(Tree("b"))
+      treesIterator(0, treeFrom(IntSlice(0, 0, 2), Slice("c", "b", "a")), false).toList shouldBe List(Tree("c"))
+      treesIterator(2, treeFrom(IntSlice(0, 0, 1, 2, 1), Slice("e", "d", "c", "b", "a")), false).toList shouldBe List(
         Tree("c", Tree("d")),
         Tree("d")
       )

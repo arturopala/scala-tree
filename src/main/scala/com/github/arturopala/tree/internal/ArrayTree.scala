@@ -169,12 +169,12 @@ object ArrayTree {
   /** Iterates over all subtrees (including the tree itself).
     * @param depthFirst if true, enumerates values depth-first,
     *                   if false, breadth-first. */
-  final def treesIterator[T](
+  final def treesIterator[F[+_]: Transformer, T](
     startIndex: Int,
-    treeStructure: IntSlice,
-    treeValues: Slice[T],
+    target: F[T],
     depthFirst: Boolean
   ): Iterator[Tree[T]] = {
+    val (treeStructure, treeValues) = toSlices(target)
     assert(
       treeStructure.length == treeValues.length,
       "When iterating over the tree's subtrees, structure and values mst be the same size."
@@ -1408,23 +1408,29 @@ object ArrayTree {
   private def removeValue[F[+_]: Transformer, T](indexes: IntSlice, target: F[T], keepDistinct: Boolean): F[T] =
     if (indexes.isEmpty) target
     else {
-      val (structure, values) = toSlices(target)
+      val (structure, _) = toSlices(target)
       if (indexes.last == structure.top) {
-        if (structure.length == 1) implicitly[Transformer[F]].empty
-        else if (structure.last == 1) instanceAt(structure.top - 1, target)
+        if (structure.length == 1) {
+          transform[F, T, T](target) {
+            case (structureBuffer, valuesBuffer) =>
+              structureBuffer.remove(0)
+              valuesBuffer.remove(0)
+              Some(-1)
+          }
+        } else if (structure.last == 1) instanceAt(structure.top - 1, target)
         else target
       } else {
-        val structureBuffer = structure.asBuffer
-        val valuesBuffer = values.asBuffer
-        val index = indexes.last
-        if (index == structureBuffer.top && structureBuffer(index) > 1)
-          throw new RuntimeException("Cannot remove top tree node having more than a single child.")
-        else {
-          val parentIndex = indexes
-            .get(indexes.length - 2)
-            .getOrElse(ArrayTreeFunctions.parentIndex(index, structureBuffer))
-          ArrayTreeFunctions.removeValue(index, parentIndex, structureBuffer, valuesBuffer, keepDistinct)
-          implicitly[Transformer[F]].fromBuffers(structureBuffer, valuesBuffer)
+        transform[F, T, T](target) {
+          case (structureBuffer, valuesBuffer) =>
+            val index = indexes.last
+            if (index == structureBuffer.top && structureBuffer(index) > 1)
+              throw new RuntimeException("Cannot remove top tree node having more than a single child.")
+            else {
+              val parentIndex = indexes
+                .get(indexes.length - 2)
+                .getOrElse(ArrayTreeFunctions.parentIndex(index, structureBuffer))
+              ArrayTreeFunctions.removeValue(index, parentIndex, structureBuffer, valuesBuffer, keepDistinct).intAsSome
+            }
         }
       }
     }
