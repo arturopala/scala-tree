@@ -19,8 +19,7 @@ package com.github.arturopala.tree.internal
 import java.util.NoSuchElementException
 
 import com.github.arturopala.bufferandslice.IndexTracker.{trackMoveRangeLeft, trackMoveRangeRight, trackShiftLeft}
-import com.github.arturopala.bufferandslice.{Buffer, IndexTracker, IntBuffer, IntSlice, Slice}
-import com.github.arturopala.tree.internal.ArrayTreeFunctions.parentIndex
+import com.github.arturopala.bufferandslice._
 
 import scala.annotation.tailrec
 import scala.collection.Iterator.continually
@@ -500,11 +499,9 @@ object ArrayTreeFunctions {
         } else throw new NoSuchElementException
 
       final def seekNext(check: Boolean): Unit =
-        if (check && counters.isEmpty) { hasNext = false }
-        else {
+        if (check && counters.isEmpty) { hasNext = false } else {
           i = indexes.peek
-          if (i < 0) { hasNext = false }
-          else {
+          if (i < 0) { hasNext = false } else {
             hasNext = true
             val c = structure(i)
             if (c == 0 || counters.length >= maxDepth - 1) {
@@ -545,12 +542,10 @@ object ArrayTreeFunctions {
         } else throw new NoSuchElementException
 
       final def seekNext(check: Boolean): Unit =
-        if (check && counters.isEmpty) { hasNext = false }
-        else {
+        if (check && counters.isEmpty) { hasNext = false } else {
           val index = indexes.peek
           i = (counters.length + 1, index)
-          if (index < 0) { hasNext = false }
-          else {
+          if (index < 0) { hasNext = false } else {
             hasNext = true
             val c = structure(index)
             if (c == 0 || counters.length >= maxDepth - 1) {
@@ -659,11 +654,9 @@ object ArrayTreeFunctions {
         } else throw new NoSuchElementException
 
       final def seekNext(check: Boolean): Unit =
-        if (check && counters.isEmpty) { hasNext = false }
-        else {
+        if (check && counters.isEmpty) { hasNext = false } else {
           val i = indexes.peek
-          if (i < 0) { hasNext = false }
-          else {
+          if (i < 0) { hasNext = false } else {
             val c = structure(i)
             array = BranchIteratorUtils.readBranch(counters, indexes).push(i)
             hasNext = true
@@ -705,11 +698,9 @@ object ArrayTreeFunctions {
 
       @tailrec
       final def seekNext(check: Boolean): Unit =
-        if (check && counters.isEmpty) { hasNext = false }
-        else {
+        if (check && counters.isEmpty) { hasNext = false } else {
           val i = indexes.peek
-          if (i < 0) { hasNext = false }
-          else {
+          if (i < 0) { hasNext = false } else {
             val c = structure(i)
             if (c == 0 || counters.length >= maxDepth - 1) {
               array = BranchIteratorUtils.readBranch(counters, indexes).push(i)

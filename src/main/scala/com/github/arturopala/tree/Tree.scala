@@ -17,7 +17,7 @@
 package com.github.arturopala.tree
 
 import com.github.arturopala.bufferandslice.{Buffer, IntBuffer, IntSlice, Slice}
-import com.github.arturopala.tree.internal.{ArrayTree, Compare, _}
+import com.github.arturopala.tree.internal.{Compare, _}
 
 /**
   * A general-purpose, covariant, immutable, low overhead,
@@ -275,7 +275,7 @@ object Tree {
   final class ArrayTree[T] private[tree] (
     val structure: IntSlice,
     val content: Slice[T],
-    delayedWidth: => Int,
+    delayedWidth:  => Int,
     delayedHeight: => Int
   ) extends ArrayTreeLike[T] with Tree[T] {
 
