@@ -137,16 +137,16 @@ class NodeTreeSpec extends AnyWordSpecCompat {
 
     "iterate over tree values depth-first with filter" in {
       val pred = Set("a", "c", "d", "f", "g", "i").contains _
-      valuesIteratorWithFilter(pred, Tree("a"), true).toList shouldBe List("a")
-      valuesIteratorWithFilter(pred, Tree("a", Tree("b")), true).toList shouldBe List("a")
-      valuesIteratorWithFilter(pred, Tree("a", Tree("b"), Tree("c")), true).toList shouldBe List("a", "c")
-      valuesIteratorWithFilter(pred, Tree("a", Tree("b", Tree("c")), Tree("d")), true).toList shouldBe
+      valuesIteratorWithFilter(Tree("a"), pred, true).toList shouldBe List("a")
+      valuesIteratorWithFilter(Tree("a", Tree("b")), pred, true).toList shouldBe List("a")
+      valuesIteratorWithFilter(Tree("a", Tree("b"), Tree("c")), pred, true).toList shouldBe List("a", "c")
+      valuesIteratorWithFilter(Tree("a", Tree("b", Tree("c")), Tree("d")), pred, true).toList shouldBe
         List("a", "c", "d")
-      valuesIteratorWithFilter(pred, Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e"))), true).toList shouldBe
+      valuesIteratorWithFilter(Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e"))), pred, true).toList shouldBe
         List("a", "c", "d")
       valuesIteratorWithFilter(
-        pred,
         Tree("a", Tree("b", Tree("c", Tree("d")), Tree("e")), Tree("f", Tree("g"), Tree("h", Tree("i")))),
+        pred,
         true
       ).toList shouldBe
         List("a", "c", "d", "f", "g", "i")
@@ -154,15 +154,15 @@ class NodeTreeSpec extends AnyWordSpecCompat {
 
     "iterate over tree values breadth-first with filter" in {
       val pred = Set("b", "c", "e", "f", "h", "g").contains _
-      valuesIteratorWithFilter(pred, Tree("a"), false).toList shouldBe List()
-      valuesIteratorWithFilter(pred, Tree("a", Tree("b")), false).toList shouldBe List("b")
-      valuesIteratorWithFilter(pred, Tree("a", Tree("b"), Tree("c")), false).toList shouldBe List("b", "c")
-      valuesIteratorWithFilter(pred, Tree("a", Tree("b", Tree("c")), Tree("d")), false).toList shouldBe List("b", "c")
-      valuesIteratorWithFilter(pred, Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e"))), false).toList shouldBe
+      valuesIteratorWithFilter(Tree("a"), pred, false).toList shouldBe List()
+      valuesIteratorWithFilter(Tree("a", Tree("b")), pred, false).toList shouldBe List("b")
+      valuesIteratorWithFilter(Tree("a", Tree("b"), Tree("c")), pred, false).toList shouldBe List("b", "c")
+      valuesIteratorWithFilter(Tree("a", Tree("b", Tree("c")), Tree("d")), pred, false).toList shouldBe List("b", "c")
+      valuesIteratorWithFilter(Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e"))), pred, false).toList shouldBe
         List("b", "c", "e")
       valuesIteratorWithFilter(
-        pred,
         Tree("a", Tree("b", Tree("c", Tree("d")), Tree("e")), Tree("f", Tree("g"), Tree("h", Tree("i")))),
+        pred,
         false
       ).toList shouldBe
         List("b", "f", "c", "e", "g", "h")
@@ -170,16 +170,16 @@ class NodeTreeSpec extends AnyWordSpecCompat {
 
     "iterate over tree values depth-first with filter and depth limit" in {
       val pred = Set("a", "c", "d", "f", "g", "i").contains _
-      valuesIteratorWithLimit(pred, Tree("a"), 2, true).toList shouldBe List("a")
-      valuesIteratorWithLimit(pred, Tree("a", Tree("b")), 2, true).toList shouldBe List("a")
-      valuesIteratorWithLimit(pred, Tree("a", Tree("b"), Tree("c")), 2, true).toList shouldBe List("a", "c")
-      valuesIteratorWithLimit(pred, Tree("a", Tree("b", Tree("c")), Tree("d")), 2, true).toList shouldBe
+      valuesIteratorWithLimit(Tree("a"), pred, 2, true).toList shouldBe List("a")
+      valuesIteratorWithLimit(Tree("a", Tree("b")), pred, 2, true).toList shouldBe List("a")
+      valuesIteratorWithLimit(Tree("a", Tree("b"), Tree("c")), pred, 2, true).toList shouldBe List("a", "c")
+      valuesIteratorWithLimit(Tree("a", Tree("b", Tree("c")), Tree("d")), pred, 2, true).toList shouldBe
         List("a", "d")
-      valuesIteratorWithLimit(pred, Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e"))), 2, true).toList shouldBe
+      valuesIteratorWithLimit(Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e"))), pred, 2, true).toList shouldBe
         List("a", "d")
       valuesIteratorWithLimit(
-        pred,
         Tree("a", Tree("b", Tree("c", Tree("d")), Tree("e")), Tree("f", Tree("g"), Tree("h", Tree("i")))),
+        pred,
         3,
         true
       ).toList shouldBe
@@ -188,15 +188,15 @@ class NodeTreeSpec extends AnyWordSpecCompat {
 
     "iterate over tree values breadth-first with filter and limit" in {
       val pred = Set("b", "c", "e", "f", "h", "g").contains _
-      valuesIteratorWithLimit(pred, Tree("a"), 2, false).toList shouldBe List()
-      valuesIteratorWithLimit(pred, Tree("a", Tree("b")), 2, false).toList shouldBe List("b")
-      valuesIteratorWithLimit(pred, Tree("a", Tree("b"), Tree("c")), 2, false).toList shouldBe List("b", "c")
-      valuesIteratorWithLimit(pred, Tree("a", Tree("b", Tree("c")), Tree("d")), 2, false).toList shouldBe List("b")
-      valuesIteratorWithLimit(pred, Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e"))), 2, false).toList shouldBe
+      valuesIteratorWithLimit(Tree("a"), pred, 2, false).toList shouldBe List()
+      valuesIteratorWithLimit(Tree("a", Tree("b")), pred, 2, false).toList shouldBe List("b")
+      valuesIteratorWithLimit(Tree("a", Tree("b"), Tree("c")), pred, 2, false).toList shouldBe List("b", "c")
+      valuesIteratorWithLimit(Tree("a", Tree("b", Tree("c")), Tree("d")), pred, 2, false).toList shouldBe List("b")
+      valuesIteratorWithLimit(Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e"))), pred, 2, false).toList shouldBe
         List("b")
       valuesIteratorWithLimit(
-        pred,
         Tree("a", Tree("b", Tree("c", Tree("d")), Tree("e")), Tree("f", Tree("g"), Tree("h", Tree("i")))),
+        pred,
         2,
         false
       ).toList shouldBe
@@ -322,16 +322,16 @@ class NodeTreeSpec extends AnyWordSpecCompat {
 
     "iterate over trees depth-first with filter" in {
       val pred: Tree[String] => Boolean = t => t.size % 2 == 0 || t.isLeaf
-      treesIteratorWithFilter(pred, Tree("a"), true).toList shouldBe List(Tree("a"))
-      treesIteratorWithFilter(pred, Tree("a", Tree("b")), true).toList shouldBe List(Tree("a", Tree("b")), Tree("b"))
-      treesIteratorWithFilter(pred, Tree("a", Tree("b"), Tree("c")), true).toList shouldBe List(Tree("b"), Tree("c"))
-      treesIteratorWithFilter(pred, Tree("a", Tree("b", Tree("c")), Tree("d")), true).toList shouldBe List(
+      treesIteratorWithFilter(Tree("a"), pred, true).toList shouldBe List(Tree("a"))
+      treesIteratorWithFilter(Tree("a", Tree("b")), pred, true).toList shouldBe List(Tree("a", Tree("b")), Tree("b"))
+      treesIteratorWithFilter(Tree("a", Tree("b"), Tree("c")), pred, true).toList shouldBe List(Tree("b"), Tree("c"))
+      treesIteratorWithFilter(Tree("a", Tree("b", Tree("c")), Tree("d")), pred, true).toList shouldBe List(
         Tree("a", Tree("b", Tree("c")), Tree("d")),
         Tree("b", Tree("c")),
         Tree("c"),
         Tree("d")
       )
-      treesIteratorWithFilter(pred, Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e"))), true).toList shouldBe
+      treesIteratorWithFilter(Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e"))), pred, true).toList shouldBe
         List(
           Tree("b", Tree("c")),
           Tree("c"),
@@ -339,8 +339,8 @@ class NodeTreeSpec extends AnyWordSpecCompat {
           Tree("e")
         )
       treesIteratorWithFilter(
-        pred,
         Tree("a", Tree("b", Tree("c", Tree("d")), Tree("e")), Tree("f", Tree("g"), Tree("h", Tree("i")))),
+        pred,
         true
       ).toList shouldBe
         List(
@@ -357,26 +357,26 @@ class NodeTreeSpec extends AnyWordSpecCompat {
 
     "iterate over trees breadth-first with filter" in {
       val pred: Tree[String] => Boolean = t => t.size % 2 != 0
-      treesIteratorWithFilter(pred, Tree("a"), false).toList shouldBe List(Tree("a"))
-      treesIteratorWithFilter(pred, Tree("a", Tree("b")), false).toList shouldBe List(Tree("b"))
-      treesIteratorWithFilter(pred, Tree("a", Tree("b"), Tree("c")), false).toList shouldBe List(
+      treesIteratorWithFilter(Tree("a"), pred, false).toList shouldBe List(Tree("a"))
+      treesIteratorWithFilter(Tree("a", Tree("b")), pred, false).toList shouldBe List(Tree("b"))
+      treesIteratorWithFilter(Tree("a", Tree("b"), Tree("c")), pred, false).toList shouldBe List(
         Tree("a", Tree("b"), Tree("c")),
         Tree("b"),
         Tree("c")
       )
-      treesIteratorWithFilter(pred, Tree("a", Tree("b", Tree("c")), Tree("d")), false).toList shouldBe List(
+      treesIteratorWithFilter(Tree("a", Tree("b", Tree("c")), Tree("d")), pred, false).toList shouldBe List(
         Tree("d"),
         Tree("c")
       )
-      treesIteratorWithFilter(pred, Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e"))), false).toList shouldBe
+      treesIteratorWithFilter(Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e"))), pred, false).toList shouldBe
         List(
           Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e"))),
           Tree("c"),
           Tree("e")
         )
       treesIteratorWithFilter(
-        pred,
         Tree("a", Tree("b", Tree("c", Tree("d")), Tree("e")), Tree("f", Tree("g"), Tree("h", Tree("i")))),
+        pred,
         false
       ).toList shouldBe
         List(
@@ -390,22 +390,22 @@ class NodeTreeSpec extends AnyWordSpecCompat {
 
     "iterate over trees depth-first with filter and depth limit" in {
       val pred: Tree[String] => Boolean = t => t.size % 2 == 0 || t.isLeaf
-      treesIteratorWithLimit(pred, Tree("a"), 2, true).toList shouldBe List(Tree("a"))
-      treesIteratorWithLimit(pred, Tree("a", Tree("b")), 2, true).toList shouldBe List(Tree("a", Tree("b")), Tree("b"))
-      treesIteratorWithLimit(pred, Tree("a", Tree("b"), Tree("c")), 2, true).toList shouldBe List(Tree("b"), Tree("c"))
-      treesIteratorWithLimit(pred, Tree("a", Tree("b", Tree("c")), Tree("d")), 2, true).toList shouldBe List(
+      treesIteratorWithLimit(Tree("a"), pred, 2, true).toList shouldBe List(Tree("a"))
+      treesIteratorWithLimit(Tree("a", Tree("b")), pred, 2, true).toList shouldBe List(Tree("a", Tree("b")), Tree("b"))
+      treesIteratorWithLimit(Tree("a", Tree("b"), Tree("c")), pred, 2, true).toList shouldBe List(Tree("b"), Tree("c"))
+      treesIteratorWithLimit(Tree("a", Tree("b", Tree("c")), Tree("d")), pred, 2, true).toList shouldBe List(
         Tree("a", Tree("b", Tree("c")), Tree("d")),
         Tree("b", Tree("c")),
         Tree("d")
       )
-      treesIteratorWithLimit(pred, Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e"))), 2, true).toList shouldBe
+      treesIteratorWithLimit(Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e"))), pred, 2, true).toList shouldBe
         List(
           Tree("b", Tree("c")),
           Tree("d", Tree("e"))
         )
       treesIteratorWithLimit(
-        pred,
         Tree("a", Tree("b", Tree("c", Tree("d")), Tree("e")), Tree("f", Tree("g"), Tree("h", Tree("i")))),
+        pred,
         3,
         true
       ).toList shouldBe
@@ -421,23 +421,23 @@ class NodeTreeSpec extends AnyWordSpecCompat {
 
     "iterate over trees breadth-first with filter and depth limit" in {
       val pred: Tree[String] => Boolean = t => t.size % 2 != 0
-      treesIteratorWithLimit(pred, Tree("a"), 2, false).toList shouldBe List(Tree("a"))
-      treesIteratorWithLimit(pred, Tree("a", Tree("b")), 2, false).toList shouldBe List(Tree("b"))
-      treesIteratorWithLimit(pred, Tree("a", Tree("b"), Tree("c")), 2, false).toList shouldBe List(
+      treesIteratorWithLimit(Tree("a"), pred, 2, false).toList shouldBe List(Tree("a"))
+      treesIteratorWithLimit(Tree("a", Tree("b")), pred, 2, false).toList shouldBe List(Tree("b"))
+      treesIteratorWithLimit(Tree("a", Tree("b"), Tree("c")), pred, 2, false).toList shouldBe List(
         Tree("a", Tree("b"), Tree("c")),
         Tree("b"),
         Tree("c")
       )
-      treesIteratorWithLimit(pred, Tree("a", Tree("b", Tree("c")), Tree("d")), 2, false).toList shouldBe List(
+      treesIteratorWithLimit(Tree("a", Tree("b", Tree("c")), Tree("d")), pred, 2, false).toList shouldBe List(
         Tree("d")
       )
-      treesIteratorWithLimit(pred, Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e"))), 2, false).toList shouldBe
+      treesIteratorWithLimit(Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e"))), pred, 2, false).toList shouldBe
         List(
           Tree("a", Tree("b", Tree("c")), Tree("d", Tree("e")))
         )
       treesIteratorWithLimit(
-        pred,
         Tree("a", Tree("b", Tree("c", Tree("d")), Tree("e")), Tree("f", Tree("g"), Tree("h", Tree("i")))),
+        pred,
         3,
         false
       ).toList shouldBe

@@ -52,8 +52,8 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
     mode: TraversingMode = TopDownDepthFirst,
     maxDepth: Int = Int.MaxValue
   ): Iterable[T] = iterableFrom {
-    if (maxDepth >= height) NodeTree.valuesIteratorWithFilter(pred, node, mode.isDepthFirst)
-    else NodeTree.valuesIteratorWithLimit(pred, node, maxDepth, mode.isDepthFirst)
+    if (maxDepth >= height) NodeTree.valuesIteratorWithFilter(node, pred, mode.isDepthFirst)
+    else NodeTree.valuesIteratorWithLimit(node, pred, maxDepth, mode.isDepthFirst)
   }
 
   def valuesAndLevelsWithFilter(
@@ -61,7 +61,7 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
     mode: TraversingMode = TopDownDepthFirst,
     maxDepth: Int = Int.MaxValue
   ): Iterable[(Int, T, Boolean)] =
-    iterableFrom(NodeTree.valuesAndLevelsIteratorWithFilter(pred, node, maxDepth, mode.isDepthFirst))
+    iterableFrom(NodeTree.valuesAndLevelsIteratorWithFilter(node, pred, maxDepth, mode.isDepthFirst))
 
   final override def childrenValues: Iterable[T] = iterableFrom(node.children.iterator.map(_.head))
 
@@ -76,8 +76,8 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
     maxDepth: Int = Int.MaxValue
   ): Iterable[Tree[T]] =
     iterableFrom {
-      if (maxDepth >= height) NodeTree.treesIteratorWithFilter(pred, node, mode.isDepthFirst)
-      else NodeTree.treesIteratorWithLimit(pred, node, maxDepth, mode.isDepthFirst)
+      if (maxDepth >= height) NodeTree.treesIteratorWithFilter(node, pred, mode.isDepthFirst)
+      else NodeTree.treesIteratorWithLimit(node, pred, maxDepth, mode.isDepthFirst)
     }
 
   def treesAndLevelsWithFilter(
@@ -85,7 +85,7 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
     mode: TraversingMode = TopDownDepthFirst,
     maxDepth: Int = Int.MaxValue
   ): Iterable[(Int, Tree[T])] =
-    iterableFrom(NodeTree.treesAndLevelsIteratorWithFilter(pred, node, maxDepth, mode.isDepthFirst))
+    iterableFrom(NodeTree.treesAndLevelsIteratorWithFilter(node, pred, maxDepth, mode.isDepthFirst))
 
   // BRANCHES
 
@@ -97,8 +97,8 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
     maxDepth: Int = Int.MaxValue
   ): Iterable[Iterable[T]] =
     iterableFrom {
-      if (maxDepth >= height) NodeTree.branchesIteratorWithFilter(pred, node, partialPaths = true)
-      else NodeTree.branchesIteratorWithLimit(pred, node, maxDepth, partialPaths = true)
+      if (maxDepth >= height) NodeTree.branchesIteratorWithFilter(node, pred, partialPaths = true)
+      else NodeTree.branchesIteratorWithLimit(node, pred, maxDepth, partialPaths = true)
     }
 
   final override def branches: Iterable[Iterable[T]] =
@@ -109,12 +109,12 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
     maxDepth: Int = Int.MaxValue
   ): Iterable[Iterable[T]] =
     iterableFrom {
-      if (maxDepth >= height) NodeTree.branchesIteratorWithFilter(pred, node, partialPaths = false)
-      else NodeTree.branchesIteratorWithLimit(pred, node, maxDepth, partialPaths = false)
+      if (maxDepth >= height) NodeTree.branchesIteratorWithFilter(node, pred, partialPaths = false)
+      else NodeTree.branchesIteratorWithLimit(node, pred, maxDepth, partialPaths = false)
     }
 
   final override def countBranches(pred: Iterable[T] => Boolean): Int =
-    NodeTree.countBranches(pred, node)
+    NodeTree.countBranches(node, pred)
 
   // SELECTIONS
 
@@ -146,10 +146,10 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
     NodeTree.containsBranch(node, branch, toPathItem)
 
   final override def existsBranch(pred: Iterable[T] => Boolean): Boolean =
-    NodeTree.existsBranch(pred, node, partialPaths = false)
+    NodeTree.existsBranch(node, pred, partialPaths = false)
 
   final override def existsBranch[K](pred: Iterable[K] => Boolean, toPathItem: T => K): Boolean =
-    NodeTree.existsBranch(pred, node, partialPaths = false, toPathItem)
+    NodeTree.existsBranch(node, pred, partialPaths = false, toPathItem)
 
   final override def containsPath[T1 >: T](path: Iterable[T1]): Boolean = NodeTree.containsPath(node, path)
 
@@ -157,10 +157,10 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
     NodeTree.containsPath(node, path, toPathItem)
 
   final override def existsPath(pred: Iterable[T] => Boolean): Boolean =
-    NodeTree.existsBranch(pred, node, partialPaths = true)
+    NodeTree.existsBranch(node, pred, partialPaths = true)
 
   final override def existsPath[K](pred: Iterable[K] => Boolean, toPathItem: T => K): Boolean =
-    NodeTree.existsBranch(pred, node, partialPaths = true, toPathItem)
+    NodeTree.existsBranch(node, pred, partialPaths = true, toPathItem)
 
   // DISTINCT INSERTIONS
 
@@ -442,7 +442,7 @@ trait NodeTreeLike[+T] extends TreeLike[T] {
   // TRANSFORMATIONS
 
   final override def map[K](f: T => K): Tree[K] = {
-    val (structure, values) = NodeTree.arrayMap(f, node)
+    val (structure, values) = NodeTree.arrayMap(node, f)
     TreeBuilder.fromIterators(structure.iterator, values.iterator).headOption.getOrElse(empty)
   }
 

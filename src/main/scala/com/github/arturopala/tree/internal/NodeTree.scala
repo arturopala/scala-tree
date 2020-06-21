@@ -33,10 +33,10 @@ object NodeTree {
   /** Type alias of a tree split, i.e. a tuple of (leftChildren, head, rightChildren). */
   type TreeSplit[T] = (Seq[Tree[T]], T, Seq[Tree[T]])
 
-  final def leavesIterator[T](node: Tree[T]): Iterator[T] = new Iterator[T] {
+  final def leavesIterator[T](target: Tree[T]): Iterator[T] = new Iterator[T] {
 
     type Queue = Iterator[Tree[T]]
-    private var queue: Queue = Iterator(node)
+    private var queue: Queue = Iterator(target)
 
     var hasNext: Boolean = false
     private var nextItem: T = _
@@ -75,10 +75,10 @@ object NodeTree {
     * @param depthFirst if true, enumerates values depth-first,
     *                   if false, breadth-first.
     */
-  final def valuesIterator[T](node: Tree[T], depthFirst: Boolean): Iterator[T] = new Iterator[T] {
+  final def valuesIterator[T](target: Tree[T], depthFirst: Boolean): Iterator[T] = new Iterator[T] {
 
     type Queue = Iterator[Tree[T]]
-    private var queue: Queue = Iterator(node)
+    private var queue: Queue = Iterator(target)
 
     override final def hasNext: Boolean = queue.nonEmpty
 
@@ -97,15 +97,15 @@ object NodeTree {
     * @param depthFirst if true, enumerates values depth-first,
     *                   if false, breadth-first.
     */
-  final def valuesIteratorWithFilter[T](pred: T => Boolean, node: Tree[T], depthFirst: Boolean): Iterator[T] =
-    new FilterIterator(valuesIterator(node, depthFirst), pred)
+  final def valuesIteratorWithFilter[T](target: Tree[T], pred: T => Boolean, depthFirst: Boolean): Iterator[T] =
+    new FilterIterator(valuesIterator(target, depthFirst), pred)
 
   /** Returns an iterator over all the values and levels of the tree.
     * @param depthFirst if true, enumerates values depth-first,
     *                   if false, breadth-first.
     */
   final def valuesAndLevelsIterator[T](
-    node: Tree[T],
+    target: Tree[T],
     maxDepth: Int,
     depthFirst: Boolean
   ): Iterator[(Int, T, Boolean)] =
@@ -113,7 +113,7 @@ object NodeTree {
 
       type Queue = Iterator[(Int, Tree[T])]
       private var queue: Queue =
-        if (maxDepth > 0) Iterator((1, node))
+        if (maxDepth > 0) Iterator((1, target))
         else Iterator.empty
 
       override final def hasNext: Boolean = queue.nonEmpty
@@ -138,18 +138,18 @@ object NodeTree {
     *                   if false, breadth-first.
     */
   final def valuesAndLevelsIteratorWithFilter[T](
+    target: Tree[T],
     pred: T => Boolean,
-    node: Tree[T],
     maxDepth: Int,
     depthFirst: Boolean
   ): Iterator[(Int, T, Boolean)] =
-    new FilterIterator(valuesAndLevelsIterator(node, maxDepth, depthFirst), (t: (Int, T, Boolean)) => pred(t._2))
+    new FilterIterator(valuesAndLevelsIterator(target, maxDepth, depthFirst), (t: (Int, T, Boolean)) => pred(t._2))
 
   /** Returns an iterator over the filtered nodes of the tree with maxDepth limit.
     * @note uses Iterator internally */
   final def valuesIteratorWithLimit[T](
+    target: Tree[T],
     pred: T => Boolean,
-    node: Tree[T],
     maxDepth: Int,
     depthFirst: Boolean
   ): Iterator[T] =
@@ -157,7 +157,7 @@ object NodeTree {
 
       type Queue = Iterator[(Int, Tree[T])]
       private var queue: Queue =
-        if (maxDepth > 0) Iterator((1, node))
+        if (maxDepth > 0) Iterator((1, target))
         else Iterator.empty
 
       var hasNext: Boolean = false
@@ -195,7 +195,7 @@ object NodeTree {
     }
 
   /** Sequence of all values of the tree fulfilling the predicate. */
-  final def values[T](pred: T => Boolean, node: Tree[T]): Vector[T] = values(pred, Vector.empty[T], Vector(node))
+  final def values[T](target: Tree[T], pred: T => Boolean): Vector[T] = values(pred, Vector.empty[T], Vector(target))
 
   @tailrec
   private def values[T](pred: T => Boolean, result: Vector[T], queue: Vector[Tree[T]]): Vector[T] =
@@ -207,10 +207,10 @@ object NodeTree {
     }
 
   /** Returns an iterator over all (sub)trees of the tree inclusive. */
-  final def treesIterator[T](node: Tree[T], depthFirst: Boolean): Iterator[Tree[T]] = new Iterator[Tree[T]] {
+  final def treesIterator[T](target: Tree[T], depthFirst: Boolean): Iterator[Tree[T]] = new Iterator[Tree[T]] {
 
     type Queue = Iterator[Tree[T]]
-    private var queue: Queue = Iterator(node)
+    private var queue: Queue = Iterator(target)
 
     override final def hasNext: Boolean = queue.nonEmpty
 
@@ -228,19 +228,19 @@ object NodeTree {
 
   /** Returns an iterator over filtered trees of the tree. */
   final def treesIteratorWithFilter[T](
+    target: Tree[T],
     pred: Tree[T] => Boolean,
-    node: Tree[T],
     depthFirst: Boolean
   ): Iterator[Tree[T]] =
-    new FilterIterator(treesIterator(node, depthFirst), pred)
+    new FilterIterator(treesIterator(target, depthFirst), pred)
 
   /** Returns an iterator over pairs of (level, tree) of the tree inclusive. */
-  final def treesAndLevelsIterator[T](node: Tree[T], maxDepth: Int, depthFirst: Boolean): Iterator[(Int, Tree[T])] =
+  final def treesAndLevelsIterator[T](target: Tree[T], maxDepth: Int, depthFirst: Boolean): Iterator[(Int, Tree[T])] =
     new Iterator[(Int, Tree[T])] {
 
       type Queue = Iterator[(Int, Tree[T])]
       private var queue: Queue =
-        if (maxDepth > 0) Iterator((1, node))
+        if (maxDepth > 0) Iterator((1, target))
         else Iterator.empty
 
       override final def hasNext: Boolean = queue.nonEmpty
@@ -262,25 +262,25 @@ object NodeTree {
 
   /** Returns an iterator over filtered pairs of (level, tree) of the tree. */
   final def treesAndLevelsIteratorWithFilter[T](
+    target: Tree[T],
     pred: Tree[T] => Boolean,
-    node: Tree[T],
     maxDepth: Int,
     depthFirst: Boolean
   ): Iterator[(Int, Tree[T])] =
-    new FilterIterator(treesAndLevelsIterator(node, maxDepth, depthFirst), (t: (Int, Tree[T])) => pred(t._2))
+    new FilterIterator(treesAndLevelsIterator(target, maxDepth, depthFirst), (t: (Int, Tree[T])) => pred(t._2))
 
   /** Returns an iterator over filtered (sub)trees of the tree with depth limit.
     * @note uses Iterator internally */
   final def treesIteratorWithLimit[T](
+    target: Tree[T],
     pred: Tree[T] => Boolean,
-    node: Tree[T],
     maxDepth: Int,
     depthFirst: Boolean
   ): Iterator[Tree[T]] =
     new Iterator[Tree[T]] {
 
       type Queue = Iterator[(Int, Tree[T])]
-      private var queue: Queue = if (maxDepth > 0) Iterator((1, node)) else Iterator.empty
+      private var queue: Queue = if (maxDepth > 0) Iterator((1, target)) else Iterator.empty
 
       var hasNext: Boolean = false
       private var nextItem: Tree[T] = _
@@ -317,8 +317,8 @@ object NodeTree {
     }
 
   /** Lists all the trees fulfilling the predicate. */
-  final def trees[T](pred: Tree[T] => Boolean, node: Tree[T]): Vector[Tree[T]] =
-    trees(pred, Vector.empty, Vector(node))
+  final def trees[T](target: Tree[T], pred: Tree[T] => Boolean): Vector[Tree[T]] =
+    trees(pred, Vector.empty, Vector(target))
 
   @tailrec
   private def trees[T](
@@ -334,11 +334,11 @@ object NodeTree {
     }
 
   /** Returns an iterator over all paths of the tree. */
-  final def pathsIterator[T](node: Tree[T]): Iterator[Iterable[T]] =
+  final def pathsIterator[T](target: Tree[T]): Iterator[Iterable[T]] =
     new Iterator[Iterable[T]] {
 
       type Queue = Iterator[(Vector[T], Tree[T])]
-      private var queue: Queue = Iterator((Vector.empty, node))
+      private var queue: Queue = Iterator((Vector.empty, target))
 
       override def hasNext: Boolean = queue.nonEmpty
 
@@ -353,11 +353,11 @@ object NodeTree {
     }
 
   /** Returns an iterator over all branches of the tree. */
-  final def branchesIterator[T](node: Tree[T]): Iterator[Iterable[T]] =
+  final def branchesIterator[T](target: Tree[T]): Iterator[Iterable[T]] =
     new Iterator[Iterable[T]] {
 
       type Queue = Vector[(Vector[T], Tree[T])]
-      private var queue: Queue = seekNext(Vector((Vector.empty, node)))
+      private var queue: Queue = seekNext(Vector((Vector.empty, target)))
 
       override def hasNext: Boolean = queue.nonEmpty
 
@@ -385,14 +385,14 @@ object NodeTree {
 
   /** Returns an iterator over filtered branches of the tree. */
   final def branchesIteratorWithFilter[T](
+    target: Tree[T],
     pred: Iterable[T] => Boolean,
-    node: Tree[T],
     partialPaths: Boolean
   ): Iterator[Iterable[T]] =
     new Iterator[Iterable[T]] {
 
       type Queue = Vector[(Vector[T], Tree[T])]
-      private var queue: Queue = seekNext(Vector((Vector.empty, node)))
+      private var queue: Queue = seekNext(Vector((Vector.empty, target)))
 
       override def hasNext: Boolean = queue.nonEmpty
 
@@ -420,8 +420,8 @@ object NodeTree {
 
   /** Returns an iterator over filtered branches of the tree with depth limit. */
   final def branchesIteratorWithLimit[T](
+    target: Tree[T],
     pred: Iterable[T] => Boolean,
-    node: Tree[T],
     maxDepth: Int,
     partialPaths: Boolean
   ): Iterator[Iterable[T]] =
@@ -429,7 +429,7 @@ object NodeTree {
 
       type Queue = Vector[(Vector[T], Tree[T])]
       private var queue: Queue =
-        if (maxDepth > 0) seekNext(Vector((Vector.empty, node)))
+        if (maxDepth > 0) seekNext(Vector((Vector.empty, target)))
         else Vector.empty
 
       override def hasNext: Boolean = queue.nonEmpty
@@ -460,8 +460,8 @@ object NodeTree {
         }
     }
 
-  final def branches[T](pred: Iterable[T] => Boolean, node: Tree[T]): Iterable[Iterable[T]] =
-    branches(pred, Vector.empty, Vector((Vector.empty, node)))
+  final def branches[T](target: Tree[T], pred: Iterable[T] => Boolean): Iterable[Iterable[T]] =
+    branches(pred, Vector.empty, Vector((Vector.empty, target)))
 
   @tailrec
   private def branches[T](
@@ -482,8 +482,8 @@ object NodeTree {
         case _ => branches(pred, result, queue.safeTail)
       }
 
-  final def countBranches[T](pred: Iterable[T] => Boolean, node: Tree[T]): Int =
-    countBranches(pred, 0, Iterator((Vector.empty, node)))
+  final def countBranches[T](target: Tree[T], pred: Iterable[T] => Boolean): Int =
+    countBranches(pred, 0, Iterator((Vector.empty, target)))
 
   @tailrec
   private def countBranches[T](
@@ -503,61 +503,61 @@ object NodeTree {
 
   @tailrec
   final def select[T, T1 >: T, R](
-    node: Tree[T],
+    target: Tree[T],
     path: Iterable[T1],
     result: Tree[T] => R,
     rightmost: Boolean
   ): Option[R] =
-    if (path.isEmpty || (path.nonEmpty && path.head != node.head)) None
+    if (path.isEmpty || (path.nonEmpty && path.head != target.head)) None
     else if (path.tail.isEmpty) {
-      if (path.head == node.head) Some(result(node)) else None
+      if (path.head == target.head) Some(result(target)) else None
     } else {
       val item = path.tail.head
       val nextOpt =
-        if (rightmost) node.children.filter(_.head == item).lastOption
-        else node.children.iterator.find(_.head == item)
+        if (rightmost) target.children.filter(_.head == item).lastOption
+        else target.children.iterator.find(_.head == item)
       if (nextOpt.isEmpty) None
       else select(nextOpt.get, path.tail, result, rightmost)
     }
 
   @tailrec
   final def select[T, K, R](
-    node: Tree[T],
+    target: Tree[T],
     path: Iterable[K],
     toResult: Tree[T] => R,
     toPathItem: T => K,
     rightmost: Boolean
   ): Option[R] =
-    if (path.isEmpty || (path.nonEmpty && path.head != toPathItem(node.head))) None
+    if (path.isEmpty || (path.nonEmpty && path.head != toPathItem(target.head))) None
     else if (path.tail.isEmpty) {
-      if (path.head == toPathItem(node.head)) Some(toResult(node)) else None
+      if (path.head == toPathItem(target.head)) Some(toResult(target)) else None
     } else {
       val item = path.tail.head
       val nextOpt =
-        if (rightmost) node.children.filter(n => toPathItem(n.head) == item).lastOption
-        else node.children.iterator.find(n => toPathItem(n.head) == item)
+        if (rightmost) target.children.filter(n => toPathItem(n.head) == item).lastOption
+        else target.children.iterator.find(n => toPathItem(n.head) == item)
       if (nextOpt.isEmpty) None
       else select(nextOpt.get, path.tail, toResult, toPathItem, rightmost)
     }
 
-  @`inline` final def containsBranch[T, T1 >: T](node: Tree[T], branch: Iterable[T1]): Boolean =
-    contains(node, branch, requiresFullMatch = true)
+  @`inline` final def containsBranch[T, T1 >: T](target: Tree[T], branch: Iterable[T1]): Boolean =
+    contains(target, branch, requiresFullMatch = true)
 
-  @`inline` final def containsBranch[T, K](node: Tree[T], branch: Iterable[K], toPathItem: T => K): Boolean =
-    contains(node, branch, requiresFullMatch = true, toPathItem)
+  @`inline` final def containsBranch[T, K](target: Tree[T], branch: Iterable[K], toPathItem: T => K): Boolean =
+    contains(target, branch, requiresFullMatch = true, toPathItem)
 
-  @`inline` final def containsPath[T, T1 >: T](node: Tree[T], path: Iterable[T1]): Boolean =
-    contains(node, path, requiresFullMatch = false)
+  @`inline` final def containsPath[T, T1 >: T](target: Tree[T], path: Iterable[T1]): Boolean =
+    contains(target, path, requiresFullMatch = false)
 
-  @`inline` final def containsPath[T, K](node: Tree[T], path: Iterable[K], toPathItem: T => K): Boolean =
-    contains(node, path, requiresFullMatch = false, toPathItem)
+  @`inline` final def containsPath[T, K](target: Tree[T], path: Iterable[K], toPathItem: T => K): Boolean =
+    contains(target, path, requiresFullMatch = false, toPathItem)
 
   @tailrec
-  final def contains[T, T1 >: T](node: Tree[T], path: Iterable[T1], requiresFullMatch: Boolean): Boolean =
-    if (path.isEmpty || (path.nonEmpty && path.head != node.head)) false
-    else if (path.tail.isEmpty) (!requiresFullMatch || node.isLeaf) && path.head == node.head
+  final def contains[T, T1 >: T](target: Tree[T], path: Iterable[T1], requiresFullMatch: Boolean): Boolean =
+    if (path.isEmpty || (path.nonEmpty && path.head != target.head)) false
+    else if (path.tail.isEmpty) (!requiresFullMatch || target.isLeaf) && path.head == target.head
     else {
-      val nextOpt = node.children.collect {
+      val nextOpt = target.children.collect {
         case nextNode if nextNode.head == path.tail.head => nextNode
       }.lastOption
       if (nextOpt.isEmpty) false
@@ -566,15 +566,15 @@ object NodeTree {
 
   @tailrec
   final def contains[T, K](
-    node: Tree[T],
+    target: Tree[T],
     path: Iterable[K],
     requiresFullMatch: Boolean,
     toPathItem: T => K
   ): Boolean =
-    if (path.isEmpty || (path.nonEmpty && path.head != toPathItem(node.head))) false
-    else if (path.tail.isEmpty) (!requiresFullMatch || node.isLeaf) && path.head == toPathItem(node.head)
+    if (path.isEmpty || (path.nonEmpty && path.head != toPathItem(target.head))) false
+    else if (path.tail.isEmpty) (!requiresFullMatch || target.isLeaf) && path.head == toPathItem(target.head)
     else {
-      val nextOpt = node.children.collect {
+      val nextOpt = target.children.collect {
         case nextNode if toPathItem(nextNode.head) == path.tail.head => nextNode
       }.lastOption
       if (nextOpt.isEmpty) false
@@ -583,8 +583,8 @@ object NodeTree {
 
   /** Returns true if branch or path fulfilling the predicate exists in the tree. */
   final def existsBranch[T](
+    target: Tree[T],
     pred: Iterable[T] => Boolean,
-    node: Tree[T],
     partialPaths: Boolean
   ): Boolean = {
 
@@ -602,13 +602,13 @@ object NodeTree {
         }
       }
 
-    seekNext(Vector((Vector.empty, node))).nonEmpty
+    seekNext(Vector((Vector.empty, target))).nonEmpty
   }
 
   /** Returns true if branch or path fulfilling the predicate exists in the tree. */
   final def existsBranch[K, T](
+    target: Tree[T],
     pred: Iterable[K] => Boolean,
-    node: Tree[T],
     partialPaths: Boolean,
     toPathItem: T => K
   ): Boolean = {
@@ -627,11 +627,11 @@ object NodeTree {
         }
       }
 
-    seekNext(Vector((Vector.empty, node))).nonEmpty
+    seekNext(Vector((Vector.empty, target))).nonEmpty
   }
 
   /** Prepends children of the tree with the new child. */
-  final def prependChild[T, T1 >: T](tree: Tree[T], child: Tree[T1]): Tree[T1] = tree match {
+  final def prependChild[T, T1 >: T](target: Tree[T], child: Tree[T1]): Tree[T1] = target match {
     case Tree.Leaf(head)                    => Tree.Unary(head, child)
     case Tree.Unary(head, existingChild)    => Tree.Binary(head, child, existingChild)
     case Tree.Binary(head, left, right)     => Tree.Bunch(head, List(child, left, right))
@@ -641,7 +641,7 @@ object NodeTree {
   }
 
   /** Appends new child to the children of the tree. */
-  final def appendChild[T, T1 >: T](tree: Tree[T], child: Tree[T1]): Tree[T1] = tree match {
+  final def appendChild[T, T1 >: T](target: Tree[T], child: Tree[T1]): Tree[T1] = target match {
     case Tree.Leaf(head)                    => Tree.Unary(head, child)
     case Tree.Unary(head, existingChild)    => Tree.Binary(head, existingChild, child)
     case Tree.Binary(head, left, right)     => Tree.Bunch(head, List(left, right, child))
@@ -651,9 +651,9 @@ object NodeTree {
   }
 
   /** Inserts branch to the tree using unsafe recursion. */
-  final def insertBranchUnsafe[T, T1 >: T](tree: Tree[T], branchIterator: Iterator[T1]): Option[Tree[T1]] =
-    if (tree.nonEmpty && branchIterator.hasNext && branchIterator.next == tree.head) {
-      Some(Tree(tree.head, insertBranchUnsafe(branchIterator.next, Vector.empty, tree.children, branchIterator)))
+  final def insertBranchUnsafe[T, T1 >: T](target: Tree[T], branchIterator: Iterator[T1]): Option[Tree[T1]] =
+    if (target.nonEmpty && branchIterator.hasNext && branchIterator.next == target.head) {
+      Some(Tree(target.head, insertBranchUnsafe(branchIterator.next, Vector.empty, target.children, branchIterator)))
     } else None
 
   private def insertBranchUnsafe[T, T1 >: T](
@@ -679,11 +679,11 @@ object NodeTree {
     }
 
   final def insertBranch[T, T1 >: T](
-    tree: Tree[T],
+    target: Tree[T],
     branchIterator: Iterator[T1],
     append: Boolean
   ): Option[Tree[T1]] =
-    splitTreeFollowingPath(tree, branchIterator, rightmost = append).flatMap {
+    splitTreeFollowingPath(target, branchIterator, rightmost = append).flatMap {
       case (treeSplit, Some(value), remainingBranchIterator, remainingTree) =>
         val branchTree: Tree[T1] =
           TreeBuilder.linearTreeFromSequence(value +: remainingBranchIterator.toVector)
@@ -696,7 +696,7 @@ object NodeTree {
       case _ => None
     }
 
-  final def toPairsList[T](node: Tree[T]): Seq[(Int, T)] = toPairsList(Vector.empty, Vector(node))
+  final def toPairsList[T](target: Tree[T]): Seq[(Int, T)] = toPairsList(Vector.empty, Vector(target))
 
   @tailrec
   private def toPairsList[T](result: Vector[(Int, T)], queue: Vector[Tree[T]]): Seq[(Int, T)] =
@@ -710,16 +710,16 @@ object NodeTree {
           toPairsList(result, queue.safeTail)
       }
 
-  final def toSlices[T](node: Tree[T]): (IntSlice, Slice[T]) = {
-    val (structure, values) = toBuffers(node)
+  final def toSlices[T](target: Tree[T]): (IntSlice, Slice[T]) = {
+    val (structure, values) = toBuffers(target)
     (structure.asSlice, values.asSlice)
   }
 
-  final def toBuffers[T](node: Tree[T]): (IntBuffer, Buffer[T]) =
-    if (node.isEmpty) (IntBuffer.empty, Buffer.empty[T])
+  final def toBuffers[T](target: Tree[T]): (IntBuffer, Buffer[T]) =
+    if (target.isEmpty) (IntBuffer.empty, Buffer.empty[T])
     else {
-      val queue = Buffer(node)
-      toBuffers(new IntBuffer(node.size), Buffer.ofSize[T](node.size), queue, node.size - 1, 0)
+      val queue = Buffer(target)
+      toBuffers(new IntBuffer(target.size), Buffer.ofSize[T](target.size), queue, target.size - 1, 0)
     }
 
   @tailrec
@@ -752,13 +752,13 @@ object NodeTree {
           toBuffers(structure, values, queue, position, queuePosition - 1)
       }
 
-  final def toArrays[T: ClassTag](node: Tree[T]): (Array[Int], Array[T]) = {
-    val (structure, values) = toBuffers(node)
+  final def toArrays[T: ClassTag](target: Tree[T]): (Array[Int], Array[T]) = {
+    val (structure, values) = toBuffers(target)
     (structure.toArray, values.toArray)
   }
 
-  @`inline` final def toStructureArray[T](node: Tree[T]): Array[Int] =
-    toStructureBuffer(new IntBuffer(node.size), Buffer(node), node.size - 1, 0).asArray
+  @`inline` final def toStructureArray[T](target: Tree[T]): Array[Int] =
+    toStructureBuffer(new IntBuffer(target.size), Buffer(target), target.size - 1, 0).asArray
 
   @tailrec
   private final def toStructureBuffer[T](
@@ -803,8 +803,8 @@ object NodeTree {
           toTreeList(result, queue.safeTail)
       }
 
-  @`inline` final def listMap[T, K](f: T => K, node: Tree[T]): Vector[(Int, K)] =
-    listMap(f, Vector.empty, Vector(node))
+  @`inline` final def listMap[T, K](target: Tree[T], f: T => K): Vector[(Int, K)] =
+    listMap(f, Vector.empty, Vector(target))
 
   @tailrec
   private final def listMap[T, K](f: T => K, result: Vector[(Int, K)], queue: Vector[Tree[T]]): Vector[(Int, K)] =
@@ -820,11 +820,11 @@ object NodeTree {
           listMap(f, result, queue.safeTail)
       }
 
-  @`inline` final def arrayMap[T, K](f: T => K, node: Tree[T]): (Array[Int], Array[K]) = {
-    val queue = new Array[Tree[T]](Math.max(node.width, node.height))
-    queue(0) = node
-    val valuesArray = ArrayOps.newArray(f(node.head), node.size)
-    arrayMap(f, new Array[Int](node.size), valuesArray, queue, node.size - 1, 0)
+  @`inline` final def arrayMap[T, K](target: Tree[T], f: T => K): (Array[Int], Array[K]) = {
+    val queue = new Array[Tree[T]](Math.max(target.width, target.height))
+    queue(0) = target
+    val valuesArray = ArrayOps.newArray(f(target.head), target.size)
+    arrayMap(f, new Array[Int](target.size), valuesArray, queue, target.size - 1, 0)
   }
 
   @tailrec
@@ -889,7 +889,7 @@ object NodeTree {
       }
 
   final def mkStringUsingBranches[T](
-    node: Tree[T],
+    target: Tree[T],
     show: T => String,
     valueSeparator: String,
     branchSeparator: String,
@@ -906,7 +906,7 @@ object NodeTree {
         branchEnd,
         maxDepth,
         new StringBuilder(branchStart),
-        Vector((1, branchStart, node)),
+        Vector((1, branchStart, target)),
         newBranch = false
       )
 
@@ -976,11 +976,11 @@ object NodeTree {
     * @note distinct child is prepended on the left side of existing children list,
     *       otherwise merged down with existing duplicate.
     */
-  final def insertChildDistinct[T, T1 >: T](tree: Tree[T], newChild: Tree[T1], append: Boolean): Tree[T1] =
+  final def insertChildDistinct[T, T1 >: T](target: Tree[T], newChild: Tree[T1], append: Boolean): Tree[T1] =
     Tree(
-      tree.head,
-      if (append) insertChildrenAfterDistinct(tree.children, List(newChild))
-      else insertChildrenBeforeDistinct(List(newChild), tree.children, preserveExisting = true)
+      target.head,
+      if (append) insertChildrenAfterDistinct(target.children, List(newChild))
+      else insertChildrenBeforeDistinct(List(newChild), target.children, preserveExisting = true)
     )
 
   /** Ensures that a child at an index position is distinct,
@@ -989,13 +989,13 @@ object NodeTree {
     * @param preserveExisting when having duplicate on the right, whether to keep its current position
     *                         or to prefer new child position (to the left) after merging.
     */
-  final def ensureChildDistinct[T](tree: Tree[T], index: Int, preserveExisting: Boolean): Tree[T] =
-    tree.children.drop(index) match {
-      case s if s.isEmpty => tree
+  final def ensureChildDistinct[T](target: Tree[T], index: Int, preserveExisting: Boolean): Tree[T] =
+    target.children.drop(index) match {
+      case s if s.isEmpty => target
       case s =>
         Tree(
-          tree.head,
-          insertDistinctBetweenSiblings(tree.children.take(index), s.head, s.tail, preserveExisting)
+          target.head,
+          insertDistinctBetweenSiblings(target.children.take(index), s.head, s.tail, preserveExisting)
         )
     }
 
@@ -1133,12 +1133,12 @@ object NodeTree {
     }
 
   /** Makes tree's children deeply distinct.
-    * @param tree the node under investigation
+    * @param target the node under investigation
     * @param maxLookupLevel the max number of nesting levels to investigate children,
     *                       does not constraint merging algorithm as it will always proceed as deep as necessary.
     */
-  @`inline` final def makeTreeDistinct[T](tree: Tree[T], maxLookupLevel: Int = Int.MaxValue): Tree[T] =
-    makeTreeDistinct(Vector((tree, true, 1)), Vector.empty, maxLookupLevel)
+  @`inline` final def makeTreeDistinct[T](target: Tree[T], maxLookupLevel: Int = Int.MaxValue): Tree[T] =
+    makeTreeDistinct(Vector((target, true, 1)), Vector.empty, maxLookupLevel)
 
   @tailrec
   private final def makeTreeDistinct[T](
@@ -1204,13 +1204,13 @@ object NodeTree {
       }
 
   final def insertChildAt[T, T1 >: T](
-    tree: Tree[T],
+    target: Tree[T],
     pathIterator: Iterator[T1],
     nodeToInsert: Tree[T1],
     append: Boolean,
     keepDistinct: Boolean
   ): Option[Tree[T1]] =
-    splitTreeFollowingPath(tree, pathIterator, rightmost = append).flatMap {
+    splitTreeFollowingPath(target, pathIterator, rightmost = append).flatMap {
       case (treeSplit, Some(value), remainingBranchIterator, remainingTree) =>
         val branchTree: Tree[T1] =
           TreeBuilder
@@ -1230,14 +1230,14 @@ object NodeTree {
     }
 
   final def insertChildAt[T, T1 >: T, K](
-    tree: Tree[T],
+    target: Tree[T],
     pathIterator: Iterator[K],
     toPathItem: T => K,
     nodeToInsert: Tree[T1],
     append: Boolean,
     keepDistinct: Boolean
   ): Either[Tree[T], Tree[T1]] =
-    splitTreeFollowingEntirePath(tree, pathIterator, toPathItem, rightmost = append)
+    splitTreeFollowingEntirePath(target, pathIterator, toPathItem, rightmost = append)
       .map {
         case (treeSplit, recipientTree) =>
           val newNode =
@@ -1248,17 +1248,17 @@ object NodeTree {
 
           Right(TreeBuilder.fromChildAndTreeSplit(newNode, treeSplit))
       }
-      .getOrElse(Left(tree))
+      .getOrElse(Left(target))
 
   /** Inserts new children at the specified path. */
   final def insertChildrenAt[T, T1 >: T](
-    tree: Tree[T],
+    target: Tree[T],
     pathIterator: Iterator[T1],
     children: Iterable[Tree[T1]],
     append: Boolean,
     keepDistinct: Boolean
   ): Option[Tree[T1]] =
-    splitTreeFollowingPath(tree, pathIterator, rightmost = append).flatMap {
+    splitTreeFollowingPath(target, pathIterator, rightmost = append).flatMap {
       case (treeSplit, Some(value), remainingBranchIterator, remainingTree) =>
         val branch = value +: remainingBranchIterator.toVector
         val branchTree: Tree[T1] =
@@ -1287,14 +1287,14 @@ object NodeTree {
 
   /** Inserts new children at the specified path. */
   final def insertChildrenAt[T, T1 >: T, K](
-    tree: Tree[T],
+    target: Tree[T],
     pathIterator: Iterator[K],
     toPathItem: T => K,
     children: Iterable[Tree[T1]],
     append: Boolean,
     keepDistinct: Boolean
   ): Either[Tree[T], Tree[T1]] =
-    splitTreeFollowingEntirePath(tree, pathIterator, toPathItem, rightmost = append)
+    splitTreeFollowingEntirePath(target, pathIterator, toPathItem, rightmost = append)
       .map {
         case (treeSplit, recipientTree) =>
           val newNode =
@@ -1303,7 +1303,7 @@ object NodeTree {
             else Tree(recipientTree.head, (children, recipientTree.children))
           Right(TreeBuilder.fromChildAndTreeSplit(newNode, treeSplit))
       }
-      .getOrElse(Left(tree))
+      .getOrElse(Left(target))
 
   /** Splits the tree following the path and succeeds only if all path items exists.
     * The tree children split is a triple of (children list left of value, a value, children list right of value)
@@ -1514,257 +1514,257 @@ object NodeTree {
 
   /** Updates value of the child holding the value. */
   final def updateChildValue[T, T1 >: T](
-    tree: Tree[T],
+    target: Tree[T],
     value: T1,
     replacement: T1,
     rightmost: Boolean,
     keepDistinct: Boolean
   ): Tree[T1] =
-    splitSequenceWhen[Tree[T]](_.head == value, tree.children, rightmost) match {
+    splitSequenceWhen[Tree[T]](_.head == value, target.children, rightmost) match {
       case Some((left, node, right)) if node.head != replacement =>
         val updatedNode = Tree(replacement, node.children)
-        if (updatedNode == node) tree
+        if (updatedNode == node) target
         else if (keepDistinct) {
-          insertChildDistinct(tree.head, left, updatedNode, right, preserveExisting = false)
+          insertChildDistinct(target.head, left, updatedNode, right, preserveExisting = false)
         } else {
-          Tree(tree.head, left ++: updatedNode +: right)
+          Tree(target.head, left ++: updatedNode +: right)
         }
-      case _ => tree
+      case _ => target
     }
 
   /** Updates value of the node selected by the path. */
   final def updateValueAt[T, T1 >: T](
-    tree: Tree[T],
+    target: Tree[T],
     pathIterator: Iterator[T1],
     replacement: T1,
     rightmost: Boolean,
     keepDistinct: Boolean
   ): Either[Tree[T], Tree[T1]] =
-    splitTreeFollowingEntirePath[T, T1](tree, pathIterator, rightmost)
+    splitTreeFollowingEntirePath[T, T1](target, pathIterator, rightmost)
       .map {
         case (treeSplit, recipientTree) =>
           if (replacement != recipientTree.head)
             Right(updateChildValueInSplit(treeSplit, recipientTree, replacement, keepDistinct))
-          else Right(tree)
+          else Right(target)
       }
-      .getOrElse(Left(tree))
+      .getOrElse(Left(target))
 
   /** Updates value of the node selected by the path using a path item extractor. */
   final def updateValueAt[K, T, T1 >: T](
-    tree: Tree[T],
+    target: Tree[T],
     pathIterator: Iterator[K],
     toPathItem: T => K,
     replacement: T1,
     rightmost: Boolean,
     keepDistinct: Boolean
   ): Either[Tree[T], Tree[T1]] =
-    splitTreeFollowingEntirePath(tree, pathIterator, toPathItem, rightmost)
+    splitTreeFollowingEntirePath(target, pathIterator, toPathItem, rightmost)
       .map {
         case (treeSplit, recipientTree) =>
           if (replacement != recipientTree.head)
             Right(updateChildValueInSplit(treeSplit, recipientTree, replacement, keepDistinct))
-          else Right(tree)
+          else Right(target)
       }
-      .getOrElse(Left(tree))
+      .getOrElse(Left(target))
 
   /** Updates the child tree holding the value at head. */
   final def updateChild[T, T1 >: T](
-    tree: Tree[T],
+    target: Tree[T],
     value: T1,
     replacement: Tree[T1],
     rightmost: Boolean,
     keepDistinct: Boolean
   ): Tree[T1] =
-    splitSequenceWhen[Tree[T]](_.head == value, tree.children, rightmost) match {
+    splitSequenceWhen[Tree[T]](_.head == value, target.children, rightmost) match {
       case Some((left, node, right)) if replacement != node =>
         replacement match {
           case Tree.empty =>
-            Tree(tree.head, left ++ right)
+            Tree(target.head, left ++ right)
 
           case t: Tree.NodeTree[T1] =>
             if (keepDistinct && t.head != node.head) {
-              insertChildDistinct(tree.head, left, t, right, preserveExisting = false)
+              insertChildDistinct(target.head, left, t, right, preserveExisting = false)
             } else {
-              Tree(tree.head, left ++: t +: right)
+              Tree(target.head, left ++: t +: right)
             }
 
           case t =>
             ArrayTree
-              .insertChildren(ArrayTree.prepend(tree.head, t), left, right, keepDistinct && t.head != node.head)
+              .insertChildren(ArrayTree.prepend(target.head, t), left, right, keepDistinct && t.head != node.head)
         }
 
-      case _ => tree
+      case _ => target
     }
 
   /** Updates a subtree selected by the path. */
   final def updateTreeAt[T, T1 >: T](
-    tree: Tree[T],
+    target: Tree[T],
     pathIterator: Iterator[T1],
     replacement: Tree[T1],
     rightmost: Boolean,
     keepDistinct: Boolean
   ): Either[Tree[T], Tree[T1]] =
-    splitTreeFollowingEntirePath[T, T1](tree, pathIterator, rightmost)
+    splitTreeFollowingEntirePath[T, T1](target, pathIterator, rightmost)
       .map {
         case (treeSplit, recipientTree) =>
           if (replacement != recipientTree)
             Right(updateChildInSplit(treeSplit, recipientTree, replacement, keepDistinct))
-          else Right(tree)
+          else Right(target)
       }
-      .getOrElse(Left(tree))
+      .getOrElse(Left(target))
 
   /** Updates a subtree selected by the path using path item extractor. */
   final def updateTreeAt[K, T, T1 >: T](
-    tree: Tree[T],
+    target: Tree[T],
     pathIterator: Iterator[K],
     toPathItem: T => K,
     replacement: Tree[T1],
     rightmost: Boolean,
     keepDistinct: Boolean
   ): Either[Tree[T], Tree[T1]] =
-    splitTreeFollowingEntirePath(tree, pathIterator, toPathItem, rightmost)
+    splitTreeFollowingEntirePath(target, pathIterator, toPathItem, rightmost)
       .map {
         case (treeSplit, recipientTree) =>
           if (replacement != recipientTree)
             Right(updateChildInSplit(treeSplit, recipientTree, replacement, keepDistinct))
-          else Right(tree)
+          else Right(target)
       }
-      .getOrElse(Left(tree))
+      .getOrElse(Left(target))
 
   /** Modifies value of the node holding the value. */
   final def modifyChildValue[T, T1 >: T](
-    tree: Tree[T],
+    target: Tree[T],
     value: T1,
     modify: T => T1,
     rightmost: Boolean,
     keepDistinct: Boolean
   ): Tree[T1] =
-    splitSequenceWhen[Tree[T]](_.head == value, tree.children, rightmost) match {
-      case None => tree
+    splitSequenceWhen[Tree[T]](_.head == value, target.children, rightmost) match {
+      case None => target
       case Some((left, node, right)) =>
         val replacement = Tree(modify(node.head), node.children)
-        if (replacement == node) tree
+        if (replacement == node) target
         else if (keepDistinct) {
-          insertChildDistinct(tree.head, left, replacement, right, preserveExisting = false)
+          insertChildDistinct(target.head, left, replacement, right, preserveExisting = false)
         } else {
-          Tree(tree.head, left ++: replacement +: right)
+          Tree(target.head, left ++: replacement +: right)
         }
     }
 
   /** Modifies value of the node selected by the path. */
   final def modifyValueAt[T, T1 >: T](
-    tree: Tree[T],
+    target: Tree[T],
     pathIterator: Iterator[T1],
     modify: T => T1,
     rightmost: Boolean,
     keepDistinct: Boolean
   ): Either[Tree[T], Tree[T1]] =
-    splitTreeFollowingEntirePath[T, T1](tree, pathIterator, rightmost)
+    splitTreeFollowingEntirePath[T, T1](target, pathIterator, rightmost)
       .map {
         case (treeSplit, recipientTree) =>
           val replacement = modify(recipientTree.head)
           if (replacement != recipientTree.head)
             Right(updateChildValueInSplit(treeSplit, recipientTree, replacement, keepDistinct))
-          else Right(tree)
+          else Right(target)
       }
-      .getOrElse(Left(tree))
+      .getOrElse(Left(target))
 
   /** Modifies value of the node selected by the path using path item extractor. */
   final def modifyValueAt[K, T, T1 >: T](
-    tree: Tree[T],
+    target: Tree[T],
     pathIterator: Iterator[K],
     toPathItem: T => K,
     modify: T => T1,
     rightmost: Boolean,
     keepDistinct: Boolean
   ): Either[Tree[T], Tree[T1]] =
-    splitTreeFollowingEntirePath(tree, pathIterator, toPathItem, rightmost)
+    splitTreeFollowingEntirePath(target, pathIterator, toPathItem, rightmost)
       .map {
         case (treeSplit, recipientTree) =>
           val replacement = modify(recipientTree.head)
           if (replacement != recipientTree.head)
             Right(updateChildValueInSplit(treeSplit, recipientTree, replacement, keepDistinct))
-          else Right(tree)
+          else Right(target)
       }
-      .getOrElse(Left(tree))
+      .getOrElse(Left(target))
 
   /** Modifies the child tree holding the value at head. */
   final def modifyChild[T, T1 >: T](
-    tree: Tree[T],
+    target: Tree[T],
     value: T1,
     modify: Tree[T] => Tree[T1],
     rightmost: Boolean,
     keepDistinct: Boolean
   ): Tree[T1] =
-    splitSequenceWhen[Tree[T]](_.head == value, tree.children, rightmost) match {
-      case None => tree
+    splitSequenceWhen[Tree[T]](_.head == value, target.children, rightmost) match {
+      case None => target
       case Some((left, node, right)) =>
         val replacement = modify(node)
-        if (replacement == node) tree
+        if (replacement == node) target
         else
           replacement match {
             case Tree.empty =>
-              Tree(tree.head, left ++ right)
+              Tree(target.head, left ++ right)
 
             case t: Tree.NodeTree[T1] =>
               if (keepDistinct && t.head != node.head) {
-                insertChildDistinct(tree.head, left, t, right, preserveExisting = false)
+                insertChildDistinct(target.head, left, t, right, preserveExisting = false)
               } else {
-                Tree(tree.head, left ++: t +: right)
+                Tree(target.head, left ++: t +: right)
               }
 
             case t =>
               ArrayTree
-                .insertChildren(ArrayTree.prepend(tree.head, t), left, right, keepDistinct && t.head != node.head)
+                .insertChildren(ArrayTree.prepend(target.head, t), left, right, keepDistinct && t.head != node.head)
           }
     }
 
   /** Modifies a subtree selected by the path. */
   final def modifyTreeAt[T, T1 >: T](
-    tree: Tree[T],
+    target: Tree[T],
     pathIterator: Iterator[T1],
     modify: Tree[T] => Tree[T1],
     rightmost: Boolean,
     keepDistinct: Boolean
   ): Either[Tree[T], Tree[T1]] =
-    splitTreeFollowingEntirePath[T, T1](tree, pathIterator, rightmost)
+    splitTreeFollowingEntirePath[T, T1](target, pathIterator, rightmost)
       .map {
         case (treeSplit, recipientTree) =>
           val replacement = modify(recipientTree)
           if (replacement != recipientTree)
             Right(updateChildInSplit(treeSplit, recipientTree, replacement, keepDistinct))
-          else Right(tree)
+          else Right(target)
       }
-      .getOrElse(Left(tree))
+      .getOrElse(Left(target))
 
   /** Modifies a subtree selected by the path using path item extractor. */
   final def modifyTreeAt[K, T, T1 >: T](
-    tree: Tree[T],
+    target: Tree[T],
     pathIterator: Iterator[K],
     toPathItem: T => K,
     modify: Tree[T] => Tree[T1],
     rightmost: Boolean,
     keepDistinct: Boolean
   ): Either[Tree[T], Tree[T1]] =
-    splitTreeFollowingEntirePath(tree, pathIterator, toPathItem, rightmost)
+    splitTreeFollowingEntirePath(target, pathIterator, toPathItem, rightmost)
       .map {
         case (treeSplit, recipientTree) =>
           val replacement = modify(recipientTree)
           if (replacement != recipientTree)
             Right(updateChildInSplit(treeSplit, recipientTree, replacement, keepDistinct))
-          else Right(tree)
+          else Right(target)
       }
-      .getOrElse(Left(tree))
+      .getOrElse(Left(target))
 
   /** Modifies children of the node selected by the path. */
   final def modifyChildrenAt[T, T1 >: T](
-    tree: Tree[T],
+    target: Tree[T],
     pathIterator: Iterator[T1],
     modify: Iterable[Tree[T]] => Iterable[Tree[T1]],
     rightmost: Boolean,
     keepDistinct: Boolean
   ): Either[Tree[T], Tree[T1]] =
-    splitTreeFollowingEntirePath[T, T1](tree, pathIterator, rightmost)
+    splitTreeFollowingEntirePath[T, T1](target, pathIterator, rightmost)
       .map {
         case (treeSplit, recipientTree) =>
           val replacementChildren = modify(recipientTree.children)
@@ -1772,20 +1772,20 @@ object NodeTree {
             Right(
               updateChildInSplit(treeSplit, recipientTree, Tree(recipientTree.head, replacementChildren), keepDistinct)
             )
-          else Right(tree)
+          else Right(target)
       }
-      .getOrElse(Left(tree))
+      .getOrElse(Left(target))
 
   /** Modifies children of the node selected by the path using path item extractor. */
   final def modifyChildrenAt[K, T, T1 >: T](
-    tree: Tree[T],
+    target: Tree[T],
     pathIterator: Iterator[K],
     toPathItem: T => K,
     modify: Iterable[Tree[T]] => Iterable[Tree[T1]],
     rightmost: Boolean,
     keepDistinct: Boolean
   ): Either[Tree[T], Tree[T1]] =
-    splitTreeFollowingEntirePath(tree, pathIterator, toPathItem, rightmost)
+    splitTreeFollowingEntirePath(target, pathIterator, toPathItem, rightmost)
       .map {
         case (treeSplit, recipientTree) =>
           val replacementChildren = modify(recipientTree.children)
@@ -1793,13 +1793,13 @@ object NodeTree {
             Right(
               updateChildInSplit(treeSplit, recipientTree, Tree(recipientTree.head, replacementChildren), keepDistinct)
             )
-          else Right(tree)
+          else Right(target)
       }
-      .getOrElse(Left(tree))
+      .getOrElse(Left(target))
 
   /** Removes the child node and inserts its children into the treeSplit. */
   final def removeChildValueFromSplit[T](
-    tree: Tree[T],
+    target: Tree[T],
     treeSplit: Vector[TreeSplit[T]],
     child: Tree[T],
     keepDistinct: Boolean
@@ -1807,7 +1807,7 @@ object NodeTree {
     if (treeSplit.isEmpty) {
       if (child.isLeaf) Tree.empty
       else if (child.childrenCount == 1) child.children.head
-      else tree
+      else target
     } else if (child.size <= 1) TreeBuilder.fromTreeSplit(treeSplit)
     else {
       val (left, head, right) = treeSplit.head
@@ -1827,18 +1827,18 @@ object NodeTree {
     *       - otherwise if the tree has more children, returns the tree unmodified.
     * */
   final def removeChildValue[T, T1 >: T](
-    tree: Tree[T],
+    target: Tree[T],
     value: T1,
     keepDistinct: Boolean,
     rightmost: Boolean
   ): Tree[T] =
-    splitSequenceWhen[Tree[T]](_.head == value, tree.children, rightmost) match {
-      case None => tree
+    splitSequenceWhen[Tree[T]](_.head == value, target.children, rightmost) match {
+      case None => target
       case Some((left, node, right)) =>
         if (keepDistinct && !node.isLeaf) {
-          insertChildrenDistinct(tree.head, left, node.children, right, preserveExisting = false)
+          insertChildrenDistinct(target.head, left, node.children, right, preserveExisting = false)
         } else {
-          Tree(tree.head, left ++ node.children ++ right)
+          Tree(target.head, left ++ node.children ++ right)
         }
     }
 
@@ -1849,17 +1849,17 @@ object NodeTree {
     *       - otherwise if the tree has more children, returns the tree unmodified.
     * */
   final def removeValueAt[T, T1 >: T](
-    tree: Tree[T],
+    target: Tree[T],
     pathIterator: Iterator[T1],
     rightmost: Boolean,
     keepDistinct: Boolean
   ): Tree[T] =
-    splitTreeFollowingEntirePath[T, T1](tree, pathIterator, rightmost)
+    splitTreeFollowingEntirePath[T, T1](target, pathIterator, rightmost)
       .map {
         case (treeSplit, recipientTree) =>
-          removeChildValueFromSplit(tree, treeSplit, recipientTree, keepDistinct)
+          removeChildValueFromSplit(target, treeSplit, recipientTree, keepDistinct)
       }
-      .getOrElse(tree)
+      .getOrElse(target)
 
   /** Removes the node selected by the path and inserts children into the parent.
     * @note when removing the top node, the following special rules apply:
@@ -1868,76 +1868,76 @@ object NodeTree {
     *       - otherwise if the tree has more children, returns the tree unmodified.
     * */
   final def removeValueAt[K, T](
-    tree: Tree[T],
+    target: Tree[T],
     pathIterator: Iterator[K],
     toPathItem: T => K,
     rightmost: Boolean,
     keepDistinct: Boolean
   ): Tree[T] =
-    splitTreeFollowingEntirePath(tree, pathIterator, toPathItem, rightmost)
+    splitTreeFollowingEntirePath(target, pathIterator, toPathItem, rightmost)
       .map {
         case (treeSplit, recipientTree) =>
-          removeChildValueFromSplit(tree, treeSplit, recipientTree, keepDistinct)
+          removeChildValueFromSplit(target, treeSplit, recipientTree, keepDistinct)
       }
-      .getOrElse(tree)
+      .getOrElse(target)
 
   /** Removes the direct child holding the value. */
   final def removeChild[T, T1 >: T](
-    tree: Tree[T],
+    target: Tree[T],
     value: T1,
     rightmost: Boolean
   ): Tree[T] =
-    splitSequenceWhen[Tree[T]](_.head == value, tree.children, rightmost) match {
-      case None                   => tree
-      case Some((left, _, right)) => Tree(tree.head, left ++ right)
+    splitSequenceWhen[Tree[T]](_.head == value, target.children, rightmost) match {
+      case None                   => target
+      case Some((left, _, right)) => Tree(target.head, left ++ right)
     }
 
   /** Removes the tree selected by the path. */
   final def removeTreeAt[T, T1 >: T](
-    tree: Tree[T],
+    target: Tree[T],
     pathIterator: Iterator[T1],
     rightmost: Boolean
   ): Tree[T] =
-    splitTreeFollowingEntirePath[T, T1](tree, pathIterator, rightmost)
+    splitTreeFollowingEntirePath[T, T1](target, pathIterator, rightmost)
       .map { case (treeSplit, _) => TreeBuilder.fromTreeSplit(treeSplit) }
-      .getOrElse(tree)
+      .getOrElse(target)
 
   /** Removes the tree selected by the path using an extractor function. */
   final def removeTreeAt[K, T](
-    tree: Tree[T],
+    target: Tree[T],
     pathIterator: Iterator[K],
     toPathItem: T => K,
     rightmost: Boolean
   ): Tree[T] =
-    splitTreeFollowingEntirePath(tree, pathIterator, toPathItem, rightmost)
+    splitTreeFollowingEntirePath(target, pathIterator, toPathItem, rightmost)
       .map { case (treeSplit, _) => TreeBuilder.fromTreeSplit(treeSplit) }
-      .getOrElse(tree)
+      .getOrElse(target)
 
   /** Removes children of the tree selected by the path. */
   final def removeChildrenAt[T, T1 >: T](
-    tree: Tree[T],
+    target: Tree[T],
     pathIterator: Iterator[T1],
     rightmost: Boolean
   ): Tree[T] =
-    splitTreeFollowingEntirePath[T, T1](tree, pathIterator, rightmost)
+    splitTreeFollowingEntirePath[T, T1](target, pathIterator, rightmost)
       .map {
         case (treeSplit, selectedTree) =>
           TreeBuilder.fromChildAndTreeSplit(Tree.Leaf(selectedTree.head), treeSplit)
       }
-      .getOrElse(tree)
+      .getOrElse(target)
 
   /** Removes children of the tree selected by the path using an extractor function. */
   final def removeChildrenAt[K, T](
-    tree: Tree[T],
+    target: Tree[T],
     pathIterator: Iterator[K],
     toPathItem: T => K,
     rightmost: Boolean
   ): Tree[T] =
-    splitTreeFollowingEntirePath(tree, pathIterator, toPathItem, rightmost)
+    splitTreeFollowingEntirePath(target, pathIterator, toPathItem, rightmost)
       .map {
         case (treeSplit, selectedTree) =>
           TreeBuilder.fromChildAndTreeSplit(Tree.Leaf(selectedTree.head), treeSplit)
       }
-      .getOrElse(tree)
+      .getOrElse(target)
 
 }
