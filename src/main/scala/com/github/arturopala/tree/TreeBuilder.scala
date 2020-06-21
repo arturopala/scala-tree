@@ -18,7 +18,7 @@ package com.github.arturopala.tree
 
 import com.github.arturopala.bufferandslice.{Buffer, IntBuffer, IntSlice, Slice}
 import com.github.arturopala.tree.Tree.{ArrayTree, NodeTree}
-import com.github.arturopala.tree.internal.{ArrayTree, ArrayTreeFunctions}
+import com.github.arturopala.tree.internal.{ArrayTree, ArrayTreeFunctions, Transformer}
 
 import scala.annotation.tailrec
 import scala.collection.Iterator
@@ -130,7 +130,7 @@ object TreeBuilder {
           while (i < length) {
             val tree = {
               val (s, c) = ArrayTreeFunctions.treeAt(length - i - 1, structure.dropRight(i), content.dropRight(i))
-              Tree.TreeTransformer.fromSlices(s, c)
+              Transformer.OfTree.fromSlices(s, c)
             }
             list = tree :: list
             i = i + tree.size

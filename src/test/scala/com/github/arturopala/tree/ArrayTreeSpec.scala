@@ -19,6 +19,7 @@ package com.github.arturopala.tree
 import com.github.arturopala.tree.internal.ArrayTree._
 import com.github.arturopala.bufferandslice.{IntSlice, RangeMapSlice, Slice}
 import com.github.arturopala.tree.LaxTreeOps._
+import com.github.arturopala.tree.internal.Transformer
 
 import scala.reflect.ClassTag
 
@@ -36,7 +37,7 @@ class ArrayTreeSpec extends AnyWordSpecCompat {
     tree.deflated.asInstanceOf[Tree.ArrayTree[T]]
 
   final def treeFrom[T](structure: IntSlice, values: Slice[T]): Tree[T] =
-    Tree.TreeTransformer.fromSlices(structure, values)
+    Transformer.OfTree.fromSlices(structure, values)
 
   class A
   class B() extends A

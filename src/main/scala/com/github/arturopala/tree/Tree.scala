@@ -47,7 +47,7 @@ import com.github.arturopala.tree.internal.{Compare, _}
 sealed trait Tree[+T] extends TreeLike[Tree, T] {
 
   // ---------------------------------------------
-  // Common Tree API is specified in the TreeLike.
+  // Main Tree API is specified in the TreeLike.
   // ---------------------------------------------
 
   // OPTIMIZATION
@@ -268,7 +268,7 @@ object Tree {
     def unapply[T](node: Bunch[T]): Option[(T, Seq[Tree[T]])] = Some((node.head, node.children))
   }
 
-  private implicit val transformer: Transformer[Tree] = TreeTransformer
+  private implicit val transformer: Transformer[Tree] = Transformer.OfTree
 
   /**
     * A Tree represented internally by two array slices,
@@ -308,40 +308,5 @@ object Tree {
 
   @`inline` final def preferInflated[T, T1 >: T](node: Tree.NodeTree[T], tree: Tree.ArrayTree[T1]): Boolean =
     tree.size < Tree.DEFLATE_SIZE_THRESHOLD || tree.size <= node.size
-
-  /** Transformer instance for the Tree. */
-  final implicit object TreeTransformer extends Transformer[Tree] {
-
-    override def toSlices[T](target: Tree[T]): (IntSlice, Slice[T]) =
-      target.toSlices
-
-    /** Creates a tree from a pair of slices. */
-    override def fromSlices[T](structure: IntSlice, values: Slice[T]): Tree[T] =
-      if (structure.length == 0) Tree.empty
-      else
-        new ArrayTree[T](
-          structure,
-          values,
-          ArrayTreeFunctions.calculateWidth(structure),
-          ArrayTreeFunctions.calculateHeight(structure)
-        )
-
-    /** Outputs tree linearisation as a pair of buffers. */
-    override def toBuffers[T, T1 >: T](target: Tree[T]): (IntBuffer, Buffer[T1]) =
-      target.toBuffers
-
-    /** Creates a tree from a pair of buffers. */
-    override def fromBuffers[T](structureBuffer: IntBuffer, valuesBuffer: Buffer[T]): Tree[T] =
-      fromSlices(structureBuffer.asSlice, valuesBuffer.asSlice)
-
-    /** Returns size of a structure of an instance. */
-    override def sizeOf[T](target: Tree[T]): Int = target.size
-
-    /** Returns true if an instance is empty. */
-    override def isEmpty[T](target: Tree[T]): Boolean = target.isEmpty
-
-    /** Returns an empty instance. */
-    override def empty[T]: Tree[T] = Tree.empty
-  }
 
 }
