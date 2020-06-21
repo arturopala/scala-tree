@@ -128,7 +128,10 @@ object TreeBuilder {
         Try {
           var i = 0
           while (i < length) {
-            val tree = ArrayTree.treeAt2(length - i - 1, structure.dropRight(i), content.dropRight(i))
+            val tree = {
+              val (s, c) = ArrayTreeFunctions.treeAt(length - i - 1, structure.dropRight(i), content.dropRight(i))
+              Tree.TreeTransformer.fromSlices(s, c)
+            }
             list = tree :: list
             i = i + tree.size
           }

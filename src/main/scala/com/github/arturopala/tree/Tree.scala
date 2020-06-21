@@ -21,7 +21,7 @@ import com.github.arturopala.tree.internal.{Compare, _}
 
 /**
   * A general-purpose, covariant, immutable, low overhead,
-  * efficient, monadic tree-like data structure with comprehensive API.
+  * efficient, monadic Tree-like data structure with comprehensive API.
   *
   * Conceptually, apart from an empty, each node of the tree has:
   *
@@ -44,11 +44,11 @@ import com.github.arturopala.tree.internal.{Compare, _}
   * consumption characteristics, making it possible to experiment and optimize
   * for individual targets while facing the same API.
   */
-sealed trait Tree[+T] extends TreeLike[T] {
+sealed trait Tree[+T] extends TreeLike[Tree, T] {
 
-  // ---------------------------------------
-  // Common Tree API is specified in TreeLike.
-  // ---------------------------------------
+  // ---------------------------------------------
+  // Common Tree API is specified in the TreeLike.
+  // ---------------------------------------------
 
   // OPTIMIZATION
 
@@ -268,6 +268,8 @@ object Tree {
     def unapply[T](node: Bunch[T]): Option[(T, Seq[Tree[T]])] = Some((node.head, node.children))
   }
 
+  private implicit val transformer: Transformer[Tree] = TreeTransformer
+
   /**
     * A Tree represented internally by two array slices,
     * one encoding the structure, the other holding node's values.
@@ -277,7 +279,7 @@ object Tree {
     val content: Slice[T],
     delayedWidth: => Int,
     delayedHeight: => Int
-  ) extends ArrayTreeLike[T] with Tree[T] {
+  ) extends ArrayTreeLike[Tree, T] with Tree[T] {
 
     override protected val tree: ArrayTree[T] = this
 
@@ -308,9 +310,9 @@ object Tree {
     tree.size < Tree.DEFLATE_SIZE_THRESHOLD || tree.size <= node.size
 
   /** Transformer instance for the Tree. */
-  implicit object TreeTransformer extends Transformer[Tree] {
+  final implicit object TreeTransformer extends Transformer[Tree] {
 
-    final override def toSlices[T](target: Tree[T]): (IntSlice, Slice[T]) =
+    override def toSlices[T](target: Tree[T]): (IntSlice, Slice[T]) =
       target.toSlices
 
     /** Creates a tree from a pair of slices. */
@@ -331,6 +333,12 @@ object Tree {
     /** Creates a tree from a pair of buffers. */
     override def fromBuffers[T](structureBuffer: IntBuffer, valuesBuffer: Buffer[T]): Tree[T] =
       fromSlices(structureBuffer.asSlice, valuesBuffer.asSlice)
+
+    /** Returns size of a structure of an instance. */
+    override def sizeOf[T](target: Tree[T]): Int = target.size
+
+    /** Returns true if an instance is empty. */
+    override def isEmpty[T](target: Tree[T]): Boolean = target.isEmpty
 
     /** Returns an empty instance. */
     override def empty[T]: Tree[T] = Tree.empty

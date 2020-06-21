@@ -28,9 +28,8 @@ import scala.reflect.ClassTag
 
 /**
   * The [[Tree.NodeTree]] final functions set.
-  * Extracted from the [[Tree]] to de-clutter its codebase.
   */
-trait NodeTreeLike[+T] extends TreeLike[T] {
+trait NodeTreeLike[+T] extends TreeLike[Tree, T] {
 
   /** [[Tree.NodeTree]] under consideration. */
   protected val node: NodeTree[T]

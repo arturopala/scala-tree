@@ -33,6 +33,12 @@ trait Transformer[F[+_]] {
   /** Creates an instance from a pair of buffers. */
   def fromBuffers[T](structureBuffer: IntBuffer, valuesBuffer: Buffer[T]): F[T]
 
+  /** Returns size of a structure of an instance. */
+  def sizeOf[T](target: F[T]): Int
+
+  /** Returns true if an instance is empty. */
+  def isEmpty[T](target: F[T]): Boolean
+
   /** Returns an empty instance. */
   def empty[T]: F[T]
 }

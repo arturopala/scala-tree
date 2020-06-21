@@ -26,10 +26,9 @@ import scala.collection.Iterator
 import scala.reflect.ClassTag
 
 /**
-  * The [[empty]] final functions set.
-  * Extracted from the [[Tree]] to de-clutter its codebase.
+  * The [[Tree.empty]] final functions set.
   */
-trait EmptyTreeLike extends TreeLike[Nothing] {
+trait EmptyTreeLike extends TreeLike[Tree, Nothing] {
 
   type T = Nothing
 
