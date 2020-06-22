@@ -531,9 +531,13 @@ object ArrayTree {
   @`inline` private final def toSlices[F[+_]: Transformer, T](target: F[T]): (IntSlice, Slice[T]) =
     implicitly[Transformer[F]].toSlices(target)
 
-  /** Returns tree if instance is empty. */
+  /** Returns true if instance is empty. */
   @`inline` private final def isEmpty[F[+_]: Transformer, T](target: F[T]): Boolean =
     implicitly[Transformer[F]].isEmpty(target)
+
+  /** Returns size of the tree, i.e. the number of nodes. */
+  @`inline` private final def sizeOf[F[+_]: Transformer, T](target: F[T]): Int =
+    implicitly[Transformer[F]].sizeOf(target)
 
   /** Maps the tree's content. */
   final def map[F[+_]: Transformer, T, K](target: F[T], f: T => K): F[K] = {
@@ -542,7 +546,7 @@ object ArrayTree {
   }
 
   /** FlatMaps the tree without checking for duplicated children. */
-  final def flatMapLax[F[+_]: Transformer, T, K](target: F[T], f: T => Tree[K]): F[K] = {
+  final def flatMapLax[F[+_]: Transformer, T, K](target: F[T], f: T => F[K]): F[K] = {
 
     val (structure, content) = toSlices(target)
 
@@ -556,17 +560,20 @@ object ArrayTree {
 
     while (index < structure.length) {
       val tree = f(content(index))
-      if (tree.isEmpty) {
+      if (isEmpty(tree)) {
         val parent = ArrayTreeFunctions.parentIndex(index, structure) + offset
         ArrayTreeFunctions.removeValue(index + offset, parent, structureBuffer, contentBuffer)
         offset = offset - 1
-      } else if (tree.isLeaf) {
-        contentBuffer(index + offset) = tree.head
       } else {
-        val (structure, content) = tree.toSlices
-        val delta =
-          ArrayTreeFunctions.expandValueIntoTreeLax(index + offset, structure, content, structureBuffer, contentBuffer)
-        offset = offset + delta
+        val (structure, content) = toSlices(tree)
+        if (sizeOf(tree) == 1) {
+          contentBuffer(index + offset) = content.last
+        } else {
+          val delta =
+            ArrayTreeFunctions
+              .expandValueIntoTreeLax(index + offset, structure, content, structureBuffer, contentBuffer)
+          offset = offset + delta
+        }
       }
       index = index + 1
     }
@@ -578,7 +585,7 @@ object ArrayTree {
   }
 
   /** FlatMaps the tree while keeping children distinct. */
-  final def flatMapDistinct[F[+_]: Transformer, T, K](target: F[T], f: T => Tree[K]): F[K] = {
+  final def flatMapDistinct[F[+_]: Transformer, T, K](target: F[T], f: T => F[K]): F[K] = {
 
     val (structure, content) = toSlices(target)
 
@@ -593,11 +600,11 @@ object ArrayTree {
     while (index < structure.length) {
       val parent = ArrayTreeFunctions.parentIndex(index + offset, structureBuffer)
       val tree = f(content(index))
-      if (tree.isEmpty) {
+      if (isEmpty(tree)) {
         ArrayTreeFunctions.removeValue(index + offset, parent, structureBuffer, contentBuffer)
         offset = offset - 1
       } else {
-        val (structure, content) = tree.toSlices
+        val (structure, content) = toSlices(tree)
         val delta =
           ArrayTreeFunctions
             .expandValueIntoTreeDistinct(index + offset, parent, structure, content, structureBuffer, contentBuffer)

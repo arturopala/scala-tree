@@ -296,7 +296,7 @@ trait LaxTree[F[+_], T] {
 object LaxTreeOps {
 
   /** [[LaxTree]] extensions for a [[Tree]]. */
-  implicit class LaxTreeExt[T](val t: Tree[T]) extends LaxTree[Tree, T] {
+  implicit final class LaxTreeExt[T](val t: Tree[T]) extends LaxTree[Tree, T] {
 
     final override def flatMapLax[K](f: T => Tree[K]): Tree[K] = t match {
       case Tree.empty => Tree.empty
@@ -726,6 +726,156 @@ object LaxTreeOps {
         case tree =>
           ArrayTree.removeValueAt(path, tree, toPathItem, rightmost = false, keepDistinct = false)
       }
+
+  }
+
+  /** [[LaxTree]] extensions for a [[MutableTree]]. */
+  implicit final class LaxMutableTreeExt[T](val tree: MutableTree[T]) extends LaxTree[MutableTree, T] {
+
+    final override def flatMapLax[K](f: T => MutableTree[K]): MutableTree[K] =
+      ArrayTree.flatMapLax(tree, f)
+
+    final override def insertLeafLax[T1 >: T](value: T1, append: Boolean = false): MutableTree[T1] =
+      ArrayTree.insertLeaf(tree.size - 1, value, tree, append, keepDistinct = false)
+
+    final override def insertLeavesLax[T1 >: T](values: Iterable[T1], append: Boolean = false): MutableTree[T1] =
+      ArrayTree.insertLeaves(tree.size - 1, values, tree, append, keepDistinct = false)
+
+    final override def insertLeafLaxAt[T1 >: T](
+      path: Iterable[T1],
+      value: T1,
+      append: Boolean = false
+    ): MutableTree[T1] =
+      ArrayTree.insertLeafAt(path, value, tree, append, keepDistinct = false)
+
+    final override def insertLeafLaxAt[K, T1 >: T](
+      path: Iterable[K],
+      value: T1,
+      toPathItem: T => K,
+      append: Boolean
+    ): Either[MutableTree[T], MutableTree[T1]] =
+      ArrayTree.insertLeafAt(path, value, tree, toPathItem, append, keepDistinct = false)
+
+    final override def insertChildLax[T1 >: T](child: MutableTree[T1], append: Boolean = false): MutableTree[T1] = {
+      val insertIndex = if (append) 0 else tree.size - 1
+      ArrayTree.insertTreeAtIndex(insertIndex, tree.size - 1, child, tree)
+    }
+
+    final override def insertChildrenLax[T1 >: T](
+      children: Iterable[MutableTree[T1]],
+      append: Boolean = false
+    ): MutableTree[T1] = {
+      val validChildren = children.filterNot(_.isEmpty)
+      if (append) ArrayTree.insertAfterChildren[MutableTree, T, T1](tree, validChildren, keepDistinct = false)
+      else ArrayTree.insertBeforeChildren[MutableTree, T, T1](tree, validChildren, keepDistinct = false)
+    }
+
+    final override def insertChildLaxAt[T1 >: T](
+      path: Iterable[T1],
+      child: MutableTree[T1],
+      append: Boolean = false
+    ): MutableTree[T1] =
+      ArrayTree.insertChildAt(path, child, tree, append, keepDistinct = false)
+
+    final override def insertChildLaxAt[K, T1 >: T](
+      path: Iterable[K],
+      child: MutableTree[T1],
+      toPathItem: T => K,
+      append: Boolean
+    ): Either[MutableTree[T], MutableTree[T1]] =
+      ArrayTree.insertChildAt(path, child, tree, toPathItem, append, keepDistinct = false)
+
+    final override def insertChildrenLaxAt[T1 >: T](
+      path: Iterable[T1],
+      children: Iterable[MutableTree[T1]],
+      append: Boolean = false
+    ): MutableTree[T1] = {
+      val validChildren = children.filterNot(_.isEmpty)
+      ArrayTree.insertChildrenAt(path, validChildren, tree, append, keepDistinct = false)
+    }
+
+    final override def insertChildrenLaxAt[K, T1 >: T](
+      path: Iterable[K],
+      children: Iterable[MutableTree[T1]],
+      toPathItem: T => K,
+      append: Boolean
+    ): Either[MutableTree[T], MutableTree[T1]] = {
+      val validChildren = children.filterNot(_.isEmpty)
+      ArrayTree.insertChildrenAt(path, validChildren, tree, toPathItem, append, keepDistinct = false)
+    }
+
+    final override def updateChildValueLax[T1 >: T](existingValue: T1, replacement: T1): MutableTree[T1] =
+      ArrayTree.updateChildValue(existingValue, replacement, tree, rightmost = false, keepDistinct = false)
+
+    final override def updateValueLaxAt[T1 >: T](
+      path: Iterable[T1],
+      replacement: T1
+    ): Either[MutableTree[T], MutableTree[T1]] =
+      ArrayTree.updateValueAt(path, replacement, tree, rightmost = false, keepDistinct = false)
+
+    final override def updateValueLaxAt[K, T1 >: T](
+      path: Iterable[K],
+      replacement: T1,
+      toPathItem: T => K
+    ): Either[MutableTree[T], MutableTree[T1]] =
+      ArrayTree.updateValueAt(path, replacement, tree, toPathItem, rightmost = false, keepDistinct = false)
+
+    final override def updateChildLax[T1 >: T](value: T1, replacement: MutableTree[T1]): MutableTree[T1] =
+      ArrayTree.updateChild(value, replacement, tree, rightmost = false, keepDistinct = false)
+
+    final override def updateTreeLaxAt[T1 >: T](
+      path: Iterable[T1],
+      replacement: MutableTree[T1]
+    ): Either[MutableTree[T], MutableTree[T1]] =
+      ArrayTree.updateTreeAt(path, replacement, tree, rightmost = false, keepDistinct = false)
+
+    final override def updateTreeLaxAt[K, T1 >: T](
+      path: Iterable[K],
+      replacement: MutableTree[T1],
+      toPathItem: T => K
+    ): Either[MutableTree[T], MutableTree[T1]] =
+      ArrayTree.updateTreeAt(path, replacement, tree, toPathItem, rightmost = false, keepDistinct = false)
+
+    final override def modifyChildValueLax[T1 >: T](value: T1, modify: T => T1): MutableTree[T1] =
+      ArrayTree.modifyChildValue(value, modify, tree, rightmost = false, keepDistinct = false)
+
+    final override def modifyValueLaxAt[T1 >: T](
+      path: Iterable[T1],
+      modify: T => T1
+    ): Either[MutableTree[T], MutableTree[T1]] =
+      ArrayTree.modifyValueAt(path, modify, tree, rightmost = false, keepDistinct = false)
+
+    final override def modifyValueLaxAt[K, T1 >: T](
+      path: Iterable[K],
+      modify: T => T1,
+      toPathItem: T => K
+    ): Either[MutableTree[T], MutableTree[T1]] =
+      ArrayTree.modifyValueAt(path, modify, tree, toPathItem, rightmost = false, keepDistinct = false)
+
+    final override def modifyChildLax[T1 >: T](value: T1, modify: MutableTree[T] => MutableTree[T1]): MutableTree[T1] =
+      ArrayTree.modifyChild(value, modify, tree, rightmost = false, keepDistinct = false)
+
+    final override def modifyTreeLaxAt[T1 >: T](
+      path: Iterable[T1],
+      modify: MutableTree[T] => MutableTree[T1]
+    ): Either[MutableTree[T], MutableTree[T1]] =
+      ArrayTree.modifyTreeAt(path, modify, tree, rightmost = false, keepDistinct = false)
+
+    final override def modifyTreeLaxAt[K, T1 >: T](
+      path: Iterable[K],
+      modify: MutableTree[T] => MutableTree[T1],
+      toPathItem: T => K
+    ): Either[MutableTree[T], MutableTree[T1]] =
+      ArrayTree.modifyTreeAt(path, modify, tree, toPathItem, rightmost = false, keepDistinct = false)
+
+    final override def removeChildValueLax[T1 >: T](value: T1): MutableTree[T] =
+      ArrayTree.removeChildValue(value, tree, rightmost = false, keepDistinct = false)
+
+    final override def removeValueLaxAt[T1 >: T](path: Iterable[T1]): MutableTree[T] =
+      ArrayTree.removeValueAt(path, tree, rightmost = false, keepDistinct = false)
+
+    final override def removeValueLaxAt[K, T1 >: T](path: Iterable[K], toPathItem: T => K): MutableTree[T] =
+      ArrayTree.removeValueAt(path, tree, toPathItem, rightmost = false, keepDistinct = false)
 
   }
 

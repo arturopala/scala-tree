@@ -16,6 +16,8 @@
 
 package com.github.arturopala.tree
 
+import LaxTreeOps._
+
 class MutableTreeSpec extends AnyWordSpecCompat with InflatedTestTrees {
 
   "MutableTree" should {
@@ -33,6 +35,14 @@ class MutableTreeSpec extends AnyWordSpecCompat with InflatedTestTrees {
       tree0.mutable.insertBranch(List("a")).immutable shouldBe tree1
       tree0.mutable.insertBranch(List("a", "b")).immutable shouldBe tree2
       tree0.mutable.insertBranch(List("a", "b", "c")).immutable shouldBe tree3_1
+    }
+
+    "have lax operations" in {
+      tree0.mutable.insertLeafLax("a").immutable shouldBe tree1
+      tree0.mutable.insertLeavesLax(List("a")).immutable shouldBe tree1
+      tree0.mutable.insertLeavesLax(List("a", "b")).immutable shouldBe tree0
+      tree0.mutable.insertChildLax(Tree("a")).immutable shouldBe tree1
+      tree0.mutable.insertChildrenLax(List(Tree("a"))).immutable shouldBe tree1
     }
   }
 

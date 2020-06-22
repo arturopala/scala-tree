@@ -56,10 +56,14 @@ This works the best by using the following scenario:
 - call `.immutable` to get back immutable `Tree`
 
 As both `.mutable` and `.immutable` methods have to make a copy of a Tree representation,
-it saves time and resources only when two or more operations in a row comparing to the `Tree`.
+it saves time and resources only when two or more operations in a row executes, comparing to the `Tree`.
+
+Warning: Iterating over subtrees has much worse performance on `MutableTree` because each subtree is a copy, 
+prefer using the `Tree` instead.
+
 
 Dependencies
----
+--- 
 
 Depends on:
 
