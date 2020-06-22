@@ -202,6 +202,12 @@ trait LaxTree[T] {
 
   // LAX MODIFICATIONS
 
+  /** Modifies all values of the tree.
+    * @note This is a lax method, it doesn't preserve children values uniqueness.
+    * @param modify function to modify values
+    * @group modification */
+  def modifyAllLax[T1 >: T](modify: T => T1): Tree[T1] = ???
+
   /** Modifies the value of a child node holding a given value.
     * @note This is a lax method, it doesn't preserve children values uniqueness.
     * @param value value of the child node

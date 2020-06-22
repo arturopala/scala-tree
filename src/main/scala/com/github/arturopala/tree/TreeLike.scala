@@ -70,7 +70,7 @@ import scala.reflect.ClassTag
   * @groupprio visualization 100
   * @groupname visualization Visualize
   */
-trait TreeLike[F[+_], +T] {
+trait TreeLike[F[+ _], +T] {
 
   // PROPERTIES
 
@@ -672,6 +672,12 @@ trait TreeLike[F[+_], +T] {
 
   // DISTINCT MODIFICATIONS
 
+  /** Modifies all values of the tree.
+    * @note This method tries to keep children values unique by merging modified trees when needed.
+    * @param modify function to modify values
+    * @group modification */
+  def modifyAll[T1 >: T](modify: T => T1): F[T1] = ???
+
   /** Modifies the head value of a this node.
     * @param modify function to modify the head
     * @group modification */
@@ -903,7 +909,7 @@ trait TreeLike[F[+_], +T] {
 object TreeLike {
 
   /** Useful extensions of [[TreeLike]] interface. */
-  implicit class TreeLikeExtensions[F[+_], T](val tree: TreeLike[F, T]) extends AnyVal {
+  implicit class TreeLikeExtensions[F[+ _], T](val tree: TreeLike[F, T]) extends AnyVal {
 
     def showAsGraph(separator: String = "\n"): String =
       TreeFormat.showAsGraph(tree, separator)
