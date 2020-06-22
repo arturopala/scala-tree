@@ -848,12 +848,20 @@ object ArrayTreeFunctions {
     result
   }
 
-  /** Calculates the height of the tree, i.e. the length of the longest branch. */
+  /** Calculates the width of the tree, i.e. the number of . */
   @`inline` final def calculateWidth(structure: IntSlice): Int =
     structure.count(_ == 0)
 
   /** Calculates the height of the tree, i.e. the length of the longest branch. */
+  @`inline` final def calculateWidth(structure: IntBuffer): Int =
+    structure.asSlice.count(_ == 0)
+
+  /** Calculates the height of the tree, i.e. the length of the longest branch. */
   @`inline` final def calculateHeight(structure: IntSlice): Int =
+    calculateHeight(structure.top, structure)
+
+  /** Calculates the height of the tree, i.e. the length of the longest branch. */
+  @`inline` final def calculateHeight(structure: IntBuffer): Int =
     calculateHeight(structure.top, structure)
 
   /** Calculates the height of the tree at index, i.e. the length of the longest branch. */
@@ -1015,17 +1023,17 @@ object ArrayTreeFunctions {
     if (parentIndex >= 0) {
       structureBuffer.increment(parentIndex)
     }
-    structureBuffer.shiftRight(index, 1)
-    structureBuffer.update(index, 0)
-    contentBuffer.shiftRight(index, 1)
-    contentBuffer.update(index, value)
+    structureBuffer.shiftRight(Math.max(index, 0), 1)
+    structureBuffer.update(Math.max(index, 0), 0)
+    contentBuffer.shiftRight(Math.max(index, 0), 1)
+    contentBuffer.update(Math.max(index, 0), value)
     1
   }
 
-  /** Inserts slice's content to the buffers at an index.
+  /** Inserts slices content to the buffers at an index.
     * Shifts existing buffer content right, starting from an index.
     * @return buffer length change */
-  final def insertSlice[T](
+  final def insertSlices[T](
     index: Int,
     structure: IntSlice,
     content: Slice[T],
@@ -1190,7 +1198,7 @@ object ArrayTreeFunctions {
             case None =>
               val s = treeSize(bufferIndex, structureBuffer) - 1
               structureBuffer.increment(bufferIndex)
-              insertSlice(bufferIndex - s, childStructure, childValues, structureBuffer, contentBuffer)
+              insertSlices(bufferIndex - s, childStructure, childValues, structureBuffer, contentBuffer)
 
             case Some(i) => insertChildDistinctUnsafe(structure, content, i, structureBuffer, contentBuffer)
           })
@@ -1270,7 +1278,7 @@ object ArrayTreeFunctions {
           if (structureBuffer(i) == 0) { // skip checking duplicates and insert remaining tree at once
             val s = treeSize(i, structureBuffer)
             structureBuffer.modify(i, _ + childStructure.last)
-            val d = insertSlice(i - s + 1, childStructure.init, childValues.init, structureBuffer, contentBuffer)
+            val d = insertSlices(i - s + 1, childStructure.init, childValues.init, structureBuffer, contentBuffer)
             IndexTracker.trackShiftRight(Math.max(i - s + 1, 0), childStructure.length - 1, indexesToTrack)
             (d, updatedQueueTail.map(shiftFromWithFlag(i - d + 1, d)))
           } else {
@@ -1379,7 +1387,7 @@ object ArrayTreeFunctions {
         case ((structure, content), delta) if structure.length > 0 =>
           structureBuffer.increment(parentIndex + delta)
           ArrayTreeFunctions
-            .insertSlice(parentIndex + delta, structure, content, structureBuffer, contentBuffer) + delta
+            .insertSlices(parentIndex + delta, structure, content, structureBuffer, contentBuffer) + delta
 
         case (_, delta) => delta
       }
@@ -1449,7 +1457,7 @@ object ArrayTreeFunctions {
           val bottom = bottomIndex(parentIndex + delta, structureBuffer)
           structureBuffer.increment(parentIndex + delta)
           ArrayTreeFunctions
-            .insertSlice(bottom, structure, content, structureBuffer, contentBuffer) + delta
+            .insertSlices(bottom, structure, content, structureBuffer, contentBuffer) + delta
 
         case (delta, _) => delta
       }
@@ -1546,7 +1554,7 @@ object ArrayTreeFunctions {
       else {
 
         if (parentIndex >= 0 && structureBuffer.nonEmpty) structureBuffer.increment(parentIndex)
-        val delta1 = insertSlice(insertIndex, structure, content, structureBuffer, contentBuffer)
+        val delta1 = insertSlices(insertIndex, structure, content, structureBuffer, contentBuffer)
 
         val duplicatedSiblingIndex =
           if (parentIndex < 0 && structureBuffer.length > 0 && contentBuffer.head == content.last)
@@ -1638,7 +1646,7 @@ object ArrayTreeFunctions {
         val s = treeSize(index + offset1, structureBuffer) - 1
         structureBuffer.modify(index + offset1, _ + structure.last)
         contentBuffer.update(index + offset1, content.last)
-        insertSlice(index + offset1 - s, structure.init, content.init, structureBuffer, contentBuffer)
+        insertSlices(index + offset1 - s, structure.init, content.init, structureBuffer, contentBuffer)
       }
       offset1 + offset2
     } else 0

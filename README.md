@@ -43,6 +43,21 @@ is such that each one exhibits different performance and memory
 consumption characteristics, making it possible to experiment and optimize
 for individual targets while facing the same API.
 
+MutableTree[+T]
+---
+
+`MutableTree` is not a `Tree`, but a special tree-like type to handle series of heavy operations on a tree without 
+having to pay a price of intermediate immutable representations. 
+
+This works the best by using the following scenario:
+
+- call `.mutable` on a `Tree` to access mutable copy
+- make a series of operations on `MutableTree`
+- call `.immutable` to get back immutable `Tree`
+
+As both `.mutable` and `.immutable` methods have to make a copy of a Tree representation,
+it saves time and resources only when two or more operations in a row comparing to the `Tree`.
+
 Dependencies
 ---
 

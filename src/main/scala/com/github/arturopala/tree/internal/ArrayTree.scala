@@ -707,7 +707,7 @@ object ArrayTree {
 
   /** Inserts new leaves to a tree at an index.
     * @param parentIndex index of the tree where to insert children
-    * @param content leaves to insert
+    * @param values leaves to insert
     * @param target the array tree
     * @param append whether to append (after) or prepend (before) to the existing children
     * @param keepDistinct if true keeps children distinct
@@ -715,29 +715,32 @@ object ArrayTree {
     */
   final def insertLeaves[F[+_]: Transformer, T, T1 >: T](
     parentIndex: Int,
-    content: Iterable[T1],
+    values: Iterable[T1],
     target: F[T],
     append: Boolean,
     keepDistinct: Boolean
   ): F[T1] =
     transform[F, T, T1](target) { (structureBuffer, contentBuffer) =>
-      val toInsert = if (keepDistinct) {
-        val existing = ArrayTreeFunctions.childrenIndexes(parentIndex, structureBuffer).map(contentBuffer)
-        content.filterNot(value => existing.exists(_ == value))
-      } else content
-      val size = toInsert.size
-      val insertIndex = if (append) ArrayTreeFunctions.bottomIndex(parentIndex, structureBuffer) else parentIndex
-      structureBuffer.modify(parentIndex, _ + size)
-      ArrayTreeFunctions
-        .insertFromIteratorReverse(
-          insertIndex,
-          size,
-          continually(0),
-          toInsert.iterator,
-          structureBuffer,
-          contentBuffer
-        )
-        .nonZeroIntAsSome
+      if (parentIndex < 0 && values.size > 1) None
+      else {
+        val toInsert = if (keepDistinct) {
+          val existing = ArrayTreeFunctions.childrenIndexes(parentIndex, structureBuffer).map(contentBuffer)
+          values.filterNot(value => existing.exists(_ == value))
+        } else values
+        val size = toInsert.size
+        val insertIndex = if (append) ArrayTreeFunctions.bottomIndex(parentIndex, structureBuffer) else parentIndex
+        structureBuffer.modify(parentIndex, _ + size)
+        ArrayTreeFunctions
+          .insertFromIteratorReverse(
+            insertIndex,
+            size,
+            continually(0),
+            toInsert.iterator,
+            structureBuffer,
+            contentBuffer
+          )
+          .nonZeroIntAsSome
+      }
     }
 
   /** Inserts a subtree to a tree at a path.
@@ -774,7 +777,7 @@ object ArrayTree {
                 )
               val (structure, content) = toSlices(child)
               val delta2 =
-                ArrayTreeFunctions.insertSlice(insertIndex, structure, content, structureBuffer, contentBuffer)
+                ArrayTreeFunctions.insertSlices(insertIndex, structure, content, structureBuffer, contentBuffer)
               Some(delta1 + delta2)
             }
           }
@@ -915,7 +918,7 @@ object ArrayTree {
       transform[F, T, T1](target) { (structureBuffer, contentBuffer) =>
         val (structure, content) = toSlices(child)
         if (parentIndex >= 0 && structureBuffer.nonEmpty) structureBuffer.increment(parentIndex)
-        ArrayTreeFunctions.insertSlice(index, structure, content, structureBuffer, contentBuffer).intAsSome
+        ArrayTreeFunctions.insertSlices(index, structure, content, structureBuffer, contentBuffer).intAsSome
       }
     }
 
@@ -949,8 +952,12 @@ object ArrayTree {
     if (children.forall(isEmpty(_))) target
     else
       transform[F, T, T1](target) { (structureBuffer, contentBuffer) =>
-        if (structureBuffer.isEmpty) None
-        else {
+        if (structureBuffer.isEmpty) {
+          if (children.size == 1) {
+            val (structure, content) = toSlices(children.head)
+            ArrayTreeFunctions.insertSlices(0, structure, content, structureBuffer, contentBuffer).intAsSome
+          } else None
+        } else {
           ArrayTreeFunctions
             .insertBeforeChildren(
               structureBuffer.top,
@@ -972,8 +979,12 @@ object ArrayTree {
     if (children.forall(isEmpty(_))) target
     else
       transform[F, T, T1](target) { (structureBuffer, contentBuffer) =>
-        if (structureBuffer.isEmpty) None
-        else {
+        if (structureBuffer.isEmpty) {
+          if (children.size == 1) {
+            val (structure, content) = toSlices(children.head)
+            ArrayTreeFunctions.insertSlices(0, structure, content, structureBuffer, contentBuffer).intAsSome
+          } else None
+        } else {
           ArrayTreeFunctions
             .insertAfterChildren(
               structureBuffer.top,
@@ -1128,7 +1139,7 @@ object ArrayTree {
             }
             IndexTracker.trackShiftRight(Math.max(0, index + delta1), structure.length, indexesToTrack)
             ArrayTreeFunctions
-              .insertSlice(Math.max(0, index + delta1), structure, content, structureBuffer, contentBuffer)
+              .insertSlices(Math.max(0, index + delta1), structure, content, structureBuffer, contentBuffer)
           }
 
         val delta3 = if (!hasSameHeadValue) {

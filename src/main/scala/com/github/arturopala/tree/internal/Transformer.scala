@@ -17,7 +17,8 @@
 package com.github.arturopala.tree.internal
 
 import com.github.arturopala.bufferandslice.{Buffer, IntBuffer, IntSlice, Slice}
-import com.github.arturopala.tree.Tree
+import com.github.arturopala.tree.MutableTree.MutableArrayTree
+import com.github.arturopala.tree.{MutableTree, Tree}
 import com.github.arturopala.tree.Tree.ArrayTree
 
 /** Interface of transformations to and from tree linearisation. */
@@ -80,6 +81,34 @@ object Transformer {
 
     /** Returns an empty instance. */
     override def empty[T]: Tree[T] = Tree.empty
+  }
+
+  /** Transformer instance for the MutableTree. */
+  final implicit object OfMutableTree extends Transformer[MutableTree] {
+
+    override def toSlices[T](target: MutableTree[T]): (IntSlice, Slice[T]) =
+      target.toSlices
+
+    /** Creates a tree from a pair of slices. */
+    override def fromSlices[T](structure: IntSlice, values: Slice[T]): MutableTree[T] =
+      fromBuffers(structure.asBuffer, values.asBuffer)
+
+    /** Outputs tree linearisation as a pair of buffers. */
+    override def toBuffers[T, T1 >: T](target: MutableTree[T]): (IntBuffer, Buffer[T1]) =
+      target.toBuffers
+
+    /** Creates a tree from a pair of buffers. */
+    override def fromBuffers[T](structureBuffer: IntBuffer, valuesBuffer: Buffer[T]): MutableTree[T] =
+      new MutableArrayTree[T](structureBuffer, valuesBuffer)
+
+    /** Returns size of a structure of an instance. */
+    override def sizeOf[T](target: MutableTree[T]): Int = target.size
+
+    /** Returns true if an instance is empty. */
+    override def isEmpty[T](target: MutableTree[T]): Boolean = target.isEmpty
+
+    /** Returns an empty instance. */
+    override def empty[T]: MutableTree[T] = MutableTree()
   }
 
 }

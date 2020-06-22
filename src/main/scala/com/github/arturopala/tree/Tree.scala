@@ -17,6 +17,7 @@
 package com.github.arturopala.tree
 
 import com.github.arturopala.bufferandslice.{Buffer, IntBuffer, IntSlice, Slice}
+import com.github.arturopala.tree.MutableTree.MutableArrayTree
 import com.github.arturopala.tree.internal.{Compare, _}
 
 /**
@@ -64,6 +65,12 @@ sealed trait Tree[+T] extends TreeLike[Tree, T] {
     */
   def deflated: Tree[T]
 
+  /** Converts into [[MutableTree]].
+    * @note Makes a copy of an underlying data structures.
+    * @group optimization
+    */
+  def mutable: MutableTree[T]
+
   // EQUALITY, HASH CODE, AND TO_STRING
 
   final override def equals(obj: Any): Boolean = obj match {
@@ -83,13 +90,13 @@ sealed trait Tree[+T] extends TreeLike[Tree, T] {
     hash
   }
 
-  override def toString: String = {
-    def stringify(o: Any): String = if (o.isInstanceOf[String]) s""""$o"""" else o.toString
-
-    if (size < 50)
-      s"Tree(${stringify(headOption.get)}${if (size > 1) s", ${children.map(_.toString).mkString(",")}" else ""})"
-    else s"Tree(size=$size, width=$width, height=$height, hashCode=${hashCode()})"
-  }
+  final override def toString: String =
+    if (isEmpty) "Tree.empty"
+    else {
+      if (size < 50)
+        s"Tree(${Tree.stringify(headOption.get)}${if (size > 1) s", ${children.map(_.toString).mkString(",")}" else ""})"
+      else s"Tree(size=$size, width=$width, height=$height, hashCode=${hashCode()})"
+    }
 }
 
 /**
@@ -167,9 +174,9 @@ object Tree {
     * An empty Tree singleton.
     */
   final case object empty extends Tree[Nothing] with EmptyTreeLike {
-    override val toString: String = "Tree.empty"
     override val inflated: Tree[T] = this
     override val deflated: Tree[T] = this
+    override def mutable: MutableTree[T] = MutableTree()
   }
 
   /**
@@ -184,8 +191,13 @@ object Tree {
     final override val inflated: Tree[T] = this
 
     final override def deflated: Tree[T] = {
-      val (structure, values) = node.toBuffers
-      new ArrayTree[T](structure.asSlice, values.asSlice, node.width, node.height)
+      val (structure, content) = node.toSlices
+      new ArrayTree[T](structure, content, node.width, node.height)
+    }
+
+    final override def mutable: MutableTree[T] = {
+      val (structureBuffer, contentBuffer) = node.toBuffers
+      new MutableArrayTree[T](structureBuffer, contentBuffer)
     }
   }
 
@@ -268,7 +280,7 @@ object Tree {
     def unapply[T](node: Bunch[T]): Option[(T, Seq[Tree[T]])] = Some((node.head, node.children))
   }
 
-  private implicit val transformer: Transformer[Tree] = Transformer.OfTree
+  //private implicit val transformer: Transformer[Tree] = Transformer.OfTree
 
   /**
     * A Tree represented internally by two array slices,
@@ -281,7 +293,7 @@ object Tree {
     delayedHeight: => Int
   ) extends ArrayTreeLike[Tree, T] with Tree[T] {
 
-    override protected val tree: ArrayTree[T] = this
+    @`inline` override protected def tree: Tree[T] = this
 
     assert(structure.nonEmpty, "When creating an ArrayTree, structure slice must not be empty.")
     assert(content.nonEmpty, "When creating an ArrayTree, content slice must not be empty.")
@@ -293,6 +305,7 @@ object Tree {
     override val size: Int = structure.length
     override lazy val width: Int = delayedWidth
     override lazy val height: Int = delayedHeight
+
     override def isLeaf: Boolean = size == 1
     override def isEmpty: Boolean = size == 0
     override def childrenCount: Int = structure.last
@@ -301,6 +314,9 @@ object Tree {
       TreeBuilder.fromIterators(structure.iterator, content.iterator).headOption.getOrElse(Tree.empty)
 
     override val deflated: Tree[T] = this
+
+    override def mutable: MutableTree[T] =
+      new MutableArrayTree[T](structure.asBuffer, content.asBuffer)
   }
 
   /** Arbitrary number for inflate-deflate heuristics. */
@@ -308,5 +324,9 @@ object Tree {
 
   @`inline` final def preferInflated[T, T1 >: T](node: Tree.NodeTree[T], tree: Tree.ArrayTree[T1]): Boolean =
     tree.size < Tree.DEFLATE_SIZE_THRESHOLD || tree.size <= node.size
+
+  final private[tree] def stringify(o: Any): String =
+    if (o.isInstanceOf[String]) s""""$o""""
+    else o.toString
 
 }
