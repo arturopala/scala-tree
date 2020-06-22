@@ -338,7 +338,7 @@ trait TreeLike[F[+_], +T] {
   /** Flat-maps every node of the tree using provided function and returns a new tree.
     * @note This method tries to keep children values unique by merging modified tree (and only that) when needed.
     * @group transformation */
-  def flatMap[K: ClassTag](f: T => F[K]): F[K] = ???
+  def flatMap[K: ClassTag](f: T => F[K]): F[K]
 
   /** Maps every branch of the tree using provided function and returns a new tree.
     * @note This method tries to keep children values unique by merging modified tree (and only that) when needed.

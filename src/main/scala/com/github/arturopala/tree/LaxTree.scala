@@ -37,7 +37,7 @@ import com.github.arturopala.tree.internal.{ArrayTree, NodeTree}
   * @groupprio laxRemoval 74
   * @groupname laxRemoval Lax removal
   */
-trait LaxTree[F[+ _], T] {
+trait LaxTree[F[+_], T] {
 
   /** Flat-maps all nodes of the tree using provided function and returns a new tree.
     * @note This is a lax method, it doesn't preserve children values uniqueness.
@@ -306,7 +306,7 @@ object LaxTreeOps {
           NodeTree.listFlatMap(f, Vector((node.children.size, f(node.head))), node.children.toVector)
 
         TreeBuilder
-          .fromSizeAndTreePairsSequence(list, Nil, TreeBuilder.TreeMergeStrategy.Join)
+          .fromSizeAndTreePairsSequence(list, Nil, TreeBuilder.MergeStrategy.AppendLax)
           .headOption
           .getOrElse(empty)
 

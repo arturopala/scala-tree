@@ -882,8 +882,16 @@ object NodeTree {
       queue.head match {
         case Tree.Leaf(head) =>
           listFlatMap(f, (0, f(head)) +: result, queue.safeTail)
+
+        case Tree.Unary(head, child) =>
+          listFlatMap(f, (1, f(head)) +: result, child +: queue.safeTail)
+
+        case Tree.Binary(head, left, right) =>
+          listFlatMap(f, (2, f(head)) +: result, left +: right +: queue.safeTail)
+
         case Tree(head: T, children: Iterable[Tree[T]]) =>
           listFlatMap(f, (children.size, f(head)) +: result, children ++: queue.safeTail)
+
         case _ =>
           listFlatMap(f, result, queue.safeTail)
       }

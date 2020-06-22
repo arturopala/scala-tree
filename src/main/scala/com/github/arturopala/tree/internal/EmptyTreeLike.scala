@@ -149,6 +149,12 @@ trait EmptyTreeLike extends TreeLike[Tree, Nothing] {
 
   final override def existsPath[K](pred: Iterable[K] => Boolean, toPathItem: T => K): Boolean = false
 
+  // TRANSFORMATIONS
+
+  final override def map[K](f: T => K): Tree[K] = empty
+
+  final override def flatMap[K: ClassTag](f: T => Tree[K]): Tree[K] = empty
+
   // INSERTIONS
 
   final override def prepend[T1](value: T1): Tree[T1] = Tree(value)
@@ -330,10 +336,6 @@ trait EmptyTreeLike extends TreeLike[Tree, Nothing] {
 
   final override def removeChildrenAt[K](path: Iterable[K], toPathItem: T => K): Tree[T] =
     empty
-
-  // TRANSFORMATIONS
-
-  final override def map[K](f: T => K): Tree[K] = empty
 
   final override def toPairsIterator: Iterator[(Int, T)] = Iterator.empty
 

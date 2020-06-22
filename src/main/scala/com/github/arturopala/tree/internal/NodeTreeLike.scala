@@ -161,6 +161,28 @@ trait NodeTreeLike[+T] extends TreeLike[Tree, T] {
   final override def existsPath[K](pred: Iterable[K] => Boolean, toPathItem: T => K): Boolean =
     NodeTree.existsBranch(node, pred, partialPaths = true, toPathItem)
 
+  // TRANSFORMATIONS
+
+  final override def map[K](f: T => K): Tree[K] = {
+    val (structure, values) = NodeTree.arrayMap(node, f)
+    TreeBuilder.fromIterators(structure.iterator, values.iterator).headOption.getOrElse(empty)
+  }
+
+  final def mapUnsafe[K](f: T => K): Tree[K] = {
+    def mapNodeUnsafe(n: Tree[T]): Tree[K] = Tree(f(n.head), n.children.map(mapNodeUnsafe))
+    mapNodeUnsafe(node)
+  }
+
+  final override def flatMap[K: ClassTag](f: T => Tree[K]): Tree[K] = {
+    val list: Vector[(Int, Tree[K])] =
+      NodeTree.listFlatMap(f, Vector((node.children.size, f(node.head))), node.children.toVector)
+
+    TreeBuilder
+      .fromSizeAndTreePairsSequence(list, Nil, TreeBuilder.MergeStrategy.AppendDistinct)
+      .headOption
+      .getOrElse(empty)
+  }
+
   // DISTINCT INSERTIONS
 
   final override def prepend[T1 >: T](value: T1): Tree[T1] = Tree(value, node)
@@ -437,18 +459,6 @@ trait NodeTreeLike[+T] extends TreeLike[Tree, T] {
 
   final override def removeChildrenAt[K](path: Iterable[K], toPathItem: T => K): Tree[T] =
     NodeTree.removeChildrenAt(node, path.iterator, toPathItem, rightmost = false)
-
-  // TRANSFORMATIONS
-
-  final override def map[K](f: T => K): Tree[K] = {
-    val (structure, values) = NodeTree.arrayMap(node, f)
-    TreeBuilder.fromIterators(structure.iterator, values.iterator).headOption.getOrElse(empty)
-  }
-
-  final def mapUnsafe[K](f: T => K): Tree[K] = {
-    def mapNodeUnsafe(n: Tree[T]): Tree[K] = Tree(f(n.head), n.children.map(mapNodeUnsafe))
-    mapNodeUnsafe(node)
-  }
 
   final override def toPairsIterator: Iterator[(Int, T)] = NodeTree.toPairsList(node).iterator
 

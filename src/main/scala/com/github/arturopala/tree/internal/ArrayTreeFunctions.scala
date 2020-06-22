@@ -1682,16 +1682,20 @@ object ArrayTreeFunctions {
 
       val delta2 =
         if (structure.length == 1) 0
-        else
+        else {
+          val insertIndex2 =
+            if (insertIndex < index) insertIndex
+            else bottomIndex(insertIndex, structureBuffer)
           insertChildrenDistinct(
             insertIndex,
-            bottomIndex(insertIndex, structureBuffer),
+            insertIndex2,
             childrenOf(structure, content),
             preserveExisting = true,
             structureBuffer,
             contentBuffer,
             0
           )
+        }
 
       delta1 + delta2
 

@@ -24,7 +24,7 @@ import com.github.arturopala.tree.internal.ArrayTreeFunctions.{expandValueIntoTr
 
 import scala.reflect.ClassTag
 
-// Special test suite to ease debugging single assertions in an IDE
+// Special purpose test suite to facilitate debugging single assertions in an IDE
 class TreeDebugSpec extends FunSuite with TestWithBuffers {
 
   test(Inflated, new Spec with InflatedTestTrees)
@@ -34,7 +34,12 @@ class TreeDebugSpec extends FunSuite with TestWithBuffers {
 
     def tree[T: ClassTag](t: Tree[T]): Tree[T]
 
-    "debug" suite {}
+    "debug" suite {
+      val f4: String => Tree[String] = s => Tree("b", Tree(s))
+      test(
+        tree3_2.flatMap(f4) shouldBe Tree("b", Tree("b", Tree("b"), Tree("c")), Tree("a"))
+      )
+    }
 
   }
 

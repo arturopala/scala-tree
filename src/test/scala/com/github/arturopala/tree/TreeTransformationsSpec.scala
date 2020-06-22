@@ -25,7 +25,7 @@ class TreeTransformationsSpec extends FunSuite {
 
   sealed trait Spec extends AnyWordSpecCompat with TestTrees {
 
-    "map all nodes" in {
+    "map lax all nodes" in {
       val f: String => String = _ + "0"
       tree0.map(f).showAsGraph() shouldBe ""
       tree1.map(f).showAsGraph() shouldBe "a0"
@@ -63,33 +63,58 @@ class TreeTransformationsSpec extends FunSuite {
           |a > d > d0
           |a > g > g0
           |a > a0""".stripMargin
+
+      val f2: String => Tree[String] = s => Tree(s, Tree(s + s), Tree(s + s + s))
+      tree0.flatMapLax(f2) shouldBe tree0
+      tree1.flatMapLax(f2) shouldBe Tree("a", Tree("aa"), Tree("aaa"))
+
+      val f3: String => Tree[String] = s => Tree(s, Tree("b"))
+      tree0.flatMapLax(f3) shouldBe tree0
+      tree1.flatMapLax(f3) shouldBe Tree("a", Tree("b"))
+      tree2.flatMapLax(f3) shouldBe Tree("a", Tree("b", Tree("b")), Tree("b"))
+      tree3_1.flatMapLax(f3) shouldBe Tree("a", Tree("b", Tree("c", Tree("b")), Tree("b")), Tree("b"))
+      tree3_2.flatMapLax(f3) shouldBe Tree("a", Tree("b", Tree("b")), Tree("c", Tree("b")), Tree("b"))
+
+      val f4: String => Tree[String] = s => Tree("b", Tree(s))
+      tree0.flatMapLax(f4) shouldBe tree0
+      tree1.flatMapLax(f4) shouldBe Tree("b", Tree("a"))
+      tree2.flatMapLax(f4) shouldBe Tree("b", Tree("b", Tree("b")), Tree("a"))
+      tree3_1.flatMapLax(f4) shouldBe Tree("b", Tree("b", Tree("b", Tree("c")), Tree("b")), Tree("a"))
+      tree3_2.flatMapLax(f4) shouldBe Tree("b", Tree("b", Tree("b")), Tree("b", Tree("c")), Tree("a"))
+      tree4_1.flatMapLax(f4) shouldBe
+        Tree("b", Tree("b", Tree("b", Tree("b", Tree("d")), Tree("c")), Tree("b")), Tree("a"))
+      tree4_2.flatMapLax(f4) shouldBe
+        Tree("b", Tree("b", Tree("b", Tree("c")), Tree("b")), Tree("b", Tree("d")), Tree("a"))
+      tree4_3.flatMapLax(f4) shouldBe
+        Tree("b", Tree("b", Tree("b")), Tree("b", Tree("c")), Tree("b", Tree("d")), Tree("a"))
     }
 
-    /*"transform a tree using a for-comprehension" in {
-      (for {
-        n       <- tree9
-        subtree <- Tree(n, Tree(n + n), Tree(n + n + n))
-      } yield subtree).showAsGraph() shouldBe
-        """a > b > c > d > dd
-          |a > b > c > d > ddd
-          |a > b > c > cc
-          |a > b > c > ccc
-          |a > b > bb
-          |a > b > bbb
-          |a > e > f > g > gg
-          |a > e > f > g > ggg
-          |a > e > f > ff
-          |a > e > f > fff
-          |a > e > h > i > ii
-          |a > e > h > i > iii
-          |a > e > h > hh
-          |a > e > h > hhh
-          |a > e > ee
-          |a > e > eee
-          |a > aa
-          |a > aaa""".stripMargin
-    }*/
+    "flatMap distinct all nodes" in {
+      val f2: String => Tree[String] = s => Tree(s, Tree(s + s), Tree(s + s + s))
+      tree0.flatMap(f2) shouldBe tree0
+      tree1.flatMap(f2) shouldBe Tree("a", Tree("aa"), Tree("aaa"))
 
+      val f3: String => Tree[String] = s => Tree(s, Tree("b"))
+      tree0.flatMap(f3) shouldBe tree0
+      tree1.flatMap(f3) shouldBe Tree("a", Tree("b"))
+      tree2.flatMap(f3) shouldBe Tree("a", Tree("b", Tree("b")))
+      tree3_1.flatMap(f3) shouldBe Tree("a", Tree("b", Tree("c", Tree("b")), Tree("b")))
+      tree3_2.flatMap(f3) shouldBe Tree("a", Tree("b", Tree("b")), Tree("c", Tree("b")))
+
+      val f4: String => Tree[String] = s => Tree("b", Tree(s))
+      tree0.flatMap(f4) shouldBe tree0
+      tree1.flatMap(f4) shouldBe Tree("b", Tree("a"))
+      tree2.flatMap(f4) shouldBe Tree("b", Tree("b", Tree("b")), Tree("a"))
+      tree3_1.flatMap(f4) shouldBe Tree("b", Tree("b", Tree("b", Tree("c"))), Tree("a"))
+      tree3_2.flatMap(f4) shouldBe Tree("b", Tree("b", Tree("b"), Tree("c")), Tree("a"))
+      tree4_1.flatMap(f4) shouldBe
+        Tree("b", Tree("b", Tree("b", Tree("b", Tree("d")), Tree("c"))), Tree("a"))
+      tree4_2.flatMap(f4) shouldBe
+        Tree("b", Tree("b", Tree("b", Tree("c")), Tree("d")), Tree("a"))
+      tree4_3.flatMap(f4) shouldBe
+        Tree("b", Tree("b", Tree("b"), Tree("c"), Tree("d")), Tree("a"))
+
+    }
   }
 
 }

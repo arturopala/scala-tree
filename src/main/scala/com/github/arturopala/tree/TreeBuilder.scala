@@ -18,7 +18,7 @@ package com.github.arturopala.tree
 
 import com.github.arturopala.bufferandslice.{Buffer, IntBuffer, IntSlice, Slice}
 import com.github.arturopala.tree.Tree.{ArrayTree, NodeTree}
-import com.github.arturopala.tree.internal.{ArrayTree, ArrayTreeFunctions, Transformer}
+import com.github.arturopala.tree.internal.{ArrayTree, ArrayTreeFunctions, NodeTree, Transformer}
 
 import scala.annotation.tailrec
 import scala.collection.Iterator
@@ -161,21 +161,21 @@ object TreeBuilder {
   final def fromSizeAndTreePairsSequence[T](
     sequence: Seq[(Int, Tree[T])],
     result: List[NodeTree[T]] = Nil,
-    strategy: TreeMergeStrategy = TreeMergeStrategy.Join
+    strategy: MergeStrategy = MergeStrategy.AppendLax
   ): Seq[Tree[T]] =
     fromSizeAndTreePairs(sequence.iterator, result, strategy)
 
   /** Builds a tree from an iterator of pairs (numberOfChildren, node). */
   final def fromSizeAndTreePairsIterator[T](
     iterator: Iterator[(Int, Tree[T])],
-    strategy: TreeMergeStrategy = TreeMergeStrategy.Join
+    strategy: MergeStrategy = MergeStrategy.AppendLax
   ): List[Tree[T]] =
     fromSizeAndTreePairs(iterator, Nil, strategy)
 
   /** Builds a tree from an iterable of pairs (numberOfChildren, node). */
   final def fromSizeAndTreePairsIterable[T](
     iterable: Iterable[(Int, Tree[T])],
-    strategy: TreeMergeStrategy = TreeMergeStrategy.Join
+    strategy: MergeStrategy = MergeStrategy.AppendLax
   ): List[Tree[T]] =
     fromSizeAndTreePairs(iterable.iterator, Nil, strategy)
 
@@ -183,18 +183,18 @@ object TreeBuilder {
   private final def fromSizeAndTreePairs[T](
     iterator: Iterator[(Int, Tree[T])],
     result: List[Tree[T]] = Nil,
-    strategy: TreeMergeStrategy = TreeMergeStrategy.Join
+    strategy: MergeStrategy = MergeStrategy.AppendLax
   ): List[Tree[T]] =
     if (iterator.hasNext) {
       val (size, tree) = iterator.next()
       tree match {
         case Tree.empty =>
-          val offset = if (strategy.keepOrphanedSubtrees) size else -1
+          val offset = if (strategy.keepOrphanedChildren) size else -1
           fromSizeAndTreePairs(iterator, result.drop(-offset), strategy)
 
         case tree =>
           val subtrees = result.take(size)
-          val merged = strategy.merge(tree.inflated.asInstanceOf[NodeTree[T]], subtrees)
+          val merged = strategy.merge(tree, subtrees)
           fromSizeAndTreePairs(iterator, merged :: result.drop(size), strategy)
       }
     } else if (result.isEmpty) List(Tree.empty)
@@ -283,28 +283,57 @@ object TreeBuilder {
     * As we don't want to be constrained by an arbitrary choice,
     * there is a possibility to create and/or use custom strategy.
     */
-  trait TreeMergeStrategy {
+  trait MergeStrategy {
 
     /** When a value of a node expands into a new Node,
       * we need a way to deal with the existing subtrees. */
-    def merge[T](newNode: Tree[T], existingSubtrees: List[Tree[T]]): Tree[T]
+    def merge[T](newNode: Tree[T], existingChildren: Iterable[Tree[T]]): Tree[T]
 
     /** When a value of a node expands into an Empty tree,
-      * we need to decide either to keep or remove existing subtrees. */
-    def keepOrphanedSubtrees: Boolean
+      * we need to decide whether to keep or remove existing children. */
+    def keepOrphanedChildren: Boolean
   }
 
-  object TreeMergeStrategy {
+  object MergeStrategy {
 
-    /** Default strategy is to preserve all existing subtrees. */
-    object Join extends TreeMergeStrategy {
+    /** Joins orphaned children to the parent node. */
+    trait KeepOrphanedMergeStrategy extends MergeStrategy {
+      override final def keepOrphanedChildren: Boolean = true
+    }
 
-      /** Concatenates new and existing subtrees of an expanded node. */
-      override final def merge[T](newNode: Tree[T], existingSubtrees: List[Tree[T]]): Tree[T] =
-        Tree(newNode.head, existingSubtrees ++ newNode.children)
+    /** Appends new children to the existing. */
+    object AppendLax extends KeepOrphanedMergeStrategy {
 
-      /** Joins orphaned subtrees to the parent node. */
-      override final def keepOrphanedSubtrees: Boolean = true
+      /** Concatenates new and existing children of an expanded node. */
+      override final def merge[T](newNode: Tree[T], existingChildren: Iterable[Tree[T]]): Tree[T] =
+        Tree(newNode.head, existingChildren ++ newNode.children)
+    }
+
+    /** Prepends new children to the existing. */
+    object PrependLax extends KeepOrphanedMergeStrategy {
+
+      /** Concatenates new and existing children of an expanded node. */
+      override final def merge[T](newNode: Tree[T], existingChildren: Iterable[Tree[T]]): Tree[T] =
+        Tree(newNode.head, newNode.children ++ existingChildren)
+    }
+
+    /** Appends new children to the existing while keeping them distinct, merges down if necessary. */
+    object AppendDistinct extends KeepOrphanedMergeStrategy {
+
+      /** Concatenates new and existing children of an expanded node. */
+      override final def merge[T](newNode: Tree[T], existingChildren: Iterable[Tree[T]]): Tree[T] =
+        Tree(newNode.head, NodeTree.insertChildrenAfterDistinct(Vector.empty, existingChildren ++ newNode.children))
+    }
+
+    /** Prepends new children to the existing while keeping them distinct, merges down if necessary. */
+    object PrependDistinct extends KeepOrphanedMergeStrategy {
+
+      /** Concatenates new and existing children of an expanded node. */
+      override final def merge[T](newNode: Tree[T], existingChildren: Iterable[Tree[T]]): Tree[T] =
+        Tree(
+          newNode.head,
+          NodeTree.insertChildrenBeforeDistinct(newNode.children, existingChildren, preserveExisting = true)
+        )
     }
 
   }
