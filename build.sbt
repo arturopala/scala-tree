@@ -3,7 +3,7 @@ ThisBuild / organization := "com.github.arturopala"
 ThisBuild / organizationName := "Artur Opala"
 ThisBuild / startYear := Some(2020)
 
-lazy val supportedScalaVersions = List("0.24.0-RC1","2.13.2", "2.12.11", "2.11.12")
+lazy val supportedScalaVersions = List("0.24.0-RC1", "2.13.2", "2.12.11", "2.11.12")
 
 lazy val Benchmark = config("benchmark") extend Test
 
@@ -14,7 +14,7 @@ lazy val root = (project in file("."))
     licenses += ("Apache-2.0", new URL("https://www.apache.org/licenses/LICENSE-2.0.txt")),
     libraryDependencies ++= Seq(
       "com.github.arturopala" %% "buffer-and-slice" % "1.30.0",
-      "org.scalameta" %% "munit" % "0.7.7" % Test
+      "org.scalameta"         %% "munit"            % "0.7.9" % Test
     ),
     libraryDependencies ++= dependencies(scalaVersion.value),
     crossScalaVersions := supportedScalaVersions,
@@ -31,18 +31,18 @@ lazy val root = (project in file("."))
     testFrameworks += new TestFramework("org.scalameter.ScalaMeterFramework"),
     logBuffered := false,
     parallelExecution in Test := false,
-    parallelExecution in Benchmark := false,
+    parallelExecution in Benchmark := false
   )
   .configs(Benchmark)
   .settings(
     inConfig(Benchmark)(Defaults.testSettings): _*
   )
 
-def dependencies(scalaVersion: String) = {
+def dependencies(scalaVersion: String) =
   CrossVersion.partialVersion(scalaVersion) match {
-    case Some((2, 13)) => List(
-      "com.storm-enroute" %% "scalameter" % "0.19"  % Test
-    )
+    case Some((2, 13)) =>
+      List(
+        "com.storm-enroute" %% "scalameter" % "0.19" % Test
+      )
     case _ => List()
   }
-}
