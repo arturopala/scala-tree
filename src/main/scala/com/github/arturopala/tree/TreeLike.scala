@@ -70,7 +70,7 @@ import scala.reflect.ClassTag
   * @groupprio visualization 100
   * @groupname visualization Visualize
   */
-trait TreeLike[F[+ _], +T] {
+trait TreeLike[F[+_], +T] {
 
   // PROPERTIES
 
@@ -909,7 +909,7 @@ trait TreeLike[F[+ _], +T] {
 object TreeLike {
 
   /** Useful extensions of [[TreeLike]] interface. */
-  implicit class TreeLikeExtensions[F[+ _], T](val tree: TreeLike[F, T]) extends AnyVal {
+  implicit class TreeLikeExtensions[F[+_], T](val tree: TreeLike[F, T]) extends AnyVal {
 
     def showAsGraph(separator: String = "\n"): String =
       TreeFormat.showAsGraph(tree, separator)
