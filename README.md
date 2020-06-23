@@ -35,7 +35,8 @@ Internally, there are three main implementations of the `Tree`:
 The reason for having an inflated and deflated variants of the tree
 is such that each one exhibits different performance and memory
 consumption characteristics, making it possible to experiment and optimize
-for individual targets while facing the same API.
+for individual targets while facing the same API. 
+Further optimization is possible with using `MutableTree` for series of transformations.
 
 Distinct and Lax operations
 ---
@@ -53,7 +54,7 @@ To enable lax operations, just `import com.github.arturopala.tree.LaxTreeOps._`.
 MutableTree\[+T]
 ---
 
-`MutableTree` is not a `Tree`, but a special tree-like type to handle series of heavy operations on a tree without 
+`MutableTree` is not a `Tree` per se, but a special `TreeLike` type to handle series of heavy operations on a tree without 
 having to pay a price of intermediate immutable representations. 
 
 This works the best by using the following scenario:
@@ -63,7 +64,7 @@ This works the best by using the following scenario:
 - call `.immutable` to get back immutable `Tree`
 
 As both `.mutable` and `.immutable` methods have to make a copy of a Tree representation,
-it saves time and resources only when two or more operations in a row executes, comparing to the `Tree`.
+it saves time and resources only for two or more operations in a row, comparing with a `Tree`.
 
 Warning: Iterating over subtrees has much worse performance on `MutableTree` because each subtree must be a copy, 
 prefer using light iteration available on the `Tree` instead.
@@ -77,7 +78,7 @@ Depends on:
 - a standard built-in Scala library,
 - [`com.github.arturopala.bufferandslice`](https://github.com/arturopala/buffer-and-slice).
 
-Cross-compiles to Scala versions `2.13.1`, `2.12.11`, `2.11.12`, and Dotty `0.24.0-RC1`.
+Cross-compiles to Scala versions `2.13.1`, `2.12.11`, `2.11.12`, and Dotty `0.25.0-RC1`.
 
 API
 ---
