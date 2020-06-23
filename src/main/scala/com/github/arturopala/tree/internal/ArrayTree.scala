@@ -539,8 +539,8 @@ object ArrayTree {
   @`inline` private final def sizeOf[F[+_]: Transformer, T](target: F[T]): Int =
     implicitly[Transformer[F]].sizeOf(target)
 
-  /** Maps the tree's content. */
-  final def map[F[+_]: Transformer, T, K](target: F[T], f: T => K): F[K] = {
+  /** Maps the tree's content without checking for duplicated children.. */
+  final def mapLax[F[+_]: Transformer, T, K](target: F[T], f: T => K): F[K] = {
     val (structure, content) = toSlices(target)
     fromSlices(structure, content.map(f))
   }
@@ -582,6 +582,12 @@ object ArrayTree {
       fromSlices(structureBuffer.asSlice, contentBuffer.asSlice)
     else
       implicitly[Transformer[F]].empty
+  }
+
+  /** Maps the tree's content while keeping children distinct. */
+  final def mapDistinct[F[+_]: Transformer, T, K](target: F[T], f: T => K): F[K] = {
+    val (structure, content) = toSlices(target)
+    fromSlices(structure, content.map(f))
   }
 
   /** FlatMaps the tree while keeping children distinct. */

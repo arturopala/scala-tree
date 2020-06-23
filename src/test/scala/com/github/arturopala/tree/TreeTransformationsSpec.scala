@@ -23,21 +23,40 @@ class TreeTransformationsSpec extends FunSuite {
   test(Inflated, new Spec with InflatedTestTrees)
   test(Deflated, new Spec with DeflatedTestTrees)
 
+  case class Item(s: String)
+
   sealed trait Spec extends AnyWordSpecCompat with TestTrees {
 
     "map lax all nodes" in {
       val f: String => String = _ + "0"
-      tree0.map(f).showAsGraph() shouldBe ""
-      tree1.map(f).showAsGraph() shouldBe "a0"
-      tree2.map(f).showAsGraph() shouldBe """a0 > b0"""
-      tree3_1.map(f).showAsGraph() shouldBe """a0 > b0 > c0"""
-      tree3_2.map(f).showAsGraph() shouldBe
+      tree0.mapLax(f).showAsGraph() shouldBe ""
+      tree1.mapLax(f).showAsGraph() shouldBe "a0"
+      tree2.mapLax(f).showAsGraph() shouldBe """a0 > b0"""
+      tree3_1.mapLax(f).showAsGraph() shouldBe """a0 > b0 > c0"""
+      tree3_2.mapLax(f).showAsGraph() shouldBe
         """a0 > b0
           |a0 > c0""".stripMargin
-      tree7.map(f).showAsGraph() shouldBe
+      tree7.mapLax(f).showAsGraph() shouldBe
         """a0 > b0 > c0
           |a0 > d0 > e0 > f0
           |a0 > g0""".stripMargin
+
+      val f2: String => Item = Item.apply(_)
+      tree0.mapLax(f2) shouldBe Tree.empty
+      tree1.mapLax(f2) shouldBe Tree(Item("a"))
+      tree2.mapLax(f2) shouldBe Tree(Item("a"), Tree(Item("b")))
+      tree3_1.mapLax(f2) shouldBe Tree(Item("a"), Tree(Item("b"), Tree(Item("c"))))
+      tree3_2.mapLax(f2) shouldBe Tree(Item("a"), Tree(Item("b")), Tree(Item("c")))
+
+      val f3: String => Int = _.length
+      tree0.mapLax(f3) shouldBe Tree.empty
+      tree1.mapLax(f3) shouldBe Tree(1)
+      tree2.mapLax(f3) shouldBe Tree(1, Tree(1))
+      tree3_1.mapLax(f3) shouldBe Tree(1, Tree(1, Tree(1)))
+      tree3_2.mapLax(f3) shouldBe Tree(1, Tree(1), Tree(1))
+      tree4_1.mapLax(f3) shouldBe Tree(1, Tree(1, Tree(1, Tree(1))))
+      tree4_2.mapLax(f3) shouldBe Tree(1, Tree(1, Tree(1)), Tree(1))
+      tree4_3.mapLax(f3) shouldBe Tree(1, Tree(1), Tree(1), Tree(1))
     }
 
     "flatMap lax all nodes" in {

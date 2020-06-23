@@ -19,13 +19,14 @@ package com.github.arturopala.tree
 import com.github.arturopala.tree.Tree.{ArrayTree, NodeTree, empty}
 import com.github.arturopala.tree.internal.{ArrayTree, NodeTree}
 
-/** Extension methods providing lax modifications of the Tree.
+/** Extension methods providing lax modifications of the [[Tree]] (and [[MutableTree]]).
   *
   * @note The [[Tree]] does not mandate children to be unique
   *       and the main [[TreeLike]] API functions keeps them distinct by default.
   *       However, if your dataset is unique per se, or you do not
   *       care about node uniqueness and do not want to pay a price of
   *       additional checks involved, this extensions allow you to do so.
+  *
   * @groupprio laxTransformation 70
   * @groupname laxTransformation Lax transformation
   * @groupprio laxInsertion 71
@@ -38,6 +39,10 @@ import com.github.arturopala.tree.internal.{ArrayTree, NodeTree}
   * @groupname laxRemoval Lax removal
   */
 trait LaxTree[F[+_], T] {
+
+  /** Maps every node of the tree using provided function and returns a new tree.
+    * @group laxTransformation */
+  def mapLax[K](f: T => K): F[K]
 
   /** Flat-maps all nodes of the tree using provided function and returns a new tree.
     * @note This is a lax method, it doesn't preserve children values uniqueness.
@@ -204,7 +209,7 @@ trait LaxTree[F[+_], T] {
   /** Modifies all values of the tree.
     * @note This is a lax method, it doesn't preserve children values uniqueness.
     * @param modify function to modify values
-    * @group modification */
+    * @group laxModification */
   def modifyAllLax[T1 >: T](modify: T => T1): F[T1] = ???
 
   /** Modifies the value of a child node holding a given value.
@@ -297,6 +302,17 @@ object LaxTreeOps {
 
   /** [[LaxTree]] extensions for a [[Tree]]. */
   implicit final class LaxTreeExt[T](val t: Tree[T]) extends LaxTree[Tree, T] {
+
+    override def mapLax[K](f: T => K): Tree[K] = t match {
+      case Tree.empty => Tree.empty
+
+      case node: NodeTree[T] =>
+        val (structure, values) = NodeTree.arrayMap(node, f)
+        TreeBuilder.fromIterators(structure.iterator, values.iterator).headOption.getOrElse(empty)
+
+      case tree =>
+        ArrayTree.mapLax(tree, f)
+    }
 
     override def flatMapLax[K](f: T => Tree[K]): Tree[K] = t match {
       case Tree.empty => Tree.empty
@@ -731,6 +747,9 @@ object LaxTreeOps {
 
   /** [[LaxTree]] extensions for a [[MutableTree]]. */
   implicit final class LaxMutableTreeExt[T](val tree: MutableTree[T]) extends LaxTree[MutableTree, T] {
+
+    override def mapLax[K](f: T => K): MutableTree[K] =
+      ArrayTree.mapLax(tree, f)
 
     override def flatMapLax[K](f: T => MutableTree[K]): MutableTree[K] =
       ArrayTree.flatMapLax(tree, f)

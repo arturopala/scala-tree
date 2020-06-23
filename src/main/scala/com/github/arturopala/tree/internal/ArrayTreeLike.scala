@@ -263,7 +263,7 @@ abstract class ArrayTreeLike[F[+_]: Transformer, T] extends TreeLike[F, T] {
   // TRANSFORMATIONS
 
   final override def map[K](f: T => K): F[K] =
-    ArrayTree.map(tree, f)
+    ArrayTree.mapDistinct(tree, f)
 
   final override def flatMap[K: ClassTag](f: T => F[K]): F[K] =
     ArrayTree.flatMapDistinct(tree, f)
