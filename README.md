@@ -50,7 +50,7 @@ Lax operations are more performant as they do not have to perform additional che
 
 To enable lax operations, just `import com.github.arturopala.tree.LaxTreeOps._`.
 
-MutableTree[+T]
+MutableTree\[+T]
 ---
 
 `MutableTree` is not a `Tree`, but a special tree-like type to handle series of heavy operations on a tree without 
