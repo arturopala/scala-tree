@@ -62,8 +62,8 @@ object TreeBuilder {
     *
     * @note Both collections have to return data following rules set in [[Tree.toArrays]].
     */
-  final def fromIterables[T](structure: Iterable[Int], values: Iterable[T]): List[Tree[T]] =
-    fromIterators(structure.iterator, values.iterator)
+  final def fromIterables[T](structure: Iterable[Int], content: Iterable[T]): List[Tree[T]] =
+    fromIterators(structure.iterator, content.iterator)
 
   /** Builds a tree from a pair of iterators:
     *   - `structure` is an iterator over linearized tree structure,
@@ -71,19 +71,19 @@ object TreeBuilder {
     *
     * @note Both iterators have to return data following rules set in [[Tree.toArrays]].
     */
-  final def fromIterators[T](structure: Iterator[Int], values: Iterator[T]): List[Tree[T]] =
-    fromIterators(structure, values, Nil)
+  final def fromIterators[T](structure: Iterator[Int], content: Iterator[T]): List[Tree[T]] =
+    fromIterators(structure, content, Nil)
 
   @tailrec
   private final def fromIterators[T](
     structure: Iterator[Int],
-    values: Iterator[T],
+    content: Iterator[T],
     result: List[Tree[T]]
   ): List[Tree[T]] =
-    if (structure.hasNext && values.hasNext) {
-      val value = values.next()
+    if (structure.hasNext && content.hasNext) {
+      val value = content.next()
       val size = structure.next()
-      fromIterators(structure, values, Tree(value.asInstanceOf[T], result.take(size)) :: result.drop(size))
+      fromIterators(structure, content, Tree(value.asInstanceOf[T], result.take(size)) :: result.drop(size))
     } else if (result.isEmpty) List(Tree.empty)
     else result
 
@@ -93,8 +93,8 @@ object TreeBuilder {
     *
     * @note Both arrays have to return data following rules set in [[Tree.toArrays]].
     */
-  @`inline` final def fromArrays[T: ClassTag](structure: Array[Int], values: Array[T]): List[Tree[T]] =
-    fromSlices(IntSlice.of(structure), Slice.of(values))
+  @`inline` final def fromArrays[T: ClassTag](structure: Array[Int], content: Array[T]): List[Tree[T]] =
+    fromSlices(IntSlice.of(structure), Slice.of(content))
 
   /** Builds a list of trees from a pair of slices:
     *   - `structure` is a slice holding linearized tree structure,
@@ -147,8 +147,8 @@ object TreeBuilder {
 
   /** Shortcut for [[TreeBuilder.fromArrays]].
     * @return head element from the produced list or an empty tree */
-  final def fromArraysHead[T: ClassTag](structure: Array[Int], values: Array[T]): Tree[T] =
-    fromArrays(structure, values).headOption.getOrElse(Tree.empty)
+  final def fromArraysHead[T: ClassTag](structure: Array[Int], content: Array[T]): Tree[T] =
+    fromArrays(structure, content).headOption.getOrElse(Tree.empty)
 
   /** Builds a tree from a sequence of pairs (numberOfChildren, node), where:
     *   - `node` is a new node, and
@@ -206,8 +206,8 @@ object TreeBuilder {
     *
     * @note Both buffers have to follow rules set in [[Tree.toArrays]].
     */
-  @`inline` final def fromBuffersHead[T](structureBuffer: IntBuffer, valuesBuffer: Buffer[T]): Tree[T] =
-    fromBuffers(structureBuffer, valuesBuffer).head
+  @`inline` final def fromBuffersHead[T](structureBuffer: IntBuffer, contentBuffer: Buffer[T]): Tree[T] =
+    fromBuffers(structureBuffer, contentBuffer).head
 
   /** Builds a list of trees from a pair of buffers.
     *  - `structureBuffer` is a buffer holding linearized tree structure,
@@ -215,8 +215,8 @@ object TreeBuilder {
     *
     * @note Both buffers have to follow rules set in [[Tree.toArrays]].
     */
-  @`inline` final def fromBuffers[T](structureBuffer: IntBuffer, valuesBuffer: Buffer[T]): List[Tree[T]] =
-    fromSlices(structureBuffer.asSlice, valuesBuffer.asSlice)
+  @`inline` final def fromBuffers[T](structureBuffer: IntBuffer, contentBuffer: Buffer[T]): List[Tree[T]] =
+    fromSlices(structureBuffer.asSlice, contentBuffer.asSlice)
 
   /** Builds a single-branch tree from a sequence of values. */
   final def linearTreeFromSequence[T](seq: Seq[T]): Tree[T] = {
