@@ -26,12 +26,6 @@ Conceptually, apart from an empty, each node of the tree has:
 - a head value
 - a collection of subtrees (children).
 
-By the design choice, every node can have duplicated children values,
-although default set of modifications methods assumes and preserve uniqueness.
-
-If the data is distinct by itself, or you don't care about uniqueness, there is 
-a matching set of lax operations supplied as extensions methods in `LaxTreeOps`.
-
 Internally, there are three main implementations of the `Tree`:
 
 - `Tree.empty` an empty tree singleton, i.e. `Tree[Nothing]`,
@@ -42,6 +36,19 @@ The reason for having an inflated and deflated variants of the tree
 is such that each one exhibits different performance and memory
 consumption characteristics, making it possible to experiment and optimize
 for individual targets while facing the same API.
+
+Distinct and Lax operations
+---
+
+By the design choice, every node of the tree can have duplicated children values,
+although the default API methods preserve the uniqueness of modified elements.
+
+If the data is distinct by itself, or you don't care about uniqueness, there is 
+a matching set of `LaxTree` API operations supplied as extensions methods in `LaxTreeOps`.
+
+Lax operations are more performant as they do not have to perform additional checks and merges.
+
+To enable lax operations, just `import com.github.arturopala.tree.LaxTreeOps._`.
 
 MutableTree[+T]
 ---
@@ -58,8 +65,8 @@ This works the best by using the following scenario:
 As both `.mutable` and `.immutable` methods have to make a copy of a Tree representation,
 it saves time and resources only when two or more operations in a row executes, comparing to the `Tree`.
 
-Warning: Iterating over subtrees has much worse performance on `MutableTree` because each subtree is a copy, 
-prefer using the `Tree` instead.
+Warning: Iterating over subtrees has much worse performance on `MutableTree` because each subtree must be a copy, 
+prefer using light iteration available on the `Tree` instead.
 
 
 Dependencies
