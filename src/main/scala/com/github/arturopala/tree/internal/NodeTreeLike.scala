@@ -165,7 +165,7 @@ trait NodeTreeLike[+T] extends TreeLike[Tree, T] {
 
   final override def map[K](f: T => K): Tree[K] = {
     val (structure, values) = NodeTree.arrayMap(node, f)
-    TreeBuilder.fromIterators(structure.iterator, values.iterator).headOption.getOrElse(empty)
+    TreeBuilder.fromIterators[K, Tree](structure.iterator, values.iterator, None).headOption.getOrElse(empty)
   }
 
   final def mapUnsafe[K](f: T => K): Tree[K] = {

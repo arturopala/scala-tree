@@ -307,8 +307,11 @@ object LaxTreeOps {
       case Tree.empty => Tree.empty
 
       case node: NodeTree[T] =>
-        val (structure, values) = NodeTree.arrayMap(node, f)
-        TreeBuilder.fromIterators(structure.iterator, values.iterator).headOption.getOrElse(empty)
+        val (structure, content) = NodeTree.arrayMap(node, f)
+        TreeBuilder
+          .fromIterators[K, Tree](structure.iterator, content.iterator, None)
+          .headOption
+          .getOrElse(empty)
 
       case tree =>
         ArrayTree.mapLax(tree, f)
@@ -394,12 +397,12 @@ object LaxTreeOps {
             case Tree.empty => node
             case tree: NodeTree[T1] =>
               Tree(node.head, if (append) node.children.toSeq :+ tree else tree +: node.children.toSeq)
-            case tree: ArrayTree[T1] =>
+            case tree =>
               if (Tree.preferInflated(node, tree))
                 Tree(
                   node.head,
-                  if (append) node.children.toSeq :+ tree.inflated.asInstanceOf[NodeTree[T1]]
-                  else tree.inflated.asInstanceOf[NodeTree[T1]] +: node.children.toSeq
+                  if (append) node.children.toSeq :+ tree.inflated
+                  else tree.inflated +: node.children.toSeq
                 )
               else node.deflated.insertChildLax(tree, append)
           }
@@ -423,8 +426,8 @@ object LaxTreeOps {
           else if (validChildren.forall(_.isInstanceOf[NodeTree[T1]]))
             Tree(
               node.head,
-              if (append) node.children ++ validChildren.asInstanceOf[Iterable[NodeTree[T1]]]
-              else validChildren.asInstanceOf[Iterable[NodeTree[T1]]] ++ node.children
+              if (append) node.children ++ validChildren
+              else validChildren ++ node.children
             )
           else if (append) ArrayTree.insertAfterChildren[Tree, T, T1](node, validChildren, keepDistinct = false)
           else ArrayTree.insertBeforeChildren[Tree, T, T1](node, validChildren, keepDistinct = false)
@@ -448,15 +451,17 @@ object LaxTreeOps {
       case node: NodeTree[T] =>
         child match {
           case Tree.empty => node
+
           case tree: NodeTree[T1] =>
             NodeTree.insertChildAt(node, path.iterator, tree, append, keepDistinct = false).getOrElse(node)
-          case tree: ArrayTree[T1] =>
+
+          case tree =>
             if (Tree.preferInflated(node, tree))
               NodeTree
                 .insertChildAt(
                   node,
                   path.iterator,
-                  tree.inflated.asInstanceOf[NodeTree[T1]],
+                  tree.inflated,
                   append,
                   keepDistinct = false
                 )
@@ -480,15 +485,17 @@ object LaxTreeOps {
       case node: NodeTree[T] =>
         child match {
           case Tree.empty => Left(node)
+
           case tree: NodeTree[T1] =>
             NodeTree.insertChildAt(node, path.iterator, toPathItem, tree, append, keepDistinct = false)
-          case tree: ArrayTree[T1] =>
+
+          case tree =>
             NodeTree
               .insertChildAt(
                 node,
                 path.iterator,
                 toPathItem,
-                tree.inflated.asInstanceOf[NodeTree[T1]],
+                tree.inflated,
                 append,
                 keepDistinct = false
               )
@@ -515,7 +522,7 @@ object LaxTreeOps {
               .insertChildrenAt(
                 node,
                 path.iterator,
-                validChildren.map(_.inflated).asInstanceOf[Iterable[NodeTree[T1]]],
+                validChildren.map(_.inflated),
                 append,
                 keepDistinct = false
               )
@@ -547,7 +554,7 @@ object LaxTreeOps {
                 node,
                 path.iterator,
                 toPathItem,
-                validChildren.map(_.inflated).asInstanceOf[Iterable[NodeTree[T1]]],
+                validChildren.map(_.inflated),
                 append,
                 keepDistinct = false
               )

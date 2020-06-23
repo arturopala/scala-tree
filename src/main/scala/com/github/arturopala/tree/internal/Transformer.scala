@@ -21,7 +21,7 @@ import com.github.arturopala.tree.MutableTree.MutableArrayTree
 import com.github.arturopala.tree.{MutableTree, Tree}
 import com.github.arturopala.tree.Tree.ArrayTree
 
-/** Interface of transformations to and from tree linearisation. */
+/** Transformation to and from tree linearisation typeclass. */
 trait Transformer[F[+_]] {
 
   /** Outputs tree linearisation as a pair of slices. */
@@ -49,7 +49,7 @@ trait Transformer[F[+_]] {
 object Transformer {
 
   /** Transformer instance for the Tree. */
-  final implicit object OfTree extends Transformer[Tree] {
+  implicit object OfTree extends Transformer[Tree] {
 
     override def toSlices[T](target: Tree[T]): (IntSlice, Slice[T]) =
       target.toSlices
@@ -84,7 +84,7 @@ object Transformer {
   }
 
   /** Transformer instance for the MutableTree. */
-  final implicit object OfMutableTree extends Transformer[MutableTree] {
+  implicit object OfMutableTree extends Transformer[MutableTree] {
 
     override def toSlices[T](target: MutableTree[T]): (IntSlice, Slice[T]) =
       target.toSlices

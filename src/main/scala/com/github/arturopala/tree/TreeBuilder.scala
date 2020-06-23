@@ -56,35 +56,52 @@ object TreeBuilder {
     } else if (result.isEmpty) List(Tree.empty)
     else result
 
-  /** Builds a tree from a pair of iterable collections:
-    *   - `structure` is a collection representing serialized tree structure,
-    *   - `values` is a collection of node's values.
+  /** Builds a result from a pair of iterable collections of tree structure and content:
+    *
+    * @param structure a collection representing serialized tree structure
+    * @param content a collection of node's values
+    * @tparam T type of tree values
+    * @tparam R type of the result
     *
     * @note Both collections have to return data following rules set in [[Tree.toArrays]].
     */
-  final def fromIterables[T](structure: Iterable[Int], content: Iterable[T]): List[Tree[T]] =
-    fromIterators(structure.iterator, content.iterator)
+  final def fromIterables[T, R[+_]: TreeFold](
+    structure: Iterable[Int],
+    content: Iterable[T],
+    refine: Option[Iterable[R[T]] => Iterable[R[T]]]
+  ): List[R[T]] =
+    fromIterators(structure.iterator, content.iterator, refine)
 
   /** Builds a tree from a pair of iterators:
-    *   - `structure` is an iterator over linearized tree structure,
-    *   - `values` is an iterator over node's values.
+    *
+    * @param structure an iterator over linearised tree structure
+    * @param content an iterator over node's values
+    * @tparam T type of tree values
+    * @tparam R type of the result
     *
     * @note Both iterators have to return data following rules set in [[Tree.toArrays]].
     */
-  final def fromIterators[T](structure: Iterator[Int], content: Iterator[T]): List[Tree[T]] =
-    fromIterators(structure, content, Nil)
-
-  @tailrec
-  private final def fromIterators[T](
+  final def fromIterators[T, R[+_]: TreeFold](
     structure: Iterator[Int],
     content: Iterator[T],
-    result: List[Tree[T]]
-  ): List[Tree[T]] =
+    refine: Option[Iterable[R[T]] => Iterable[R[T]]]
+  ): List[R[T]] =
+    fromIterators(structure, content, Nil, refine)
+
+  @tailrec
+  private final def fromIterators[T, R[+_]: TreeFold](
+    structure: Iterator[Int],
+    content: Iterator[T],
+    result: List[R[T]],
+    refine: Option[Iterable[R[T]] => Iterable[R[T]]]
+  ): List[R[T]] =
     if (structure.hasNext && content.hasNext) {
       val value = content.next()
       val size = structure.next()
-      fromIterators(structure, content, Tree(value.asInstanceOf[T], result.take(size)) :: result.drop(size))
-    } else if (result.isEmpty) List(Tree.empty)
+      val children = result.take(size)
+      val newNode = implicitly[TreeFold[R]].fold(value.asInstanceOf[T], refine.map(_(children)).getOrElse(children))
+      fromIterators(structure, content, newNode :: result.drop(size), refine)
+    } else if (result.isEmpty) List(implicitly[TreeFold[R]].empty)
     else result
 
   /** Builds a list of trees from a pair of arrays:

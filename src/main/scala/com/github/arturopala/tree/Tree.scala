@@ -173,7 +173,7 @@ object Tree {
   /**
     * An empty Tree singleton.
     */
-  final case object empty extends Tree[Nothing] with EmptyTreeLike {
+  case object empty extends Tree[Nothing] with EmptyTreeLike {
     override val inflated: Tree[T] = this
     override val deflated: Tree[T] = this
     override def mutable: MutableTree[T] = MutableTree()
@@ -311,7 +311,7 @@ object Tree {
     override def childrenCount: Int = structure.last
 
     override def inflated: Tree[T] =
-      TreeBuilder.fromIterators(structure.iterator, content.iterator).headOption.getOrElse(Tree.empty)
+      TreeBuilder.fromIterators[T, Tree](structure.iterator, content.iterator, None).headOption.getOrElse(Tree.empty)
 
     override val deflated: Tree[T] = this
 
@@ -322,8 +322,8 @@ object Tree {
   /** Arbitrary number for inflate-deflate heuristics. */
   @`inline` final val DEFLATE_SIZE_THRESHOLD: Int = 1000
 
-  @`inline` final def preferInflated[T, T1 >: T](node: Tree.NodeTree[T], tree: Tree.ArrayTree[T1]): Boolean =
-    tree.size < Tree.DEFLATE_SIZE_THRESHOLD || tree.size <= node.size
+  @`inline` final def preferInflated[T, T1 >: T](nodeTree: Tree[T], arrayTree: Tree[T1]): Boolean =
+    arrayTree.size < Tree.DEFLATE_SIZE_THRESHOLD || arrayTree.size <= nodeTree.size
 
   final private[tree] def stringify(o: Any): String =
     if (o.isInstanceOf[String]) s""""$o""""
