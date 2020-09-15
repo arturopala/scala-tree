@@ -1,9 +1,9 @@
-ThisBuild / scalaVersion := "2.13.1"
+ThisBuild / scalaVersion := "2.13.3"
 ThisBuild / organization := "com.github.arturopala"
 ThisBuild / organizationName := "Artur Opala"
 ThisBuild / startYear := Some(2020)
 
-lazy val supportedScalaVersions = List("0.25.0-RC1", "2.13.2", "2.12.11", "2.11.12")
+lazy val supportedScalaVersions = List("0.27.0-RC1", "2.13.3", "2.12.11", "2.11.12")
 
 lazy val Benchmark = config("benchmark") extend Test
 
@@ -13,8 +13,8 @@ lazy val root = (project in file("."))
     name := "tree",
     licenses += ("Apache-2.0", new URL("https://www.apache.org/licenses/LICENSE-2.0.txt")),
     libraryDependencies ++= Seq(
-      "com.github.arturopala" %% "buffer-and-slice" % "1.32.0",
-      "org.scalameta"         %% "munit"            % "0.7.9" % Test
+      "com.github.arturopala" %% "buffer-and-slice" % "1.33.0",
+      "org.scalameta"         %% "munit"            % "0.7.12" % Test
     ),
     libraryDependencies ++= dependencies(scalaVersion.value),
     crossScalaVersions := supportedScalaVersions,
